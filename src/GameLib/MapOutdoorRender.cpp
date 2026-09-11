@@ -67,14 +67,7 @@ void CMapOutdoor::RenderTerrain()
 			STATEMANAGER.GetRenderState(D3DRS_ZENABLE) == TRUE &&
 			STATEMANAGER.GetRenderState(D3DRS_ZWRITEENABLE) == TRUE &&
 			STATEMANAGER.GetRenderState(D3DRS_ZFUNC) == D3DCMP_LESSEQUAL;
-		D3DXMATRIX textureTransform;
-		if (CTerrainPatch::SOFTWARE_TRANSFORM_PATCH_ENABLE)
-			D3DXMatrixScaling(&textureTransform, 1.0f/640.0f, -1.0f/640.0f, 0.0f); // Existing STP kTexTile.
-		else
-			textureTransform = m_TextureSet.GetTexture(1).m_matTransform;
-		std::array<float,16> textureMatrix;
-		memcpy(textureMatrix.data(), &textureTransform, sizeof(textureTransform));
-		Renderer::terrainRenderer->BeginTerrain(matrices, statesMatch, &textureMatrix);
+		Renderer::terrainRenderer->BeginTerrain(matrices, statesMatch);
 	}
 
 	// 그리기 위한 벡터 세팅
@@ -696,8 +689,12 @@ void CMapOutdoor::SelectIndexBuffer(BYTE byLODLevel, WORD * pwPrimitiveCount, D3
 void CMapOutdoor::SubmitTerrainGeometry(long patchnum)
 {
 	if (Renderer::terrainRenderer)
-		Renderer::terrainRenderer->DrawTerrain(m_pTerrainPatchProxyList[patchnum].GetTerrainGeometry(),
-			m_terrainIndices[m_terrainGeometryLOD], m_wNumIndices[m_terrainGeometryLOD], m_terrainGeometryLOD == 0, m_terrainTexture);
+	{
+		const D3DXCOLOR color(STATEMANAGER.GetRenderState(D3DRS_TEXTUREFACTOR));
+		Renderer::terrainRenderer->DrawTerrainSolid(m_pTerrainPatchProxyList[patchnum].GetTerrainGeometry(),
+			m_terrainIndices[m_terrainGeometryLOD], m_wNumIndices[m_terrainGeometryLOD], m_terrainGeometryLOD == 0,
+			{color.r,color.g,color.b,color.a});
+	}
 }
 
 void CMapOutdoor::SetPatchDrawVector()

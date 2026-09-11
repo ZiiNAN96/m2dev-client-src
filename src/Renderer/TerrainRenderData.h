@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <memory>
 #include "TerrainTextureData.h"
+#include "TerrainSplatData.h"
 
 namespace Renderer
 {
@@ -25,6 +26,13 @@ public:
                               const std::array<float,16>* textureTransform = nullptr) = 0;
     virtual void DrawTerrain(const TerrainBufferPtr& vertices, const TerrainBufferPtr& indices,
                              uint32_t indexCount, bool triangleStrip, const TerrainTexturePtr& texture = {}) = 0;
+    virtual TerrainSplatMaterialPtr CreateSplatMaterial(const TerrainTexturePtr& color, const TerrainTexturePtr& alpha) = 0;
+    virtual void ReleaseSplatMaterial(TerrainSplatMaterialPtr& material) = 0;
+    virtual void SetSplatVertices(const TerrainSplatVertex* vertices, uint32_t count) = 0;
+    virtual void DrawSplat(const TerrainBufferPtr&, const TerrainBufferPtr&, uint32_t count, bool strip,
+                          const TerrainSplatMaterialPtr&, const TerrainSplatParameters&) = 0;
+    virtual void DrawTerrainSolid(const TerrainBufferPtr&, const TerrainBufferPtr&, uint32_t count, bool strip,
+                                  const std::array<float,4>& color) = 0;
 };
 // Bound only during startup, before maps/loaders exist; unbound after map destruction.
 // Null is the legacy default. No backend selection or switching in terrain code.

@@ -12,6 +12,8 @@
 #include "EterLib/TerrainTextureLoader.h"
 #include "EterImageLib/DDSTextureLoader9.h"
 #include "TerrainTextureFixtures.h"
+typedef struct _object PyObject;
+#include "UserInterface/PythonSystem.h"
 #include <wrl/client.h>
 #include <iostream>
 #include <stdexcept>
@@ -19,6 +21,8 @@
 #include <cstring>
 
 float CCamera::CAMERA_MAX_DISTANCE = 2500.0f;
+// The isolated terrain test supplies fog states explicitly; no Python application/configuration is created.
+int CPythonSystem::GetFogLevel() { return 2; }
 static void Check(bool condition, const char* message) { if (!condition) throw std::runtime_error(message); }
 namespace Renderer
 {
@@ -175,9 +179,9 @@ static void TextureChecks(LegacyProbe& screen, Renderer::LegacyD3D9Backend& lega
             Check(covered>10000,"textured coverage");
             const double mean=error/(covered*3);
             std::cout<<"Texture "<<(material ? "BC1 mips" : "BGRA UV")<<" pose="<<pose<<" mean RGB error="<<mean<<" edge="<<edgeMismatch<<'\n';
-            // Half-pixel differences at wrap boundaries are expected, a flipped or
-            // camera-space-stuck mapping is not. Reference uses legacy texture generation.
-            Check(mean<12 && edgeMismatch<(width+height)*4,"legacy texture/UV/mip parity");
+            // The pixel-center correction must also preserve sampling at wrap boundaries.
+            // Reference uses the original legacy texture loader and matrices.
+            Check(mean<0.1 && edgeMismatch<(width+height)/10,"legacy texture/UV/mip parity including pixel centers");
             if(material) Check(nonBaseMip>covered*9/10,"smaller DDS mips sampled");
             Check(!terrain.Failed() && terrain.TexturedDrawCount()==2,"single texture patch draws");
             legacy.Present(); modern.Present();
@@ -190,6 +194,8 @@ static void TextureChecks(LegacyProbe& screen, Renderer::LegacyD3D9Backend& lega
     Check(terrain.TextureUploadCount()==2,"map replacement uploads");
     std::cout<<"Texture UV / adjacent patches / filtering / original mips / replacement lifetime: PASS\n";
 }
+
+#include "TerrainSplatGpuChecks.h"
 
 int main()
 {
@@ -267,8 +273,8 @@ int main()
                     if(b) Check((depth[i]&0xffffff)<0xffffff, "terrain wrote depth");
                 }
                 Check(covered > width*height/10, "visible front faces");
-                // D3D9's half-pixel rasterization may move the outer silhouette one pixel.
-                Check(disagreement < (width+height)*4, "D3D9/D3D11 silhouette parity");
+                // Backend projection accounts for D3D9's pixel centers; allow only tiny rounding differences.
+                Check(disagreement < (width+height)/10, "D3D9/D3D11 silhouette parity");
                 if (pose == 0)
                 {
                     HardwareTransformPatch_SSourceVertex nearerVertices[289];
@@ -297,6 +303,7 @@ int main()
                 legacy.Present(); modern.Present();
             }
             TextureChecks(screen,legacy,modern,terrain);
+            SplatChecks(screen,legacy,modern,terrain);
             patch.Clear(); Check(lifetime.expired(), "patch releases geometry");
             CTerrainPatch::SOFTWARE_TRANSFORM_PATCH_ENABLE = oldSoftware;
             terrainRenderer = nullptr;

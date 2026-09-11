@@ -67,6 +67,10 @@ public:
                           << " textured_draws=" << m_terrain->TexturedDrawCount() << " textures=" << m_terrain->LiveTextureCount()
                           << " uploads=" << m_terrain->TextureUploadCount() << " size=" << size[0] << 'x' << size[1]
                           << " mips=" << size[2] << std::endl;
+            m_diagnostics << "splat_draws=" << m_terrain->SplatDrawCount()
+                          << " color_textures=" << m_terrain->LiveTextureCount()-m_terrain->LiveAlphaCount()
+                          << " alpha_textures=" << m_terrain->LiveAlphaCount()
+                          << " layer_materials=" << m_terrain->LiveMaterialCount() << std::endl;
         }
         if (visible) m_backend.Present();
         if (visible != m_visible)

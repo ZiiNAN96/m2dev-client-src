@@ -2,6 +2,7 @@
 #include "EterLib/TerrainTextureLoader.h"
 #include "EterImageLib/DDSTextureLoader9.h"
 #include "TerrainTextureFixtures.h"
+#include "GameLib/TerrainAlphaImage.h"
 #include <iostream>
 #include <stdexcept>
 
@@ -25,6 +26,12 @@ public:
         return std::make_shared<Renderer::TerrainTexture>();
     }
     void ReleaseTexture(Renderer::TerrainTexturePtr& p) override { p.reset(); }
+    Renderer::TerrainSplatMaterialPtr CreateSplatMaterial(const Renderer::TerrainTexturePtr&,const Renderer::TerrainTexturePtr&) override { return {}; }
+    void ReleaseSplatMaterial(Renderer::TerrainSplatMaterialPtr& p) override { p.reset(); }
+    void SetSplatVertices(const Renderer::TerrainSplatVertex*,uint32_t) override {}
+    void DrawSplat(const Renderer::TerrainBufferPtr&,const Renderer::TerrainBufferPtr&,uint32_t,bool,
+                   const Renderer::TerrainSplatMaterialPtr&,const Renderer::TerrainSplatParameters&) override {}
+    void DrawTerrainSolid(const Renderer::TerrainBufferPtr&,const Renderer::TerrainBufferPtr&,uint32_t,bool,const std::array<float,4>&) override {}
     Renderer::TerrainBufferPtr UploadVertices(const void*,uint32_t,uint32_t) override { return {}; }
     Renderer::TerrainBufferPtr UploadIndices(const uint16_t*,uint32_t) override { return {}; }
     void BeginTerrain(const Renderer::TerrainMatrices&,bool,const std::array<float,16>*) override {}
@@ -35,6 +42,25 @@ int main()
     try
     {
         UploadProbe probe;
+        TerrainAlphaImage alpha;
+        for(bool fourBit:{false,true}) for(uint32_t mip=0;mip<5;++mip)
+        {
+            const uint32_t size=256u>>mip, stride=size*(fourBit ? 2 : 4)+16;
+            std::vector<uint8_t> packed(size*stride,0);
+            for(uint32_t y=0;y<size;++y) for(uint32_t x=0;x<size;++x)
+                packed[y*stride+x*(fourBit ? 2 : 4)+(fourBit ? 1 : 3)]=uint8_t(x+y);
+            alpha.Capture(mip,packed.data(),size,stride,fourBit);
+            for(uint32_t y=0;y<size;++y) for(uint32_t x=0;x<size;++x)
+                Check(alpha.Mip(mip)[y*size+x]==(fourBit ? (uint8_t(x+y)>>4)*17 : uint8_t(x+y)),"alpha pitch/channel/quantization");
+        }
+        const auto retained=alpha.Mip(0);
+        alpha.Capture(5,nullptr,0,0,false);
+        alpha.Capture(0,nullptr,256,1024,false);
+        alpha.Capture(0,retained.data(),256,255,false);
+        Check(alpha.Mip(0)==retained,"invalid alpha captures ignored safely");
+        alpha.Clear();
+        for(uint32_t mip=0;mip<5;++mip) Check(alpha.Mip(mip).empty(),"alpha CPU storage released");
+        std::cout<<"Alpha capture: five mips / padded pitch / A8+A4 / bounds / release PASS\n";
         auto dds=TerrainFixture::DDS(7,5,3);
         DirectX::DDS2DView view;
         Check(SUCCEEDED(DirectX::GetDDS2DView(dds.data(),dds.size(),view)),"DDS CPU view");

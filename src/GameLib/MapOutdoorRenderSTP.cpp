@@ -171,7 +171,20 @@ void CMapOutdoor::__SoftwareTransformPatch_RenderPatchSplat(SoftwareTransformPat
 	
 	if (!__SoftwareTransformPatch_SetSplatStream(akTransVertex))
 		return;
-	SubmitTerrainGeometry(patchnum);
+	if(Renderer::terrainRenderer)
+	{
+		std::array<Renderer::TerrainSplatVertex,CTerrainPatch::TERRAIN_VERTEX_COUNT> attributes;
+		for(size_t i=0;i<attributes.size();++i)
+		{
+			const auto& source=akTransVertex[i];
+			const D3DXCOLOR color(source.dwDiffuse);
+			attributes[i].diffuse={color.r,color.g,color.b,color.a};
+			attributes[i].fog=float(source.dwFog>>24)/255.0f;
+			attributes[i].colorUV={source.kTexTile.x,source.kTexTile.y};
+			attributes[i].alphaUV={source.kTexAlpha.x,source.kTexAlpha.y};
+		}
+		Renderer::terrainRenderer->SetSplatVertices(attributes.data(),attributes.size());
+	}
 	
 	if (isFogEnable)
 	{
@@ -206,6 +219,7 @@ void CMapOutdoor::__SoftwareTransformPatch_RenderPatchSplat(SoftwareTransformPat
 			STATEMANAGER.SetTextureStageState(1, D3DTSS_ALPHAOP,   D3DTOP_SELECTARG2);
 			STATEMANAGER.SetTexture(0, rTexture.pd3dTexture);
 			STATEMANAGER.SetTexture(1, rSplat.pd3dTexture);
+			SubmitTerrainSplat(patchnum,pTerrain,j);
 			STATEMANAGER.DrawIndexedPrimitive(ePrimitiveType, 0, m_iPatchTerrainVertexCount, 0, wPrimitiveCount);
 			STATEMANAGER.SetTextureStageState(1, D3DTSS_ALPHAOP,   D3DTOP_SELECTARG1);
 			isFirst=false;
@@ -214,6 +228,7 @@ void CMapOutdoor::__SoftwareTransformPatch_RenderPatchSplat(SoftwareTransformPat
 		{
 			STATEMANAGER.SetTexture(0, rTexture.pd3dTexture);
 			STATEMANAGER.SetTexture(1, rSplat.pd3dTexture);
+			SubmitTerrainSplat(patchnum,pTerrain,j);
 			STATEMANAGER.DrawIndexedPrimitive(ePrimitiveType, 0, m_iPatchTerrainVertexCount, 0, wPrimitiveCount);			
 		}
 		

@@ -4,6 +4,7 @@ class CMapOutdoor;
 
 #include "PRTerrainLib/Terrain.h"
 #include "TerrainPatch.h"
+#include "TerrainAlphaImage.h"
 
 class CTerrain : public CTerrainImpl, public CGraphicBase
 {
@@ -100,9 +101,12 @@ class CTerrain : public CTerrainImpl, public CGraphicBase
 
 		CMapOutdoor *	GetOwner() { return m_pOwnerOutdoorMap; }
 		void			RAW_GenerateSplat(bool bBGLoading = false);
+		Renderer::TerrainSplatMaterialPtr GetSplatMaterial(uint32_t layer, const Renderer::TerrainTexturePtr& color)
+		{ return layer<MAXTERRAINTEXTURES ? m_rendererAlpha[layer].Material(color) : Renderer::TerrainSplatMaterialPtr{}; }
 
 	protected:
 		bool	Initialize();
+		std::array<TerrainAlphaImage,MAXTERRAINTEXTURES> m_rendererAlpha;
 		void	RAW_AllocateSplats(bool bBGLoading = false);
 		void	RAW_DeallocateSplats(bool bBGLoading = false);
 		virtual void RAW_CountTiles();

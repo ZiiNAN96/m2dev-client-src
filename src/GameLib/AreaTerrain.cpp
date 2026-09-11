@@ -47,6 +47,7 @@ void CTerrain::SetMapOutDoor(CMapOutdoor * pOwnerOutdoorMap)
 
 void CTerrain::Clear()
 {
+	for(auto& alpha:m_rendererAlpha) alpha.Clear();
 	DeallocateMarkedSplats();
 	CTerrainImpl::Clear();
   	Initialize();
@@ -567,6 +568,7 @@ bool CTerrain::GetWaterHeight(WORD wCoordX, WORD wCoordY, long * plWaterHeight)
 
 void CTerrain::RAW_DeallocateSplats(bool bBGLoading)
 {
+	for(auto& alpha:m_rendererAlpha) alpha.Clear();
 	for (DWORD i = 1; i < GetTextureSet()->GetTextureCount(); ++i)
 	{
 		TTerainSplat & rSplat = m_TerrainSplatPatch.Splats[i];
@@ -674,6 +676,7 @@ void CTerrain::RAW_GenerateSplat(bool bBGLoading)
 		
 		if (rSplat.NeedsUpdate)
 		{
+			m_rendererAlpha[i].Clear();
 			if (m_TerrainSplatPatch.TileCount[i] > 0)
 			{
 				if (rSplat.Active)   // We already have an alpha map which needs to be updated
@@ -838,6 +841,8 @@ LPDIRECT3DTEXTURE9 CTerrain::AddTexture32(BYTE byImageNum, BYTE * pbyImage, long
 		else
 			PutImage16(abResizeImage, (BYTE*) d3dlr.pBits, 256, d3dlr.Pitch, 256, 256, bResizedAndSuccess);
 
+		if(Renderer::terrainRenderer)
+			m_rendererAlpha[byImageNum].Capture(0,d3dlr.pBits,256,d3dlr.Pitch,!ms_bSupportDXT);
 		pkTex->UnlockRect(0);
 	}
 
@@ -875,6 +880,8 @@ LPDIRECT3DTEXTURE9 CTerrain::AddTexture32(BYTE byImageNum, BYTE * pbyImage, long
 		else
 			PutImage16(pbDstBuffer, (BYTE*) d3dlr.pBits, uDstSize, d3dlr.Pitch, uDstSize, uDstSize, bResizedAndSuccess);
 
+		if(Renderer::terrainRenderer)
+			m_rendererAlpha[byImageNum].Capture(uMipMapLevel,d3dlr.pBits,uDstSize,d3dlr.Pitch,!ms_bSupportDXT);
 		hr = pkTex->UnlockRect(uMipMapLevel);
 		
 		std::swap(pbSrcBuffer, pbDstBuffer);

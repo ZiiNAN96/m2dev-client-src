@@ -396,12 +396,15 @@ bool CMapOutdoor::LoadSetting(const char * c_szFileName)
 	CTerrain::SetTextureSet(&m_TextureSet);
 	if (Renderer::terrainRenderer)
 	{
-		// M3A: one real map texture everywhere, not a first-layer/splat selection.
-		Renderer::terrainRenderer->ReleaseTexture(m_terrainTexture);
-		const auto& singleTexture = m_TextureSet.GetTexture(1);
-		m_terrainTexture = LoadTerrainTextureFile(singleTexture.stFilename.c_str(), *Renderer::terrainRenderer);
-		if (!m_terrainTexture)
+		for(auto& texture:m_terrainTextures) Renderer::terrainRenderer->ReleaseTexture(texture);
+		m_terrainTextures.clear();
+		if(m_TextureSet.GetTextureCount()>MAXTERRAINTEXTURES)
+		{
+			Renderer::terrainRenderer->UploadTexture({});
 			return false;
+		}
+		// Existing layer selection triggers one load per actually used map color.
+		m_terrainTextures.resize(m_TextureSet.GetTextureCount());
 	}
 	
 	if (stTokenVectorMap.end() != stTokenVectorMap.find("environment"))
