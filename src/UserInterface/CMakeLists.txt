@@ -9,6 +9,7 @@ set_target_properties(UserInterface PROPERTIES LINK_FLAGS "/level='requireAdmini
 )
 
 target_link_libraries(UserInterface 
+	M2RendererBootstrap
 	AudioLib
 	Discord
 	EffectLib 
@@ -43,6 +44,7 @@ target_link_libraries(UserInterface
 	ddraw
 	version
 	Dbghelp
+	shell32
 )
 
 GroupSourcesByFolder(UserInterface)

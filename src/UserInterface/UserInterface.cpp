@@ -4,6 +4,8 @@
 #include "PythonExceptionSender.h"
 #include "resource.h"
 #include "Version.h"
+#include "Renderer/RendererBootstrap.h"
+#include <shellapi.h>
 
 #ifdef _DEBUG
 #include <crtdbg.h>
@@ -225,7 +227,7 @@ bool RunMainScript(CPythonLauncher& pyLauncher, const char* lpCmdLine)
 	return true;
 }
 
-static bool Main(HINSTANCE hInstance, LPSTR lpCmdLine)
+static bool Main(HINSTANCE hInstance, LPSTR lpCmdLine, Renderer::BackendKind backend)
 {
 	DWORD dwRandSeed = (DWORD)time(NULL) ^ GetCurrentProcessId() ^ GetTickCount();
 	srandom(dwRandSeed);
@@ -266,7 +268,7 @@ static bool Main(HINSTANCE hInstance, LPSTR lpCmdLine)
 	// Create game thread pool singleton before CPythonApplication
 	static CGameThreadPool gameThreadPool;
 
-	auto app = new CPythonApplication;
+	auto app = new CPythonApplication(backend);
 	app->Initialize (hInstance);
 	CPythonLauncher pyLauncher;
 
@@ -293,12 +295,34 @@ void __ErrorPythonLibraryIsNotExist()
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
+	Renderer::StartupOptions rendererOptions;
+	int rendererArgc = 0;
+	LPWSTR* rendererArgv = CommandLineToArgvW(GetCommandLineW(), &rendererArgc);
+	if (!rendererArgv)
+		return 2;
+	for (int i = 1; i < rendererArgc; ++i)
+		rendererOptions.ParseArgument(rendererArgv[i]);
+	LocalFree(rendererArgv);
+	if (!rendererOptions.valid)
+	{
+		MessageBoxW(nullptr, L"Use --renderer=legacy-d3d9 or --renderer=diligent-d3d11. Select only one backend.",
+		            L"Invalid renderer selection", MB_OK | MB_ICONERROR);
+		return 2;
+	}
+	if (rendererOptions.smokeTest)
+		return Renderer::RunRendererBootstrap(hInstance, rendererOptions);
+	if (rendererOptions.backend == Renderer::BackendKind::DiligentD3D11 && !Renderer::IsDiligentTerrainAvailable())
+	{
+		MessageBoxW(nullptr, L"This build does not include Diligent D3D11.", L"Renderer unavailable", MB_OK | MB_ICONERROR);
+		return 2;
+	}
+
 	LoadConfig("config/locale.cfg");
 
 	int nArgc = 0;
 	auto szArgv = CommandLineToArgv (lpCmdLine, &nArgc);
 
-	Main (hInstance, lpCmdLine);
+	Main (hInstance, lpCmdLine, rendererOptions.backend);
 	::CoUninitialize();
 
 Clean:

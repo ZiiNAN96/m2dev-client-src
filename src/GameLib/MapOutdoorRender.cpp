@@ -47,6 +47,29 @@ void CMapOutdoor::RenderTerrain()
 	// 거리순 정렬
 	std::sort(m_PatchVector.begin(),m_PatchVector.end());
 
+	if (Renderer::terrainRenderer)
+	{
+		D3DXMATRIX world, view, projection;
+		if (CTerrainPatch::SOFTWARE_TRANSFORM_PATCH_ENABLE)
+			D3DXMatrixIdentity(&world); // STP applies View*Projection to world-space positions.
+		else
+		{
+			world = m_matWorldForCommonUse;
+			world._41 = world._42 = 0.0f; // Same world set by HTP before its patch loop.
+		}
+		STATEMANAGER.GetTransform(D3DTS_VIEW, &view);
+		STATEMANAGER.GetTransform(D3DTS_PROJECTION, &projection);
+		Renderer::TerrainMatrices matrices;
+		memcpy(matrices.world.data(), &world, sizeof(world));
+		memcpy(matrices.view.data(), &view, sizeof(view));
+		memcpy(matrices.projection.data(), &projection, sizeof(projection));
+		const bool statesMatch = STATEMANAGER.GetRenderState(D3DRS_CULLMODE) == D3DCULL_CW &&
+			STATEMANAGER.GetRenderState(D3DRS_ZENABLE) == TRUE &&
+			STATEMANAGER.GetRenderState(D3DRS_ZWRITEENABLE) == TRUE &&
+			STATEMANAGER.GetRenderState(D3DRS_ZFUNC) == D3DCMP_LESSEQUAL;
+		Renderer::terrainRenderer->BeginTerrain(matrices, statesMatch);
+	}
+
 	// 그리기 위한 벡터 세팅
 	if (CTerrainPatch::SOFTWARE_TRANSFORM_PATCH_ENABLE)
 		__RenderTerrain_RenderSoftwareTransformPatch();
@@ -649,6 +672,7 @@ void CMapOutdoor::RenderPCBlocker()
 
 void CMapOutdoor::SelectIndexBuffer(BYTE byLODLevel, WORD * pwPrimitiveCount, D3DPRIMITIVETYPE * pePrimitiveType)
 {
+	m_terrainGeometryLOD = byLODLevel;
 	if (0 == byLODLevel)
 	{
 		*pwPrimitiveCount = m_wNumIndices[byLODLevel] - 2;
@@ -660,6 +684,13 @@ void CMapOutdoor::SelectIndexBuffer(BYTE byLODLevel, WORD * pwPrimitiveCount, D3
 		*pePrimitiveType = D3DPT_TRIANGLELIST;
 	}
 	STATEMANAGER.SetIndices(m_IndexBuffer[byLODLevel].GetD3DIndexBuffer(), 0);
+}
+
+void CMapOutdoor::SubmitTerrainGeometry(long patchnum)
+{
+	if (Renderer::terrainRenderer)
+		Renderer::terrainRenderer->DrawTerrain(m_pTerrainPatchProxyList[patchnum].GetTerrainGeometry(),
+			m_terrainIndices[m_terrainGeometryLOD], m_wNumIndices[m_terrainGeometryLOD], m_terrainGeometryLOD == 0);
 }
 
 void CMapOutdoor::SetPatchDrawVector()

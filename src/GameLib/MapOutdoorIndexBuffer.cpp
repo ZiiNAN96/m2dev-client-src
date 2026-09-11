@@ -129,6 +129,8 @@ void CMapOutdoor::SetIndexBuffer()
 	for (uci = 0; uci < TERRAINPATCH_LODMAX; ++uci)
 	{
 		m_wNumIndices[uci] = count[uci];
+		if (Renderer::terrainRenderer)
+			m_terrainIndices[uci] = Renderer::terrainRenderer->UploadIndices(m_pwaIndices[uci], count[uci]);
 		if( !m_IndexBuffer[uci].Lock((void **) &pIndices) )
 			TraceError("CMapOutdoor::SetIndexBuffer() IndexBuffer Unlock Error");
 		memcpy(pIndices, m_pwaIndices[uci], count[uci] * sizeof(WORD));

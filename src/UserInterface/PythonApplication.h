@@ -4,6 +4,10 @@
 #include "eterLib/Input.h"
 #include "eterLib/Profiler.h"
 #include "eterLib/GrpDevice.h"
+#include "Renderer/IRenderBackend.h"
+#include "Renderer/StartupOptions.h"
+#include "Renderer/TerrainPresentation.h"
+#include <memory>
 #include "eterLib/NetDevice.h"
 #include "eterLib/GrpLightManager.h"
 #include "eterLib/GameThreadPool.h"
@@ -124,7 +128,7 @@ class CPythonApplication : public CMSApplication, public CInputKeyboard, public 
 		};
 
 	public:
-		CPythonApplication();
+		explicit CPythonApplication(Renderer::BackendKind backend = Renderer::BackendKind::LegacyD3D9);
 		virtual ~CPythonApplication();
 
 	public:
@@ -350,6 +354,9 @@ class CPythonApplication : public CMSApplication, public CInputKeyboard, public 
 		CAccountConnector			m_kAccountConnector;
 
 		CGraphicDevice				m_grpDevice;
+		std::unique_ptr<Renderer::IRenderBackend> m_renderBackend;
+		const Renderer::BackendKind m_startupBackend;
+		std::unique_ptr<Renderer::ITerrainPresentation> m_terrainPresentation;
 		CNetworkDevice				m_netDevice;
 
 		CPythonSystem				m_pySystem;

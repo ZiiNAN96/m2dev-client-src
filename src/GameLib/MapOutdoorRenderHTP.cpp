@@ -291,6 +291,7 @@ void CMapOutdoor::__HardwareTransformPatch_RenderPatchSplat(long patchnum, WORD 
 	STATEMANAGER.SetRenderState(D3DRS_LIGHTING, FALSE);
 
 	int iPrevRenderedSplatNum=m_iRenderedSplatNum;
+	SubmitTerrainGeometry(patchnum);
 	bool isFirst=true;
 	for (DWORD j = 1; j < pTerrain->GetNumTextures(); ++j)
 	{
@@ -439,4 +440,5 @@ void CMapOutdoor::__HardwareTransformPatch_RenderPatchNone(long patchnum, WORD w
 
 	STATEMANAGER.SetStreamSource(0, pkVB->GetD3DVertexBuffer(), m_iPatchTerrainVertexSize);
 	STATEMANAGER.DrawIndexedPrimitive(ePrimitiveType, 0, m_iPatchTerrainVertexCount, 0, wPrimitiveCount);
+	SubmitTerrainGeometry(patchnum);
 }

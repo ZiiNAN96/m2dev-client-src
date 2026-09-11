@@ -11,6 +11,7 @@
 
 #include "EterLib/GrpVertexBuffer.h"
 #include "PRTerrainLib/Terrain.h"
+#include "Renderer/TerrainRenderData.h"
 
 #pragma pack(push)
 #pragma pack(1)
@@ -51,6 +52,7 @@ public:
 	};
 
 	static bool SOFTWARE_TRANSFORM_PATCH_ENABLE;
+	Renderer::TerrainBufferPtr terrainGeometry;
 	
 public:
 	CTerrainPatch()									{ Clear(); }
@@ -177,6 +179,7 @@ public:
 	void SetTerrainNum(BYTE byTerrainNum)											{ m_byTerrainNum = byTerrainNum; }
 
 	void SetTerrainPatch(CTerrainPatch * pTerrainPatch)								{ m_pTerrainPatch = pTerrainPatch;}
+	Renderer::TerrainBufferPtr GetTerrainGeometry() const { return m_pTerrainPatch ? m_pTerrainPatch->terrainGeometry : nullptr; }
 
 	bool isWaterExists();
 

@@ -171,6 +171,7 @@ void CMapOutdoor::__SoftwareTransformPatch_RenderPatchSplat(SoftwareTransformPat
 	
 	if (!__SoftwareTransformPatch_SetSplatStream(akTransVertex))
 		return;
+	SubmitTerrainGeometry(patchnum);
 	
 	if (isFogEnable)
 	{
@@ -335,6 +336,7 @@ void CMapOutdoor::__SoftwareTransformPatch_RenderPatchNone(SoftwareTransformPatc
 
 	STATEMANAGER.SetStreamSource(0, pkVB, sizeof(SoftwareTransformPatch_STVertex));
 	STATEMANAGER.DrawIndexedPrimitive(ePrimitiveType, 0, m_iPatchTerrainVertexCount, 0, wPrimitiveCount);
+	SubmitTerrainGeometry(patchnum);
 	ms_faceCount += wPrimitiveCount;
 }
 

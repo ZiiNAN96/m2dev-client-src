@@ -362,7 +362,10 @@ void CMapOutdoor::DestroyTerrainPatchProxyList()
 	}
 
 	for (int i = 0; i < TERRAINPATCH_LODMAX; ++i)
+	{
+		m_terrainIndices[i].reset();
 		m_IndexBuffer[i].Destroy();
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////

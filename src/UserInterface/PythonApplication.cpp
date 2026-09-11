@@ -7,6 +7,7 @@
 
 #include "resource.h"
 #include "PythonApplication.h"
+#include "EterLib/LegacyD3D9Backend.h"
 #include "PythonCharacterManager.h"
 
 #include "ProcessScanner.h"
@@ -25,7 +26,8 @@ float c_fDefaultCameraRotateSpeed = 1.5f;
 float c_fDefaultCameraPitchSpeed = 1.5f;
 float c_fDefaultCameraZoomSpeed = 0.05f;
 
-CPythonApplication::CPythonApplication() :
+CPythonApplication::CPythonApplication(Renderer::BackendKind backend) :
+m_startupBackend(backend),
 m_bCursorVisible(TRUE),
 m_bLiarCursorOn(false),
 m_iCursorMode(CURSOR_MODE_HARDWARE),
@@ -455,27 +457,39 @@ bool CPythonApplication::Process()
 		{
 			// RestoreLostDevice
 			CCullingManager::Instance().Update();
-			if (m_pyGraphic.Begin()) [[likely]] {
+			if (m_renderBackend && m_renderBackend->BeginFrame()) [[likely]] {
 
-				m_pyGraphic.ClearDepthBuffer();
+				m_renderBackend->Clear({});
 
 #ifdef _DEBUG
-				m_pyGraphic.SetClearColor(0.3f, 0.3f, 0.3f);
-				m_pyGraphic.Clear();
+				m_renderBackend->Clear({true, Renderer::ClearColor{0.3f, 0.3f, 0.3f, 1.0f}});
 #endif
 
 				/////////////////////
 				// Interface
+				if (m_terrainPresentation && !m_terrainPresentation->BeginFrame())
+				{
+					TraceError("Diligent terrain BeginFrame failed");
+					m_renderBackend->EndFrame();
+					PostQuitMessage(1);
+					return false;
+				}
 				m_pyGraphic.SetInterfaceRenderState();
 
 				OnUIRender();
 				OnMouseRender();
 				/////////////////////
 
-				m_pyGraphic.End();
+				m_renderBackend->EndFrame();
 
 				//DWORD t1 = ELTimer_GetMSec();
-				m_pyGraphic.Show();
+				m_renderBackend->Present();
+				if (m_terrainPresentation && !m_terrainPresentation->Present())
+				{
+					TraceError("Diligent terrain rendering failed (resource, camera or legacy state mismatch)");
+					PostQuitMessage(1);
+					return false;
+				}
 				//DWORD t2 = ELTimer_GetMSec();
 
 				DWORD dwRenderEndTime = ELTimer_GetMSec();
@@ -595,8 +609,14 @@ bool CPythonApplication::CreateDevice(int width, int height, int Windowed, int b
 {
 	int iRet;
 
-	m_grpDevice.InitBackBufferCount(2);
-	iRet = m_grpDevice.Create(GetWindowHandle(), width, height, Windowed ? true : false, bit, frequency);
+	// Unported game resources and login still require the existing compatibility device.
+	if (m_renderBackend)
+		return false;
+	auto backend = std::make_unique<Renderer::LegacyD3D9Backend>(m_grpDevice, m_pyGraphic);
+	backend->Initialize({GetWindowHandle(), static_cast<uint32_t>(width), static_cast<uint32_t>(height),
+	                     Windowed != 0, bit, frequency});
+	iRet = backend->GetCreateResult();
+	m_renderBackend = std::move(backend);
 
 	switch (iRet)
 	{
@@ -889,6 +909,21 @@ bool CPythonApplication::Create(PyObject * poSelf, const char * c_szName, int wi
 		if (!CreateDevice(m_pySystem.GetWidth(), m_pySystem.GetHeight(), Windowed, m_pySystem.GetBPP(), m_pySystem.GetFrequency()))
 			return false;
 
+		if (m_startupBackend == Renderer::BackendKind::DiligentD3D11)
+		{
+			if (!Windowed || m_isWindowFullScreenEnable)
+			{
+				PyErr_SetString(PyExc_RuntimeError, "Diligent terrain milestone requires windowed mode");
+				return false;
+			}
+			m_terrainPresentation = Renderer::CreateTerrainPresentation(GetWindowHandle(), m_pySystem.GetWidth(), m_pySystem.GetHeight());
+			if (!m_terrainPresentation)
+			{
+				PyErr_SetString(PyExc_RuntimeError, "Diligent terrain initialization failed");
+				return false;
+			}
+		}
+
 		GrannyCreateSharedDeformBuffer();
 
 		if (m_pySystem.IsAutoTiling())
@@ -1125,7 +1160,12 @@ void CPythonApplication::Destroy()
 	CGrannyModelInstance::DestroySystem();
 	CGraphicImageInstance::DestroySystem();
 
-	m_grpDevice.Destroy();
+	m_terrainPresentation.reset();
+	if (m_renderBackend)
+	{
+		m_renderBackend->Shutdown();
+		m_renderBackend.reset();
+	}
 
 	//CSpeedTreeForestDirectX::Instance().Clear();
 

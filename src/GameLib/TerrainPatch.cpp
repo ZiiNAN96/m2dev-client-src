@@ -42,6 +42,7 @@ bool CTerrainPatch::SOFTWARE_TRANSFORM_PATCH_ENABLE=TRUE;
 
 void CTerrainPatch::Clear()
 {
+	terrainGeometry.reset();
 	m_kHT.m_kVB.Destroy();
 	m_kST.Destroy();
 	
@@ -80,6 +81,9 @@ void CTerrainPatch::BuildWaterVertexBuffer(SWaterVertex* akSrcVertex, UINT uWate
 		
 void CTerrainPatch::BuildTerrainVertexBuffer(HardwareTransformPatch_SSourceVertex* akSrcVertex)
 {
+	static_assert(sizeof(HardwareTransformPatch_SSourceVertex) == 24);
+	if (Renderer::terrainRenderer)
+		terrainGeometry = Renderer::terrainRenderer->UploadVertices(akSrcVertex, TERRAIN_VERTEX_COUNT, sizeof(*akSrcVertex));
 	if (SOFTWARE_TRANSFORM_PATCH_ENABLE)
 		__BuildSoftwareTerrainVertexBuffer(akSrcVertex);
 	else

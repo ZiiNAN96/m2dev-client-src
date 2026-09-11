@@ -200,6 +200,12 @@ LRESULT CPythonApplication::WindowProcedure(HWND hWnd, UINT uiMsg, WPARAM wParam
 			break;
 
 		case WM_SIZE:
+			if (m_terrainPresentation && !m_terrainPresentation->Resize(
+				wParam == SIZE_MINIMIZED ? 0 : LOWORD(lParam), wParam == SIZE_MINIMIZED ? 0 : HIWORD(lParam)))
+			{
+				TraceError("Diligent terrain resize failed");
+				PostQuitMessage(1);
+			}
 			switch (wParam)
 			{
 				case SIZE_RESTORED:
@@ -210,7 +216,8 @@ LRESULT CPythonApplication::WindowProcedure(HWND hWnd, UINT uiMsg, WPARAM wParam
 				
 						UINT uWidth=rcWnd.right-rcWnd.left; 
 						UINT uHeight=rcWnd.bottom-rcWnd.left; 
-						m_grpDevice.ResizeBackBuffer(uWidth, uHeight);				
+						if (m_renderBackend)
+							m_renderBackend->Resize(uWidth, uHeight);
 					}
 					break;
 			}
@@ -231,7 +238,8 @@ LRESULT CPythonApplication::WindowProcedure(HWND hWnd, UINT uiMsg, WPARAM wParam
 				
 				UINT uWidth=rcWnd.right-rcWnd.left; 
 				UINT uHeight=rcWnd.bottom-rcWnd.left; 
-				m_grpDevice.ResizeBackBuffer(uWidth, uHeight);				
+				if (m_renderBackend)
+					m_renderBackend->Resize(uWidth, uHeight);
 				OnSizeChange(short(LOWORD(lParam)), short(HIWORD(lParam)));
 			}
 			break; 
@@ -246,7 +254,12 @@ LRESULT CPythonApplication::WindowProcedure(HWND hWnd, UINT uiMsg, WPARAM wParam
 					ShowWindow(hWnd, SW_MINIMIZE);
 					return 0;
 				case HTCLOSE:
-					RunPressExitKey();
+					// The experimental terrain surface covers the unported exit menu.
+					// Exit the normal Python loop so mainStream.Destroy closes the game phase.
+					if (m_terrainPresentation)
+						Exit();
+					else
+						RunPressExitKey();
 					return 0;
 				case HTCAPTION:
 					if (!IsUserMovingMainWindow())
@@ -310,6 +323,11 @@ LRESULT CPythonApplication::WindowProcedure(HWND hWnd, UINT uiMsg, WPARAM wParam
 			break;
 
 		case WM_CLOSE:
+			if (m_terrainPresentation)
+			{
+				Exit();
+				return 0;
+			}
 #ifdef _DEBUG
 			PostQuitMessage(0);
 #else	

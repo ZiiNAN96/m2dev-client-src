@@ -200,6 +200,9 @@ class CMapOutdoor : public CMapBase
 		WORD *						m_pwaIndices[TERRAINPATCH_LODMAX];
 
 		CGraphicIndexBuffer			m_IndexBuffer[TERRAINPATCH_LODMAX];
+		Renderer::TerrainBufferPtr m_terrainIndices[TERRAINPATCH_LODMAX];
+		BYTE m_terrainGeometryLOD = 0;
+		void SubmitTerrainGeometry(long patchnum);
 		WORD						m_wNumIndices[TERRAINPATCH_LODMAX];
 		
 		virtual void	DestroyTerrain();
