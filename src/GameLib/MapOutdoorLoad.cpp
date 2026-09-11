@@ -3,6 +3,7 @@
 #include "AreaTerrain.h"
 #include "AreaLoaderThread.h"
 #include "EterLib/ResourceManager.h"
+#include "EterLib/TerrainTextureLoader.h"
 #include "PackLib/PackManager.h"
 
 //CAreaLoaderThread CMapOutdoor::ms_AreaLoaderThread;
@@ -393,6 +394,15 @@ bool CMapOutdoor::LoadSetting(const char * c_szFileName)
 	}
 
 	CTerrain::SetTextureSet(&m_TextureSet);
+	if (Renderer::terrainRenderer)
+	{
+		// M3A: one real map texture everywhere, not a first-layer/splat selection.
+		Renderer::terrainRenderer->ReleaseTexture(m_terrainTexture);
+		const auto& singleTexture = m_TextureSet.GetTexture(1);
+		m_terrainTexture = LoadTerrainTextureFile(singleTexture.stFilename.c_str(), *Renderer::terrainRenderer);
+		if (!m_terrainTexture)
+			return false;
+	}
 	
 	if (stTokenVectorMap.end() != stTokenVectorMap.find("environment"))
 	{

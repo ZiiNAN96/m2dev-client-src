@@ -1,5 +1,9 @@
 # Milestone 2: Diligent-Terrain-Geometrie
 
+Historischer Abschlussstand. Die nachfolgende einzelne Terrain-Textur ist separat
+in [Milestone 3A](renderer-milestone3a.md) dokumentiert; die untenstehenden
+M2-Ergebnisse beziehen sich weiterhin auf den damaligen einfarbigen Renderer.
+
 Stand: 11.09.2026. Source: `C:\Users\ZiiNAN\Documents\GitHub\m2dev-client-src`.
 Basis: vorhandener, noch uncommitteter Milestone 1; HEAD `a7555110828182f20d0a0306aac0552142cf0039`.
 

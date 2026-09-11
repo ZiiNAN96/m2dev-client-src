@@ -201,6 +201,7 @@ class CMapOutdoor : public CMapBase
 
 		CGraphicIndexBuffer			m_IndexBuffer[TERRAINPATCH_LODMAX];
 		Renderer::TerrainBufferPtr m_terrainIndices[TERRAINPATCH_LODMAX];
+		Renderer::TerrainTexturePtr m_terrainTexture;
 		BYTE m_terrainGeometryLOD = 0;
 		void SubmitTerrainGeometry(long patchnum);
 		WORD						m_wNumIndices[TERRAINPATCH_LODMAX];

@@ -61,7 +61,13 @@ public:
         if (m_terrain->Failed()) return false;
         const bool visible = m_terrain->HasTerrain();
         if (m_diagnostics && (++m_frame % 120 == 0 || visible != m_visible))
-            m_diagnostics << "frame=" << m_frame << " terrain=" << visible << " draws=" << m_terrain->DrawCount() << std::endl;
+        {
+            const auto size=m_terrain->LastTextureSize();
+            m_diagnostics << "frame=" << m_frame << " terrain=" << visible << " draws=" << m_terrain->DrawCount()
+                          << " textured_draws=" << m_terrain->TexturedDrawCount() << " textures=" << m_terrain->LiveTextureCount()
+                          << " uploads=" << m_terrain->TextureUploadCount() << " size=" << size[0] << 'x' << size[1]
+                          << " mips=" << size[2] << std::endl;
+        }
         if (visible) m_backend.Present();
         if (visible != m_visible)
         {

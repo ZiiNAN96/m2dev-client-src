@@ -14,7 +14,7 @@ import wndMgr
 
 def run():
     wndMgr.SetScreenSize(systemSetting.GetWidth(), systemSetting.GetHeight())
-    app.Create("Metin2 terrain milestone 2 test", systemSetting.GetWidth(), systemSetting.GetHeight(), 1)
+    app.Create("Metin2 terrain renderer test", systemSetting.GetWidth(), systemSetting.GetHeight(), 1)
     app.SetCameraMaxDistance(30000.0)
     background.Initialize()
     background.LoadMap("metin2_map_a1", 50000.0, 60000.0, 0.0)

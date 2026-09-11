@@ -1098,6 +1098,45 @@ HRESULT DirectX::CreateDDSTextureFromMemory(
     return CreateDDSTextureFromMemoryEx(d3dDevice, ddsData, ddsDataSize, 0u, D3DPOOL_DEFAULT, generateMipsIfMissing, texture);
 }
 
+HRESULT DirectX::GetDDS2DView(const uint8_t* data, size_t size, DDS2DView& result) noexcept
+{
+    result = {};
+    if (!data) return E_POINTER;
+    const DDS_HEADER* header = nullptr;
+    const uint8_t* bits = nullptr;
+    size_t remaining = 0;
+    HRESULT hr = LoadTextureDataFromMemory(data, size, &header, &bits, &remaining);
+    if (FAILED(hr)) return hr;
+    if ((header->flags & DDS_HEADER_FLAGS_VOLUME) || (header->caps2 & DDS_CUBEMAP))
+        return HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED);
+    DDS2DView view;
+    view.width = header->width;
+    view.height = header->height;
+    view.mipCount = header->mipMapCount ? header->mipMapCount : 1;
+    view.format = GetD3D9Format(header->ddspf);
+    if (!view.width || !view.height || view.width > 8192 || view.height > 8192 ||
+        view.mipCount > view.mips.size() || view.format == D3DFMT_UNKNOWN)
+        return E_INVALIDARG;
+    uint32_t maxMips = 1;
+    for (uint32_t extent = std::max(view.width, view.height); extent > 1; extent >>= 1) ++maxMips;
+    if (view.mipCount > maxMips) return E_INVALIDARG;
+    uint32_t width = view.width, height = view.height;
+    for (uint32_t mip = 0; mip < view.mipCount; ++mip)
+    {
+        size_t bytes = 0, pitch = 0, rows = 0;
+        hr = GetSurfaceInfo(width, height, view.format, &bytes, &pitch, &rows);
+        if (FAILED(hr)) return hr;
+        if (!bytes || bytes > remaining) return HRESULT_FROM_WIN32(ERROR_HANDLE_EOF);
+        view.mips[mip] = {bits, bytes, pitch};
+        bits += bytes;
+        remaining -= bytes;
+        width = std::max(1u, width >> 1);
+        height = std::max(1u, height >> 1);
+    }
+    result = view;
+    return S_OK;
+}
+
 _Use_decl_annotations_
 HRESULT DirectX::CreateDDSTextureFromMemoryEx(
     LPDIRECT3DDEVICE9 d3dDevice,

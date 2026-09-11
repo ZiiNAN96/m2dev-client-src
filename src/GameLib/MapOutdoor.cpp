@@ -190,6 +190,10 @@ bool CMapOutdoor::Initialize()
 
 bool CMapOutdoor::Destroy()
 {
+	if (Renderer::terrainRenderer)
+		Renderer::terrainRenderer->ReleaseTexture(m_terrainTexture);
+	else
+		m_terrainTexture.reset();
 	m_bEnableTerrainOnlyForHeight = FALSE;
 	m_bEnablePortal = FALSE;
 

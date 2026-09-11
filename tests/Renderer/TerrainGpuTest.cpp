@@ -9,6 +9,10 @@
 #include "Renderer/DiligentD3D11BackendInternal.h"
 #include "Renderer/DiligentTerrainRenderer.h"
 #include "Renderer/TerrainPresentation.h"
+#include "EterLib/TerrainTextureLoader.h"
+#include "EterImageLib/DDSTextureLoader9.h"
+#include "TerrainTextureFixtures.h"
+#include <wrl/client.h>
 #include <iostream>
 #include <stdexcept>
 #include <vector>
@@ -55,6 +59,12 @@ public:
 class LegacyProbe : public CScreen
 {
 public:
+    static Microsoft::WRL::ComPtr<IDirect3DTexture9> Texture(const std::vector<uint8_t>& dds)
+    {
+        Microsoft::WRL::ComPtr<IDirect3DTexture9> texture;
+        Check(SUCCEEDED(DirectX::CreateDDSTextureFromMemoryEx(ms_lpd3dDevice,dds.data(),dds.size(),0,D3DPOOL_DEFAULT,false,texture.GetAddressOf())),"legacy DDS texture");
+        return texture;
+    }
     Renderer::TerrainMatrices Matrices()
     {
         Renderer::TerrainMatrices result;
@@ -82,6 +92,104 @@ public:
         return pixels;
     }
 };
+
+static void TextureChecks(LegacyProbe& screen, Renderer::LegacyD3D9Backend& legacy,
+                          Renderer::DiligentD3D11Backend& modern, Renderer::DiligentTerrainRenderer& terrain)
+{
+    using namespace Renderer;
+    constexpr uint32_t width=800,height=600;
+    Check(legacy.Resize(width,height) && modern.Resize(width,height),"textured resize");
+    HardwareTransformPatch_SSourceVertex vertices[2][289];
+    CTerrainPatch patches[2];
+    for(int patch=0;patch<2;++patch)
+    {
+        for(int y=0;y<17;++y) for(int x=0;x<17;++x)
+            vertices[patch][y*17+x]={D3DXVECTOR3(float(patch*3200+x*200),float(-y*200),0),D3DXVECTOR3(0,0,1)};
+        patches[patch].BuildTerrainVertexBuffer(vertices[patch]);
+    }
+    const uint16_t indices[]{0,272,16,16,272,288};
+    auto ib=terrain.UploadIndices(indices,6);
+    const uint16_t stripIndices[]{0,272,16,288};
+    auto strip=terrain.UploadIndices(stripIndices,4);
+    auto rgba=TerrainFixture::GradientDDS(), mipped=TerrainFixture::DDS();
+    for(int material=0;material<2;++material)
+    {
+        const auto& bytes=material ? mipped : rgba;
+        auto texture=LoadTerrainTextureMemory(bytes.data(),bytes.size(),terrain);
+        auto legacyTexture=LegacyProbe::Texture(bytes);
+        Check(texture && terrain.LiveTextureCount()==1,"one live texture per map");
+        Check(terrain.LastTextureSize()[2]==(material ? 7u : 1u),"original mip count uploaded");
+        for(int pose=0;pose<4;++pose)
+        {
+            // Real camera; two adjacent patches, offsets and unequal UV scales.
+            screen.SetPositionCamera(3200+pose*150,-1600,0,float(11000+pose*1200),45,float(pose*75));
+            screen.SetPerspective(30,float(width)/height,100,25600);
+            auto matrices=screen.Matrices();
+            D3DXMATRIX transform;
+            D3DXMatrixScaling(&transform,material ? 1.0f/80 : 5.0f/3200,material ? -1.0f/80 : -6.0f/3200,0);
+            transform._41=0.17f; transform._42=-0.23f;
+            std::array<float,16> uv; memcpy(uv.data(),&transform,64);
+            D3DXMATRIX view,inverse,legacyTransform,identity;
+            memcpy(&view,matrices.view.data(),64); D3DXMatrixInverse(&inverse,nullptr,&view);
+            D3DXMatrixMultiply(&legacyTransform,&inverse,&transform); D3DXMatrixIdentity(&identity);
+            Check(legacy.BeginFrame() && modern.BeginFrame(),"textured frame");
+            legacy.Clear({true,ClearColor{0,0,0,1}}); modern.Clear({true,ClearColor{0,0,0,1}});
+            terrain.ResetFrame(); terrain.BeginTerrain(matrices,true,&uv);
+            STATEMANAGER.SetTransform(D3DTS_WORLD,&identity);
+            STATEMANAGER.SetFVF(D3DFVF_XYZ|D3DFVF_NORMAL);
+            STATEMANAGER.SetRenderState(D3DRS_LIGHTING,FALSE);
+            STATEMANAGER.SetRenderState(D3DRS_FOGENABLE,FALSE);
+            STATEMANAGER.SetRenderState(D3DRS_ALPHATESTENABLE,FALSE);
+            STATEMANAGER.SetRenderState(D3DRS_ALPHABLENDENABLE,FALSE);
+            STATEMANAGER.SetTexture(0,legacyTexture.Get());
+            STATEMANAGER.SetTexture(1,nullptr);
+            STATEMANAGER.SetTextureStageState(0,D3DTSS_TEXCOORDINDEX,D3DTSS_TCI_CAMERASPACEPOSITION);
+            STATEMANAGER.SetTextureStageState(0,D3DTSS_TEXTURETRANSFORMFLAGS,D3DTTFF_COUNT2);
+            STATEMANAGER.SetTransform(D3DTS_TEXTURE0,&legacyTransform);
+            STATEMANAGER.SetTextureStageState(0,D3DTSS_COLOROP,D3DTOP_SELECTARG1);
+            STATEMANAGER.SetTextureStageState(0,D3DTSS_COLORARG1,D3DTA_TEXTURE);
+            STATEMANAGER.SetTextureStageState(0,D3DTSS_ALPHAOP,D3DTOP_DISABLE);
+            STATEMANAGER.SetTextureStageState(1,D3DTSS_COLOROP,D3DTOP_DISABLE);
+            STATEMANAGER.SetSamplerState(0,D3DSAMP_MINFILTER,D3DTEXF_LINEAR);
+            STATEMANAGER.SetSamplerState(0,D3DSAMP_MAGFILTER,D3DTEXF_LINEAR);
+            STATEMANAGER.SetSamplerState(0,D3DSAMP_MIPFILTER,D3DTEXF_LINEAR);
+            STATEMANAGER.SetSamplerState(0,D3DSAMP_ADDRESSU,D3DTADDRESS_WRAP);
+            STATEMANAGER.SetSamplerState(0,D3DSAMP_ADDRESSV,D3DTADDRESS_WRAP);
+            for(int patch=0;patch<2;++patch)
+            {
+                terrain.DrawTerrain(patches[patch].terrainGeometry,patch ? ib : strip,patch ? 6 : 4,!patch,texture);
+                STATEMANAGER.DrawIndexedPrimitiveUP(D3DPT_TRIANGLELIST,0,289,2,indices,D3DFMT_INDEX16,vertices[patch],24);
+            }
+            legacy.EndFrame(); modern.EndFrame();
+            const auto d9=LegacyProbe::Read(width,height), d11=BackendTestAccess::Read(modern,false);
+            size_t covered=0,edgeMismatch=0,nonBaseMip=0; double error=0;
+            for(size_t i=0;i<d9.size();++i)
+            {
+                const bool a=(d9[i]&0xffffff)!=0,b=(d11[i]&0xffffff)!=0;
+                edgeMismatch+=(a!=b);
+                if(!a || !b) continue;
+                ++covered;
+                for(int c=0;c<3;++c) error+=std::abs(int((d9[i]>>(16-c*8))&255)-int((d11[i]>>(c*8))&255));
+                if(((d11[i]>>8)&255)>20 || ((d11[i]>>16)&255)>20) ++nonBaseMip;
+            }
+            Check(covered>10000,"textured coverage");
+            const double mean=error/(covered*3);
+            std::cout<<"Texture "<<(material ? "BC1 mips" : "BGRA UV")<<" pose="<<pose<<" mean RGB error="<<mean<<" edge="<<edgeMismatch<<'\n';
+            // Half-pixel differences at wrap boundaries are expected, a flipped or
+            // camera-space-stuck mapping is not. Reference uses legacy texture generation.
+            Check(mean<12 && edgeMismatch<(width+height)*4,"legacy texture/UV/mip parity");
+            if(material) Check(nonBaseMip>covered*9/10,"smaller DDS mips sampled");
+            Check(!terrain.Failed() && terrain.TexturedDrawCount()==2,"single texture patch draws");
+            legacy.Present(); modern.Present();
+        }
+        std::weak_ptr<TerrainTexture> released=texture;
+        terrain.ReleaseTexture(texture);
+        Check(released.expired() && terrain.LiveTextureCount()==0,"map texture/SRB release");
+        STATEMANAGER.SetTexture(0,nullptr);
+    }
+    Check(terrain.TextureUploadCount()==2,"map replacement uploads");
+    std::cout<<"Texture UV / adjacent patches / filtering / original mips / replacement lifetime: PASS\n";
+}
 
 int main()
 {
@@ -188,6 +296,7 @@ int main()
                 std::cout << "pose=" << pose << " covered=" << covered << " edge-differences=" << disagreement << " draws=2 PASS\n";
                 legacy.Present(); modern.Present();
             }
+            TextureChecks(screen,legacy,modern,terrain);
             patch.Clear(); Check(lifetime.expired(), "patch releases geometry");
             CTerrainPatch::SOFTWARE_TRANSFORM_PATCH_ENABLE = oldSoftware;
             terrainRenderer = nullptr;
@@ -206,23 +315,34 @@ int main()
             auto vb=terrainRenderer->UploadVertices(vertices,289,24);
             auto ib=terrainRenderer->UploadIndices(indices,3);
             Check(vb && ib,"presentation geometry");
+            const auto image=TerrainFixture::DDS();
+            auto texture=LoadTerrainTextureMemory(image.data(),image.size(),*terrainRenderer);
+            Check(texture!=nullptr,"presentation texture");
+            std::array<float,16> uv{}; uv[0]=1.0f/640; uv[5]=-1.0f/640;
             for (const auto size : {std::pair{640u,480u},std::pair{800u,600u},std::pair{320u,240u},std::pair{1024u,768u}})
             {
                 Check(presentation->Resize(size.first,size.second),"presentation resize");
                 screen.SetPositionCamera(1600,-1600,0,5000,45,0);
                 screen.SetPerspective(30,float(size.first)/size.second,100,25600);
                 Check(presentation->BeginFrame(),"presentation begin");
-                terrainRenderer->BeginTerrain(screen.Matrices(),true);
-                terrainRenderer->DrawTerrain(vb,ib,3,false);
+                terrainRenderer->BeginTerrain(screen.Matrices(),true,&uv);
+                terrainRenderer->DrawTerrain(vb,ib,3,false,texture);
                 Check(presentation->Present(),"presentation terrain present");
             }
             Check(presentation->Resize(0,0),"presentation minimize");
             Check(presentation->Resize(640,480),"presentation restore");
+            Check(presentation->BeginFrame(),"textured restore begin");
+            terrainRenderer->BeginTerrain(screen.Matrices(),true,&uv);
+            terrainRenderer->DrawTerrain(vb,ib,3,false,texture);
+            Check(presentation->Present(),"textured restore present");
+            std::weak_ptr<TerrainTexture> textureLifetime=texture;
+            terrainRenderer->ReleaseTexture(texture);
+            Check(textureLifetime.expired(),"presentation texture release before shutdown");
             Check(presentation->BeginFrame() && presentation->Present(),"terrain to login transition");
             vb.reset(); ib.reset(); // Map handles must die before the device owner.
             presentation.reset();
             Check(!terrainRenderer,"presentation unbinds terrain bridge");
-            std::cout << "Presentation resize / suspend / resume / shutdown: PASS\n";
+            std::cout << "Textured presentation resize / suspend / resume / shutdown: PASS\n";
         }
         legacy.Shutdown();
     }

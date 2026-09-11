@@ -23,10 +23,22 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <array>
 
 
 namespace DirectX
 {
+    // CPU-only view of the same legacy DDS layout used by the D3D9 loader.
+    // Views borrow the input buffer. No texture allocation, decoding or mip generation.
+    struct DDS2DView
+    {
+        struct Mip { const uint8_t* data = nullptr; size_t size = 0, rowPitch = 0; };
+        uint32_t width = 0, height = 0, mipCount = 0;
+        D3DFORMAT format = D3DFMT_UNKNOWN;
+        std::array<Mip,14> mips{};
+    };
+    HRESULT GetDDS2DView(const uint8_t* data, size_t size, DDS2DView& result) noexcept;
+
     // Standard version
     HRESULT CreateDDSTextureFromMemory(
         _In_ LPDIRECT3DDEVICE9 d3dDevice,
