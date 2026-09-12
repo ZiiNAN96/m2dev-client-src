@@ -56,6 +56,9 @@ public:
                           << " actor_textures=" << m_actors->LiveTextureCount() << std::endl;
             m_diagnostics << "shutdown attachment_geometry=" << m_actors->AttachmentGeometryCount()
                           << " attachment_textures=" << m_actors->AttachmentTextureCount() << std::endl;
+            // ZiiNAN: Diligent mount actor rendering
+            m_diagnostics << "shutdown mount_geometry=" << m_actors->MountGeometryCount()
+                          << " mount_textures=" << m_actors->MountTextureCount() << std::endl;
         }
         actorWorldFrame=false;
         if(actorRenderer==m_actors.get()) actorRenderer=nullptr;
@@ -124,6 +127,12 @@ public:
                           << " hair_draws=" << m_actors->HairDraws()
                           << " attachment_geometry=" << m_actors->AttachmentGeometryCount()
                           << " attachment_textures=" << m_actors->AttachmentTextureCount() << std::endl;
+            // ZiiNAN: Diligent mount actor rendering
+            m_diagnostics << "mounts_visible=" << m_actors->Visible(ActorCategory::Mount)
+                          << " mounted_actors=" << m_actors->Visible(ActorCategory::MountedPlayer)
+                          << " mount_draws=" << m_actors->MountDraws() << " mount_uploads=" << m_actors->MountUploads()
+                          << " mount_geometry=" << m_actors->MountGeometryCount()
+                          << " mount_textures=" << m_actors->MountTextureCount() << std::endl;
         }
         if (visible) m_backend.Present();
         if (visible != m_visible)

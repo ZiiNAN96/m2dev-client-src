@@ -6,13 +6,13 @@
 class ActorGpuAdapter : public Renderer::ITextureUploader
 {
 public:
-    explicit ActorGpuAdapter(Renderer::DiligentD3D11Backend& backend) : actors(backend) {}
+    explicit ActorGpuAdapter(Renderer::DiligentD3D11Backend& backend, Renderer::ActorCategory category = Renderer::ActorCategory::Player) : actors(backend), category(category) {}
     bool Initialize() { return actors.Initialize(); }
     bool Failed() const { return actors.Failed(); }
     Renderer::StaticObjectGeometryPtr UploadGeometry(const Renderer::StaticObjectSource& data)
     {
         source = &data;
-        return actors.CreateGeometry({static_cast<uint32_t>(data.vertices.size()), data.indices});
+        return actors.CreateGeometry({static_cast<uint32_t>(data.vertices.size()), data.indices},Renderer::ActorPart::Body,category);
     }
     Renderer::TerrainTexturePtr UploadTexture(const Renderer::TerrainTextureData& data) override
     { return actors.UploadTexture(data); }
@@ -21,10 +21,13 @@ public:
         const Renderer::TerrainTexturePtr& texture, const Renderer::StaticObjectDraw& draw)
     {
         if (!uploaded) {
-            Check(source && actors.UpdateVertices(geometry, source->vertices), "dynamic actor upload");
+            Check(source && actors.UpdateVertices(geometry, source->vertices,0,category), "dynamic actor upload");
             uploaded = true;
         }
-        actors.Draw(this, geometry, texture, draw);
+        actors.Draw(this, geometry, texture, draw,category);
+        if(category==Renderer::ActorCategory::Mount)
+            Check(actors.Visible(category)==1 && actors.MountUploads()==1 && actors.MountGeometryCount()==1 &&
+                  actors.MountDraws()==actors.DrawCount(),"mount uses the same dynamic/material renderer");
         Check(actors.VisibleActors() == 1 && actors.Uploads() == 1 &&
             actors.VerticesUploaded() == source->vertices.size() &&
             actors.BytesUploaded() == source->vertices.size() * 32 && actors.IndexUploads() == 1,
@@ -36,8 +39,16 @@ public:
     uint32_t LiveTextureCount() const { return actors.LiveTextureCount(); }
 private:
     Renderer::DiligentActorRenderer actors;
+    Renderer::ActorCategory category;
     const Renderer::StaticObjectSource* source = nullptr;
     bool uploaded = false;
+};
+
+// ZiiNAN: Diligent mount actor rendering
+class MountGpuAdapter : public ActorGpuAdapter
+{
+public:
+    explicit MountGpuAdapter(Renderer::DiligentD3D11Backend& backend) : ActorGpuAdapter(backend,Renderer::ActorCategory::Mount) {}
 };
 
 // ZiiNAN: Diligent actor attachment rendering

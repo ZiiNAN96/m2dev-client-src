@@ -311,6 +311,7 @@ int main()
             // ZiiNAN: Dynamic PNT poses, native material parity, depth and lifetime.
             StaticObjectChecks<ActorGpuAdapter>(screen,legacy,modern,terrain);
             StaticObjectChecks<RigidAttachmentGpuAdapter>(screen,legacy,modern,terrain);
+            StaticObjectChecks<MountGpuAdapter>(screen,legacy,modern,terrain);
             ActorLifetimeChecks(screen,modern);
             ActorStateIsolationChecks(modern);
             patch.Clear(); Check(lifetime.expired(), "patch releases geometry");

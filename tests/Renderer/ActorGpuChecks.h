@@ -80,5 +80,44 @@ static void ActorLifetimeChecks(LegacyProbe& screen, Renderer::DiligentD3D11Back
         Check(!actors.AttachmentGeometryCount() && !actors.AttachmentTextureCount() &&
               !actors.LiveGeometryCount() && !actors.LiveTextureCount(),"equipment swap/despawn/map change releases all attachment resources");
     }
+    // ZiiNAN: Diligent mount actor rendering
+    for(int cycle=0;cycle<3;++cycle) {
+        ActorModelSource skinned{3,{0,1,2},3,{}};
+        auto mount=actors.CreateGeometry(skinned,ActorPart::Body,ActorCategory::Mount);
+        auto rider=actors.CreateGeometry(skinned,ActorPart::Body,ActorCategory::MountedPlayer);
+        auto hair=actors.CreateGeometry(skinned,ActorPart::Hair,ActorCategory::MountedPlayer);
+        auto weapon=actors.CreateGeometry(source,ActorPart::Weapon,ActorCategory::MountedPlayer);
+        auto mountTexture=LoadTerrainTextureMemory(image.data(),image.size(),actors);
+        auto riderTexture=LoadTerrainTextureMemory(image.data(),image.size(),actors);
+        actors.TrackMountTexture(mountTexture); actors.TrackMountTexture(mountTexture);
+        actors.TrackAttachmentTexture(riderTexture);
+        Check(mount && rider && hair && weapon && mountTexture && riderTexture,"mount/rider resources created");
+        for(int frame=0;frame<3;++frame) {
+            actors.ResetFrame(); Check(backend.BeginFrame(),"mount/rider frame");
+            Check(actors.UpdateVertices(mount,vertices,3,ActorCategory::Mount) &&
+                  actors.UpdateVertices(rider,vertices,3,ActorCategory::MountedPlayer) &&
+                  actors.UpdateVertices(hair,vertices,3,ActorCategory::MountedPlayer),"native parent then rider/hair uploads");
+            actors.Draw(mount.get(),mount,mountTexture,draw,ActorCategory::Mount);
+            actors.Draw(mount.get(),mount,mountTexture,draw,ActorCategory::Mount);
+            actors.Draw(rider.get(),rider,riderTexture,draw,ActorCategory::MountedPlayer);
+            actors.Draw(rider.get(),weapon,riderTexture,draw,ActorCategory::MountedPlayer,ActorPart::Weapon);
+            actors.Draw(rider.get(),hair,riderTexture,draw,ActorCategory::MountedPlayer,ActorPart::Hair);
+            Check(actors.VisibleActors()==2 && actors.Visible(ActorCategory::Mount)==1 &&
+                  actors.Visible(ActorCategory::MountedPlayer)==1 && actors.Visible(ActorCategory::Player)==1 &&
+                  actors.VisibleAttachments()==2 && actors.MountDraws()==2 && actors.MountUploads()==1 &&
+                  actors.Uploads()==3 && actors.MountGeometryCount()==1 && actors.MountTextureCount()==1,
+                  "mount separate from rider/attachments; one upload despite multiple material groups");
+            backend.EndFrame(); backend.Present();
+        }
+        actors.ResetFrame();
+        Check(!actors.MountDraws() && !actors.MountUploads() && !actors.VisibleActors(),"hidden mount and rider submit nothing");
+        actors.ReleaseBindings(); mount.reset(); mountTexture.reset();
+        Check(!actors.MountGeometryCount() && !actors.MountTextureCount() && actors.LiveGeometryCount()==3,
+              "dismount frees only the mount, not rider attachments");
+        rider.reset(); hair.reset(); weapon.reset(); riderTexture.reset();
+        Check(!actors.LiveGeometryCount() && !actors.LiveTextureCount() && !actors.AttachmentGeometryCount() &&
+              !actors.AttachmentTextureCount() && !actors.Failed(),"mount change/map/shutdown all resources zero");
+    }
+    std::cout<<"Mount/rider/attachments / material groups / hide / dismount / repeated lifetime: PASS\n";
     std::cout<<"Actor per-frame counters / multi-group / hidden / delete / recreate / invalid snapshot / zero lifetime: PASS\n";
 }

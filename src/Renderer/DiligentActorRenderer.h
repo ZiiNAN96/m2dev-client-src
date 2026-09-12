@@ -12,8 +12,8 @@ public:
     bool Initialize() { return m_meshes.Initialize(); }
     bool Failed() const { return m_meshes.Failed(); }
     void ResetFrame();
-    StaticObjectGeometryPtr CreateGeometry(const ActorModelSource&, ActorPart part = ActorPart::Body) override;
-    bool UpdateVertices(const StaticObjectGeometryPtr&, const std::vector<StaticObjectVertex>&, uint32_t deformedCount = 0) override;
+    StaticObjectGeometryPtr CreateGeometry(const ActorModelSource&, ActorPart part = ActorPart::Body, ActorCategory category = ActorCategory::Player) override;
+    bool UpdateVertices(const StaticObjectGeometryPtr&, const std::vector<StaticObjectVertex>&, uint32_t deformedCount = 0, ActorCategory category = ActorCategory::Player) override;
     TerrainTexturePtr UploadTexture(const TerrainTextureData& data) override { return m_meshes.UploadTexture(data); }
     void Draw(const void*, const StaticObjectGeometryPtr&, const TerrainTexturePtr&, const StaticObjectDraw&, ActorCategory category = ActorCategory::Player, ActorPart part = ActorPart::Body) override;
     // ZiiNAN: Diligent actor attachment rendering
@@ -23,6 +23,12 @@ public:
     uint32_t HairDraws() const { return m_partDraws[4]; }
     uint32_t AttachmentGeometryCount() const;
     uint32_t AttachmentTextureCount() const;
+    // ZiiNAN: Diligent mount actor rendering
+    void TrackMountTexture(const TerrainTexturePtr&) override;
+    uint32_t MountGeometryCount() const;
+    uint32_t MountTextureCount() const;
+    uint32_t MountDraws() const { return m_mountDraws; }
+    uint32_t MountUploads() const { return m_mountUploads; }
     void ReleaseBindings() override { m_meshes.ReleaseBindings(); }
     uint32_t VisibleActors() const { return static_cast<uint32_t>(m_actors.size()); }
     // ZiiNAN: Categories count distinct actors, not material draws.
@@ -42,6 +48,9 @@ private:
     std::array<uint32_t,5> m_partDraws{};
     std::vector<std::weak_ptr<StaticObjectGeometry>> m_attachmentGeometry;
     std::vector<std::weak_ptr<TerrainTexture>> m_attachmentTextures;
+    std::vector<std::weak_ptr<StaticObjectGeometry>> m_mountGeometry;
+    std::vector<std::weak_ptr<TerrainTexture>> m_mountTextures;
+    uint32_t m_mountDraws = 0, m_mountUploads = 0;
     uint32_t m_uploads = 0;
     uint64_t m_vertices = 0, m_indexUploads = 0, m_skinnedVertices = 0;
 };

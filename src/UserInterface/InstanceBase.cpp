@@ -10,6 +10,7 @@
 
 #include "EterLib/StateManager.h"
 #include "GameLib/ItemManager.h"
+#include "GameLib/ActorRenderBridge.h" // ZiiNAN: Diligent mount actor rendering
 
 BOOL HAIR_COLOR_ENABLE=FALSE;
 BOOL USE_ARMOR_SPECULAR=FALSE;
@@ -1957,6 +1958,15 @@ void CInstanceBase::Deform()
 
 	++ms_dwDeformCounter;
 
+    // ZiiNAN: Diligent mount actor rendering
+    const auto pair=MakeAnimatedMountPair(m_GraphicThingInstance,m_kHorse.GetActorPtr());
+    Renderer::ActorMountScope mountScope(pair);
+    if(pair) {
+        // Sample the native saddle parent before the rider, exactly one skinning pass each.
+        m_kHorse.Deform();
+        m_GraphicThingInstance.INSTANCEBASE_Deform();
+        return;
+    }
 	m_GraphicThingInstance.INSTANCEBASE_Deform();
 
 	m_kHorse.Deform();
@@ -1981,6 +1991,8 @@ void CInstanceBase::Render()
 
 	++ms_dwRenderCounter;
 
+    // ZiiNAN: Diligent mount actor rendering
+    Renderer::ActorMountScope mountScope(MakeAnimatedMountPair(m_GraphicThingInstance,m_kHorse.GetActorPtr()));
 	m_kHorse.Render();
 	m_GraphicThingInstance.Render();
 

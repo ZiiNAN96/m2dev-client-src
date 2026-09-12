@@ -56,10 +56,10 @@ static void StaticObjectChecks(LegacyProbe& screen,Renderer::LegacyD3D9Backend& 
     auto b5Texture=LoadStaticObjectTextureMemory(b5Bytes.data(),b5Bytes.size(),objects);
     auto legacyAlpha=LegacyProbe::Texture(alphaBytes),legacyB5=LegacyProbe::Texture(b5Bytes);
     Check(alphaTexture && b5Texture,"static alpha and native 16-bit uploads");
-    constexpr bool actorMaterials=std::is_same_v<MeshRenderer,ActorGpuAdapter> || std::is_same_v<MeshRenderer,RigidAttachmentGpuAdapter>;
+    constexpr bool actorMaterials=std::is_base_of_v<ActorGpuAdapter,MeshRenderer> || std::is_same_v<MeshRenderer,RigidAttachmentGpuAdapter>;
     for(int pose=0;pose<(actorMaterials ? 37 : 27);++pose) {
         // ZiiNAN: Distinct completed CPU poses, including normals, on the same VB/IB.
-        if constexpr (std::is_same_v<MeshRenderer,ActorGpuAdapter>) {
+        if constexpr (std::is_base_of_v<ActorGpuAdapter,MeshRenderer>) {
             source.vertices=originalVertices;
             for(size_t i=2;i<source.vertices.size();++i) {
                 auto& p=source.vertices[i];
@@ -263,7 +263,8 @@ static void StaticObjectChecks(LegacyProbe& screen,Renderer::LegacyD3D9Backend& 
             SaveSplatReadback(d11,width,height,true,"object-failure-d3d11");
             std::cout << "center d9=" << std::hex << d9[width*(height/2)+width/2] << " d11=" << d11[width*(height/2)+width/2] << std::dec << '\n';
         }
-        std::cout<<(std::is_same_v<MeshRenderer,ActorGpuAdapter> ? "Dynamic actor pose=" : "Static object pose=")<<pose<<" pixels="<<covered<<" RGB="<<mean<<" edges="<<edges<<" coverage-interior="<<coverageInterior<<" alpha-errors="<<alphaErrors<<" alpha-boundary="<<alphaBoundary<<'\n';
+        std::cout<<(std::is_same_v<MeshRenderer,MountGpuAdapter> ? "Mount actor pose=" :
+            std::is_same_v<MeshRenderer,ActorGpuAdapter> ? "Dynamic actor pose=" : "Static object pose=")<<pose<<" pixels="<<covered<<" RGB="<<mean<<" edges="<<edges<<" coverage-interior="<<coverageInterior<<" alpha-errors="<<alphaErrors<<" alpha-boundary="<<alphaBoundary<<'\n';
         Check(!alphaErrors && alphaBoundary<(width+height)/10,"original object alpha channel");
         // ZiiNAN: Only the new linear-filtered factor-alpha cutout has driver filter-rounding edges.
         // Accept exclusively one-pixel boundaries in BOTH images, never an interior hole/halo.

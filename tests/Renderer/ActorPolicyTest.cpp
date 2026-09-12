@@ -41,5 +41,22 @@ int main()
     if(!rigid.IsRigid()) return 8;
     rigid.deformVertexCount=1; if(rigid.IsRigid()) return 9;
     rigid.deformVertexCount=0; rigid.rigidVertices.pop_back(); if(rigid.IsRigid()) return 10;
+    // ZiiNAN: Diligent mount actor rendering
+    int mount=0,pet=0,otherMount=0;
+    const auto unsupported=ClassifyActor(6,20114);
+    {
+        ActorMountScope pair({&body,&mount});
+        if(actorMountPair.Classify(&mount,unsupported)!=ActorCategory::Mount ||
+           actorMountPair.Classify(&body,ActorCategory::Player)!=ActorCategory::MountedPlayer ||
+           actorMountPair.Classify(&pet,unsupported)!=ActorCategory::Unsupported) return 11;
+        { ActorMountScope nested({&foreign,&otherMount});
+          if(actorMountPair.Classify(&mount,unsupported)!=ActorCategory::Unsupported ||
+             actorMountPair.Classify(&otherMount,unsupported)!=ActorCategory::Mount) return 12; }
+        if(actorMountPair.Classify(&mount,unsupported)!=ActorCategory::Mount) return 13;
+        { ActorMountScope hidden({}); if(actorMountPair.Classify(&mount,unsupported)!=ActorCategory::Unsupported) return 14; }
+    }
+    if(actorMountPair || actorMountPair.Classify(&mount,unsupported)!=ActorCategory::Unsupported ||
+       ActorMountPair{&body,&body} || ActorMountPair{nullptr,&mount}) return 15;
     std::cout<<"Player/NPC/mob / companion exclusion / exact body and attachment parts / nested scopes / rigid contract: PASS\n";
+    std::cout<<"Mount ownership / mounted rider / foreign companion exclusion / nested scope / teardown: PASS\n";
 }

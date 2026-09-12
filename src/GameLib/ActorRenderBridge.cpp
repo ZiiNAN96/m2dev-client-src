@@ -6,13 +6,16 @@
 #include "EterLib/StateManager.h"
 #include <fstream>
 
-// ZiiNAN: Diligent actor attachment rendering
-bool IsDiligentActorCandidate(CActorInstance& actor)
+// ZiiNAN: Diligent mount actor rendering
+static Renderer::ActorCategory RenderCategory(CActorInstance& actor)
 {
     static_assert(CActorInstance::TYPE_PC==6 && CActorInstance::TYPE_NPC==1 && CActorInstance::TYPE_ENEMY==0);
-    return !actor.IsPoly() &&
-        Renderer::ClassifyActor(actor.GetActorType(),actor.GetRace())!=Renderer::ActorCategory::Unsupported;
+    const auto ordinary=actor.IsPoly() ? Renderer::ActorCategory::Unsupported :
+        Renderer::ClassifyActor(actor.GetActorType(),actor.GetRace());
+    return Renderer::actorMountPair.Classify(&actor,ordinary);
 }
+bool IsDiligentActorCandidate(CActorInstance& actor)
+{ return RenderCategory(actor)!=Renderer::ActorCategory::Unsupported; }
 namespace
 {
 using namespace Renderer;
@@ -55,6 +58,7 @@ void Report(CActorInstance& actor, CGrannyModelInstance& instance, const std::st
     auto* thing=actor.GetBaseThingPtr(); const auto& p=actor.GetPosition();
     diagnostics << status << " race=" << actor.GetRace() << " file=" << (thing ? thing->GetFileName() : "unknown")
                 << " vid=" << actor.GetVirtualID() << " part=" << uint32_t(actorDrawTarget.targets.Find(&instance))
+                << " category=" << uint32_t(RenderCategory(actor))
                 << " position=" << p.x << ',' << p.y << ',' << p.z
                 << " vertices=" << instance.GetModel()->GetVertexCount()
                 << " deform_vertices=" << instance.GetModel()->GetDeformVertexCount()
@@ -70,6 +74,19 @@ void Submit(void* context, const void* nativeInstance, ActorPart part, const Act
     if(part!=ActorPart::Body && (!body || !body->GetActorRenderData().ready ||
         body->GetActorRenderData().capturedFrame!=actorFrameSerial)) return;
     auto* model=instance->GetModel(); auto& data=instance->GetActorRenderData();
+    // ZiiNAN: Diligent mount actor rendering
+    const auto category=RenderCategory(actor);
+    if(category==ActorCategory::Mount || category==ActorCategory::MountedPlayer) {
+        for(const auto* member:{actorMountPair.rider,actorMountPair.mount}) {
+            auto* paired=static_cast<CActorInstance*>(const_cast<void*>(member));
+            auto* pairedBody=paired && paired->GetLODControllerCount()>CRaceData::PART_MAIN ?
+                paired->GetLODControllerPointer(CRaceData::PART_MAIN)->GetModelInstance() : nullptr;
+            if(!pairedBody || !paired->isShow() || !pairedBody->GetActorRenderData().ready ||
+                pairedBody->GetActorRenderData().capturedFrame!=actorFrameSerial) {
+                Report(actor,*instance,"excluded: mount pair has no current visible pose"); return;
+            }
+        }
+    }
     const auto& source=model->GetActorSource();
     if(!source) { Report(actor,*instance,"excluded: model outside captured actor PNT contract"); return; }
     if(!data.ready || data.capturedFrame!=actorFrameSerial || (!source->IsRigid() && data.vertices.size()!=source->vertexCount)) {
@@ -90,6 +107,7 @@ void Submit(void* context, const void* nativeInstance, ActorPart part, const Act
         if(!texture) {
             texture=LoadStaticObjectTextureFile(name.c_str(),*actorRenderer);
             if(texture && part!=ActorPart::Body) actorRenderer->TrackAttachmentTexture(texture);
+            if(texture && category==ActorCategory::Mount) actorRenderer->TrackMountTexture(texture);
         }
         return texture;
     };
@@ -108,15 +126,15 @@ void Submit(void* context, const void* nativeInstance, ActorPart part, const Act
     D3DXMatrixTranspose(&normal,&normal); memcpy(draw.normalTransform.data(),&normal,64);
     draw.baseVertex=native.baseVertex+(native.rigid ? source->deformVertexCount : 0);
     draw.vertexCount=native.vertexCount; draw.firstIndex=native.firstIndex; draw.indexCount=native.indexCount;
-    if(!data.geometry) data.geometry=actorRenderer->CreateGeometry(*source,part);
+    if(!data.geometry) data.geometry=actorRenderer->CreateGeometry(*source,part,category);
     if(!data.geometry) { Report(actor,*instance,"ERROR: actor geometry upload"); return; }
     if(!source->IsRigid() && data.uploadedRevision!=data.revision) {
-        if(!actorRenderer->UpdateVertices(data.geometry,data.vertices,source->deformVertexCount)) {
+        if(!actorRenderer->UpdateVertices(data.geometry,data.vertices,source->deformVertexCount,category)) {
             Report(actor,*instance,"ERROR: actor vertex upload"); return;
         }
         data.uploadedRevision=data.revision;
     }
-    actorRenderer->Draw(&actor,data.geometry,texture,draw,ClassifyActor(actor.GetActorType(),actor.GetRace()),part);
+    actorRenderer->Draw(&actor,data.geometry,texture,draw,category,part);
     Report(actor,*instance,part==ActorPart::Body ? "submitted: CPU-skinned main body" :
         source->IsRigid() ? "submitted: rigid attachment" : "submitted: CPU-skinned attachment");
     Report(actor,*instance,"material group="+std::to_string(native.material)+" stage="+std::to_string(uint32_t(draw.actorStage))+
@@ -150,4 +168,11 @@ Renderer::ActorDrawTarget MakeAnimatedActorTarget(CActorInstance& actor)
         Report(actor,*instance,"excluded: actor category outside 5B body scope"); return {};
     }
     return {GetAnimatedActorParts(actor),&actor,Submit};
+}
+Renderer::ActorMountPair MakeAnimatedMountPair(CActorInstance& rider,CActorInstance* mount)
+{
+    using namespace Renderer;
+    if(!actorRenderer || !actorWorldFrame || !mount || mount==&rider || rider.IsPoly() ||
+        ClassifyActor(rider.GetActorType(),rider.GetRace())!=ActorCategory::Player) return {};
+    return {&rider,mount};
 }

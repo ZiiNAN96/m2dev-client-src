@@ -13,8 +13,9 @@ enum
 
 void CActorInstance::INSTANCEBASE_Deform()
 {
-    // ZiiNAN: Diligent actor attachment rendering
-    Renderer::ActorDeformScope actorScope(!m_pkHorse ? GetAnimatedActorParts(*this) : Renderer::ActorInstanceSet{});
+    // ZiiNAN: Diligent mount actor rendering
+    Renderer::ActorDeformScope actorScope(!m_pkHorse || Renderer::actorMountPair.rider==this ?
+        GetAnimatedActorParts(*this) : Renderer::ActorInstanceSet{});
 	Deform();
 	TraceProcess();
 }

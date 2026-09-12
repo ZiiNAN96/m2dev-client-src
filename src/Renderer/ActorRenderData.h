@@ -8,7 +8,7 @@
 namespace Renderer
 {
 // ZiiNAN: Bounded 5B categories; native packets do not distinguish NPC-typed pets.
-enum class ActorCategory : uint32_t { Player, Npc, Mob, Unsupported };
+enum class ActorCategory : uint32_t { Player, Npc, Mob, Mount, MountedPlayer, Unsupported };
 inline ActorCategory ClassifyActor(uint32_t type, uint32_t race)
 {
     if(type==6 && race<8) return ActorCategory::Player;
@@ -48,15 +48,38 @@ struct ActorInstanceData
 class IActorRenderer : public ITextureUploader
 {
 public:
-    virtual StaticObjectGeometryPtr CreateGeometry(const ActorModelSource&, ActorPart part = ActorPart::Body) = 0;
-    virtual bool UpdateVertices(const StaticObjectGeometryPtr&, const std::vector<StaticObjectVertex>&, uint32_t deformedCount = 0) = 0;
+    virtual StaticObjectGeometryPtr CreateGeometry(const ActorModelSource&, ActorPart part = ActorPart::Body, ActorCategory category = ActorCategory::Player) = 0;
+    virtual bool UpdateVertices(const StaticObjectGeometryPtr&, const std::vector<StaticObjectVertex>&, uint32_t deformedCount = 0, ActorCategory category = ActorCategory::Player) = 0;
     virtual void Draw(const void* actor, const StaticObjectGeometryPtr&, const TerrainTexturePtr&, const StaticObjectDraw&, ActorCategory category = ActorCategory::Player, ActorPart part = ActorPart::Body) = 0;
     virtual void TrackAttachmentTexture(const TerrainTexturePtr&) {}
+    virtual void TrackMountTexture(const TerrainTexturePtr&) {}
     virtual void ReleaseBindings() = 0;
 };
 inline IActorRenderer* actorRenderer = nullptr;
 inline bool actorWorldFrame = false;
 inline uint64_t actorFrameSerial = 0; // ZiiNAN: Reject poses not deformed for the current world frame.
+// ZiiNAN: Diligent mount actor rendering
+struct ActorMountPair
+{
+    const void* rider = nullptr;
+    const void* mount = nullptr;
+    explicit operator bool() const { return rider && mount && rider!=mount; }
+    ActorCategory Classify(const void* actor, ActorCategory ordinary) const
+    {
+        if(*this && actor==mount) return ActorCategory::Mount;
+        if(*this && actor==rider && ordinary==ActorCategory::Player) return ActorCategory::MountedPlayer;
+        return ordinary;
+    }
+};
+inline ActorMountPair actorMountPair;
+struct ActorMountScope
+{
+    ActorMountPair previous = actorMountPair;
+    explicit ActorMountScope(ActorMountPair pair) { actorMountPair = pair; }
+    ~ActorMountScope() { actorMountPair = previous; }
+    ActorMountScope(const ActorMountScope&) = delete;
+    ActorMountScope& operator=(const ActorMountScope&) = delete;
+};
 inline ActorInstanceSet actorDeformTargets;
 // ZiiNAN: Diligent actor attachment rendering
 struct ActorNativeDraw
