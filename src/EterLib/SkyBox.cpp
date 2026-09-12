@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "SkyBox.h"
+#include "WorldRenderBridge.h"
 #include "Camera.h"
 #include "StateManager.h"
 #include "ResourceManager.h"
@@ -91,7 +92,10 @@ bool CSkyObjectQuad::Update()
 void CSkyObjectQuad::Render()
 {
 	if (CGraphicBase::SetPDTStream(m_Vertex, 4))
-		STATEMANAGER.DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
+	{
+		const HRESULT nativeDraw=STATEMANAGER.DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
+		WorldRenderBridge::SubmitQuad(m_Vertex,nativeDraw);
+	}
 	//STATEMANAGER.DrawIndexedPrimitiveUP(D3DPT_TRIANGLESTRIP, 0, 4, 2, m_Indices, D3DFMT_INDEX16, &m_Vertex, sizeof(TPDTVertex));
 }
 
@@ -309,6 +313,7 @@ void CSkyBox::SetCloudScrollSpeed(const D3DXVECTOR2 & c_rv2CloudScrollSpeed)
 
 void CSkyBox::Unload()
 {
+	WorldRenderBridge::Release(m_worldResources);
 	TGraphicImageInstanceMap::iterator itor = m_GraphicImageInstanceMap.begin();
 
 	while (itor != m_GraphicImageInstanceMap.end())
@@ -805,6 +810,8 @@ void CSkyBox::Update()
 
 void CSkyBox::Render()
 {
+	// ZiiNAN: Diligent special world rendering; existing gradient/textured faces.
+	WorldRenderScope worldScope(m_worldResources,Renderer::WorldPart::Sky);
 	// 2004.01.25 myevan 처리를 렌더링 후반으로 옮기고, DepthTest 처리
 	STATEMANAGER.SaveRenderState(D3DRS_ZENABLE,	TRUE);
 	STATEMANAGER.SaveRenderState(D3DRS_ZWRITEENABLE, FALSE);
@@ -840,6 +847,7 @@ void CSkyBox::Render()
 				break;
 
 			STATEMANAGER.SetTexture( 0, pFaceImageInstance->GetTextureReference().GetD3DTexture() );
+			WorldRenderBridge::Texture(pFaceImageInstance->GetGraphicImagePointer());
 
 			m_Faces[i].Render();
 		}
@@ -870,6 +878,7 @@ void CSkyBox::Render()
 
 void CSkyBox::RenderCloud()
 {
+	WorldRenderScope worldScope(m_worldResources,Renderer::WorldPart::Cloud);
 	if (m_FaceCloud.m_strfacename.empty())
 		return;
 
@@ -916,6 +925,7 @@ void CSkyBox::RenderCloud()
 	STATEMANAGER.SetTransform(D3DTS_WORLD, &m_matWorldCloud);
 	STATEMANAGER.SaveTransform(D3DTS_PROJECTION, &matProjCloud);
 	STATEMANAGER.SetTexture(0, pCloudGraphicImageInstance->GetTexturePointer()->GetD3DTexture());
+	WorldRenderBridge::Texture(pCloudGraphicImageInstance->GetGraphicImagePointer());
 	m_FaceCloud.Render();
 	STATEMANAGER.RestoreTransform(D3DTS_PROJECTION);
 	

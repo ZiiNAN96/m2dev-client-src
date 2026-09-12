@@ -190,6 +190,11 @@ bool CMapOutdoor::Initialize()
 
 bool CMapOutdoor::Destroy()
 {
+	// ZiiNAN: Release only Diligent environment handles at every native map boundary.
+	m_SkyBox.ReleaseWorldResources();
+	if(Renderer::worldRenderer) Renderer::worldRenderer->ReleaseBindings();
+	m_waterResources.textures.clear();
+	Renderer::waterTexturesResident=0;
 	for(auto& texture:m_terrainTextures)
 		if (Renderer::terrainRenderer) Renderer::terrainRenderer->ReleaseTexture(texture);
 	m_terrainTextures.clear();

@@ -13,6 +13,7 @@
 #include "GrpScreen.h"
 #include "GrpImageInstance.h"
 #include "ColorTransitionHelper.h"
+#include "Renderer/WorldRenderData.h"
 
 #include <map>
 #include <string>
@@ -131,6 +132,7 @@ protected:
 
 	// 스카이 박스 이미지...
 	TGraphicImageInstanceMap m_GraphicImageInstanceMap;
+	Renderer::WorldResources m_worldResources; // ZiiNAN: Native sky/environment lifetime.
 	
 	// Transform...
 	D3DXMATRIX m_matWorld, m_matTranslation;
@@ -159,6 +161,7 @@ public:
 
 	void Destroy();
 	void Unload();
+	void ReleaseWorldResources() { if(Renderer::worldRenderer) Renderer::worldRenderer->ReleaseBindings(); m_worldResources.textures.clear(); }
 
 	void SetSkyBoxScale(const D3DXVECTOR3 & c_rv3Scale);
 	void SetGradientLevel(BYTE byUpper, BYTE byLower);

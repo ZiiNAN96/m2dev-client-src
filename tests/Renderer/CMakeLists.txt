@@ -17,6 +17,11 @@ add_executable(RendererEffectPolicyTest EffectPolicyTest.cpp)
 target_link_libraries(RendererEffectPolicyTest PRIVATE M2RendererInterface)
 add_test(NAME Renderer.EffectPolicy COMMAND RendererEffectPolicyTest)
 
+# ZiiNAN: Water/world ownership and default gate are tested with Diligent ON and OFF.
+add_executable(RendererWorldPolicyTest WorldPolicyTest.cpp)
+target_link_libraries(RendererWorldPolicyTest PRIVATE M2RendererInterface)
+add_test(NAME Renderer.WorldPolicy COMMAND RendererWorldPolicyTest)
+
 # ZiiNAN: Read-only original SpeedTree SDK probe; real asset paths are explicit arguments.
 add_executable(SpeedTreeAssetProbe SpeedTreeAssetProbe.cpp)
 target_link_libraries(SpeedTreeAssetProbe PRIVATE SpeedTree user32)

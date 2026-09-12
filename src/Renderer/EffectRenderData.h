@@ -47,7 +47,7 @@ inline bool EffectDrawValid(const EffectDraw& d,uint32_t count)
     return count>=3 && (d.strip || count%3==0) && d.src>=1 && d.src<=13 && d.dst>=1 && (d.dst<=11 || d.dst==13) &&
         d.blendOp>=1 && d.blendOp<=5 && d.cull<=2 && d.depthFunction>=1 && d.depthFunction<=8 &&
         d.alphaFunction>=1 && d.alphaFunction<=8 && d.alphaReference<=255 && d.fog<=3 &&
-        EffectColorOpSupported(d.colorOp) && EffectColorOpSupported(d.alphaOp) &&
+        (EffectColorOpSupported(d.colorOp) || d.colorOp==20) && EffectColorOpSupported(d.alphaOp) &&
         EffectArgumentSupported(d.colorArg1) && EffectArgumentSupported(d.colorArg2) &&
         EffectArgumentSupported(d.alphaArg1) && EffectArgumentSupported(d.alphaArg2) &&
         (d.textureCoordinates==0 || d.textureCoordinates==0x20000) &&

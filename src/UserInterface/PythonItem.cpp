@@ -6,6 +6,8 @@
 
 #include "pythonitem.h"
 #include "PythonTextTail.h"
+#include "GameLib/StaticObjectBridge.h"
+#include "Renderer/WorldRenderData.h"
 
 const float c_fDropStartHeight = 100.0f;
 const float c_fDropTime = 0.5f;
@@ -23,6 +25,7 @@ void CPythonItem::GetInfo(std::string* pstInfo)
 void CPythonItem::TGroundItemInstance::Clear()
 {
 	stOwnership = "";
+	ReleaseStaticMapObject(&ThingInstance); // ZiiNAN: Ground model lifetime, not its UI label.
 	ThingInstance.Clear();
 	CEffectManager::Instance().DestroyEffectInstance(dwEffectInstanceIndex);
 }
@@ -127,6 +130,8 @@ void CPythonItem::Render()
 		CGraphicThingInstance & rInstance = itor->second->ThingInstance;
 		//rInstance.Update();
 		rInstance.Render();
+		if(Renderer::worldRenderer && Renderer::worldSurfaceFrame)
+			SubmitStaticMapObject(rInstance,StaticMapObjectPass::GroundItem);
 		rInstance.BlendRender();
 	}
 }
@@ -289,6 +294,8 @@ DWORD	CPythonItem::__GetUseSoundType(const CItemData& c_rkItemData)
 
 void CPythonItem::CreateItem(DWORD dwVirtualID, DWORD dwVirtualNumber, float x, float y, float z, bool bDrop)
 {
+	// ZiiNAN: Capture newly loaded rigid drop models using the existing static-object load scope.
+	Renderer::StaticObjectLoadScope groundItemLoad;
 	//CItemManager& rkItemMgr=CItemManager::Instance();
 
 	CItemData * pItemData;

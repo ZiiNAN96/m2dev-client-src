@@ -12,6 +12,7 @@
 #include "EterLib/GrpVertexBuffer.h"
 #include "PRTerrainLib/Terrain.h"
 #include "Renderer/TerrainRenderData.h"
+#include "Renderer/WorldRenderData.h"
 
 #pragma pack(push)
 #pragma pack(1)
@@ -53,6 +54,8 @@ public:
 
 	static bool SOFTWARE_TRANSFORM_PATCH_ENABLE;
 	Renderer::TerrainBufferPtr terrainGeometry;
+	// ZiiNAN: Original water vertices, owned and released by their native terrain patch.
+	Renderer::WaterGeometryPtr waterGeometry;
 	
 public:
 	CTerrainPatch()									{ Clear(); }
@@ -180,6 +183,7 @@ public:
 
 	void SetTerrainPatch(CTerrainPatch * pTerrainPatch)								{ m_pTerrainPatch = pTerrainPatch;}
 	Renderer::TerrainBufferPtr GetTerrainGeometry() const { return m_pTerrainPatch ? m_pTerrainPatch->terrainGeometry : nullptr; }
+	Renderer::WaterGeometryPtr GetWaterGeometry() const { return m_pTerrainPatch ? m_pTerrainPatch->waterGeometry : nullptr; }
 
 	bool isWaterExists();
 

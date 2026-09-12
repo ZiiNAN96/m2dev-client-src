@@ -43,6 +43,7 @@ bool CTerrainPatch::SOFTWARE_TRANSFORM_PATCH_ENABLE=TRUE;
 void CTerrainPatch::Clear()
 {
 	terrainGeometry.reset();
+	waterGeometry.reset();
 	m_kHT.m_kVB.Destroy();
 	m_kST.Destroy();
 	
@@ -74,6 +75,16 @@ void CTerrainPatch::BuildWaterVertexBuffer(SWaterVertex* akSrcVertex, UINT uWate
 		UINT uVBSize=sizeof(SWaterVertex)*uWaterVertexCount;
 		memcpy(akDstWaterVertex, akSrcVertex, uVBSize);
 		m_dwWaterPriCount=uWaterVertexCount/3;
+		// ZiiNAN: Diligent water rendering integration; copy only generated legacy geometry.
+		if(Renderer::worldRenderer) {
+			waterGeometry=std::make_shared<Renderer::WaterGeometry>();
+			waterGeometry->vertices.resize(uWaterVertexCount);
+			for(UINT i=0;i<uWaterVertexCount;++i) {
+				auto& dst=waterGeometry->vertices[i];
+				memcpy(dst.position.data(),akSrcVertex+i,12);
+				memcpy(&dst.color,reinterpret_cast<const BYTE*>(akSrcVertex+i)+12,4);
+			}
+		}
 
 		rkVB.Unlock();		
 	}	

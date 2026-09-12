@@ -12,6 +12,7 @@ public:
     ~DiligentEffectRenderer() override;
     bool Initialize();
     void ResetFrame();
+    void ReleaseBindings();
     void Shutdown();
     bool Failed() const;
     void ReportFailure() override;

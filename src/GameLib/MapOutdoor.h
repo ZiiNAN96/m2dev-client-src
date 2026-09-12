@@ -651,6 +651,8 @@ class CMapOutdoor : public CMapBase
 	protected:
 		float	m_fOpaqueWaterDepth;
 		CGraphicImageInstance m_WaterInstances[30];
+		// ZiiNAN: Diligent water rendering integration; map-local texture ownership.
+		Renderer::WorldResources m_waterResources;
 
 	public:
 		float	GetOpaqueWaterDepth() { return m_fOpaqueWaterDepth;	}

@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "EterLib/StateManager.h"
 #include "EterLib/ResourceManager.h"
+#include "EterLib/WorldRenderBridge.h"
 
 #include "MapOutdoor.h"
 #include "TerrainPatch.h"
@@ -18,12 +19,16 @@ void CMapOutdoor::LoadWaterTexture()
 
 void CMapOutdoor::UnloadWaterTexture()
 {
+	WorldRenderBridge::Release(m_waterResources);
+	Renderer::waterTexturesResident=0;
 	for (int i = 0; i < 30; ++i)
 		m_WaterInstances[i].Destroy();
 }
 
 void CMapOutdoor::RenderWater()
 {
+	// ZiiNAN: Diligent water rendering integration; same native frame, height and material.
+	WorldRenderScope worldScope(m_waterResources,Renderer::WorldPart::Water);
 	if (m_PatchVector.empty())
 		return;
 
@@ -40,7 +45,9 @@ void CMapOutdoor::RenderWater()
 	STATEMANAGER.SaveRenderState(D3DRS_DIFFUSEMATERIALSOURCE, D3DMCS_COLOR1);
 	STATEMANAGER.SaveRenderState(D3DRS_COLORVERTEX, TRUE);
 
-	STATEMANAGER.SetTexture(0, m_WaterInstances[((ELTimer_GetMSec() / 70) % 30)].GetTexturePointer()->GetD3DTexture());
+	const auto waterFrame=(ELTimer_GetMSec()/70)%30;
+	STATEMANAGER.SetTexture(0, m_WaterInstances[waterFrame].GetTexturePointer()->GetD3DTexture());
+	WorldRenderBridge::Texture(m_WaterInstances[waterFrame].GetGraphicImagePointer());
 
 	D3DXMatrixScaling(&matTexTransformWater, m_fWaterTexCoordBase, -m_fWaterTexCoordBase, 0.0f);
 	D3DXMatrixMultiply(&matTexTransformWater, &m_matViewInverse, &matTexTransformWater);
@@ -164,7 +171,13 @@ void CMapOutdoor::DrawWater(long patchnum)
 		return;
 	
 	STATEMANAGER.SetStreamSource(0, pkVB->GetD3DVertexBuffer(), sizeof(SWaterVertex));
-	STATEMANAGER.DrawPrimitive(D3DPT_TRIANGLELIST, 0, uPriCount);
+	const HRESULT nativeDraw=STATEMANAGER.DrawPrimitive(D3DPT_TRIANGLELIST, 0, uPriCount);
+	if(Renderer::worldRenderer && Renderer::worldSurfaceFrame) {
+		auto geometry=rkTerrainPatchProxy.GetWaterGeometry();
+		if(geometry && geometry->vertices.size()==size_t(uPriCount)*3)
+			WorldRenderBridge::Submit(geometry->vertices.data(),UINT(geometry->vertices.size()),false,nativeDraw);
+		else Renderer::worldRenderer->ReportFailure();
+	}
 
 	ms_faceCount += uPriCount;
 }

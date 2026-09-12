@@ -202,6 +202,7 @@ static void TextureChecks(LegacyProbe& screen, Renderer::LegacyD3D9Backend& lega
 #include "TreeGpuChecks.h" // ZiiNAN: Original SpeedTree shader/fixed-function comparison.
 #include "EffectGpuChecks.h" // ZiiNAN: Original effect material/dynamic upload comparison.
 #include "EffectRuntimeGpuChecks.h"
+#include "WorldGpuChecks.h"
 
 int main()
 {
@@ -319,6 +320,7 @@ int main()
             ActorStateIsolationChecks(modern);
             TreeGpuChecks(screen,legacy,modern);
             EffectGpuChecks(legacy,modern);
+            WorldGpuChecks(legacy,modern);
             EffectRuntimeGpuChecks(screen,legacy,modern);
             patch.Clear(); Check(lifetime.expired(), "patch releases geometry");
             CTerrainPatch::SOFTWARE_TRANSFORM_PATCH_ENABLE = oldSoftware;

@@ -5,6 +5,7 @@
 #include "DiligentActorRenderer.h" // ZiiNAN: Same world surface and depth target.
 #include "DiligentTreeRenderer.h" // ZiiNAN: Diligent SpeedTree rendering integration
 #include "DiligentEffectRenderer.h" // ZiiNAN: Diligent effect rendering integration
+#include "DiligentWorldRenderer.h" // ZiiNAN: Diligent water and special world rendering.
 #include <windows.h>
 #include <fstream>
 
@@ -22,6 +23,7 @@ class TerrainPresentation final : public ITerrainPresentation
     std::unique_ptr<DiligentActorRenderer> m_actors; // ZiiNAN: Separate actor resource counters.
     std::unique_ptr<DiligentTreeRenderer> m_trees;
     std::unique_ptr<DiligentEffectRenderer> m_effects;
+    std::unique_ptr<DiligentWorldRenderer> m_world;
     std::ofstream m_diagnostics;
     uint32_t m_frame = 0;
 public:
@@ -45,6 +47,8 @@ public:
         if(!m_trees->Initialize()) return false;
         m_effects=std::make_unique<DiligentEffectRenderer>(m_backend);
         if(!m_effects->Initialize()) return false;
+        m_world=std::make_unique<DiligentWorldRenderer>(m_backend);
+        if(!m_world->Initialize()) return false;
         const LONG_PTR style = GetWindowLongPtrW(parent, GWL_STYLE);
         m_addedClipChildren = !(style & WS_CLIPCHILDREN);
         if (m_addedClipChildren) SetWindowLongPtrW(parent, GWL_STYLE, style | WS_CLIPCHILDREN);
@@ -53,12 +57,21 @@ public:
         actorRenderer=m_actors.get(); // ZiiNAN: Available before original character assets load.
         treeRenderer=m_trees.get();
         effectRenderer=m_effects.get();
+        worldRenderer=m_world.get();
         // Experimental backend only; bounded frame summaries go to a file, never the console.
         m_diagnostics.open("terrain-renderer.log", std::ios::trunc);
         return true;
     }
     ~TerrainPresentation() override
     {
+        worldSurfaceFrame=false;
+        if(worldRenderer==m_world.get()) worldRenderer=nullptr;
+        if(m_world) {
+            m_world->ResetFrame(); m_world->Shutdown();
+            if(m_diagnostics) m_diagnostics << "shutdown water_geometry=" << waterGeometryCount.load()
+                << " world_textures=" << m_world->LiveTextureCount() << " world_buffers=" << m_world->LiveBufferCount() << std::endl;
+        }
+        m_world.reset();
         // ZiiNAN: Effect owners release images before the renderer releases upload/PSO/SRB resources.
         effectWorldFrame=false;
         if(effectRenderer==m_effects.get()) effectRenderer=nullptr;
@@ -112,10 +125,12 @@ public:
         m_actors->ResetFrame(); ++actorFrameSerial; actorWorldFrame=false;
         m_trees->ResetFrame(); treeWorldFrame=false;
         m_effects->ResetFrame(); effectWorldFrame=false; ++effectFrameSerial; effectVisibleParticles=0;
+        m_world->ResetFrame(); worldSurfaceFrame=false; ++worldSurfaceSerial;
         if (!m_backend.BeginFrame()) return false;
         actorWorldFrame=worldWasVisible;
         treeWorldFrame=worldWasVisible;
         effectWorldFrame=worldWasVisible;
+        worldSurfaceFrame=worldWasVisible;
         m_inFrame = true;
         m_backend.Clear({true, ClearColor{0.08f, 0.16f, 0.28f, 1.0f}});
         return !m_terrain->Failed();
@@ -128,11 +143,17 @@ public:
         treeWorldFrame=false;
         m_inFrame = false;
         effectWorldFrame=false;
-        if (m_terrain->Failed() || m_objects->Failed() || m_actors->Failed() || m_trees->Failed() || m_effects->Failed()) return false;
+        worldSurfaceFrame=false;
+        if (m_terrain->Failed() || m_objects->Failed() || m_actors->Failed() || m_trees->Failed() || m_effects->Failed() || m_world->Failed()) return false;
         const bool visible = m_terrain->HasTerrain();
         if (m_diagnostics && (++m_frame % 120 == 0 || visible != m_visible))
         {
             const auto size=m_terrain->LastTextureSize();
+            m_diagnostics << "water_patches=" << m_world->DrawCount(WorldPart::Water)
+                << " water_draws=" << m_world->DrawCount(WorldPart::Water) << " water_vertices=" << m_world->WaterVertices()
+                << " water_indices=0 water_geometry=" << waterGeometryCount.load() << " water_textures=" << waterTexturesResident
+                << " sky_draws=" << m_world->DrawCount(WorldPart::Sky) << " cloud_draws=" << m_world->DrawCount(WorldPart::Cloud)
+                << " world_textures=" << m_world->LiveTextureCount() << std::endl;
             m_diagnostics << "frame=" << m_frame << " terrain=" << visible << " draws=" << m_terrain->DrawCount()
                           << " textured_draws=" << m_terrain->TexturedDrawCount() << " textures=" << m_terrain->LiveTextureCount()
                           << " uploads=" << m_terrain->TextureUploadCount() << " size=" << size[0] << 'x' << size[1]

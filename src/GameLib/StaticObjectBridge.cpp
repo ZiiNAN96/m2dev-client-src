@@ -56,7 +56,7 @@ float Float(D3DRENDERSTATETYPE type)
 class StateReader : public CGraphicBase
 {
 public:
-    static bool Capture(StaticObjectDraw& d, bool cameraMask, bool shadowBase, bool actorLighting)
+    static bool Capture(StaticObjectDraw& d, bool cameraMask, bool shadowBase, bool actorLighting, bool groundItem)
     {
         // ZiiNAN: Ensure deterministic actor material state
         if(actorLighting) d=StaticObjectDraw{};
@@ -87,6 +87,14 @@ public:
             d.factorAlphaOnly=Stage(0,D3DTSS_ALPHAARG2)==D3DTA_TFACTOR && Stage(0,D3DTSS_ALPHAOP)==D3DTOP_SELECTARG2;
             if(d.actorStage==ActorMaterialStage::Specular && !d.factorAlpha) return false;
         }
+        // ZiiNAN: Ground items retain the native post-effect TFACTOR * TEXTURE alpha order.
+        const bool swappedFactorAlpha=groundItem && Stage(0,D3DTSS_ALPHAOP)==D3DTOP_MODULATE &&
+            Stage(0,D3DTSS_ALPHAARG1)==D3DTA_TFACTOR && Stage(0,D3DTSS_ALPHAARG2)==D3DTA_TEXTURE;
+        if(swappedFactorAlpha) {
+            d.factorAlpha=true;
+            const D3DXCOLOR factor(STATEMANAGER.GetRenderState(D3DRS_TEXTUREFACTOR));
+            d.textureFactor={factor.r,factor.g,factor.b,factor.a};
+        }
         if(!STATEMANAGER.GetRenderState(D3DRS_ZENABLE) ||
            STATEMANAGER.GetRenderState(D3DRS_ZFUNC)!=D3DCMP_LESSEQUAL ||
            STATEMANAGER.GetRenderState(D3DRS_SPECULARENABLE) || STATEMANAGER.GetRenderState(D3DRS_COLORVERTEX) ||
@@ -94,7 +102,7 @@ public:
            Stage(0,D3DTSS_COLORARG1)!=D3DTA_TEXTURE ||
            (Stage(0,D3DTSS_COLORARG2)!=D3DTA_CURRENT && Stage(0,D3DTSS_COLORARG2)!=D3DTA_DIFFUSE) ||
            (!shadowBase && !d.factorAlphaOnly && Stage(0,D3DTSS_ALPHAOP)!=D3DTOP_MODULATE && Stage(0,D3DTSS_ALPHAOP)!=D3DTOP_SELECTARG1) ||
-           (!d.factorAlphaOnly && Stage(0,D3DTSS_ALPHAARG1)!=D3DTA_TEXTURE) ||
+           (!d.factorAlphaOnly && !swappedFactorAlpha && Stage(0,D3DTSS_ALPHAARG1)!=D3DTA_TEXTURE) ||
            (!shadowBase && !d.factorAlpha && Stage(0,D3DTSS_ALPHAOP)==D3DTOP_MODULATE && Stage(0,D3DTSS_ALPHAARG2)!=D3DTA_CURRENT && Stage(0,D3DTSS_ALPHAARG2)!=D3DTA_DIFFUSE) ||
            Stage(0,D3DTSS_TEXCOORDINDEX)!=0 || Stage(0,D3DTSS_TEXTURETRANSFORMFLAGS)!=D3DTTFF_DISABLE) return false;
         d.blend=STATEMANAGER.GetRenderState(D3DRS_ALPHABLENDENABLE)!=FALSE;
@@ -190,7 +198,7 @@ public:
                 BOOL other=FALSE;
                 if(FAILED(ms_lpd3dDevice->GetLightEnable(i,&other)) || !other) continue;
                 // ZiiNAN: Same existing point light for the normal actor material, no new lights.
-                if((!cameraMask && !shadowBase && !actorLighting) || i!=1) return false;
+                if((!cameraMask && !shadowBase && !actorLighting && !groundItem) || i!=1) return false;
                 D3DLIGHT9 point{};
                 if(FAILED(ms_lpd3dDevice->GetLight(1,&point)) || point.Type!=D3DLIGHT_POINT) return false;
                 D3DXVECTOR3 position(point.Position.x,point.Position.y,point.Position.z);
@@ -229,9 +237,9 @@ public:
 };
 }
 
-bool CaptureStaticMapObjectDraw(Renderer::StaticObjectDraw& draw, bool cameraMask, bool shadowBase, bool actorLighting)
+bool CaptureStaticMapObjectDraw(Renderer::StaticObjectDraw& draw, bool cameraMask, bool shadowBase, bool actorLighting, bool groundItem)
 {
-    return StateReader::Capture(draw,cameraMask,shadowBase,actorLighting);
+    return StateReader::Capture(draw,cameraMask,shadowBase,actorLighting,groundItem);
 }
 
 void BeginStaticMapObjects(bool legacyShadowActive)
@@ -252,6 +260,10 @@ void SubmitStaticMapObject(CGraphicThingInstance& thing, StaticMapObjectPass pas
     if(pass==StaticMapObjectPass::CameraBlocker) {
         common={};
         if(!cameraAlpha || !CaptureStaticMapObjectDraw(common,true)) { Report(thing,"excluded: camera blocker state"); return; }
+    } else if(pass==StaticMapObjectPass::GroundItem) {
+        // ZiiNAN: Capture this native item draw, never inherit the earlier map-object snapshot.
+        common={};
+        if(!CaptureStaticMapObjectDraw(common,false,false,false,true)) { Report(thing,"excluded: ground item state"); return; }
     } else if(!baseDrawValid) { Report(thing,"excluded: base render state"); return; }
     // RenderArea enables writes for its opaque list after the shadow receiver pass.
     if(pass==StaticMapObjectPass::Opaque) common.depthWrite=true;
@@ -259,7 +271,8 @@ void SubmitStaticMapObject(CGraphicThingInstance& thing, StaticMapObjectPass pas
     for(DWORD i=0;i<thing.GetLODControllerCount();++i) {
         auto* instance=thing.GetLODControllerPointer(i)->GetModelInstance();
         auto* model=instance ? instance->GetModel() : nullptr;
-        if(!model || !model->GetStaticObjectSource()) { Report(thing,"excluded: no static PNT source"); return; }
+        if(!model || (!model->GetStaticObjectSource() && !(pass==StaticMapObjectPass::GroundItem &&
+            model->GetActorSource() && model->GetActorSource()->IsRigid()))) { Report(thing,"excluded: no static PNT source"); return; }
         auto& palette=instance->GetStaticObjectMaterialPalette();
         for(auto* node=model->GetMeshNodeList(CGrannyMesh::TYPE_RIGID,CGrannyMaterial::TYPE_DIFFUSE_PNT);node;node=node->pNextMeshNode)
         for(auto* group=node->pMesh->GetTriGroupNodeList(CGrannyMaterial::TYPE_DIFFUSE_PNT);group;group=group->pNextTriGroupNode) {
@@ -281,7 +294,14 @@ void SubmitStaticMapObject(CGraphicThingInstance& thing, StaticMapObjectPass pas
     for(DWORD i=0;i<thing.GetLODControllerCount();++i) {
         auto* instance=thing.GetLODControllerPointer(i)->GetModelInstance();
         auto* model=instance->GetModel(); auto& resource=object.models[model];
-        if(!resource.geometry) resource.geometry=renderer->UploadGeometry(*model->GetStaticObjectSource());
+        if(!resource.geometry) {
+            if(model->GetStaticObjectSource()) resource.geometry=renderer->UploadGeometry(*model->GetStaticObjectSource());
+            else {
+                // ZiiNAN: An equipped weapon may already be cached; reuse its existing rigid CPU snapshot.
+                const auto& source=*model->GetActorSource();
+                resource.geometry=renderer->UploadGeometry({source.rigidVertices,source.indices});
+            }
+        }
         if(!resource.geometry) { Report(thing,"ERROR: geometry upload"); return; }
         if(pass==StaticMapObjectPass::CameraBlocker) {
             const std::string name=cameraAlpha->GetFileName();

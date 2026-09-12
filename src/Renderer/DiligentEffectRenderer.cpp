@@ -58,7 +58,9 @@ float4 Argument(uint arg,float4 diffuse,float4 tex) {
 float4 Operation(uint op,float4 a,float4 b,float4 current) {
  if(op==1) return current; if(op==2) return a; if(op==3) return b;
  if(op==4) return saturate(a*b); if(op==5) return saturate(2*a*b); if(op==6) return saturate(4*a*b);
- if(op==8) return saturate(a+b-0.5); return current;
+ if(op==8) return saturate(a+b-0.5);
+ // ZiiNAN: Original SkyBox cloud combiner, D3DTOP_MODULATEINVALPHA_ADDCOLOR.
+ if(op==20) return saturate(a+(1-a.a)*b); return current;
 }
 bool Compare(uint f,float a,float b) {
  if(f==1) return false; if(f==2) return a<b; if(f==3) return a==b; if(f==4) return a<=b;
@@ -70,6 +72,8 @@ float4 PS(Output i):SV_TARGET {
  if(Color.x!=1 && !(Modes.z==0 && (Color.y&15)==2)) {
   c.rgb=Operation(Color.x,Argument(Color.y,i.diffuse,tex),Argument(Color.z,i.diffuse,tex),i.diffuse).rgb;
   c.a=Operation(Alpha.x,Argument(Alpha.y,i.diffuse,tex),Argument(Alpha.z,i.diffuse,tex),i.diffuse).a;
+  // ZiiNAN: Native textured sky with disabled alpha stage writes opaque alpha (GPU oracle).
+  if(Alpha.x==1 && Modes.z!=0) c.a=1;
  }
  if(Modes.w!=0 && !Compare(Alpha.w,floor(saturate(c.a)*255+0.5),float(Color.w))) discard;
  c.rgb=lerp(FogColor.rgb,c.rgb,i.fog); return c;
@@ -119,6 +123,11 @@ uint32_t DiligentEffectRenderer::LiveBufferCount() const { return unsigned(bool(
 void DiligentEffectRenderer::ResetFrame()
 {
     auto& s=*m_impl; s.draws.fill(0); s.vertexCount=s.bytes=0;
+    ReleaseBindings();
+}
+void DiligentEffectRenderer::ReleaseBindings()
+{
+    auto& s=*m_impl;
     for(auto& entry:s.pipelines) if(entry.second.bindings)
         entry.second.bindings->GetVariableByName(SHADER_TYPE_PIXEL,"EffectTexture")->Set(nullptr);
 }
