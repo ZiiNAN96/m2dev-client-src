@@ -24,6 +24,7 @@ private:
     friend class BackendTestAccess;
     friend class DiligentTerrainRenderer;
     friend class DiligentStaticObjectRenderer;
+    friend class DiligentTreeRenderer; // ZiiNAN: Existing D3D11 world/depth target.
     struct Impl;
     std::unique_ptr<Impl> m_impl;
 };

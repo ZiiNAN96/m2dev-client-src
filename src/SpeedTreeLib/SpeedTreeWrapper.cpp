@@ -47,6 +47,7 @@
 #include "SpeedTreeForestDirectX.h"
 #include "SpeedTreeWrapper.h"
 #include "VertexShaders.h"
+#include "TreeRenderBridge.h" // ZiiNAN: Diligent SpeedTree rendering integration
 
 #include <filesystem>
 
@@ -91,6 +92,7 @@ void CSpeedTreeWrapper::SetVertexShaders(LPDIRECT3DVERTEXDECLARATION9 pBranchVer
 
 void CSpeedTreeWrapper::OnRenderPCBlocker()
 {
+    Renderer::TreeDrawScope treeScope(true);
 	if (!ms_dwBranchVertexShader || !ms_pLeafVertexShaderDecl || !ms_pLeafVertexShader)
 		CSpeedTreeForestDirectX::Instance().EnsureVertexShaders();
 
@@ -239,6 +241,7 @@ void CSpeedTreeWrapper::OnRenderPCBlocker()
 
 void CSpeedTreeWrapper::OnRender()
 {
+    Renderer::TreeDrawScope treeScope(true);
 	if (!ms_dwBranchVertexShader || !ms_pLeafVertexShaderDecl || !ms_pLeafVertexShader)
 		CSpeedTreeForestDirectX::Instance().EnsureVertexShaders();
 
@@ -463,6 +466,9 @@ bool CSpeedTreeWrapper::LoadTree(const char * pszSptFile, const BYTE * c_pbBlock
 		
 		// setup the index and vertex buffers
 		SetupBuffers();
+
+        // ZiiNAN: Keep CPU upload data with the native model; no D3D9 buffer readback.
+        TreeRenderBridge::Capture(*this,pszSptFile);
 		
 		// everything appeared to go well
 		bSuccess = true;
@@ -840,6 +846,7 @@ CSpeedTreeWrapper::SpeedTreeWrapperPtr CSpeedTreeWrapper::MakeInstance()
 			spInstance->m_ShadowImageInstance.SetImagePointer(m_ShadowImageInstance.GetGraphicImagePointer());
 		
 		spInstance->m_pTextureInfo = m_pTextureInfo;
+        spInstance->m_treeRenderData = m_treeRenderData; // ZiiNAN: Existing native model sharing.
 		
 		// use the same geometry cache
 		spInstance->m_pGeometryCache = m_pGeometryCache;
@@ -989,6 +996,7 @@ void CSpeedTreeWrapper::RenderBranches(void) const
 			{
 				ms_faceCount += stripLength - 2;
 				STATEMANAGER.DrawIndexedPrimitive(D3DPT_TRIANGLESTRIP, 0, m_pGeometryCache->m_sBranches.m_usVertexCount, m_branchStripOffsets[s], stripLength - 2);
+                TreeRenderBridge::Draw(*this,Renderer::TreePart::Branch,lod,m_branchStripOffsets[s],stripLength);
 			}
 		}
 	}
@@ -1070,6 +1078,7 @@ void CSpeedTreeWrapper::RenderFronds(void) const
 			{
 				ms_faceCount += stripLength - 2;
 				STATEMANAGER.DrawIndexedPrimitive(D3DPT_TRIANGLESTRIP, 0, m_pGeometryCache->m_sFronds.m_usVertexCount, m_frondStripOffsets[s], stripLength - 2);
+                TreeRenderBridge::Draw(*this,Renderer::TreePart::Frond,lod,m_frondStripOffsets[s],stripLength);
 			}
 		}
 	}
@@ -1240,6 +1249,7 @@ void CSpeedTreeWrapper::RenderLeaves(void) const
 		
 		ms_faceCount += pLeaf->m_usLeafCount * 2;
 		STATEMANAGER.DrawPrimitive(D3DPT_TRIANGLELIST, 0, pLeaf->m_usLeafCount * 2);
+        TreeRenderBridge::Draw(*this,Renderer::TreePart::Leaf,unLod,0,pLeaf->m_usLeafCount*6);
 	}
 }
 
@@ -1295,6 +1305,7 @@ void CSpeedTreeWrapper::RenderBillboards(void) const
 		
 		ms_faceCount += 2;
 		STATEMANAGER.DrawPrimitiveUP(D3DPT_TRIANGLEFAN, 2, sVertex, sizeof(SBillboardVertex));
+        TreeRenderBridge::Billboard(*this,pCoords,pTexCoords);
 	}
 	
 	// if tree supports 360 degree billboards, render the second
@@ -1313,6 +1324,7 @@ void CSpeedTreeWrapper::RenderBillboards(void) const
 		
 		ms_faceCount += 2;
 		STATEMANAGER.DrawPrimitiveUP(D3DPT_TRIANGLEFAN, 2, sVertex, sizeof(SBillboardVertex));
+        TreeRenderBridge::Billboard(*this,pCoords,pTexCoords);
 	}
 	
 #ifdef WRAPPER_RENDER_HORIZONTAL_BILLBOARD

@@ -139,6 +139,8 @@ void CSpeedTreeForestDirectX::UpdateCompundMatrix(const D3DXVECTOR3& c_rEyeVec, 
 
 void CSpeedTreeForestDirectX::Render(unsigned long ulRenderBitVector)
 {
+    // ZiiNAN: Diligent SpeedTree rendering integration; exclude shadow/minimap passes.
+    Renderer::TreeDrawScope treeScope(!(ulRenderBitVector & (Forest_RenderToShadow | Forest_RenderToMiniMap)));
 	UpdateSystem(CTimer::Instance().GetCurrentSecond());
 
 	if (m_pMainTreeMap.empty())

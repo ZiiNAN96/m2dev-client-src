@@ -47,6 +47,7 @@
 
 #include "EterLib/GrpObjectInstance.h"
 #include "EterLib/GrpImageInstance.h"
+#include "Renderer/TreeRenderData.h" // ZiiNAN: Diligent SpeedTree rendering integration
 
 #ifndef SAFE_DELETE
 #define SAFE_DELETE(p)       { if (p) { delete (p);     (p) = NULL; } }
@@ -160,6 +161,9 @@ private:
 	
 private:
 	// SpeedTreeRT data
+    friend class TreeRenderBridge;
+    std::shared_ptr<Renderer::TreeModelData> m_treeRenderData;
+    mutable Renderer::TreeMesh m_treeBillboard; // Camera-dependent native quad, owned by this instance.
 	CSpeedTreeRT*					m_pSpeedTree;					// the SpeedTree object
 	CSpeedTreeRT::STextures*		m_pTextureInfo;					// texture info cache
 	bool							m_bIsInstance;					// is this an instance?

@@ -199,6 +199,7 @@ static void TextureChecks(LegacyProbe& screen, Renderer::LegacyD3D9Backend& lega
 #include "StaticObjectGpuChecks.h"
 #include "ActorGpuChecks.h" // ZiiNAN: Actor-specific lifetime/counter contract.
 #include "ActorStateIsolationChecks.h"
+#include "TreeGpuChecks.h" // ZiiNAN: Original SpeedTree shader/fixed-function comparison.
 
 int main()
 {
@@ -314,6 +315,7 @@ int main()
             StaticObjectChecks<MountGpuAdapter>(screen,legacy,modern,terrain);
             ActorLifetimeChecks(screen,modern);
             ActorStateIsolationChecks(modern);
+            TreeGpuChecks(screen,legacy,modern);
             patch.Clear(); Check(lifetime.expired(), "patch releases geometry");
             CTerrainPatch::SOFTWARE_TRANSFORM_PATCH_ENABLE = oldSoftware;
             terrainRenderer = nullptr;
