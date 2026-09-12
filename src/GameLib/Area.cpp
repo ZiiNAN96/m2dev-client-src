@@ -7,6 +7,7 @@
 #include "EterBase/Timer.h"
 
 #include "Area.h"
+#include "StaticObjectBridge.h"
 #include "PropertyManager.h"
 #include "Property.h"
 
@@ -557,6 +558,7 @@ void CArea::TObjectInstance::SetTree(float x, float y, float z, DWORD dwTreeCRC,
 
 void CArea::__SetObjectInstance_SetBuilding(TObjectInstance * pObjectInstance, const TObjectData * c_pData, CProperty * pProperty)
 {
+    Renderer::StaticObjectLoadScope staticObjectLoad;
 	prt::TPropertyBuilding Data;
 	if (!prt::PropertyBuildingStringToData(pProperty, &Data))
 		return;
@@ -1112,6 +1114,8 @@ void CArea::__Clear_DestroyObjectInstance(TObjectInstance * pObjectInstance)
 
 	if (pObjectInstance->pThingInstance)
 	{
+        // GPU cache belongs to the area, not the delayed legacy resource cache.
+        ReleaseStaticMapObject(pObjectInstance->pThingInstance);
 		CGraphicThingInstance::Delete(pObjectInstance->pThingInstance);
 		pObjectInstance->pThingInstance = NULL;
 	}

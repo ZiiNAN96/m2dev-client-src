@@ -1,6 +1,7 @@
 #include "TerrainPresentation.h"
 #ifdef M2_ENABLE_DILIGENT_D3D11
 #include "DiligentTerrainRenderer.h"
+#include "DiligentStaticObjectRenderer.h"
 #include <windows.h>
 #include <fstream>
 
@@ -14,6 +15,7 @@ class TerrainPresentation final : public ITerrainPresentation
     bool m_addedClipChildren = false, m_visible = false, m_inFrame = false;
     DiligentD3D11Backend m_backend;
     std::unique_ptr<DiligentTerrainRenderer> m_terrain;
+    std::unique_ptr<DiligentStaticObjectRenderer> m_objects;
     std::ofstream m_diagnostics;
     uint32_t m_frame = 0;
 public:
@@ -28,17 +30,25 @@ public:
         if (!m_surface || !m_backend.Initialize({m_surface, width, height})) return false;
         m_terrain = std::make_unique<DiligentTerrainRenderer>(m_backend);
         if (!m_terrain->Initialize()) return false;
+        m_objects = std::make_unique<DiligentStaticObjectRenderer>(m_backend);
+        if (!m_objects->Initialize()) return false;
         const LONG_PTR style = GetWindowLongPtrW(parent, GWL_STYLE);
         m_addedClipChildren = !(style & WS_CLIPCHILDREN);
         if (m_addedClipChildren) SetWindowLongPtrW(parent, GWL_STYLE, style | WS_CLIPCHILDREN);
         terrainRenderer = m_terrain.get();
+        staticObjectRenderer = m_objects.get();
         // Experimental backend only; bounded frame summaries go to a file, never the console.
         m_diagnostics.open("terrain-renderer.log", std::ios::trunc);
         return true;
     }
     ~TerrainPresentation() override
     {
+        if(m_diagnostics && m_objects)
+            m_diagnostics << "shutdown object_geometry=" << m_objects->LiveGeometryCount()
+                          << " object_textures=" << m_objects->LiveTextureCount() << std::endl;
         if (terrainRenderer == m_terrain.get()) terrainRenderer = nullptr;
+        if (staticObjectRenderer == m_objects.get()) staticObjectRenderer = nullptr;
+        m_objects.reset();
         m_terrain.reset(); // Application destroys maps (and their handles) first.
         m_backend.Shutdown();
         if (IsWindow(m_surface)) DestroyWindow(m_surface);
@@ -48,6 +58,7 @@ public:
     bool BeginFrame() override
     {
         m_terrain->ResetFrame();
+        m_objects->ResetFrame();
         if (!m_backend.BeginFrame()) return false;
         m_inFrame = true;
         m_backend.Clear({true, ClearColor{0.08f, 0.16f, 0.28f, 1.0f}});
@@ -58,7 +69,7 @@ public:
         if (!m_inFrame) return false;
         m_backend.EndFrame();
         m_inFrame = false;
-        if (m_terrain->Failed()) return false;
+        if (m_terrain->Failed() || m_objects->Failed()) return false;
         const bool visible = m_terrain->HasTerrain();
         if (m_diagnostics && (++m_frame % 120 == 0 || visible != m_visible))
         {
@@ -71,6 +82,9 @@ public:
                           << " color_textures=" << m_terrain->LiveTextureCount()-m_terrain->LiveAlphaCount()
                           << " alpha_textures=" << m_terrain->LiveAlphaCount()
                           << " layer_materials=" << m_terrain->LiveMaterialCount() << std::endl;
+            m_diagnostics << "object_draws=" << m_objects->DrawCount()
+                          << " object_geometry=" << m_objects->LiveGeometryCount()
+                          << " object_textures=" << m_objects->LiveTextureCount() << std::endl;
         }
         if (visible) m_backend.Present();
         if (visible != m_visible)

@@ -22,4 +22,11 @@ struct TerrainTextureData
 };
 struct TerrainTexture { virtual ~TerrainTexture() = default; };
 using TerrainTexturePtr = std::shared_ptr<TerrainTexture>;
+// Shared image-upload boundary; existing names retained for terrain compatibility.
+class ITextureUploader
+{
+public:
+    virtual ~ITextureUploader() = default;
+    virtual TerrainTexturePtr UploadTexture(const TerrainTextureData&) = 0;
+};
 }

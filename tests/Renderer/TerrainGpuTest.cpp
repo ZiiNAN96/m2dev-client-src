@@ -196,6 +196,7 @@ static void TextureChecks(LegacyProbe& screen, Renderer::LegacyD3D9Backend& lega
 }
 
 #include "TerrainSplatGpuChecks.h"
+#include "StaticObjectGpuChecks.h"
 
 int main()
 {
@@ -304,6 +305,7 @@ int main()
             }
             TextureChecks(screen,legacy,modern,terrain);
             SplatChecks(screen,legacy,modern,terrain);
+            StaticObjectChecks(screen,legacy,modern,terrain);
             patch.Clear(); Check(lifetime.expired(), "patch releases geometry");
             CTerrainPatch::SOFTWARE_TRANSFORM_PATCH_ENABLE = oldSoftware;
             terrainRenderer = nullptr;

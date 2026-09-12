@@ -380,6 +380,7 @@ bool CGrannyModel::__LoadVertices()
 
 void CGrannyModel::Initialize()
 {
+    m_staticObjectSource.reset();
 	memset(m_meshNodeLists, 0, sizeof(m_meshNodeLists));
 	
 	m_pgrnModel = NULL;
@@ -398,6 +399,24 @@ void CGrannyModel::Initialize()
 
 	m_dwFvF = 0;
 	m_bHaveBlendThing = false;
+}
+
+void CGrannyModel::CaptureStaticObjectSource()
+{
+    if (!Renderer::staticObjectLoadDepth || m_deformVtxCount || m_bHaveBlendThing ||
+        m_dwFvF != (D3DFVF_XYZ | D3DFVF_NORMAL | D3DFVF_TEX1) ||
+        m_rigidVtxCount <= 0 || m_idxCount <= 0) return;
+    static_assert(sizeof(Renderer::StaticObjectVertex) == sizeof(TPNTVertex));
+    auto source = std::make_shared<Renderer::StaticObjectSource>();
+    source->vertices.resize(m_rigidVtxCount);
+    source->indices.resize(m_idxCount);
+    for (int i=0; i<GetMeshCount(); ++i)
+    {
+        // Same original conversion and offsets, while Granny file sections are alive.
+        m_meshs[i].NEW_LoadVertices(source->vertices.data());
+        m_meshs[i].LoadIndices(source->indices.data());
+    }
+    m_staticObjectSource = std::move(source);
 }
 
 CGrannyModel::CGrannyModel()

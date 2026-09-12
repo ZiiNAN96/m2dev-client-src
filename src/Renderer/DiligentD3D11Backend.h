@@ -23,6 +23,7 @@ public:
 private:
     friend class BackendTestAccess;
     friend class DiligentTerrainRenderer;
+    friend class DiligentStaticObjectRenderer;
     struct Impl;
     std::unique_ptr<Impl> m_impl;
 };

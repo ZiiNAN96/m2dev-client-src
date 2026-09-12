@@ -4,6 +4,7 @@
 #include "Eterlib/GrpIndexBuffer.h"
 
 #include "Mesh.h"
+#include "Renderer/StaticObjectRenderData.h"
 
 class CGrannyModel : public CReferenceObject
 {
@@ -47,6 +48,8 @@ class CGrannyModel : public CReferenceObject
 		void UnlockVertices() const;
 
 		const CGrannyMaterialPalette& GetMaterialPalette() const;
+        void CaptureStaticObjectSource();
+        const std::shared_ptr<const Renderer::StaticObjectSource>& GetStaticObjectSource() const { return m_staticObjectSource; }
 
 	protected:
 		bool LoadMeshs();		
@@ -83,6 +86,7 @@ class CGrannyModel : public CReferenceObject
 		CGrannyMaterialPalette	m_kMtrlPal;
 	private:
 		bool					m_bHaveBlendThing;
+        std::shared_ptr<const Renderer::StaticObjectSource> m_staticObjectSource;
 	public:
 		bool					HaveBlendThing() { return m_bHaveBlendThing; }
 	

@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "StaticObjectBridge.h"
 #include "MapOutdoor.h"
 #include "TerrainPatch.h"
 #include "AreaTerrain.h"
@@ -396,6 +397,7 @@ struct CMapOutdoor_FOpaqueThingInstanceRender
 	inline void operator () (CGraphicThingInstance * pkThingInst)
 	{
 		pkThingInst->Render();
+        SubmitStaticMapObject(*pkThingInst);
 	}
 };
 struct CMapOutdoor_FBlendThingInstanceRender

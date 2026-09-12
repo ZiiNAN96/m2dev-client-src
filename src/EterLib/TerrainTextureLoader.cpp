@@ -5,7 +5,7 @@
 #include "PackLib/PackManager.h"
 #include <limits>
 
-Renderer::TerrainTexturePtr LoadTerrainTextureMemory(const void* data, size_t size, Renderer::ITerrainRenderer& renderer)
+Renderer::TerrainTexturePtr LoadTerrainTextureMemory(const void* data, size_t size, Renderer::ITextureUploader& renderer)
 {
     using namespace Renderer;
     TerrainTextureData upload;
@@ -42,7 +42,7 @@ Renderer::TerrainTexturePtr LoadTerrainTextureMemory(const void* data, size_t si
     return renderer.UploadTexture(upload);
 }
 
-Renderer::TerrainTexturePtr LoadTerrainTextureFile(const char* filename, Renderer::ITerrainRenderer& renderer)
+Renderer::TerrainTexturePtr LoadTerrainTextureFile(const char* filename, Renderer::ITextureUploader& renderer)
 {
     TPackFile file;
     if (!filename || !CPackManager::Instance().GetFile(filename, file))

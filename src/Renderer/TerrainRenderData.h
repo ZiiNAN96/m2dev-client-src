@@ -14,7 +14,7 @@ struct TerrainMatrices
 {
     std::array<float, 16> world, view, projection;
 };
-class ITerrainRenderer
+class ITerrainRenderer : public ITextureUploader
 {
 public:
     virtual ~ITerrainRenderer() = default;

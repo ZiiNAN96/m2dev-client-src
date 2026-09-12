@@ -69,6 +69,11 @@ class CGrannyModelInstance : public CGraphicCollisionObject
 
 		// Model
 		CGrannyModel* GetModel();
+        CGrannyMaterialPalette& GetStaticObjectMaterialPalette() { return m_kMtrlPal; }
+        const D3DXMATRIX* GetStaticObjectWorldMatrix(int mesh) const
+        {
+            return m_pModel && m_meshMatrices && mesh>=0 && mesh<m_pModel->GetMeshCount() ? &m_meshMatrices[mesh] : nullptr;
+        }
 		void	SetMaterialImagePointer(const char* c_szImageName, CGraphicImage* pImage);
 		void	SetMaterialData(const char* c_szImageName, const SMaterialData& c_rkMaterialData);
 		void	SetSpecularInfo(const char* c_szMtrlName, BOOL bEnable, float fPower);

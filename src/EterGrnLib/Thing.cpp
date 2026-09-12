@@ -213,6 +213,8 @@ bool CGraphicThing::LoadModels()
 
 		if (!rModel.CreateFromGrannyModelPointer(pgrnModel))
 			return false;
+        if (Renderer::staticObjectLoadDepth && m_pgrnFileInfo->AnimationCount == 0)
+            rModel.CaptureStaticObjectSource();
 	}
 
 	GrannyFreeFileSection(m_pgrnFile, GrannyStandardRigidVertexSection);
