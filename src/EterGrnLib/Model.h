@@ -52,7 +52,7 @@ class CGrannyModel : public CReferenceObject
         void CaptureStaticObjectSource();
         const std::shared_ptr<const Renderer::StaticObjectSource>& GetStaticObjectSource() const { return m_staticObjectSource; }
         // ZiiNAN: Capture before Granny frees its deformable index section.
-        void CaptureActorSource();
+        void CaptureActorSource(bool attachment = false);
         const std::shared_ptr<const Renderer::ActorModelSource>& GetActorSource() const { return m_actorSource; }
 
 	protected:

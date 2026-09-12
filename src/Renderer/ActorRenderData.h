@@ -20,9 +20,21 @@ struct ActorModelSource
 {
     uint32_t vertexCount = 0;
     std::vector<uint16_t> indices;
-    // ZiiNAN: Rigid pieces embedded in PART_MAIN, not attachment parts.
+    // ZiiNAN: Diligent actor attachment rendering
     uint32_t deformVertexCount = 0;
     std::vector<StaticObjectVertex> rigidVertices;
+    bool IsRigid() const { return vertexCount && !deformVertexCount && rigidVertices.size()==vertexCount; }
+};
+enum class ActorPart : uint32_t { Body=0, Weapon=1, WeaponLeft=3, Hair=4, Unsupported=5 };
+struct ActorInstanceSet
+{
+    std::array<const void*,5> instances{};
+    ActorPart Find(const void* instance) const
+    {
+        if(instance) for(auto part:{ActorPart::Body,ActorPart::Weapon,ActorPart::WeaponLeft,ActorPart::Hair})
+            if(instances[uint32_t(part)]==instance) return part;
+        return ActorPart::Unsupported;
+    }
 };
 struct ActorInstanceData
 {
@@ -36,16 +48,17 @@ struct ActorInstanceData
 class IActorRenderer : public ITextureUploader
 {
 public:
-    virtual StaticObjectGeometryPtr CreateGeometry(const ActorModelSource&) = 0;
+    virtual StaticObjectGeometryPtr CreateGeometry(const ActorModelSource&, ActorPart part = ActorPart::Body) = 0;
     virtual bool UpdateVertices(const StaticObjectGeometryPtr&, const std::vector<StaticObjectVertex>&, uint32_t deformedCount = 0) = 0;
-    virtual void Draw(const void* actor, const StaticObjectGeometryPtr&, const TerrainTexturePtr&, const StaticObjectDraw&, ActorCategory category = ActorCategory::Player) = 0;
+    virtual void Draw(const void* actor, const StaticObjectGeometryPtr&, const TerrainTexturePtr&, const StaticObjectDraw&, ActorCategory category = ActorCategory::Player, ActorPart part = ActorPart::Body) = 0;
+    virtual void TrackAttachmentTexture(const TerrainTexturePtr&) {}
     virtual void ReleaseBindings() = 0;
 };
 inline IActorRenderer* actorRenderer = nullptr;
 inline bool actorWorldFrame = false;
 inline uint64_t actorFrameSerial = 0; // ZiiNAN: Reject poses not deformed for the current world frame.
-inline const void* actorDeformTarget = nullptr;
-// ZiiNAN: Observe only the selected native body draw after its material is applied.
+inline ActorInstanceSet actorDeformTargets;
+// ZiiNAN: Diligent actor attachment rendering
 struct ActorNativeDraw
 {
     uint32_t mesh, material, firstIndex, indexCount, baseVertex, vertexCount;
@@ -53,15 +66,16 @@ struct ActorNativeDraw
 };
 struct ActorDrawTarget
 {
-    const void* instance = nullptr;
+    ActorInstanceSet targets;
     void* context = nullptr;
-    void (*submit)(void*, const ActorNativeDraw&) = nullptr;
+    void (*submit)(void*, const void*, ActorPart, const ActorNativeDraw&) = nullptr;
 };
 inline ActorDrawTarget actorDrawTarget;
 inline void SubmitActorNativeDraw(const void* instance, const ActorNativeDraw& draw)
 {
-    if(actorDrawTarget.instance==instance && actorDrawTarget.submit)
-        actorDrawTarget.submit(actorDrawTarget.context,draw);
+    const auto part=actorDrawTarget.targets.Find(instance);
+    if(part!=ActorPart::Unsupported && actorDrawTarget.submit)
+        actorDrawTarget.submit(actorDrawTarget.context,instance,part,draw);
 }
 struct ActorDrawScope
 {
@@ -71,13 +85,13 @@ struct ActorDrawScope
     ActorDrawScope(const ActorDrawScope&) = delete;
     ActorDrawScope& operator=(const ActorDrawScope&) = delete;
 };
-// ZiiNAN: Select only the existing main body, never hair/weapon/horse deformations.
+// ZiiNAN: Diligent actor attachment rendering
 struct ActorDeformScope
 {
-    const void* previous = actorDeformTarget;
-    explicit ActorDeformScope(const void* instance)
-    { actorDeformTarget = actorRenderer && actorWorldFrame ? instance : nullptr; }
-    ~ActorDeformScope() { actorDeformTarget = previous; }
+    ActorInstanceSet previous = actorDeformTargets;
+    explicit ActorDeformScope(ActorInstanceSet targets)
+    { actorDeformTargets = actorRenderer && actorWorldFrame ? targets : ActorInstanceSet{}; }
+    ~ActorDeformScope() { actorDeformTargets = previous; }
     ActorDeformScope(const ActorDeformScope&) = delete;
     ActorDeformScope& operator=(const ActorDeformScope&) = delete;
 };

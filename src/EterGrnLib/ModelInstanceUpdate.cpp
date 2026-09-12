@@ -60,7 +60,7 @@ void CGrannyModelInstance::Deform(const D3DXMATRIX * c_pWorldMatrix)
 		return;
 
     // ZiiNAN: A failed native deformation must not submit a stale actor pose.
-    const bool captureActor=Renderer::actorDeformTarget==this && m_pModel->GetActorSource()!=nullptr;
+    const bool captureActor=Renderer::actorDeformTargets.Find(this)!=Renderer::ActorPart::Unsupported && m_pModel->GetActorSource()!=nullptr;
     if(captureActor) m_actorRenderData.ready=false;
 
 	// DELETED
@@ -69,6 +69,12 @@ void CGrannyModelInstance::Deform(const D3DXMATRIX * c_pWorldMatrix)
 	
 	UpdateWorldPose();
 	UpdateWorldMatrices(c_pWorldMatrix);
+
+    // ZiiNAN: Diligent actor attachment rendering
+    if(captureActor && m_pModel->GetActorSource()->IsRigid()) {
+        m_actorRenderData.capturedFrame=Renderer::actorFrameSerial;
+        m_actorRenderData.ready=true;
+    }
 
 	if (m_pModel->CanDeformPNTVertices())
 	{

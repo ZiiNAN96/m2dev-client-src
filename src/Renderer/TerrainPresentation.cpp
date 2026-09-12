@@ -51,8 +51,12 @@ public:
     {
         // ZiiNAN: Actors must already be destroyed by the existing application teardown.
         if(m_diagnostics && m_actors)
+        {
             m_diagnostics << "shutdown actor_geometry=" << m_actors->LiveGeometryCount()
                           << " actor_textures=" << m_actors->LiveTextureCount() << std::endl;
+            m_diagnostics << "shutdown attachment_geometry=" << m_actors->AttachmentGeometryCount()
+                          << " attachment_textures=" << m_actors->AttachmentTextureCount() << std::endl;
+        }
         actorWorldFrame=false;
         if(actorRenderer==m_actors.get()) actorRenderer=nullptr;
         m_actors.reset();
@@ -114,6 +118,12 @@ public:
                           << " npcs_visible=" << m_actors->Visible(ActorCategory::Npc)
                           << " mobs_visible=" << m_actors->Visible(ActorCategory::Mob)
                           << " skinned_vertices=" << m_actors->SkinnedVerticesUploaded() << std::endl;
+            // ZiiNAN: Diligent actor attachment rendering
+            m_diagnostics << "attachments_visible=" << m_actors->VisibleAttachments()
+                          << " weapon_draws=" << m_actors->WeaponDraws() << " shield_draws=0"
+                          << " hair_draws=" << m_actors->HairDraws()
+                          << " attachment_geometry=" << m_actors->AttachmentGeometryCount()
+                          << " attachment_textures=" << m_actors->AttachmentTextureCount() << std::endl;
         }
         if (visible) m_backend.Present();
         if (visible != m_visible)

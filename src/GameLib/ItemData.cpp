@@ -131,6 +131,10 @@ void CItemData::__LoadFiles()
 	if (!m_strDropModelFileName.empty())
 		m_pDropModelThing = (CGraphicThing *)CResourceManager::Instance().GetResourcePointer(m_strDropModelFileName.c_str());
 
+    // ZiiNAN: Diligent actor attachment rendering
+    if (m_pModelThing) m_pModelThing->MarkActorAttachment();
+    if (m_pSubModelThing) m_pSubModelThing->MarkActorAttachment();
+
 
 	if (!m_strLODModelFileNameVector.empty())
 	{
@@ -141,6 +145,7 @@ void CItemData::__LoadFiles()
 		{
 			const std::string & c_rstrLODModelFileName = m_strLODModelFileNameVector[i];
 			m_pLODModelThingVector[i] = (CGraphicThing *)CResourceManager::Instance().GetResourcePointer(c_rstrLODModelFileName.c_str());
+            if (m_pLODModelThingVector[i]) m_pLODModelThingVector[i]->MarkActorAttachment();
 		}
 	}
 }

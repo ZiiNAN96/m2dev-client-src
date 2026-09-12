@@ -6,7 +6,7 @@
 #include "EterLib/StateManager.h"
 #include <fstream>
 
-// ZiiNAN: One scoped main-model bridge for original player, NPC and mob material draws.
+// ZiiNAN: Diligent actor attachment rendering
 bool IsDiligentActorCandidate(CActorInstance& actor)
 {
     static_assert(CActorInstance::TYPE_PC==6 && CActorInstance::TYPE_NPC==1 && CActorInstance::TYPE_ENEMY==0);
@@ -54,20 +54,25 @@ void Report(CActorInstance& actor, CGrannyModelInstance& instance, const std::st
     if(status.find("excluded: actor render state")==0) ActorStateDiagnostic::Write(diagnostics);
     auto* thing=actor.GetBaseThingPtr(); const auto& p=actor.GetPosition();
     diagnostics << status << " race=" << actor.GetRace() << " file=" << (thing ? thing->GetFileName() : "unknown")
+                << " vid=" << actor.GetVirtualID() << " part=" << uint32_t(actorDrawTarget.targets.Find(&instance))
                 << " position=" << p.x << ',' << p.y << ',' << p.z
                 << " vertices=" << instance.GetModel()->GetVertexCount()
                 << " deform_vertices=" << instance.GetModel()->GetDeformVertexCount()
                 << " rigid_vertices=" << instance.GetModel()->GetRigidVertexCount() << std::endl;
 }
-void Submit(void* context, const ActorNativeDraw& native)
+void Submit(void* context, const void* nativeInstance, ActorPart part, const ActorNativeDraw& native)
 {
     auto& actor=*static_cast<CActorInstance*>(context);
-    auto* instance=actor.GetLODControllerPointer(CRaceData::PART_MAIN)->GetModelInstance();
-    if(!actorRenderer || !actorWorldFrame || !instance || actorDrawTarget.instance!=instance || !actor.isShow()) return;
+    // ZiiNAN: Diligent actor attachment rendering
+    auto* instance=actor.GetLODControllerPointer(uint32_t(part))->GetModelInstance();
+    if(!actorRenderer || !actorWorldFrame || !instance || nativeInstance!=instance || !actor.isShow()) return;
+    auto* body=actor.GetLODControllerPointer(CRaceData::PART_MAIN)->GetModelInstance();
+    if(part!=ActorPart::Body && (!body || !body->GetActorRenderData().ready ||
+        body->GetActorRenderData().capturedFrame!=actorFrameSerial)) return;
     auto* model=instance->GetModel(); auto& data=instance->GetActorRenderData();
     const auto& source=model->GetActorSource();
-    if(!source) { Report(actor,*instance,"excluded: main model outside PNT skin contract"); return; }
-    if(!data.ready || data.capturedFrame!=actorFrameSerial || data.vertices.size()!=source->vertexCount) {
+    if(!source) { Report(actor,*instance,"excluded: model outside captured actor PNT contract"); return; }
+    if(!data.ready || data.capturedFrame!=actorFrameSerial || (!source->IsRigid() && data.vertices.size()!=source->vertexCount)) {
         Report(actor,*instance,"excluded: no current CPU-deformed pose"); return;
     }
     StaticObjectDraw draw;
@@ -82,7 +87,10 @@ void Submit(void* context, const ActorNativeDraw& native)
         if(!image) return {};
         const std::string name=image->GetFileName();
         auto& texture=data.textures[name];
-        if(!texture) texture=LoadStaticObjectTextureFile(name.c_str(),*actorRenderer);
+        if(!texture) {
+            texture=LoadStaticObjectTextureFile(name.c_str(),*actorRenderer);
+            if(texture && part!=ActorPart::Body) actorRenderer->TrackAttachmentTexture(texture);
+        }
         return texture;
     };
     const auto texture=load(material.GetImagePointer(0));
@@ -100,20 +108,37 @@ void Submit(void* context, const ActorNativeDraw& native)
     D3DXMatrixTranspose(&normal,&normal); memcpy(draw.normalTransform.data(),&normal,64);
     draw.baseVertex=native.baseVertex+(native.rigid ? source->deformVertexCount : 0);
     draw.vertexCount=native.vertexCount; draw.firstIndex=native.firstIndex; draw.indexCount=native.indexCount;
-    if(!data.geometry) data.geometry=actorRenderer->CreateGeometry(*source);
+    if(!data.geometry) data.geometry=actorRenderer->CreateGeometry(*source,part);
     if(!data.geometry) { Report(actor,*instance,"ERROR: actor geometry upload"); return; }
-    if(data.uploadedRevision!=data.revision) {
+    if(!source->IsRigid() && data.uploadedRevision!=data.revision) {
         if(!actorRenderer->UpdateVertices(data.geometry,data.vertices,source->deformVertexCount)) {
             Report(actor,*instance,"ERROR: actor vertex upload"); return;
         }
         data.uploadedRevision=data.revision;
     }
-    actorRenderer->Draw(&actor,data.geometry,texture,draw,ClassifyActor(actor.GetActorType(),actor.GetRace()));
-    Report(actor,*instance,"submitted: CPU-skinned main body");
+    actorRenderer->Draw(&actor,data.geometry,texture,draw,ClassifyActor(actor.GetActorType(),actor.GetRace()),part);
+    Report(actor,*instance,part==ActorPart::Body ? "submitted: CPU-skinned main body" :
+        source->IsRigid() ? "submitted: rigid attachment" : "submitted: CPU-skinned attachment");
     Report(actor,*instance,"material group="+std::to_string(native.material)+" stage="+std::to_string(uint32_t(draw.actorStage))+
         " alpha_test="+std::to_string(uint32_t(draw.alphaTest))+" blend="+std::to_string(draw.blend)+
-        " rigid="+std::to_string(native.rigid)+" texture="+material.GetImagePointer(0)->GetFileName());
+        " rigid="+std::to_string(native.rigid)+" mesh="+std::to_string(native.mesh)+
+        " cull="+std::to_string(uint32_t(draw.cull))+" depth_write="+std::to_string(draw.depthWrite)+
+        " texture="+material.GetImagePointer(0)->GetFileName());
 }
+}
+// ZiiNAN: Diligent actor attachment rendering
+Renderer::ActorInstanceSet GetAnimatedActorParts(CActorInstance& actor)
+{
+    using namespace Renderer;
+    static_assert(CRaceData::PART_MAIN==0 && CRaceData::PART_WEAPON==1 &&
+        CRaceData::PART_WEAPON_LEFT==3 && CRaceData::PART_HAIR==4);
+    ActorInstanceSet result;
+    if(!actorRenderer || !actorWorldFrame || !IsDiligentActorCandidate(actor)) return result;
+    for(auto part:{ActorPart::Body,ActorPart::Weapon,ActorPart::WeaponLeft,ActorPart::Hair}) {
+        const auto index=uint32_t(part);
+        if(index<actor.GetLODControllerCount()) result.instances[index]=actor.GetLODControllerPointer(index)->GetModelInstance();
+    }
+    return result;
 }
 Renderer::ActorDrawTarget MakeAnimatedActorTarget(CActorInstance& actor)
 {
@@ -124,5 +149,5 @@ Renderer::ActorDrawTarget MakeAnimatedActorTarget(CActorInstance& actor)
     if(!IsDiligentActorCandidate(actor)) {
         Report(actor,*instance,"excluded: actor category outside 5B body scope"); return {};
     }
-    return {instance,&actor,Submit};
+    return {GetAnimatedActorParts(actor),&actor,Submit};
 }

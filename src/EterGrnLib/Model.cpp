@@ -421,9 +421,10 @@ void CGrannyModel::CaptureStaticObjectSource()
 }
 
 // ZiiNAN: Original deform indices plus local PNT for rigid pieces inside the same body.
-void CGrannyModel::CaptureActorSource()
+void CGrannyModel::CaptureActorSource(bool attachment)
 {
-    if(!Renderer::actorRenderer || m_deformVtxCount<=0 || m_idxCount<=0 ||
+    // ZiiNAN: Diligent actor attachment rendering
+    if(!Renderer::actorRenderer || (m_deformVtxCount<=0 && !attachment) || m_vtxCount<=0 || m_idxCount<=0 ||
        m_dwFvF!=(D3DFVF_XYZ|D3DFVF_NORMAL|D3DFVF_TEX1)) return;
     auto source=std::make_shared<Renderer::ActorModelSource>();
     source->vertexCount=static_cast<uint32_t>(m_deformVtxCount+m_rigidVtxCount);

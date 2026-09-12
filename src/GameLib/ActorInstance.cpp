@@ -13,11 +13,8 @@ enum
 
 void CActorInstance::INSTANCEBASE_Deform()
 {
-    // ZiiNAN: Main-model snapshot only; mounts, pets and attachment parts remain excluded.
-    CGrannyModelInstance* body=nullptr;
-    if(Renderer::actorRenderer && IsDiligentActorCandidate(*this) && !m_pkHorse && GetLODControllerCount()>CRaceData::PART_MAIN)
-        body=GetLODControllerPointer(CRaceData::PART_MAIN)->GetModelInstance();
-    Renderer::ActorDeformScope actorScope(body);
+    // ZiiNAN: Diligent actor attachment rendering
+    Renderer::ActorDeformScope actorScope(!m_pkHorse ? GetAnimatedActorParts(*this) : Renderer::ActorInstanceSet{});
 	Deform();
 	TraceProcess();
 }

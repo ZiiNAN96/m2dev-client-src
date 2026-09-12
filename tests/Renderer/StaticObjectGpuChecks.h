@@ -56,7 +56,8 @@ static void StaticObjectChecks(LegacyProbe& screen,Renderer::LegacyD3D9Backend& 
     auto b5Texture=LoadStaticObjectTextureMemory(b5Bytes.data(),b5Bytes.size(),objects);
     auto legacyAlpha=LegacyProbe::Texture(alphaBytes),legacyB5=LegacyProbe::Texture(b5Bytes);
     Check(alphaTexture && b5Texture,"static alpha and native 16-bit uploads");
-    for(int pose=0;pose<(std::is_same_v<MeshRenderer,ActorGpuAdapter> ? 37 : 27);++pose) {
+    constexpr bool actorMaterials=std::is_same_v<MeshRenderer,ActorGpuAdapter> || std::is_same_v<MeshRenderer,RigidAttachmentGpuAdapter>;
+    for(int pose=0;pose<(actorMaterials ? 37 : 27);++pose) {
         // ZiiNAN: Distinct completed CPU poses, including normals, on the same VB/IB.
         if constexpr (std::is_same_v<MeshRenderer,ActorGpuAdapter>) {
             source.vertices=originalVertices;

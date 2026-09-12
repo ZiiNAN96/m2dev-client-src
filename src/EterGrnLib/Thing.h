@@ -26,6 +26,9 @@ class CGraphicThing : public CResource
 		CGrannyMotion *			GetMotionPointer(int iMotion);
 		int						GetMotionCount() const;
 
+        // ZiiNAN: Diligent actor attachment rendering
+        void MarkActorAttachment() { m_actorAttachment=true; }
+
 	protected:
 		void					Initialize();
 
@@ -40,6 +43,7 @@ class CGraphicThing : public CResource
 
 	protected:
 		granny_file *			m_pgrnFile;
+        bool m_actorAttachment=false;
 		granny_file_info *		m_pgrnFileInfo;
 
 		granny_animation *		m_pgrnAni;

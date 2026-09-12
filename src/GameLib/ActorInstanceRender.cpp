@@ -37,7 +37,7 @@ void CActorInstance::OnRender()
 	if (!m_pkCurRaceData)
 		return;
 
-    // ZiiNAN: Native material loops supply all body passes, never hair/weapon/horse parts.
+    // ZiiNAN: Diligent actor attachment rendering
     Renderer::ActorDrawScope actorScope(!m_pkHorse ? MakeAnimatedActorTarget(*this) : Renderer::ActorDrawTarget{});
 
 	D3DMATERIAL9 kMtrl;

@@ -12,10 +12,17 @@ public:
     bool Initialize() { return m_meshes.Initialize(); }
     bool Failed() const { return m_meshes.Failed(); }
     void ResetFrame();
-    StaticObjectGeometryPtr CreateGeometry(const ActorModelSource&) override;
+    StaticObjectGeometryPtr CreateGeometry(const ActorModelSource&, ActorPart part = ActorPart::Body) override;
     bool UpdateVertices(const StaticObjectGeometryPtr&, const std::vector<StaticObjectVertex>&, uint32_t deformedCount = 0) override;
     TerrainTexturePtr UploadTexture(const TerrainTextureData& data) override { return m_meshes.UploadTexture(data); }
-    void Draw(const void*, const StaticObjectGeometryPtr&, const TerrainTexturePtr&, const StaticObjectDraw&, ActorCategory category = ActorCategory::Player) override;
+    void Draw(const void*, const StaticObjectGeometryPtr&, const TerrainTexturePtr&, const StaticObjectDraw&, ActorCategory category = ActorCategory::Player, ActorPart part = ActorPart::Body) override;
+    // ZiiNAN: Diligent actor attachment rendering
+    void TrackAttachmentTexture(const TerrainTexturePtr&) override;
+    uint32_t VisibleAttachments() const;
+    uint32_t WeaponDraws() const { return m_partDraws[1]+m_partDraws[3]; }
+    uint32_t HairDraws() const { return m_partDraws[4]; }
+    uint32_t AttachmentGeometryCount() const;
+    uint32_t AttachmentTextureCount() const;
     void ReleaseBindings() override { m_meshes.ReleaseBindings(); }
     uint32_t VisibleActors() const { return static_cast<uint32_t>(m_actors.size()); }
     // ZiiNAN: Categories count distinct actors, not material draws.
@@ -31,6 +38,10 @@ public:
 private:
     DiligentStaticObjectRenderer m_meshes;
     std::unordered_map<const void*,ActorCategory> m_actors;
+    std::unordered_map<const void*,uint32_t> m_attachmentParts;
+    std::array<uint32_t,5> m_partDraws{};
+    std::vector<std::weak_ptr<StaticObjectGeometry>> m_attachmentGeometry;
+    std::vector<std::weak_ptr<TerrainTexture>> m_attachmentTextures;
     uint32_t m_uploads = 0;
     uint64_t m_vertices = 0, m_indexUploads = 0, m_skinnedVertices = 0;
 };

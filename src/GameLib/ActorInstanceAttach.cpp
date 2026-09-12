@@ -159,10 +159,25 @@ void CActorInstance::AttachWeapon(DWORD dwItemIndex,DWORD dwParentPartIndex, DWO
 	}
 
 	__DestroyWeaponTrace();
+
+    // ZiiNAN: Diligent actor attachment rendering
+    // Shared native fix: a weapon-type change must not retain an unused hand model.
+    const bool rightHand=__IsRightHandWeapon(pItemData->GetWeaponType());
+    const bool leftHand=__IsLeftHandWeapon(pItemData->GetWeaponType());
+    if (!rightHand && GetLODControllerCount()>CRaceData::PART_WEAPON)
+    {
+        RegisterModelThing(CRaceData::PART_WEAPON, NULL);
+        SetModelInstance(CRaceData::PART_WEAPON, CRaceData::PART_WEAPON, 0);
+    }
+    if (!leftHand && GetLODControllerCount()>CRaceData::PART_WEAPON_LEFT)
+    {
+        RegisterModelThing(CRaceData::PART_WEAPON_LEFT, NULL);
+        SetModelInstance(CRaceData::PART_WEAPON_LEFT, CRaceData::PART_WEAPON_LEFT, 0);
+    }
 	//양손무기(자객 이도류) 왼손,오른손 모두에 장착.
-	if (__IsRightHandWeapon(pItemData->GetWeaponType()))
+	if (rightHand)
 		AttachWeapon(dwParentPartIndex, CRaceData::PART_WEAPON, pItemData);
-	if (__IsLeftHandWeapon(pItemData->GetWeaponType()))
+	if (leftHand)
 		AttachWeapon(dwParentPartIndex, CRaceData::PART_WEAPON_LEFT, pItemData);
 }
 

@@ -53,5 +53,32 @@ static void ActorLifetimeChecks(LegacyProbe& screen, Renderer::DiligentD3D11Back
         backend.EndFrame(); backend.Present();
     }
     Check(!actors.LiveGeometryCount(),"foreign test handles released");
+    // ZiiNAN: Diligent actor attachment rendering
+    source.rigidVertices=vertices;
+    for(int cycle=0;cycle<3;++cycle) {
+        auto weapon=actors.CreateGeometry(source,ActorPart::Weapon);
+        auto left=actors.CreateGeometry(source,ActorPart::WeaponLeft);
+        ActorModelSource skinned{3,{0,1,2},3,{}};
+        auto hair=actors.CreateGeometry(skinned,ActorPart::Hair);
+        auto sharedTexture=LoadTerrainTextureMemory(image.data(),image.size(),actors);
+        actors.TrackAttachmentTexture(sharedTexture); actors.TrackAttachmentTexture(sharedTexture);
+        Check(weapon && left && hair && sharedTexture && actors.AttachmentGeometryCount()==3 &&
+              actors.AttachmentTextureCount()==1,"attachment slots own meshes, tracked shared image deduplicated");
+        for(int frame=0;frame<3;++frame) {
+            actors.ResetFrame(); Check(backend.BeginFrame(),"attachment sync frame");
+            Check(actors.UpdateVertices(hair,vertices,3),"only skinned hair is uploaded");
+            actors.Draw(&actors,weapon,sharedTexture,draw,ActorCategory::Player,ActorPart::Weapon);
+            actors.Draw(&actors,weapon,sharedTexture,draw,ActorCategory::Player,ActorPart::Weapon);
+            actors.Draw(&actors,left,sharedTexture,draw,ActorCategory::Player,ActorPart::WeaponLeft);
+            actors.Draw(&actors,hair,sharedTexture,draw,ActorCategory::Player,ActorPart::Hair);
+            Check(actors.VisibleAttachments()==3 && actors.WeaponDraws()==3 && actors.HairDraws()==1 &&
+                  actors.Uploads()==1 && actors.SkinnedVerticesUploaded()==3,"attachment groups count parts once, rigid never reskinned");
+            backend.EndFrame(); backend.Present();
+        }
+        actors.ResetFrame(); Check(!actors.VisibleAttachments() && !actors.WeaponDraws() && !actors.HairDraws(),"hidden parts disappear together");
+        actors.ReleaseBindings(); weapon.reset(); left.reset(); hair.reset(); sharedTexture.reset();
+        Check(!actors.AttachmentGeometryCount() && !actors.AttachmentTextureCount() &&
+              !actors.LiveGeometryCount() && !actors.LiveTextureCount(),"equipment swap/despawn/map change releases all attachment resources");
+    }
     std::cout<<"Actor per-frame counters / multi-group / hidden / delete / recreate / invalid snapshot / zero lifetime: PASS\n";
 }

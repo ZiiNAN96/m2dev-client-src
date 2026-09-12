@@ -39,3 +39,35 @@ private:
     const Renderer::StaticObjectSource* source = nullptr;
     bool uploaded = false;
 };
+
+// ZiiNAN: Diligent actor attachment rendering
+class RigidAttachmentGpuAdapter : public Renderer::ITextureUploader
+{
+public:
+    explicit RigidAttachmentGpuAdapter(Renderer::DiligentD3D11Backend& backend) : actors(backend) {}
+    bool Initialize() { return actors.Initialize(); }
+    bool Failed() const { return actors.Failed(); }
+    Renderer::StaticObjectGeometryPtr UploadGeometry(const Renderer::StaticObjectSource& data)
+    {
+        return actors.CreateGeometry({static_cast<uint32_t>(data.vertices.size()),data.indices,0,data.vertices},Renderer::ActorPart::Weapon);
+    }
+    Renderer::TerrainTexturePtr UploadTexture(const Renderer::TerrainTextureData& data) override
+    {
+        auto texture=actors.UploadTexture(data); actors.TrackAttachmentTexture(texture); return texture;
+    }
+    void ResetFrame() { actors.ResetFrame(); }
+    void Draw(const Renderer::StaticObjectGeometryPtr& geometry,
+        const Renderer::TerrainTexturePtr& texture,const Renderer::StaticObjectDraw& draw)
+    {
+        actors.Draw(this,geometry,texture,draw,Renderer::ActorCategory::Player,Renderer::ActorPart::Weapon);
+        Check(actors.VisibleActors()==1 && actors.VisibleAttachments()==1 && actors.Uploads()==0 &&
+              actors.SkinnedVerticesUploaded()==0 && actors.IndexUploads()==1 && actors.AttachmentGeometryCount()==1,
+              "rigid attachment: native world matrix, one immutable upload, no CPU skinning or per-frame upload");
+    }
+    void ReleaseBindings() { actors.ReleaseBindings(); }
+    uint32_t DrawCount() const { return actors.DrawCount(); }
+    uint32_t LiveGeometryCount() const { return actors.LiveGeometryCount(); }
+    uint32_t LiveTextureCount() const { return actors.LiveTextureCount(); }
+private:
+    Renderer::DiligentActorRenderer actors;
+};
