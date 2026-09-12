@@ -4,6 +4,9 @@
 
 void CGrannyModelInstance::Clear()
 {
+    // ZiiNAN: Release actor bindings before pooled instance/model reuse.
+    if(Renderer::actorRenderer && m_actorRenderData.geometry) Renderer::actorRenderer->ReleaseBindings();
+    m_actorRenderData={};
 	m_kMtrlPal.Clear();
 	
 	DestroyDeviceObjects();

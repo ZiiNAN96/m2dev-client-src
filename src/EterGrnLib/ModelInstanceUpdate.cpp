@@ -59,6 +59,10 @@ void CGrannyModelInstance::Deform(const D3DXMATRIX * c_pWorldMatrix)
 	if (IsEmpty())
 		return;
 
+    // ZiiNAN: A failed native deformation must not submit a stale actor pose.
+    const bool captureActor=Renderer::actorDeformTarget==this && m_pModel->GetActorSource()!=nullptr;
+    if(captureActor) m_actorRenderData.ready=false;
+
 	// DELETED
 	//m_pgrnWorldPose = m_pgrnWorldPoseReal;
 	/////////////////////////////////////////////
@@ -74,6 +78,15 @@ void CGrannyModelInstance::Deform(const D3DXMATRIX * c_pWorldMatrix)
 		if (rkDeformableVertexBuffer.LockRange(m_pModel->GetDeformVertexCount(), (void **)&pntVertices))
 		{
 			DeformPNTVertices(pntVertices);
+            // ZiiNAN: Copy finished CPU-skinned PNT before the existing Unlock; no second skinning pass.
+            if(captureActor) {
+                static_assert(sizeof(Renderer::StaticObjectVertex)==sizeof(TPNTVertex));
+                m_actorRenderData.vertices.resize(m_pModel->GetDeformVertexCount());
+                memcpy(m_actorRenderData.vertices.data(),pntVertices,m_actorRenderData.vertices.size()*sizeof(TPNTVertex));
+                ++m_actorRenderData.revision;
+                m_actorRenderData.capturedFrame=Renderer::actorFrameSerial;
+                m_actorRenderData.ready=true;
+            }
 			rkDeformableVertexBuffer.Unlock();
 		}
 		else

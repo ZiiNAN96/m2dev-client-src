@@ -215,6 +215,8 @@ bool CGraphicThing::LoadModels()
 			return false;
         if (Renderer::staticObjectLoadDepth && m_pgrnFileInfo->AnimationCount == 0)
             rModel.CaptureStaticObjectSource();
+        // ZiiNAN: Preserve only original actor indices before the existing section frees.
+        rModel.CaptureActorSource();
 	}
 
 	GrannyFreeFileSection(m_pgrnFile, GrannyStandardRigidVertexSection);

@@ -56,7 +56,7 @@ float Float(D3DRENDERSTATETYPE type)
 class StateReader : public CGraphicBase
 {
 public:
-    static bool Capture(StaticObjectDraw& d, bool cameraMask, bool shadowBase)
+    static bool Capture(StaticObjectDraw& d, bool cameraMask, bool shadowBase, bool actorLighting)
     {
         // Some sampler fields were never initialized in the legacy cache. Read the
         // real device defaults/settings without changing the legacy state manager.
@@ -147,7 +147,8 @@ public:
             for(DWORD i=1;i<8;++i) {
                 BOOL other=FALSE;
                 if(FAILED(ms_lpd3dDevice->GetLightEnable(i,&other)) || !other) continue;
-                if((!cameraMask && !shadowBase) || i!=1) return false;
+                // ZiiNAN: Same existing point light for the normal actor material, no new lights.
+                if((!cameraMask && !shadowBase && !actorLighting) || i!=1) return false;
                 D3DLIGHT9 point{};
                 if(FAILED(ms_lpd3dDevice->GetLight(1,&point)) || point.Type!=D3DLIGHT_POINT) return false;
                 D3DXVECTOR3 position(point.Position.x,point.Position.y,point.Position.z);
@@ -186,9 +187,9 @@ public:
 };
 }
 
-bool CaptureStaticMapObjectDraw(Renderer::StaticObjectDraw& draw, bool cameraMask, bool shadowBase)
+bool CaptureStaticMapObjectDraw(Renderer::StaticObjectDraw& draw, bool cameraMask, bool shadowBase, bool actorLighting)
 {
-    return StateReader::Capture(draw,cameraMask,shadowBase);
+    return StateReader::Capture(draw,cameraMask,shadowBase,actorLighting);
 }
 
 void BeginStaticMapObjects(bool legacyShadowActive)

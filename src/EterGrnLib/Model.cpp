@@ -381,6 +381,7 @@ bool CGrannyModel::__LoadVertices()
 void CGrannyModel::Initialize()
 {
     m_staticObjectSource.reset();
+    m_actorSource.reset(); // ZiiNAN: Model-owned immutable actor indices.
 	memset(m_meshNodeLists, 0, sizeof(m_meshNodeLists));
 	
 	m_pgrnModel = NULL;
@@ -417,6 +418,18 @@ void CGrannyModel::CaptureStaticObjectSource()
         m_meshs[i].LoadIndices(source->indices.data());
     }
     m_staticObjectSource = std::move(source);
+}
+
+// ZiiNAN: First actor subset is fully CPU-deformed PNT, never mixed rigid/skin or attachments.
+void CGrannyModel::CaptureActorSource()
+{
+    if(!Renderer::actorRenderer || m_rigidVtxCount || m_deformVtxCount<=0 || m_idxCount<=0 ||
+       m_dwFvF!=(D3DFVF_XYZ|D3DFVF_NORMAL|D3DFVF_TEX1)) return;
+    auto source=std::make_shared<Renderer::ActorModelSource>();
+    source->vertexCount=static_cast<uint32_t>(m_deformVtxCount);
+    source->indices.resize(m_idxCount);
+    for(int i=0;i<GetMeshCount();++i) m_meshs[i].LoadIndices(source->indices.data());
+    m_actorSource=std::move(source);
 }
 
 CGrannyModel::CGrannyModel()

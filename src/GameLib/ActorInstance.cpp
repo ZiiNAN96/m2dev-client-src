@@ -12,6 +12,11 @@ enum
 
 void CActorInstance::INSTANCEBASE_Deform()
 {
+    // ZiiNAN: Native IsPC also covers mount/poly races; capture only a normal unmounted player.
+    CGrannyModelInstance* body=nullptr;
+    if(Renderer::actorRenderer && IsPC() && !IsPoly() && !m_pkHorse && GetLODControllerCount()>CRaceData::PART_MAIN)
+        body=GetLODControllerPointer(CRaceData::PART_MAIN)->GetModelInstance();
+    Renderer::ActorDeformScope actorScope(body);
 	Deform();
 	TraceProcess();
 }

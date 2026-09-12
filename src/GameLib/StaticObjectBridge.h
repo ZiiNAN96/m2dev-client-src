@@ -3,7 +3,8 @@ class CGraphicThingInstance;
 class CGraphicImage;
 namespace Renderer { struct StaticObjectDraw; }
 // Read-only legacy state capture, also used by native D3D9 parity tests.
-bool CaptureStaticMapObjectDraw(Renderer::StaticObjectDraw&, bool cameraMask = false, bool shadowBase = false);
+// ZiiNAN: Actor lighting opts into native selection light 1 without shadow alpha semantics.
+bool CaptureStaticMapObjectDraw(Renderer::StaticObjectDraw&, bool cameraMask = false, bool shadowBase = false, bool actorLighting = false);
 // Capture before the legacy dynamic shadow stage changes the base material state.
 void BeginStaticMapObjects(bool legacyShadowActive);
 enum class StaticMapObjectPass { Opaque, ShadowReceiver, CameraBlocker };

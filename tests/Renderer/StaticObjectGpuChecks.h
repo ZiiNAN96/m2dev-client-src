@@ -2,6 +2,7 @@
 #include "Renderer/DiligentStaticObjectRenderer.h"
 #include "GameLib/StaticObjectBridge.h"
 #include "EterLib/StaticObjectTextureLoader.h"
+#include "ActorGpuAdapter.h" // ZiiNAN: Same native reference for dynamic PNT uploads.
 
 // Uses the native D3D9 fixed-function renderer as the reference, not another shader.
 class ObjectLegacyProbe : public LegacyProbe
@@ -30,11 +31,12 @@ public:
               SUCCEEDED(ms_lpd3dDevice->LightEnable(1,enabled)),"character selection light setup");
     }
 };
+template<class MeshRenderer = Renderer::DiligentStaticObjectRenderer>
 static void StaticObjectChecks(LegacyProbe& screen,Renderer::LegacyD3D9Backend& legacy,
     Renderer::DiligentD3D11Backend& modern,Renderer::DiligentTerrainRenderer& terrain)
 {
     using namespace Renderer;
-    DiligentStaticObjectRenderer objects(modern);
+    MeshRenderer objects(modern);
     Check(objects.Initialize(),"static object pipeline initialization");
     StaticObjectSource source;
     // Prefix vertices/indices exercise nonzero base vertex AND group start offsets.
@@ -42,6 +44,7 @@ static void StaticObjectChecks(LegacyProbe& screen,Renderer::LegacyD3D9Backend& 
         {{0,0,0,0,0,1,-0.2f,0.1f}},{{0,-3200,0,0,0,1,-0.2f,4.1f}},
         {{3200,0,0,0,0,1,3.8f,0.1f}},{{3200,-3200,0,0,0,1,3.8f,4.1f}}};
     source.indices={0,0,0,0,1,2,2,1,3};
+    const auto originalVertices=source.vertices; // ZiiNAN: Restore after dynamic parity poses.
     auto geometry=objects.UploadGeometry(source);
     const auto image=TerrainFixture::GradientDDS();
     auto texture=LoadTerrainTextureMemory(image.data(),image.size(),objects);
@@ -53,6 +56,15 @@ static void StaticObjectChecks(LegacyProbe& screen,Renderer::LegacyD3D9Backend& 
     auto legacyAlpha=LegacyProbe::Texture(alphaBytes),legacyB5=LegacyProbe::Texture(b5Bytes);
     Check(alphaTexture && b5Texture,"static alpha and native 16-bit uploads");
     for(int pose=0;pose<27;++pose) {
+        // ZiiNAN: Distinct completed CPU poses, including normals, on the same VB/IB.
+        if constexpr (std::is_same_v<MeshRenderer,ActorGpuAdapter>) {
+            source.vertices=originalVertices;
+            for(size_t i=2;i<source.vertices.size();++i) {
+                auto& p=source.vertices[i];
+                p[2]=std::sin(float(pose)*0.7f)*80.0f;
+                p[3]=std::sin(float(pose)*0.1f); p[5]=std::cos(float(pose)*0.1f);
+            }
+        }
         const uint32_t width=pose<6 ? 640 : 800,height=pose<6 ? 480 : 600;
         Check(legacy.Resize(width,height) && modern.Resize(width,height),"static object resize");
         if(pose==6 || pose==19 || pose==23) { Check(modern.Resize(0,0) && !modern.BeginFrame(),"static object minimize"); Check(modern.Resize(width,height),"static object restore"); }
@@ -233,7 +245,7 @@ static void StaticObjectChecks(LegacyProbe& screen,Renderer::LegacyD3D9Backend& 
             SaveSplatReadback(d11,width,height,true,"object-failure-d3d11");
             std::cout << "center d9=" << std::hex << d9[width*(height/2)+width/2] << " d11=" << d11[width*(height/2)+width/2] << std::dec << '\n';
         }
-        std::cout<<"Static object pose="<<pose<<" pixels="<<covered<<" RGB="<<mean<<" edges="<<edges<<" alpha-errors="<<alphaErrors<<" alpha-boundary="<<alphaBoundary<<'\n';
+        std::cout<<(std::is_same_v<MeshRenderer,ActorGpuAdapter> ? "Dynamic actor pose=" : "Static object pose=")<<pose<<" pixels="<<covered<<" RGB="<<mean<<" edges="<<edges<<" alpha-errors="<<alphaErrors<<" alpha-boundary="<<alphaBoundary<<'\n';
         Check(!alphaErrors && alphaBoundary<(width+height)/10,"original object alpha channel");
         Check(covered>1000 && mean<1.5 && edges<(width+height)/10,"static diffuse/transform/light/fog/cull parity");
         legacy.Present(); modern.Present();
@@ -241,6 +253,7 @@ static void StaticObjectChecks(LegacyProbe& screen,Renderer::LegacyD3D9Backend& 
     }
     // Same depth target as terrain, both submission orders, object above/below ground.
     {
+        source.vertices=originalVertices; // ZiiNAN: Re-upload neutral pose for shared depth.
         constexpr uint32_t width=800,height=600;
         screen.SetPositionCamera(1600,-1600,0,7000,45,0);
         screen.SetPerspective(30,float(width)/height,100,25600);
@@ -259,6 +272,7 @@ static void StaticObjectChecks(LegacyProbe& screen,Renderer::LegacyD3D9Backend& 
             std::vector<uint32_t> firstColor,firstDepth;
             for(int order=0;order<2;++order) {
                 Check(modern.BeginFrame(),"terrain/object overlap begin"); modern.Clear({true,ClearColor{0,0,0,1}});
+                objects.ResetFrame(); // ZiiNAN: Per-frame actor upload/count boundary.
                 terrain.ResetFrame(); terrain.BeginTerrain(matrices,true);
                 const auto ground=[&]() { terrain.DrawTerrainSolid(vb,ib,6,false,{0.1f,0.8f,0.2f,1}); };
                 if(order==0) objects.Draw(geometry,texture,draw);
@@ -282,7 +296,7 @@ static void StaticObjectChecks(LegacyProbe& screen,Renderer::LegacyD3D9Backend& 
     geometry.reset(); texture.reset(); alphaTexture.reset(); b5Texture.reset();
     Check(weakGeometry.expired() && weakTexture.expired() && !objects.LiveGeometryCount() && !objects.LiveTextureCount(),"static resource map-release lifetime");
     {
-        DiligentStaticObjectRenderer invalid(modern); Check(invalid.Initialize(),"invalid input test initialize");
+        MeshRenderer invalid(modern); Check(invalid.Initialize(),"invalid input test initialize");
         StaticObjectSource bad=source; bad.indices[0]=65535;
         Check(!invalid.UploadGeometry(bad) && invalid.Failed(),"invalid static index rejected");
     }

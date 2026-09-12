@@ -69,6 +69,8 @@ class CGrannyModelInstance : public CGraphicCollisionObject
 
 		// Model
 		CGrannyModel* GetModel();
+        // ZiiNAN: Completed native deformation and renderer handles belong to this instance.
+        Renderer::ActorInstanceData& GetActorRenderData() { return m_actorRenderData; }
         CGrannyMaterialPalette& GetStaticObjectMaterialPalette() { return m_kMtrlPal; }
         const D3DXMATRIX* GetStaticObjectWorldMatrix(int mesh) const
         {
@@ -185,6 +187,7 @@ class CGrannyModelInstance : public CGraphicCollisionObject
 		DWORD							m_dwOldUpdateFrame;
 
 		CGrannyMaterialPalette			m_kMtrlPal;
+        Renderer::ActorInstanceData m_actorRenderData; // ZiiNAN: No animation ownership.
 
 		// WORK
 		granny_world_pose*					m_pgrnWorldPoseReal;	// 실제 메모리는 여기에 할당

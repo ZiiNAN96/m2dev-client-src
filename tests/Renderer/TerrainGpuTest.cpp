@@ -197,6 +197,7 @@ static void TextureChecks(LegacyProbe& screen, Renderer::LegacyD3D9Backend& lega
 
 #include "TerrainSplatGpuChecks.h"
 #include "StaticObjectGpuChecks.h"
+#include "ActorGpuChecks.h" // ZiiNAN: Actor-specific lifetime/counter contract.
 
 int main()
 {
@@ -306,6 +307,9 @@ int main()
             TextureChecks(screen,legacy,modern,terrain);
             SplatChecks(screen,legacy,modern,terrain);
             StaticObjectChecks(screen,legacy,modern,terrain);
+            // ZiiNAN: Dynamic PNT poses, native material parity, depth and lifetime.
+            StaticObjectChecks<ActorGpuAdapter>(screen,legacy,modern,terrain);
+            ActorLifetimeChecks(screen,modern);
             patch.Clear(); Check(lifetime.expired(), "patch releases geometry");
             CTerrainPatch::SOFTWARE_TRANSFORM_PATCH_ENABLE = oldSoftware;
             terrainRenderer = nullptr;
@@ -316,6 +320,7 @@ int main()
         {
             auto presentation = CreateTerrainPresentation(modernWindow,640,480);
             Check(presentation && terrainRenderer, "presentation binds terrain bridge");
+            Check(actorRenderer && !actorWorldFrame,"ZiiNAN: actor owner initialized outside a world frame");
             Check(presentation->BeginFrame() && presentation->Present(), "login frame without terrain");
             const float triangle[3][6]{{0,0,0,0,0,1},{0,-3200,0,0,0,1},{3200,0,0,0,0,1}};
             float vertices[289][6]{};
@@ -328,15 +333,18 @@ int main()
             auto texture=LoadTerrainTextureMemory(image.data(),image.size(),*terrainRenderer);
             Check(texture!=nullptr,"presentation texture");
             std::array<float,16> uv{}; uv[0]=1.0f/640; uv[5]=-1.0f/640;
+            bool previousTerrain=false; // ZiiNAN: World eligibility must survive terrain frame reset.
             for (const auto size : {std::pair{640u,480u},std::pair{800u,600u},std::pair{320u,240u},std::pair{1024u,768u}})
             {
                 Check(presentation->Resize(size.first,size.second),"presentation resize");
                 screen.SetPositionCamera(1600,-1600,0,5000,45,0);
                 screen.SetPerspective(30,float(size.first)/size.second,100,25600);
                 Check(presentation->BeginFrame(),"presentation begin");
+                Check(actorWorldFrame==previousTerrain,"ZiiNAN: actor world frame after terrain reset");
                 terrainRenderer->BeginTerrain(screen.Matrices(),true,&uv);
                 terrainRenderer->DrawTerrain(vb,ib,3,false,texture);
                 Check(presentation->Present(),"presentation terrain present");
+                Check(!actorWorldFrame,"ZiiNAN: no actor uploads outside frame"); previousTerrain=true;
             }
             Check(presentation->Resize(0,0),"presentation minimize");
             Check(presentation->Resize(640,480),"presentation restore");
@@ -351,6 +359,7 @@ int main()
             vb.reset(); ib.reset(); // Map handles must die before the device owner.
             presentation.reset();
             Check(!terrainRenderer,"presentation unbinds terrain bridge");
+            Check(!actorRenderer && !actorWorldFrame,"ZiiNAN: presentation unbinds actor bridge");
             std::cout << "Textured presentation resize / suspend / resume / shutdown: PASS\n";
         }
         legacy.Shutdown();

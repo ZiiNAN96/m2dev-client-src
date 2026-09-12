@@ -22,6 +22,7 @@ struct Geometry final : StaticObjectGeometry
     RefCntAutoPtr<IBuffer> vertices, indices;
     std::vector<uint16_t> validationIndices;
     uint32_t vertexCount=0;
+    bool dynamic=false; // ZiiNAN: Only actor VBs use discard updates.
     std::shared_ptr<Counters> counters;
     ~Geometry() override { if(counters) --counters->geometry; }
 };
@@ -178,6 +179,11 @@ bool DiligentStaticObjectRenderer::Initialize()
     } catch(...) { s.failed=true; return false; }
 }
 StaticObjectGeometryPtr DiligentStaticObjectRenderer::UploadGeometry(const StaticObjectSource& data)
+{ return CreateGeometry(data,false); }
+// ZiiNAN: Reuse index validation/materials while keeping the static path unchanged.
+StaticObjectGeometryPtr DiligentStaticObjectRenderer::UploadDynamicGeometry(const StaticObjectSource& data)
+{ return CreateGeometry(data,true); }
+StaticObjectGeometryPtr DiligentStaticObjectRenderer::CreateGeometry(const StaticObjectSource& data, bool dynamic)
 {
     auto& s=*m_impl;
     const auto fail=[&]() -> StaticObjectGeometryPtr { s.failed=true; return {}; };
@@ -191,17 +197,36 @@ StaticObjectGeometryPtr DiligentStaticObjectRenderer::UploadGeometry(const Stati
         auto result=std::make_shared<Geometry>();
         BufferDesc desc;
         desc.Name="Original static PNT vertices"; desc.Size=data.vertices.size()*32;
-        desc.Usage=USAGE_IMMUTABLE; desc.BindFlags=BIND_VERTEX_BUFFER;
+        desc.Usage=dynamic ? USAGE_DYNAMIC : USAGE_IMMUTABLE; desc.BindFlags=BIND_VERTEX_BUFFER;
+        desc.CPUAccessFlags=dynamic ? CPU_ACCESS_WRITE : CPU_ACCESS_NONE;
         BufferData initial{data.vertices.data(),desc.Size};
-        s.backend.m_impl->device->CreateBuffer(desc,&initial,&result->vertices);
+        s.backend.m_impl->device->CreateBuffer(desc,dynamic ? nullptr : &initial,&result->vertices);
         desc.Name="Original static uint16 indices"; desc.Size=data.indices.size()*2; desc.BindFlags=BIND_INDEX_BUFFER;
+        desc.Usage=USAGE_IMMUTABLE; desc.CPUAccessFlags=CPU_ACCESS_NONE;
         initial={data.indices.data(),desc.Size};
         s.backend.m_impl->device->CreateBuffer(desc,&initial,&result->indices);
         if(!result->vertices || !result->indices) return fail();
         result->vertexCount=static_cast<uint32_t>(data.vertices.size()); result->validationIndices=data.indices;
+        result->dynamic=dynamic;
         result->counters=s.counters; ++s.counters->geometry;
         return result;
     } catch(...) { return fail(); }
+}
+// ZiiNAN: No skinning here; upload the already deformed position/normal/UV bytes.
+bool DiligentStaticObjectRenderer::UpdateDynamicVertices(const StaticObjectGeometryPtr& geometry, const std::vector<StaticObjectVertex>& vertices)
+{
+    auto& s=*m_impl;
+    auto mesh=std::dynamic_pointer_cast<Geometry>(geometry);
+    if(!s.backend.m_impl || !s.backend.m_impl->inFrame || !mesh || !mesh->dynamic ||
+       mesh->counters!=s.counters || vertices.size()!=mesh->vertexCount) { s.failed=true; return false; }
+    for(const auto& vertex:vertices) for(float value:vertex)
+        if(!std::isfinite(value)) { s.failed=true; return false; }
+    try {
+        MapHelper<StaticObjectVertex> mapped(s.backend.m_impl->context,mesh->vertices,MAP_WRITE,MAP_FLAG_DISCARD);
+        if(!mapped) { s.failed=true; return false; }
+        memcpy(mapped,vertices.data(),vertices.size()*sizeof(StaticObjectVertex));
+        return true;
+    } catch(...) { s.failed=true; return false; }
 }
 TerrainTexturePtr DiligentStaticObjectRenderer::UploadTexture(const TerrainTextureData& data)
 {
