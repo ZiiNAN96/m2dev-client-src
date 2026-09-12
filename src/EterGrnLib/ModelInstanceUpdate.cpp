@@ -81,8 +81,12 @@ void CGrannyModelInstance::Deform(const D3DXMATRIX * c_pWorldMatrix)
             // ZiiNAN: Copy finished CPU-skinned PNT before the existing Unlock; no second skinning pass.
             if(captureActor) {
                 static_assert(sizeof(Renderer::StaticObjectVertex)==sizeof(TPNTVertex));
-                m_actorRenderData.vertices.resize(m_pModel->GetDeformVertexCount());
-                memcpy(m_actorRenderData.vertices.data(),pntVertices,m_actorRenderData.vertices.size()*sizeof(TPNTVertex));
+                const auto& source=*m_pModel->GetActorSource();
+                m_actorRenderData.vertices.resize(source.vertexCount);
+                memcpy(m_actorRenderData.vertices.data(),pntVertices,source.deformVertexCount*sizeof(TPNTVertex));
+                // ZiiNAN: Rigid local vertices retain their separate native Bone*World draw matrix.
+                if(!source.rigidVertices.empty())
+                    memcpy(m_actorRenderData.vertices.data()+source.deformVertexCount,source.rigidVertices.data(),source.rigidVertices.size()*sizeof(TPNTVertex));
                 ++m_actorRenderData.revision;
                 m_actorRenderData.capturedFrame=Renderer::actorFrameSerial;
                 m_actorRenderData.ready=true;

@@ -64,6 +64,8 @@ class CGrannyMaterial : public CReferenceObject
 		float					GetSpecularPower() const;
 		bool					IsSpecularEnabled() const { return m_bSpecularEnable; }
 		BYTE					GetSphereMapIndex() const { return m_bSphereMapIndex; }
+        // ZiiNAN: Reuse the original already loaded sphere-map resource, without altering states.
+        CGraphicImage* GetSphereMapImage() const { return ms_akSphereMapInstance[m_bSphereMapIndex].GetGraphicImagePointer(); }
 		// MR-12: -- END OF -- Fix specular isolation issue
 
 		bool					IsTwoSided() const		{ return m_bTwoSideRender; }

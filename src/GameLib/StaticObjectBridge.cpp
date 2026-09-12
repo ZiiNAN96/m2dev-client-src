@@ -58,20 +58,44 @@ class StateReader : public CGraphicBase
 public:
     static bool Capture(StaticObjectDraw& d, bool cameraMask, bool shadowBase, bool actorLighting)
     {
+        // ZiiNAN: Ensure deterministic actor material state
+        if(actorLighting) d=StaticObjectDraw{};
         // Some sampler fields were never initialized in the legacy cache. Read the
         // real device defaults/settings without changing the legacy state manager.
         const auto Sample=[](D3DSAMPLERSTATETYPE type) { DWORD value=0; return SUCCEEDED(ms_lpd3dDevice->GetSamplerState(0,type,&value)) ? value : ~DWORD(0); };
         // RenderArea's imminent shadow setup changes base RGB to TEXTURE*DIFFUSE
         // and disables texture alpha. Preserve that lighting, not the shadow texture.
         const bool textureOnly=!shadowBase && Stage(0,D3DTSS_COLOROP)==D3DTOP_SELECTARG1;
+        // ZiiNAN: Inspect the already applied native actor stages; never set legacy state.
+        if(actorLighting) {
+            const auto operation=Stage(1,D3DTSS_COLOROP);
+            if(operation!=D3DTOP_DISABLE) {
+                if(Stage(1,D3DTSS_COLORARG1)!=D3DTA_CURRENT) return false;
+                if((operation==D3DTOP_ADD || operation==D3DTOP_MODULATE) &&
+                   Stage(1,D3DTSS_COLORARG2)==D3DTA_TFACTOR && Stage(1,D3DTSS_ALPHAOP)==D3DTOP_DISABLE)
+                    d.actorStage=operation==D3DTOP_ADD ? ActorMaterialStage::Add : ActorMaterialStage::Modulate;
+                else if(operation==D3DTOP_MODULATEALPHA_ADDCOLOR && Stage(1,D3DTSS_COLORARG2)==D3DTA_TEXTURE &&
+                        Stage(1,D3DTSS_ALPHAOP)==D3DTOP_SELECTARG1 && Stage(1,D3DTSS_ALPHAARG1)==D3DTA_CURRENT &&
+                        Stage(1,D3DTSS_TEXCOORDINDEX)==D3DTSS_TCI_CAMERASPACEREFLECTIONVECTOR &&
+                        Stage(1,D3DTSS_TEXTURETRANSFORMFLAGS)==D3DTTFF_COUNT2)
+                    d.actorStage=ActorMaterialStage::Specular;
+                else return false;
+            }
+            const D3DXCOLOR factor(STATEMANAGER.GetRenderState(D3DRS_TEXTUREFACTOR));
+            d.textureFactor={factor.r,factor.g,factor.b,factor.a};
+            d.factorAlpha=Stage(0,D3DTSS_ALPHAARG2)==D3DTA_TFACTOR && Stage(0,D3DTSS_ALPHAOP)==D3DTOP_MODULATE;
+            d.factorAlphaOnly=Stage(0,D3DTSS_ALPHAARG2)==D3DTA_TFACTOR && Stage(0,D3DTSS_ALPHAOP)==D3DTOP_SELECTARG2;
+            if(d.actorStage==ActorMaterialStage::Specular && !d.factorAlpha) return false;
+        }
         if(!STATEMANAGER.GetRenderState(D3DRS_ZENABLE) ||
            STATEMANAGER.GetRenderState(D3DRS_ZFUNC)!=D3DCMP_LESSEQUAL ||
            STATEMANAGER.GetRenderState(D3DRS_SPECULARENABLE) || STATEMANAGER.GetRenderState(D3DRS_COLORVERTEX) ||
-           (!cameraMask && Stage(1,D3DTSS_COLOROP)!=D3DTOP_DISABLE) || (!shadowBase && !textureOnly && Stage(0,D3DTSS_COLOROP)!=D3DTOP_MODULATE) ||
+           (!cameraMask && !actorLighting && Stage(1,D3DTSS_COLOROP)!=D3DTOP_DISABLE) || (!shadowBase && !textureOnly && Stage(0,D3DTSS_COLOROP)!=D3DTOP_MODULATE) ||
            Stage(0,D3DTSS_COLORARG1)!=D3DTA_TEXTURE ||
            (Stage(0,D3DTSS_COLORARG2)!=D3DTA_CURRENT && Stage(0,D3DTSS_COLORARG2)!=D3DTA_DIFFUSE) ||
-           (!shadowBase && Stage(0,D3DTSS_ALPHAOP)!=D3DTOP_MODULATE && Stage(0,D3DTSS_ALPHAOP)!=D3DTOP_SELECTARG1) || Stage(0,D3DTSS_ALPHAARG1)!=D3DTA_TEXTURE ||
-           (!shadowBase && Stage(0,D3DTSS_ALPHAOP)==D3DTOP_MODULATE && Stage(0,D3DTSS_ALPHAARG2)!=D3DTA_CURRENT && Stage(0,D3DTSS_ALPHAARG2)!=D3DTA_DIFFUSE) ||
+           (!shadowBase && !d.factorAlphaOnly && Stage(0,D3DTSS_ALPHAOP)!=D3DTOP_MODULATE && Stage(0,D3DTSS_ALPHAOP)!=D3DTOP_SELECTARG1) ||
+           (!d.factorAlphaOnly && Stage(0,D3DTSS_ALPHAARG1)!=D3DTA_TEXTURE) ||
+           (!shadowBase && !d.factorAlpha && Stage(0,D3DTSS_ALPHAOP)==D3DTOP_MODULATE && Stage(0,D3DTSS_ALPHAARG2)!=D3DTA_CURRENT && Stage(0,D3DTSS_ALPHAARG2)!=D3DTA_DIFFUSE) ||
            Stage(0,D3DTSS_TEXCOORDINDEX)!=0 || Stage(0,D3DTSS_TEXTURETRANSFORMFLAGS)!=D3DTTFF_DISABLE) return false;
         d.blend=STATEMANAGER.GetRenderState(D3DRS_ALPHABLENDENABLE)!=FALSE;
         d.depthWrite=STATEMANAGER.GetRenderState(D3DRS_ZWRITEENABLE)!=FALSE;
@@ -108,6 +132,24 @@ public:
             d.cameraAlphaAnisotropic=min==D3DTEXF_ANISOTROPIC || mag==D3DTEXF_ANISOTROPIC;
             if(d.cameraAlphaAnisotropic) {
                 d.cameraAlphaMaxAnisotropy=CameraSample(D3DSAMP_MAXANISOTROPY);
+                if(min!=D3DTEXF_ANISOTROPIC || mag!=D3DTEXF_ANISOTROPIC || mip!=D3DTEXF_LINEAR ||
+                   d.cameraAlphaMaxAnisotropy<1 || d.cameraAlphaMaxAnisotropy>16) return false;
+            }
+        }
+        // ZiiNAN: Original sphere-map matrix and sampler, separate from camera-blocker alpha.
+        if(d.actorStage==ActorMaterialStage::Specular) {
+            D3DXMATRIX matrix; STATEMANAGER.GetTransform(D3DTS_TEXTURE1,&matrix);
+            memcpy(d.cameraAlphaTransform.data(),&matrix,64);
+            const auto SphereSample=[](D3DSAMPLERSTATETYPE type) { DWORD value=0; return SUCCEEDED(ms_lpd3dDevice->GetSamplerState(1,type,&value)) ? value : ~DWORD(0); };
+            const auto min=SphereSample(D3DSAMP_MINFILTER),mag=SphereSample(D3DSAMP_MAGFILTER),mip=SphereSample(D3DSAMP_MIPFILTER);
+            if(SphereSample(D3DSAMP_ADDRESSU)!=D3DTADDRESS_WRAP || SphereSample(D3DSAMP_ADDRESSV)!=D3DTADDRESS_WRAP ||
+               (min!=D3DTEXF_POINT && min!=D3DTEXF_LINEAR && min!=D3DTEXF_ANISOTROPIC) ||
+               (mag!=D3DTEXF_POINT && mag!=D3DTEXF_LINEAR && mag!=D3DTEXF_ANISOTROPIC) || mip>D3DTEXF_LINEAR ||
+               SphereSample(D3DSAMP_MAXMIPLEVEL)!=0 || SphereSample(D3DSAMP_MIPMAPLODBIAS)!=0) return false;
+            d.cameraAlphaSampling={true,true,min==D3DTEXF_LINEAR,mag==D3DTEXF_LINEAR,mip==D3DTEXF_LINEAR,mip!=D3DTEXF_NONE};
+            d.cameraAlphaAnisotropic=min==D3DTEXF_ANISOTROPIC || mag==D3DTEXF_ANISOTROPIC;
+            if(d.cameraAlphaAnisotropic) {
+                d.cameraAlphaMaxAnisotropy=SphereSample(D3DSAMP_MAXANISOTROPY);
                 if(min!=D3DTEXF_ANISOTROPIC || mag!=D3DTEXF_ANISOTROPIC || mip!=D3DTEXF_LINEAR ||
                    d.cameraAlphaMaxAnisotropy<1 || d.cameraAlphaMaxAnisotropy>16) return false;
             }

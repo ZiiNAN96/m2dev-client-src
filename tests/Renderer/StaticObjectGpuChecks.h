@@ -3,6 +3,7 @@
 #include "GameLib/StaticObjectBridge.h"
 #include "EterLib/StaticObjectTextureLoader.h"
 #include "ActorGpuAdapter.h" // ZiiNAN: Same native reference for dynamic PNT uploads.
+#include "ActorMaterialGpuCases.h" // ZiiNAN: Original actor stages, without altering 4B cases.
 
 // Uses the native D3D9 fixed-function renderer as the reference, not another shader.
 class ObjectLegacyProbe : public LegacyProbe
@@ -55,7 +56,7 @@ static void StaticObjectChecks(LegacyProbe& screen,Renderer::LegacyD3D9Backend& 
     auto b5Texture=LoadStaticObjectTextureMemory(b5Bytes.data(),b5Bytes.size(),objects);
     auto legacyAlpha=LegacyProbe::Texture(alphaBytes),legacyB5=LegacyProbe::Texture(b5Bytes);
     Check(alphaTexture && b5Texture,"static alpha and native 16-bit uploads");
-    for(int pose=0;pose<27;++pose) {
+    for(int pose=0;pose<(std::is_same_v<MeshRenderer,ActorGpuAdapter> ? 37 : 27);++pose) {
         // ZiiNAN: Distinct completed CPU poses, including normals, on the same VB/IB.
         if constexpr (std::is_same_v<MeshRenderer,ActorGpuAdapter>) {
             source.vertices=originalVertices;
@@ -151,7 +152,7 @@ static void StaticObjectChecks(LegacyProbe& screen,Renderer::LegacyD3D9Backend& 
             draw.ambient=captured.ambient; draw.diffuse=captured.diffuse;
         }
         auto selectedTexture=texture;
-        if(pose>=14) {
+        if(pose>=14 && pose<27) {
             selectedTexture=pose<16 ? b5Texture : alphaTexture;
             STATEMANAGER.SetTexture(0,pose<16 ? legacyB5.Get() : legacyAlpha.Get());
             STATEMANAGER.SetSamplerState(0,D3DSAMP_MINFILTER,D3DTEXF_POINT);
@@ -209,15 +210,31 @@ static void StaticObjectChecks(LegacyProbe& screen,Renderer::LegacyD3D9Backend& 
             if(pose==23) Check(captured.pointPositionRange[3]==500,"original native point light captured");
             draw=captured;
         }
+        if(pose>=27) {
+            selectedTexture=alphaTexture;
+            STATEMANAGER.SetTexture(0,legacyAlpha.Get());
+            draw=ActorMaterialCase(pose,draw,legacyTexture.Get(),texture);
+        }
         STATEMANAGER.DrawIndexedPrimitiveUP(D3DPT_TRIANGLELIST,0,4,2,source.indices.data()+3,D3DFMT_INDEX16,source.vertices.data()+2,32);
         objects.ResetFrame(); objects.Draw(geometry,selectedTexture,draw);
         legacy.EndFrame(); modern.EndFrame();
         Check(!objects.Failed() && objects.DrawCount()==1,"static object draw");
         const auto d9=LegacyProbe::Read(width,height),d11=BackendTestAccess::Read(modern,false),depth=BackendTestAccess::Read(modern,true);
-        size_t covered=0,edges=0,alphaErrors=0,alphaBoundary=0; double error=0;
+        size_t covered=0,edges=0,coverageInterior=0,alphaErrors=0,alphaBoundary=0; double error=0;
         for(size_t i=0;i<d9.size();++i) {
             const bool a=(d9[i]&0xffffff)!=0,b=(d11[i]&0xffffff)!=0;
-            edges+=a!=b; if(!a || !b) continue; ++covered;
+            edges+=a!=b;
+            if(a!=b) {
+                bool nativeBoundary=false,modernBoundary=false;
+                for(int offset:{-1,1,-int(width),int(width)}) {
+                    const auto neighbour=int64_t(i)+offset;
+                    if(neighbour<0 || neighbour>=int64_t(d9.size())) continue;
+                    nativeBoundary|=((d9[neighbour]&0xffffff)!=0)!=a;
+                    modernBoundary|=((d11[neighbour]&0xffffff)!=0)!=b;
+                }
+                if(!nativeBoundary || !modernBoundary) ++coverageInterior;
+            }
+            if(!a || !b) continue; ++covered;
             Check(((depth[i]&0xffffff)<0xffffff)==draw.depthWrite,"object depth write state");
             if(pose>=14 && std::abs(int(d9[i]>>24)-int(d11[i]>>24))>2) {
                 // Point sampling may choose opposite texels at an exact boundary.
@@ -245,9 +262,13 @@ static void StaticObjectChecks(LegacyProbe& screen,Renderer::LegacyD3D9Backend& 
             SaveSplatReadback(d11,width,height,true,"object-failure-d3d11");
             std::cout << "center d9=" << std::hex << d9[width*(height/2)+width/2] << " d11=" << d11[width*(height/2)+width/2] << std::dec << '\n';
         }
-        std::cout<<(std::is_same_v<MeshRenderer,ActorGpuAdapter> ? "Dynamic actor pose=" : "Static object pose=")<<pose<<" pixels="<<covered<<" RGB="<<mean<<" edges="<<edges<<" alpha-errors="<<alphaErrors<<" alpha-boundary="<<alphaBoundary<<'\n';
+        std::cout<<(std::is_same_v<MeshRenderer,ActorGpuAdapter> ? "Dynamic actor pose=" : "Static object pose=")<<pose<<" pixels="<<covered<<" RGB="<<mean<<" edges="<<edges<<" coverage-interior="<<coverageInterior<<" alpha-errors="<<alphaErrors<<" alpha-boundary="<<alphaBoundary<<'\n';
         Check(!alphaErrors && alphaBoundary<(width+height)/10,"original object alpha channel");
-        Check(covered>1000 && mean<1.5 && edges<(width+height)/10,"static diffuse/transform/light/fog/cull parity");
+        // ZiiNAN: Only the new linear-filtered factor-alpha cutout has driver filter-rounding edges.
+        // Accept exclusively one-pixel boundaries in BOTH images, never an interior hole/halo.
+        // All 27 existing static/dynamic tolerances remain unchanged.
+        const bool coverageMatch=pose==36 ? (coverageInterior==0 && edges<width+height) : edges<(width+height)/10;
+        Check(covered>1000 && mean<1.5 && coverageMatch,"static diffuse/transform/light/fog/cull parity");
         legacy.Present(); modern.Present();
         if(pose==13 || pose==23 || pose==26) ObjectLegacyProbe::SelectionLight(false);
     }

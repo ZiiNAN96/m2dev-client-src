@@ -13,11 +13,14 @@ public:
     bool Failed() const { return m_meshes.Failed(); }
     void ResetFrame();
     StaticObjectGeometryPtr CreateGeometry(const ActorModelSource&) override;
-    bool UpdateVertices(const StaticObjectGeometryPtr&, const std::vector<StaticObjectVertex>&) override;
+    bool UpdateVertices(const StaticObjectGeometryPtr&, const std::vector<StaticObjectVertex>&, uint32_t deformedCount = 0) override;
     TerrainTexturePtr UploadTexture(const TerrainTextureData& data) override { return m_meshes.UploadTexture(data); }
-    void Draw(const void*, const StaticObjectGeometryPtr&, const TerrainTexturePtr&, const StaticObjectDraw&) override;
+    void Draw(const void*, const StaticObjectGeometryPtr&, const TerrainTexturePtr&, const StaticObjectDraw&, ActorCategory category = ActorCategory::Player) override;
     void ReleaseBindings() override { m_meshes.ReleaseBindings(); }
     uint32_t VisibleActors() const { return static_cast<uint32_t>(m_actors.size()); }
+    // ZiiNAN: Categories count distinct actors, not material draws.
+    uint32_t Visible(ActorCategory category) const;
+    uint64_t SkinnedVerticesUploaded() const { return m_skinnedVertices; }
     uint32_t Uploads() const { return m_uploads; }
     uint64_t VerticesUploaded() const { return m_vertices; }
     uint64_t BytesUploaded() const { return m_vertices * sizeof(StaticObjectVertex); }
@@ -27,8 +30,8 @@ public:
     uint64_t IndexUploads() const { return m_indexUploads; }
 private:
     DiligentStaticObjectRenderer m_meshes;
-    std::unordered_set<const void*> m_actors;
+    std::unordered_map<const void*,ActorCategory> m_actors;
     uint32_t m_uploads = 0;
-    uint64_t m_vertices = 0, m_indexUploads = 0;
+    uint64_t m_vertices = 0, m_indexUploads = 0, m_skinnedVertices = 0;
 };
 }

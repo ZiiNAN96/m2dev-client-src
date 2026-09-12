@@ -1,5 +1,6 @@
 #pragma once
-// ZiiNAN: Existing visible actor main-body submission; no animation or attachment traversal.
+// ZiiNAN: Scoped native main-model submission shared by player, NPC and mob.
+#include "Renderer/ActorRenderData.h"
 class CActorInstance;
-void SubmitAnimatedActorBody(CActorInstance&);
-void ReportAnimatedActorExclusion(CActorInstance&, const char*);
+bool IsDiligentActorCandidate(CActorInstance&);
+Renderer::ActorDrawTarget MakeAnimatedActorTarget(CActorInstance&);

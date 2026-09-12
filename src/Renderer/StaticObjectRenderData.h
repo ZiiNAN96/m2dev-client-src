@@ -14,6 +14,8 @@ struct StaticObjectGeometry { virtual ~StaticObjectGeometry() = default; };
 using StaticObjectGeometryPtr = std::shared_ptr<StaticObjectGeometry>;
 enum class StaticObjectCull : uint32_t { None, Clockwise, CounterClockwise };
 enum class StaticObjectAlphaTest : uint32_t { Disabled, GreaterEqual, Greater };
+// ZiiNAN: Only the existing actor texture-stage operations, not a material graph.
+enum class ActorMaterialStage : uint32_t { None, Add, Modulate, Specular };
 struct StaticObjectDraw
 {
     TerrainMatrices matrices{};
@@ -35,6 +37,10 @@ struct StaticObjectDraw
     TerrainSampling cameraAlphaSampling{};
     bool cameraAlphaAnisotropic = false;
     uint32_t cameraAlphaMaxAnisotropy = 1;
+    ActorMaterialStage actorStage = ActorMaterialStage::None;
+    std::array<float,4> textureFactor{1,1,1,1};
+    bool factorAlpha = false, factorAlphaOnly = false;
+    TerrainTexturePtr sphereMap; // Uses the mutually exclusive native stage-1 matrix/sampling above.
     // Existing point light 1 left by character selection, needed by PCBlocker MODULATE.
     std::array<float,4> pointPositionRange{}, pointAttenuation{}, pointAmbient{}, pointDiffuse{};
     uint32_t firstIndex = 0, indexCount = 0, baseVertex = 0, vertexCount = 0;

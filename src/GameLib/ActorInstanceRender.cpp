@@ -37,10 +37,8 @@ void CActorInstance::OnRender()
 	if (!m_pkCurRaceData)
 		return;
 
-    // ZiiNAN: Exclude native PC-typed mount/poly races and non-opaque body modes.
-    if(IsPC() && !IsPoly() && !m_pkHorse && m_iRenderMode!=RENDER_MODE_NORMAL &&
-       !(m_iRenderMode==RENDER_MODE_BLEND && m_fAlphaValue==1.0f))
-        ReportAnimatedActorExclusion(*this,"excluded: non-opaque actor mode");
+    // ZiiNAN: Native material loops supply all body passes, never hair/weapon/horse parts.
+    Renderer::ActorDrawScope actorScope(!m_pkHorse ? MakeAnimatedActorTarget(*this) : Renderer::ActorDrawTarget{});
 
 	D3DMATERIAL9 kMtrl;
 	STATEMANAGER.GetMaterial(&kMtrl);
@@ -57,8 +55,6 @@ void CActorInstance::OnRender()
 		case RENDER_MODE_NORMAL:
 			BeginDiffuseRender();
 				RenderWithOneTexture();
-                // ZiiNAN: Existing visibility, native material and PART_MAIN only.
-                if(IsPC() && !IsPoly() && !m_pkHorse) SubmitAnimatedActorBody(*this);
 			EndDiffuseRender();
 			BeginOpacityRender();
 				BlendRenderWithOneTexture();
@@ -69,8 +65,6 @@ void CActorInstance::OnRender()
 			{
 				BeginDiffuseRender();
 					RenderWithOneTexture();
-                    // ZiiNAN: Fully opaque branch shares the identical body path.
-                    if(IsPC() && !IsPoly() && !m_pkHorse) SubmitAnimatedActorBody(*this);
 				EndDiffuseRender();
 				BeginOpacityRender();
 					BlendRenderWithOneTexture();

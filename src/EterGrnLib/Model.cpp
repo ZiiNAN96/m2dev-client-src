@@ -420,15 +420,20 @@ void CGrannyModel::CaptureStaticObjectSource()
     m_staticObjectSource = std::move(source);
 }
 
-// ZiiNAN: First actor subset is fully CPU-deformed PNT, never mixed rigid/skin or attachments.
+// ZiiNAN: Original deform indices plus local PNT for rigid pieces inside the same body.
 void CGrannyModel::CaptureActorSource()
 {
-    if(!Renderer::actorRenderer || m_rigidVtxCount || m_deformVtxCount<=0 || m_idxCount<=0 ||
+    if(!Renderer::actorRenderer || m_deformVtxCount<=0 || m_idxCount<=0 ||
        m_dwFvF!=(D3DFVF_XYZ|D3DFVF_NORMAL|D3DFVF_TEX1)) return;
     auto source=std::make_shared<Renderer::ActorModelSource>();
-    source->vertexCount=static_cast<uint32_t>(m_deformVtxCount);
+    source->vertexCount=static_cast<uint32_t>(m_deformVtxCount+m_rigidVtxCount);
+    source->deformVertexCount=static_cast<uint32_t>(m_deformVtxCount);
+    source->rigidVertices.resize(m_rigidVtxCount);
     source->indices.resize(m_idxCount);
-    for(int i=0;i<GetMeshCount();++i) m_meshs[i].LoadIndices(source->indices.data());
+    for(int i=0;i<GetMeshCount();++i) {
+        m_meshs[i].LoadIndices(source->indices.data());
+        if(m_rigidVtxCount) m_meshs[i].NEW_LoadVertices(source->rigidVertices.data());
+    }
     m_actorSource=std::move(source);
 }
 

@@ -227,6 +227,10 @@ void CGrannyModelInstance::RenderMeshNodeListWithOneTexture(CGrannyMesh::EType e
 			// MR-12: -- END OF -- Fix specular isolation issue
 
 			rkMtrl.ApplyRenderState();
+			// ZiiNAN: Read the exact visible body material/pass; keep the native draw unchanged.
+			Renderer::SubmitActorNativeDraw(this,
+					{uint32_t(pMeshNode->iMesh),uint32_t(pTriGroupNode->mtrlIndex),uint32_t(pTriGroupNode->idxPos),
+					 uint32_t(pTriGroupNode->triCount*3),uint32_t(vtxMeshBasePos),uint32_t(vtxCount),eMeshType==CGrannyMesh::TYPE_RIGID});
 			STATEMANAGER.DrawIndexedPrimitive(D3DPT_TRIANGLELIST, vtxMeshBasePos, 0, vtxCount, pTriGroupNode->idxPos, pTriGroupNode->triCount);
 			rkMtrl.RestoreRenderState();
 			

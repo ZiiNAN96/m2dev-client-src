@@ -198,6 +198,7 @@ static void TextureChecks(LegacyProbe& screen, Renderer::LegacyD3D9Backend& lega
 #include "TerrainSplatGpuChecks.h"
 #include "StaticObjectGpuChecks.h"
 #include "ActorGpuChecks.h" // ZiiNAN: Actor-specific lifetime/counter contract.
+#include "ActorStateIsolationChecks.h"
 
 int main()
 {
@@ -310,6 +311,7 @@ int main()
             // ZiiNAN: Dynamic PNT poses, native material parity, depth and lifetime.
             StaticObjectChecks<ActorGpuAdapter>(screen,legacy,modern,terrain);
             ActorLifetimeChecks(screen,modern);
+            ActorStateIsolationChecks(modern);
             patch.Clear(); Check(lifetime.expired(), "patch releases geometry");
             CTerrainPatch::SOFTWARE_TRANSFORM_PATCH_ENABLE = oldSoftware;
             terrainRenderer = nullptr;

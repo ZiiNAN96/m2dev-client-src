@@ -21,8 +21,10 @@ static void ActorLifetimeChecks(LegacyProbe& screen, Renderer::DiligentD3D11Back
         backend.Clear({true,ClearColor{0,0,0,1}});
         vertices[0][2]=float(frame)*25;
         Check(actors.UpdateVertices(a,vertices) && actors.UpdateVertices(b,vertices),"two poses uploaded");
-        actors.Draw(a.get(),a,texture,draw); actors.Draw(a.get(),a,texture,draw);
-        actors.Draw(b.get(),b,texture,draw);
+        actors.Draw(a.get(),a,texture,draw,ActorCategory::Npc); actors.Draw(a.get(),a,texture,draw,ActorCategory::Npc);
+        actors.Draw(b.get(),b,texture,draw,ActorCategory::Mob);
+        Check(actors.Visible(ActorCategory::Player)==0 && actors.Visible(ActorCategory::Npc)==1 &&
+              actors.Visible(ActorCategory::Mob)==1,"ZiiNAN: categories count once per actor, not per group");
         Check(actors.VisibleActors()==2 && actors.Uploads()==2 && actors.VerticesUploaded()==6 &&
               actors.BytesUploaded()==192 && actors.DrawCount()==3 && actors.IndexUploads()==2,
               "actors deduplicated across material groups; no per-frame index uploads");

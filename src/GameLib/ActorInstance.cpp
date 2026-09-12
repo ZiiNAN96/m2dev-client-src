@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "ActorInstance.h"
+#include "ActorRenderBridge.h" // ZiiNAN: Same bounded category selection for deformation and draws.
 #include "AreaTerrain.h"
 #include "RaceData.h"
 #include "SpeedTreeLib/SpeedTreeForestDirectX.h"
@@ -12,9 +13,9 @@ enum
 
 void CActorInstance::INSTANCEBASE_Deform()
 {
-    // ZiiNAN: Native IsPC also covers mount/poly races; capture only a normal unmounted player.
+    // ZiiNAN: Main-model snapshot only; mounts, pets and attachment parts remain excluded.
     CGrannyModelInstance* body=nullptr;
-    if(Renderer::actorRenderer && IsPC() && !IsPoly() && !m_pkHorse && GetLODControllerCount()>CRaceData::PART_MAIN)
+    if(Renderer::actorRenderer && IsDiligentActorCandidate(*this) && !m_pkHorse && GetLODControllerCount()>CRaceData::PART_MAIN)
         body=GetLODControllerPointer(CRaceData::PART_MAIN)->GetModelInstance();
     Renderer::ActorDeformScope actorScope(body);
 	Deform();

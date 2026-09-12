@@ -51,6 +51,7 @@ struct Constants
     std::array<float,16> cameraAlphaTransform;
     std::array<float,4> pointPositionRange,pointAttenuation,pointAmbient,pointDiffuse;
     std::array<uint32_t,4> alphaModes;
+    std::array<float,4> textureFactor; // ZiiNAN: Existing actor stage constant.
 };
 static_assert(sizeof(Constants)%16==0 && sizeof(StaticObjectVertex)==32);
 constexpr char shaderSource[] = R"(
@@ -62,6 +63,7 @@ cbuffer ObjectConstants {
  row_major float4x4 CameraAlphaTransform;
  float4 PointPositionRange; float4 PointAttenuation; float4 PointAmbient; float4 PointDiffuse;
  uint4 AlphaModes;
+ float4 TextureFactor;
 };
 Texture2D DiffuseTexture;
 SamplerState ObjectSampler;
@@ -85,6 +87,8 @@ Output VS(float3 position:ATTRIB0, float3 normal:ATTRIB1, float2 uv:ATTRIB2) {
  }
  o.diffuse=float4(saturate(lighting),Ambient.a);
  o.cameraUV=mul(eye,CameraAlphaTransform).xy;
+ // ZiiNAN: Native camera-space reflection vector, transformed at the vertex stage.
+ if(Modes.w==3) o.cameraUV=mul(float4(reflect(normalize(eye.xyz),n),1),CameraAlphaTransform).xy;
  // D3D9 fixed-function diffuse output is an 8-bit color before interpolation.
  o.diffuse=floor(o.diffuse*255+0.5)/255;
  float d=Modes.y!=0 ? length(eye.xyz) : abs(eye.z);
@@ -100,9 +104,17 @@ float4 PS(Output i):SV_TARGET {
  color.rgb*=i.diffuse.rgb;
  if(AlphaModes.x==0) color.a*=i.diffuse.a;
  if(AlphaModes.x==2) color.a=i.diffuse.a;
+ // ZiiNAN: Exact legacy factor/fade and stage-1 actor operations, before fog.
+ if(AlphaModes.x==3) color.a*=TextureFactor.a;
+ if(AlphaModes.x==4) color.a=TextureFactor.a;
+ if(Modes.w==1) color.rgb=saturate(color.rgb+TextureFactor.rgb);
+ if(Modes.w==2) color.rgb*=TextureFactor.rgb;
+ if(Modes.w==3) color.rgb=saturate(color.rgb+color.a*CameraAlphaTexture.Sample(CameraAlphaSampler,i.cameraUV).rgb);
  if(AlphaModes.w!=0) color.a=CameraAlphaTexture.Sample(CameraAlphaSampler,i.cameraUV).a;
- if(AlphaModes.y==1 && color.a<float(AlphaModes.z)/255.0) discard;
- if(AlphaModes.y==2 && color.a<=float(AlphaModes.z)/255.0) discard;
+ // ZiiNAN: Native alpha test compares the 8-bit stage result, including filtered/factor alpha.
+ float testedAlpha=floor(saturate(color.a)*255+0.5);
+ if(AlphaModes.y==1 && testedAlpha<float(AlphaModes.z)) discard;
+ if(AlphaModes.y==2 && testedAlpha<=float(AlphaModes.z)) discard;
  color.rgb=lerp(FogColor.rgb,color.rgb,i.fog);
  return color;
 }
@@ -274,12 +286,15 @@ void DiligentStaticObjectRenderer::Draw(const StaticObjectGeometryPtr& geometry,
     auto& s=*m_impl;
     auto mesh=std::dynamic_pointer_cast<Geometry>(geometry);
     auto image=std::dynamic_pointer_cast<Texture>(texture);
-    auto cameraImage=draw.cameraAlpha ? std::dynamic_pointer_cast<Texture>(draw.cameraAlpha) : image;
+    auto cameraImage=draw.sphereMap ? std::dynamic_pointer_cast<Texture>(draw.sphereMap) :
+        (draw.cameraAlpha ? std::dynamic_pointer_cast<Texture>(draw.cameraAlpha) : image);
     const auto cull=static_cast<uint32_t>(draw.cull);
     const auto variant=cull+(draw.blend ? 3 : 0)+(draw.depthWrite ? 0 : 6);
     if(!s.backend.m_impl || !s.backend.m_impl->inFrame || !mesh || !image || !cameraImage ||
        mesh->counters!=s.counters || image->counters!=s.counters || cameraImage->counters!=s.counters ||
        cull>=3 || !s.pipelines[variant] || draw.alphaReference>255 || static_cast<uint32_t>(draw.alphaTest)>2 ||
+       static_cast<uint32_t>(draw.actorStage)>3 || (draw.cameraAlpha && draw.sphereMap) ||
+       (draw.actorStage==ActorMaterialStage::Specular && !draw.sphereMap) ||
        !draw.indexCount || draw.indexCount%3 || draw.firstIndex>mesh->validationIndices.size() ||
        draw.indexCount>mesh->validationIndices.size()-draw.firstIndex || !draw.vertexCount ||
        draw.baseVertex>mesh->vertexCount || draw.vertexCount>mesh->vertexCount-draw.baseVertex ||
@@ -347,11 +362,12 @@ void DiligentStaticObjectRenderer::Draw(const StaticObjectGeometryPtr& geometry,
             }
             mapped->ambient=draw.ambient; mapped->diffuse=draw.diffuse; mapped->direction=draw.lightDirection;
             mapped->fogColor=draw.fogColor; mapped->fogParameters=draw.fogParameters;
-            mapped->modes={static_cast<uint32_t>(draw.fog),draw.rangeFog,draw.normalizeNormals,0};
+            mapped->modes={static_cast<uint32_t>(draw.fog),draw.rangeFog,draw.normalizeNormals,static_cast<uint32_t>(draw.actorStage)};
+            mapped->textureFactor=draw.textureFactor;
             mapped->cameraAlphaTransform=draw.cameraAlphaTransform;
             mapped->pointPositionRange=draw.pointPositionRange; mapped->pointAttenuation=draw.pointAttenuation;
             mapped->pointAmbient=draw.pointAmbient; mapped->pointDiffuse=draw.pointDiffuse;
-            mapped->alphaModes={draw.diffuseAlphaOnly ? 2u : uint32_t(draw.textureAlpha),static_cast<uint32_t>(draw.alphaTest),draw.alphaReference,draw.cameraAlpha ? 1u : 0u};
+            mapped->alphaModes={draw.factorAlphaOnly ? 4u : (draw.factorAlpha ? 3u : (draw.diffuseAlphaOnly ? 2u : uint32_t(draw.textureAlpha))),static_cast<uint32_t>(draw.alphaTest),draw.alphaReference,draw.cameraAlpha ? 1u : 0u};
         }
         b.context->SetPipelineState(s.pipelines[variant]);
         IBuffer* vertex=mesh->vertices; Uint64 offset=0;

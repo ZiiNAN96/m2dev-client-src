@@ -109,6 +109,11 @@ public:
                           << " actor_vertices=" << m_actors->VerticesUploaded() << " actor_bytes=" << m_actors->BytesUploaded()
                           << " actor_draws=" << m_actors->DrawCount() << " actor_geometry=" << m_actors->LiveGeometryCount()
                           << " actor_textures=" << m_actors->LiveTextureCount() << " actor_index_uploads=" << m_actors->IndexUploads() << std::endl;
+            // ZiiNAN: Same renderer, separate measured player/NPC/mob coverage.
+            m_diagnostics << "players_visible=" << m_actors->Visible(ActorCategory::Player)
+                          << " npcs_visible=" << m_actors->Visible(ActorCategory::Npc)
+                          << " mobs_visible=" << m_actors->Visible(ActorCategory::Mob)
+                          << " skinned_vertices=" << m_actors->SkinnedVerticesUploaded() << std::endl;
         }
         if (visible) m_backend.Present();
         if (visible != m_visible)

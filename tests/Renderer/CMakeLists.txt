@@ -2,6 +2,11 @@ add_executable(RendererStartupOptionsTest StartupOptionsTest.cpp)
 target_link_libraries(RendererStartupOptionsTest PRIVATE M2RendererInterface)
 add_test(NAME Renderer.StartupOptions COMMAND RendererStartupOptionsTest)
 
+# ZiiNAN: Body-only category/scope safety does not depend on the Diligent build option.
+add_executable(RendererActorPolicyTest ActorPolicyTest.cpp)
+target_link_libraries(RendererActorPolicyTest PRIVATE M2RendererInterface)
+add_test(NAME Renderer.ActorPolicy COMMAND RendererActorPolicyTest)
+
 add_executable(RendererSmokeTest RendererSmokeTest.cpp)
 get_target_property(client_libraries UserInterface LINK_LIBRARIES)
 add_executable(TerrainTextureCpuTest TerrainTextureCpuTest.cpp)
