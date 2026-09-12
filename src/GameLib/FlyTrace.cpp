@@ -4,6 +4,7 @@
 
 #include "FlyingData.h"
 #include "FlyTrace.h"
+#include "EffectLib/EffectRenderBridge.h" // ZiiNAN: Diligent effect rendering integration.
 
 CDynamicPool<CFlyTrace>		CFlyTrace::ms_kPool;		
 
@@ -118,6 +119,8 @@ typedef std::vector<std::pair<float, TFlyVertexSet> > TFlyVertexSetVector;
 
 void CFlyTrace::Render()
 {
+    Renderer::EffectResources resources;
+    EffectRenderScope effectScope(resources,"flying-trace",Renderer::EffectPart::FlyTrace);
 	if (m_TimePositionDeque.size()<=1)
 		return;
 	TFlyVertexSetVector VSVector;
@@ -272,7 +275,7 @@ void CFlyTrace::Render()
 
 	for(TFlyVertexSetVector::iterator it = VSVector.begin();it!=VSVector.end();++it)
 	{
-		STATEMANAGER.DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 4, it->second.v, sizeof(TVertex));
+		EffectRenderBridge::DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 4, it->second.v, sizeof(TVertex));
 	}
 	STATEMANAGER.RestoreRenderState(D3DRS_DESTBLEND);
 	STATEMANAGER.RestoreRenderState(D3DRS_SRCBLEND);

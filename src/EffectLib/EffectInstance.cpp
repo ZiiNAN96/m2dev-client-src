@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "EffectInstance.h"
+#include "EffectRenderBridge.h" // ZiiNAN: Diligent effect rendering integration.
 #include "ParticleSystemInstance.h"
 #include "SimpleLightInstance.h"
 
@@ -78,6 +79,7 @@ struct FEffectUpdator
 
 void CEffectInstance::OnUpdate()
 {
+    if(!m_effectCounted) { ++Renderer::effectRuntime.instances; m_effectCounted=true; }
 	Transform();
 
 	FEffectUpdator f(CTimer::Instance().GetCurrentSecond()-m_fLastTime);
@@ -91,6 +93,7 @@ void CEffectInstance::OnUpdate()
 
 void CEffectInstance::OnRender()
 {
+    EffectRenderScope effectScope(m_effectResources,m_pkEftData ? m_pkEftData->GetFileName() : nullptr);
 	STATEMANAGER.SetFVF(D3DFVF_XYZ | D3DFVF_TEX1);
 
 	STATEMANAGER.SaveSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_NONE);
@@ -246,6 +249,8 @@ bool CEffectInstance::GetBoundingSphere(D3DXVECTOR3 & v3Center, float & fRadius)
 
 void CEffectInstance::Clear()
 {
+    m_effectResources.textures.clear();
+    if(m_effectCounted) { --Renderer::effectRuntime.instances; m_effectCounted=false; }
 	if (!m_ParticleInstanceVector.empty())
 	{
 		std::for_each(m_ParticleInstanceVector.begin(), m_ParticleInstanceVector.end(), CParticleSystemInstance::Delete);

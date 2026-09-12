@@ -1,6 +1,7 @@
 #pragma once
 
 #include "EterLib/GrpScreen.h"
+#include "Renderer/EffectRenderData.h" // ZiiNAN: Only existing snow geometry, no blur renderer.
 
 class CSnowParticle;
 
@@ -52,4 +53,5 @@ class CSnowEnvironment : public CScreen
 		BOOL m_bBlurEnable;
 
 		BOOL m_bSnowEnable;
+        Renderer::EffectResources m_effectResources;
 };

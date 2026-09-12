@@ -4,6 +4,7 @@
 #include "DiligentStaticObjectRenderer.h"
 #include "DiligentActorRenderer.h" // ZiiNAN: Same world surface and depth target.
 #include "DiligentTreeRenderer.h" // ZiiNAN: Diligent SpeedTree rendering integration
+#include "DiligentEffectRenderer.h" // ZiiNAN: Diligent effect rendering integration
 #include <windows.h>
 #include <fstream>
 
@@ -20,6 +21,7 @@ class TerrainPresentation final : public ITerrainPresentation
     std::unique_ptr<DiligentStaticObjectRenderer> m_objects;
     std::unique_ptr<DiligentActorRenderer> m_actors; // ZiiNAN: Separate actor resource counters.
     std::unique_ptr<DiligentTreeRenderer> m_trees;
+    std::unique_ptr<DiligentEffectRenderer> m_effects;
     std::ofstream m_diagnostics;
     uint32_t m_frame = 0;
 public:
@@ -41,6 +43,8 @@ public:
         if(!m_actors->Initialize()) return false;
         m_trees=std::make_unique<DiligentTreeRenderer>(m_backend);
         if(!m_trees->Initialize()) return false;
+        m_effects=std::make_unique<DiligentEffectRenderer>(m_backend);
+        if(!m_effects->Initialize()) return false;
         const LONG_PTR style = GetWindowLongPtrW(parent, GWL_STYLE);
         m_addedClipChildren = !(style & WS_CLIPCHILDREN);
         if (m_addedClipChildren) SetWindowLongPtrW(parent, GWL_STYLE, style | WS_CLIPCHILDREN);
@@ -48,12 +52,23 @@ public:
         staticObjectRenderer = m_objects.get();
         actorRenderer=m_actors.get(); // ZiiNAN: Available before original character assets load.
         treeRenderer=m_trees.get();
+        effectRenderer=m_effects.get();
         // Experimental backend only; bounded frame summaries go to a file, never the console.
         m_diagnostics.open("terrain-renderer.log", std::ios::trunc);
         return true;
     }
     ~TerrainPresentation() override
     {
+        // ZiiNAN: Effect owners release images before the renderer releases upload/PSO/SRB resources.
+        effectWorldFrame=false;
+        if(effectRenderer==m_effects.get()) effectRenderer=nullptr;
+        if(m_effects) {
+            m_effects->ResetFrame(); m_effects->Shutdown();
+            if(m_diagnostics) m_diagnostics << "shutdown effect_textures=" << m_effects->LiveTextureCount()
+                << " effect_buffers=" << m_effects->LiveBufferCount() << " effect_instances=" << effectRuntime.instances
+                << " particle_systems=" << effectRuntime.systems << " particles=" << effectRuntime.particles << std::endl;
+        }
+        m_effects.reset();
         // ZiiNAN: Native map/instance owners must release their tree resources first.
         treeWorldFrame=false;
         if(m_diagnostics && m_trees)
@@ -96,9 +111,11 @@ public:
         // ZiiNAN: Never compose actors into login/selection; reject stale frame snapshots.
         m_actors->ResetFrame(); ++actorFrameSerial; actorWorldFrame=false;
         m_trees->ResetFrame(); treeWorldFrame=false;
+        m_effects->ResetFrame(); effectWorldFrame=false; ++effectFrameSerial; effectVisibleParticles=0;
         if (!m_backend.BeginFrame()) return false;
         actorWorldFrame=worldWasVisible;
         treeWorldFrame=worldWasVisible;
+        effectWorldFrame=worldWasVisible;
         m_inFrame = true;
         m_backend.Clear({true, ClearColor{0.08f, 0.16f, 0.28f, 1.0f}});
         return !m_terrain->Failed();
@@ -110,7 +127,8 @@ public:
         actorWorldFrame=false; // ZiiNAN: Actor submissions only inside a world frame.
         treeWorldFrame=false;
         m_inFrame = false;
-        if (m_terrain->Failed() || m_objects->Failed() || m_actors->Failed() || m_trees->Failed()) return false;
+        effectWorldFrame=false;
+        if (m_terrain->Failed() || m_objects->Failed() || m_actors->Failed() || m_trees->Failed() || m_effects->Failed()) return false;
         const bool visible = m_terrain->HasTerrain();
         if (m_diagnostics && (++m_frame % 120 == 0 || visible != m_visible))
         {
@@ -157,6 +175,15 @@ public:
                           << " tree_vertices=" << m_trees->Vertices() << " tree_indices=" << m_trees->Indices()
                           << " tree_geometry=" << m_trees->LiveGeometryCount()
                           << " tree_textures=" << m_trees->LiveTextureCount() << std::endl;
+            m_diagnostics << "effect_instances=" << effectRuntime.instances << " particle_systems=" << effectRuntime.systems
+                          << " particles_alive=" << effectRuntime.particles << " particles_visible=" << effectVisibleParticles
+                          << " particle_draws=" << m_effects->DrawCount(EffectPart::Particle)
+                          << " mesh_effect_draws=" << m_effects->DrawCount(EffectPart::Mesh)
+                          << " weapon_trace_draws=" << m_effects->DrawCount(EffectPart::WeaponTrace)
+                          << " fly_trace_draws=" << m_effects->DrawCount(EffectPart::FlyTrace)
+                          << " snow_draws=" << m_effects->DrawCount(EffectPart::Snow)
+                          << " effect_vertices=" << m_effects->Vertices() << " effect_upload_bytes=" << m_effects->UploadBytes()
+                          << " effect_buffer_bytes=" << m_effects->BufferBytes() << " effect_textures=" << m_effects->LiveTextureCount() << std::endl;
         }
         if (visible) m_backend.Present();
         if (visible != m_visible)

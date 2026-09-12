@@ -253,11 +253,13 @@ void CParticleSystemInstance::CreateParticles(float fElapsedTime)
 
 		m_ParticleInstanceListVector[pInstance->m_byFrameIndex].push_back(pInstance);
 		m_dwCurrentEmissionCount++;
+        ++Renderer::effectRuntime.particles;
 	}
 }
 
 bool CParticleSystemInstance::OnUpdate(float fElapsedTime)
 {
+    if(!m_effectCounted) { ++Renderer::effectRuntime.systems; m_effectCounted=true; }
 	bool bMakeParticle = true;
 
 	/////
@@ -305,6 +307,7 @@ bool CParticleSystemInstance::OnUpdate(float fElapsedTime)
 
 				itor = m_ParticleInstanceListVector[dwFrameIndex].erase(itor);
 				m_dwCurrentEmissionCount--;
+                --Renderer::effectRuntime.particles;
 			}
 			else [[likely]] {
 				if (pInstance->m_byFrameIndex != dwFrameIndex)
@@ -342,10 +345,10 @@ namespace NParticleRenderer
 		inline void operator () (CParticleInstance * pInstance)
 		{
 			pInstance->Transform(pmat,D3DXToRadian(-30.0f));
-			STATEMANAGER.DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, pInstance->GetParticleMeshPointer(), sizeof(TPTVertex));
+			EffectRenderBridge::DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, pInstance->GetParticleMeshPointer(), sizeof(TPTVertex));
 
 			pInstance->Transform(pmat,D3DXToRadian(+30.0f));
-			STATEMANAGER.DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, pInstance->GetParticleMeshPointer(), sizeof(TPTVertex));
+			EffectRenderBridge::DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, pInstance->GetParticleMeshPointer(), sizeof(TPTVertex));
 		}
 	};
 	
@@ -360,11 +363,11 @@ namespace NParticleRenderer
 		inline void operator () (CParticleInstance * pInstance)
 		{
 			pInstance->Transform(pmat);
-			STATEMANAGER.DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, pInstance->GetParticleMeshPointer(), sizeof(TPTVertex));
+			EffectRenderBridge::DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, pInstance->GetParticleMeshPointer(), sizeof(TPTVertex));
 			pInstance->Transform(pmat,D3DXToRadian(-60.0f));
-			STATEMANAGER.DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, pInstance->GetParticleMeshPointer(), sizeof(TPTVertex));
+			EffectRenderBridge::DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, pInstance->GetParticleMeshPointer(), sizeof(TPTVertex));
 			pInstance->Transform(pmat,D3DXToRadian(+60.0f));
-			STATEMANAGER.DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, pInstance->GetParticleMeshPointer(), sizeof(TPTVertex));
+			EffectRenderBridge::DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, pInstance->GetParticleMeshPointer(), sizeof(TPTVertex));
 		}
 	};
 	
@@ -373,7 +376,7 @@ namespace NParticleRenderer
 		inline void operator () (CParticleInstance * pInstance)
 		{
 			pInstance->Transform();
-			STATEMANAGER.DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, pInstance->GetParticleMeshPointer(), sizeof(TPTVertex));
+			EffectRenderBridge::DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, pInstance->GetParticleMeshPointer(), sizeof(TPTVertex));
 		}
 	};
 	struct AttachRenderer
@@ -387,13 +390,14 @@ namespace NParticleRenderer
 		inline void operator () (CParticleInstance * pInstance)
 		{
 			pInstance->Transform(pmat);
-			STATEMANAGER.DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, pInstance->GetParticleMeshPointer(), sizeof(TPTVertex));
+			EffectRenderBridge::DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, pInstance->GetParticleMeshPointer(), sizeof(TPTVertex));
 		}
 	};
 }
 
 void CParticleSystemInstance::OnRender()
 {
+    EffectRenderBridge::Part(Renderer::EffectPart::Particle);
 	CScreen::Identity();
 	STATEMANAGER.SetRenderState(D3DRS_SRCBLEND, m_pParticleProperty->m_bySrcBlendType);
 	STATEMANAGER.SetRenderState(D3DRS_DESTBLEND, m_pParticleProperty->m_byDestBlendType);
@@ -472,6 +476,10 @@ void CParticleSystemInstance::OnInitialize()
 
 void CParticleSystemInstance::OnDestroy()
 {
+    // ZiiNAN: Observe native lifetime, including particles still alive at map teardown.
+    if(m_effectCounted) { --Renderer::effectRuntime.systems; m_effectCounted=false; }
+    Renderer::effectRuntime.particles-=m_dwCurrentEmissionCount;
+    m_dwCurrentEmissionCount=0;
 	// 2004. 3. 1. myevan. 파티클 제거 루틴
 	TParticleInstanceListVector::iterator i;
 	for(i = m_ParticleInstanceListVector.begin(); i!=m_ParticleInstanceListVector.end(); ++i)

@@ -5,6 +5,7 @@
 #include "EterLib/Camera.h"
 #include "EterLib/ResourceManager.h"
 #include "SnowParticle.h"
+#include "EffectLib/EffectRenderBridge.h" // ZiiNAN: Diligent effect rendering integration.
 
 void CSnowEnvironment::Enable()
 {
@@ -171,6 +172,8 @@ void CSnowEnvironment::__ApplyBlur()
 
 void CSnowEnvironment::Render()
 {
+    EffectRenderScope effectScope(m_effectResources,"snow",Renderer::EffectPart::Snow);
+    std::vector<SParticleVertex> effectVertices;
 	if (!m_bSnowEnable)
 	{
 		if (m_kVct_pkParticleSnow.empty())
@@ -202,6 +205,14 @@ void CSnowEnvironment::Render()
 								pv3Verticies[i*4+2],
 								pv3Verticies[i*4+3]);
 		}
+
+        if(Renderer::effectRenderer && Renderer::effectWorldFrame && !m_bBlurEnable) {
+            // Preserve the native index order while the original CPU vertices are still locked.
+            constexpr unsigned corners[]={0,2,1,2,3,1};
+            effectVertices.reserve(size_t(dwParticleCount)*6);
+            for(unsigned particle=0;particle<dwParticleCount;++particle)
+                for(auto corner:corners) effectVertices.push_back(pv3Verticies[particle*4+corner]);
+        }
 		m_pVB->Unlock();
 	}
 
@@ -222,7 +233,11 @@ void CSnowEnvironment::Render()
 	STATEMANAGER.SetIndices(m_pIB, 0);
 	STATEMANAGER.SetStreamSource(0, m_pVB, sizeof(SParticleVertex));
 	STATEMANAGER.SetFVF(D3DFVF_XYZ | D3DFVF_TEX1);
-	STATEMANAGER.DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, dwParticleCount*4, 0, dwParticleCount*2);
+    const HRESULT nativeDraw=STATEMANAGER.DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, dwParticleCount*4, 0, dwParticleCount*2);
+    if(!effectVertices.empty()) {
+        EffectRenderBridge::Texture(m_pImageInstance->GetGraphicImagePointer());
+        EffectRenderBridge::SubmitNativeDraw(D3DPT_TRIANGLELIST,dwParticleCount*2,effectVertices.data(),sizeof(SParticleVertex),nativeDraw);
+    }
 	STATEMANAGER.RestoreRenderState(D3DRS_ALPHABLENDENABLE);
 	STATEMANAGER.RestoreRenderState(D3DRS_ZWRITEENABLE);
 	STATEMANAGER.RestoreRenderState(D3DRS_CULLMODE);
@@ -304,6 +319,7 @@ bool CSnowEnvironment::Create()
 
 void CSnowEnvironment::Destroy()
 {
+    m_effectResources.textures.clear();
 	SAFE_RELEASE(m_lpSnowTexture);
 	SAFE_RELEASE(m_lpSnowRenderTargetSurface);
 	SAFE_RELEASE(m_lpSnowDepthSurface);

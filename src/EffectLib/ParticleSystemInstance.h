@@ -1,4 +1,5 @@
 #pragma once
+#include "EffectRenderBridge.h" // ZiiNAN: Submit only native-visible particles.
 #include "EffectElementBaseInstance.h"
 #include "ParticleInstance.h"
 #include "ParticleProperty.h"
@@ -26,12 +27,14 @@ class CParticleSystemInstance : public CEffectElementBaseInstance
 			for(dwFrameIndex=0; dwFrameIndex<m_kVct_pkImgInst.size(); dwFrameIndex++)
 			{
 				STATEMANAGER.SetTexture(0, m_kVct_pkImgInst[dwFrameIndex]->GetTextureReference().GetD3DTexture());
+                EffectRenderBridge::Texture(m_kVct_pkImgInst[dwFrameIndex]->GetGraphicImagePointer());
 				TParticleInstanceList::iterator itor = m_ParticleInstanceListVector[dwFrameIndex].begin();
 				for (; itor != m_ParticleInstanceListVector[dwFrameIndex].end(); ++itor)
 				{
 					if (!InFrustum(*itor))
 						continue;
 
+                    EffectRenderBridge::VisibleParticle();
 					FunObj(*itor);
 				}
 			}
@@ -69,6 +72,7 @@ class CParticleSystemInstance : public CEffectElementBaseInstance
 		float m_fEmissionResidue;
 		
 		DWORD m_dwCurrentEmissionCount;
+        bool m_effectCounted=false;
 		int	m_iLoopCount;
 
 		typedef std::list<CParticleInstance*> TParticleInstanceList;

@@ -3,6 +3,7 @@
 #include "EterLib/StateManager.h"
 
 #include "WeaponTrace.h"
+#include "EffectLib/EffectRenderBridge.h" // ZiiNAN: Diligent effect rendering integration.
 
 CDynamicPool<CWeaponTrace> CWeaponTrace::ms_kPool;
 
@@ -278,6 +279,8 @@ bool CWeaponTrace::BuildVertex()
 
 void CWeaponTrace::Render()
 {
+    Renderer::EffectResources resources;
+    EffectRenderScope effectScope(resources,"weapon-trace",Renderer::EffectPart::WeaponTrace);
 	//if (!m_isPlaying)
 	//	return;
 	//if (m_CurvingTraceVector.size() < 4)
@@ -326,7 +329,7 @@ void CWeaponTrace::Render()
 	STATEMANAGER.SetRenderState(D3DRS_LIGHTING, FALSE);
 	STATEMANAGER.SetTexture(0, lpTexture);
 	STATEMANAGER.SetTexture(1, NULL);
-	STATEMANAGER.DrawPrimitiveUP(D3DPT_TRIANGLESTRIP,
+	EffectRenderBridge::DrawPrimitiveUP(D3DPT_TRIANGLESTRIP,
 								 int(m_PDTVertexVector.size() - 2),
 								 &m_PDTVertexVector[0],
 								 sizeof(TPDTVertex));

@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "EffectRenderBridge.h" // ZiiNAN: Diligent effect rendering integration.
 #include "EterLib/StateManager.h"
 #include "EterLib/ResourceManager.h"
 #include "EffectMeshInstance.h"
@@ -60,6 +61,7 @@ bool CEffectMeshInstance::OnUpdate(float fElapsedTime)
 
 void CEffectMeshInstance::OnRender()
 {
+    EffectRenderBridge::Part(Renderer::EffectPart::Mesh);
 	if (!isActive())
 		return;
 
@@ -164,12 +166,13 @@ void CEffectMeshInstance::OnRender()
 		{
 			CGraphicImageInstance * pImageInstance = m_TextureInstanceVector[i].TextureInstanceVector[dwcurTextureFrame];
 			STATEMANAGER.SetTexture(0, pImageInstance->GetTexturePointer()->GetD3DTexture());
+            EffectRenderBridge::Texture(pImageInstance->GetGraphicImagePointer());
 		}
 
 		Color.a = fAlpha * rFrameData.fVisibility;
 		STATEMANAGER.SetRenderState(D3DRS_TEXTUREFACTOR, DWORD(Color));
 		STATEMANAGER.SetFVF(D3DFVF_XYZ | D3DFVF_TEX1);
-		STATEMANAGER.DrawPrimitiveUP(D3DPT_TRIANGLELIST,
+		EffectRenderBridge::DrawPrimitiveUP(D3DPT_TRIANGLELIST,
 									 rFrameData.dwIndexCount/3,
 									 &rFrameData.PDTVertexVector[0],
 									 sizeof(TPTVertex));

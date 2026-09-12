@@ -7,6 +7,7 @@
 #include "StdAfx.h"
 #include "EffectElementBaseInstance.h"
 #include "EffectData.h"
+#include "Renderer/EffectRenderData.h" // ZiiNAN: Instanced effect resource lifetime.
 #include "EffectMeshInstance.h"
 #include "ParticleSystemInstance.h"
 #include "SimpleLightInstance.h"
@@ -79,6 +80,8 @@ class CEffectInstance : public CGraphicObjectInstance
 		D3DXMATRIX				m_matGlobal;
 
 		CEffectData * m_pkEftData;
+        Renderer::EffectResources m_effectResources;
+        bool m_effectCounted=false;
 
  		std::vector<CParticleSystemInstance*>	m_ParticleInstanceVector;
 		std::vector<CEffectMeshInstance*>		m_MeshInstanceVector;

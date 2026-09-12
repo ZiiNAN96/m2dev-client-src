@@ -12,6 +12,11 @@ add_executable(RendererTreePolicyTest TreePolicyTest.cpp)
 target_link_libraries(RendererTreePolicyTest PRIVATE M2RendererInterface)
 add_test(NAME Renderer.TreePolicy COMMAND RendererTreePolicyTest)
 
+# ZiiNAN: Effect contracts and lifetime remain testable in the OFF build.
+add_executable(RendererEffectPolicyTest EffectPolicyTest.cpp)
+target_link_libraries(RendererEffectPolicyTest PRIVATE M2RendererInterface)
+add_test(NAME Renderer.EffectPolicy COMMAND RendererEffectPolicyTest)
+
 # ZiiNAN: Read-only original SpeedTree SDK probe; real asset paths are explicit arguments.
 add_executable(SpeedTreeAssetProbe SpeedTreeAssetProbe.cpp)
 target_link_libraries(SpeedTreeAssetProbe PRIVATE SpeedTree user32)

@@ -41,6 +41,8 @@ if(M2_ENABLE_DILIGENT_D3D11)
     target_sources(M2RendererDiligent PRIVATE DiligentActorRenderer.cpp)
     # ZiiNAN: Existing SpeedTree geometry/materials, no new vegetation runtime.
     target_sources(M2RendererDiligent PRIVATE DiligentTreeRenderer.cpp)
+    # ZiiNAN: Existing CPU effects, no simulation or other backend changes.
+    target_sources(M2RendererDiligent PRIVATE DiligentEffectRenderer.cpp)
     target_include_directories(M2RendererDiligent PRIVATE "${diligentcore_SOURCE_DIR}")
     target_link_libraries(M2RendererDiligent PUBLIC M2RendererInterface PRIVATE Diligent-GraphicsEngineD3D11-static)
     target_compile_definitions(M2RendererBootstrap PRIVATE M2_ENABLE_DILIGENT_D3D11=1)
