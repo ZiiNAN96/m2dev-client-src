@@ -1,11 +1,24 @@
 #pragma once
 #include "Renderer/DiligentStaticObjectRenderer.h"
 #include "GameLib/StaticObjectBridge.h"
+#include "EterLib/StaticObjectTextureLoader.h"
 
 // Uses the native D3D9 fixed-function renderer as the reference, not another shader.
 class ObjectLegacyProbe : public LegacyProbe
 {
 public:
+    struct AlphaTarget
+    {
+        Microsoft::WRL::ComPtr<IDirect3DSurface9> original,target;
+        AlphaTarget(uint32_t width,uint32_t height)
+        {
+            Check(SUCCEEDED(ms_lpd3dDevice->GetRenderTarget(0,&original)),"original native target");
+            // Windowed D3D9 backbuffer is X8R8G8B8: its unused byte is not alpha.
+            Check(SUCCEEDED(ms_lpd3dDevice->CreateRenderTarget(width,height,D3DFMT_A8R8G8B8,D3DMULTISAMPLE_NONE,0,FALSE,&target,nullptr)) &&
+                  SUCCEEDED(ms_lpd3dDevice->SetRenderTarget(0,target.Get())),"native alpha reference target");
+        }
+        ~AlphaTarget() { ms_lpd3dDevice->SetRenderTarget(0,original.Get()); }
+    };
     static void Light(const D3DLIGHT9& light) { ms_lpd3dDevice->LightEnable(0,TRUE); STATEMANAGER.SetLight(0,&light); }
     static void SelectionLight(bool enabled)
     {
@@ -34,10 +47,16 @@ static void StaticObjectChecks(LegacyProbe& screen,Renderer::LegacyD3D9Backend& 
     auto texture=LoadTerrainTextureMemory(image.data(),image.size(),objects);
     auto legacyTexture=LegacyProbe::Texture(image);
     Check(geometry && texture && objects.LiveGeometryCount()==1 && objects.LiveTextureCount()==1,"static object uploads");
-    for(int pose=0;pose<14;++pose) {
+    const auto alphaBytes=TerrainFixture::AlphaDDS(),b5Bytes=TerrainFixture::B5G5R5A1DDS();
+    auto alphaTexture=LoadStaticObjectTextureMemory(alphaBytes.data(),alphaBytes.size(),objects);
+    auto b5Texture=LoadStaticObjectTextureMemory(b5Bytes.data(),b5Bytes.size(),objects);
+    auto legacyAlpha=LegacyProbe::Texture(alphaBytes),legacyB5=LegacyProbe::Texture(b5Bytes);
+    Check(alphaTexture && b5Texture,"static alpha and native 16-bit uploads");
+    for(int pose=0;pose<27;++pose) {
         const uint32_t width=pose<6 ? 640 : 800,height=pose<6 ? 480 : 600;
         Check(legacy.Resize(width,height) && modern.Resize(width,height),"static object resize");
-        if(pose==6) { Check(modern.Resize(0,0) && !modern.BeginFrame(),"static object minimize"); Check(modern.Resize(width,height),"static object restore"); }
+        if(pose==6 || pose==19 || pose==23) { Check(modern.Resize(0,0) && !modern.BeginFrame(),"static object minimize"); Check(modern.Resize(width,height),"static object restore"); }
+        ObjectLegacyProbe::AlphaTarget alphaTarget(width,height);
         screen.SetPositionCamera(1600,-1600,0,7000,45,float((pose%3)*70));
         screen.SetPerspective(30,float(width)/height,100,25600);
         StaticObjectDraw draw;
@@ -83,7 +102,8 @@ static void StaticObjectChecks(LegacyProbe& screen,Renderer::LegacyD3D9Backend& 
         DWORD bits; memcpy(&bits,&draw.fogParameters[0],4); STATEMANAGER.SetRenderState(D3DRS_FOGSTART,bits);
         memcpy(&bits,&draw.fogParameters[1],4); STATEMANAGER.SetRenderState(D3DRS_FOGEND,bits);
         memcpy(&bits,&draw.fogParameters[2],4); STATEMANAGER.SetRenderState(D3DRS_FOGDENSITY,bits);
-        STATEMANAGER.SetRenderState(D3DRS_ALPHATESTENABLE,FALSE); STATEMANAGER.SetRenderState(D3DRS_ALPHABLENDENABLE,FALSE);
+        STATEMANAGER.SetRenderState(D3DRS_ALPHATESTENABLE,TRUE); STATEMANAGER.SetRenderState(D3DRS_ALPHATESTENABLE,FALSE);
+        STATEMANAGER.SetRenderState(D3DRS_ALPHABLENDENABLE,TRUE); STATEMANAGER.SetRenderState(D3DRS_ALPHABLENDENABLE,FALSE);
         STATEMANAGER.SetRenderState(D3DRS_CULLMODE,static_cast<DWORD>(draw.cull)+1);
         STATEMANAGER.SetRenderState(D3DRS_ZENABLE,TRUE); STATEMANAGER.SetRenderState(D3DRS_ZWRITEENABLE,TRUE);
         STATEMANAGER.SetRenderState(D3DRS_ZFUNC,D3DCMP_LESSEQUAL);
@@ -118,21 +138,93 @@ static void StaticObjectChecks(LegacyProbe& screen,Renderer::LegacyD3D9Backend& 
             Check(captured.ambient[3]==material.Diffuse.a,"texture-only material alpha preserved");
             draw.ambient=captured.ambient; draw.diffuse=captured.diffuse;
         }
+        auto selectedTexture=texture;
+        if(pose>=14) {
+            selectedTexture=pose<16 ? b5Texture : alphaTexture;
+            STATEMANAGER.SetTexture(0,pose<16 ? legacyB5.Get() : legacyAlpha.Get());
+            STATEMANAGER.SetSamplerState(0,D3DSAMP_MINFILTER,D3DTEXF_POINT);
+            STATEMANAGER.SetSamplerState(0,D3DSAMP_MAGFILTER,D3DTEXF_POINT);
+            STATEMANAGER.SetSamplerState(0,D3DSAMP_MIPFILTER,pose==15 ? D3DTEXF_POINT : D3DTEXF_NONE);
+            STATEMANAGER.SetTextureStageState(0,D3DTSS_ALPHAOP,D3DTOP_SELECTARG1);
+            if(pose>=16 && pose<20) {
+                STATEMANAGER.SetRenderState(D3DRS_ALPHATESTENABLE,TRUE);
+                STATEMANAGER.SetRenderState(D3DRS_ALPHAFUNC,pose%2 ? D3DCMP_GREATER : D3DCMP_GREATEREQUAL);
+                STATEMANAGER.SetRenderState(D3DRS_ALPHAREF,pose<18 ? 128 : (pose==18 ? 1 : 0));
+            }
+            if(pose>=20 && pose<25) {
+                STATEMANAGER.SetRenderState(D3DRS_ALPHABLENDENABLE,TRUE);
+                STATEMANAGER.SetRenderState(D3DRS_SRCBLEND,D3DBLEND_SRCALPHA);
+                STATEMANAGER.SetRenderState(D3DRS_DESTBLEND,D3DBLEND_INVSRCALPHA);
+                STATEMANAGER.SetRenderState(D3DRS_BLENDOP,D3DBLENDOP_ADD);
+                STATEMANAGER.SetRenderState(D3DRS_SEPARATEALPHABLENDENABLE,FALSE);
+                STATEMANAGER.SetRenderState(D3DRS_ZWRITEENABLE,pose!=21);
+            }
+            if(pose>=22 && pose<25) {
+                STATEMANAGER.SetTexture(1,legacyAlpha.Get());
+                STATEMANAGER.SetTextureStageState(1,D3DTSS_COLOROP,D3DTOP_SELECTARG1);
+                STATEMANAGER.SetTextureStageState(1,D3DTSS_COLORARG1,D3DTA_CURRENT);
+                STATEMANAGER.SetTextureStageState(1,D3DTSS_ALPHAOP,D3DTOP_SELECTARG1);
+                STATEMANAGER.SetTextureStageState(1,D3DTSS_ALPHAARG1,D3DTA_TEXTURE);
+                STATEMANAGER.SetTextureStageState(1,D3DTSS_TEXCOORDINDEX,D3DTSS_TCI_CAMERASPACEPOSITION);
+                STATEMANAGER.SetTextureStageState(1,D3DTSS_TEXTURETRANSFORMFLAGS,D3DTTFF_COUNT2);
+                D3DXMATRIX mask; D3DXMatrixIdentity(&mask);
+                mask._11=mask._22=0.0003f; mask._41=mask._42=0.5f;
+                STATEMANAGER.SetTransform(D3DTS_TEXTURE1,&mask);
+                STATEMANAGER.SetSamplerState(1,D3DSAMP_ADDRESSU,D3DTADDRESS_CLAMP);
+                STATEMANAGER.SetSamplerState(1,D3DSAMP_ADDRESSV,D3DTADDRESS_CLAMP);
+                STATEMANAGER.SetSamplerState(1,D3DSAMP_MINFILTER,D3DTEXF_POINT);
+                STATEMANAGER.SetSamplerState(1,D3DSAMP_MAGFILTER,D3DTEXF_POINT);
+                STATEMANAGER.SetSamplerState(1,D3DSAMP_MIPFILTER,D3DTEXF_NONE);
+                if(pose==23) ObjectLegacyProbe::SelectionLight(true);
+                if(pose==24) STATEMANAGER.SetTextureStageState(0,D3DTSS_ALPHAOP,D3DTOP_MODULATE);
+            }
+            StaticObjectDraw captured;
+            if(pose>=25) {
+                // Same pre-shadow capture used by RenderArea, followed by the
+                // original base stage (without transferring its shadow texture).
+                STATEMANAGER.SetTextureStageState(0,D3DTSS_COLOROP,D3DTOP_SELECTARG1);
+                material.Diffuse.a=0.4f; STATEMANAGER.SetMaterial(&material);
+                if(pose==26) ObjectLegacyProbe::SelectionLight(true);
+            }
+            Check(CaptureStaticMapObjectDraw(captured,pose>=22 && pose<25,pose>=25),"static 4B original state capture");
+            if(pose>=25) {
+                STATEMANAGER.SetTextureStageState(0,D3DTSS_COLOROP,D3DTOP_MODULATE);
+                STATEMANAGER.SetTextureStageState(0,D3DTSS_ALPHAOP,D3DTOP_DISABLE);
+            }
+            captured.matrices=draw.matrices; captured.normalTransform=draw.normalTransform;
+            captured.firstIndex=3; captured.indexCount=6; captured.baseVertex=2; captured.vertexCount=4;
+            if(pose>=22 && pose<25) captured.cameraAlpha=alphaTexture;
+            if(pose==23) Check(captured.pointPositionRange[3]==500,"original native point light captured");
+            draw=captured;
+        }
         STATEMANAGER.DrawIndexedPrimitiveUP(D3DPT_TRIANGLELIST,0,4,2,source.indices.data()+3,D3DFMT_INDEX16,source.vertices.data()+2,32);
-        objects.ResetFrame(); objects.Draw(geometry,texture,draw);
+        objects.ResetFrame(); objects.Draw(geometry,selectedTexture,draw);
         legacy.EndFrame(); modern.EndFrame();
         Check(!objects.Failed() && objects.DrawCount()==1,"static object draw");
         const auto d9=LegacyProbe::Read(width,height),d11=BackendTestAccess::Read(modern,false),depth=BackendTestAccess::Read(modern,true);
-        size_t covered=0,edges=0; double error=0;
+        size_t covered=0,edges=0,alphaErrors=0,alphaBoundary=0; double error=0;
         for(size_t i=0;i<d9.size();++i) {
             const bool a=(d9[i]&0xffffff)!=0,b=(d11[i]&0xffffff)!=0;
             edges+=a!=b; if(!a || !b) continue; ++covered;
-            Check((depth[i]&0xffffff)<0xffffff,"object depth write");
+            Check(((depth[i]&0xffffff)<0xffffff)==draw.depthWrite,"object depth write state");
+            if(pose>=14 && std::abs(int(d9[i]>>24)-int(d11[i]>>24))>2) {
+                // Point sampling may choose opposite texels at an exact boundary.
+                // Only accept a one-pixel boundary in BOTH native and Diligent images.
+                bool nativeEdge=false,modernEdge=false;
+                for(int offset:{-1,1,-int(width),int(width)}) {
+                    const auto neighbour=int64_t(i)+offset;
+                    if(neighbour<0 || neighbour>=int64_t(d9.size())) continue;
+                    nativeEdge|=std::abs(int(d9[i]>>24)-int(d9[neighbour]>>24))>2;
+                    modernEdge|=std::abs(int(d11[i]>>24)-int(d11[neighbour]>>24))>2;
+                }
+                if(nativeEdge && modernEdge) ++alphaBoundary;
+                else ++alphaErrors;
+            }
             if(pose==13) Check(std::abs(int(d11[i]>>24)-102)<=1,"texture-only GPU material alpha");
             for(int c=0;c<3;++c) error+=std::abs(int((d9[i]>>(16-c*8))&255)-int((d11[i]>>(c*8))&255));
         }
         const double mean=covered ? error/(covered*3) : 999;
-        if(pose==0 || pose==13) {
+        if(pose==0 || pose==13 || pose>=14) {
             SaveSplatReadback(d9,width,height,false,"object-pose"+std::to_string(pose)+"-d3d9");
             SaveSplatReadback(d11,width,height,true,"object-pose"+std::to_string(pose)+"-d3d11");
         }
@@ -141,10 +233,11 @@ static void StaticObjectChecks(LegacyProbe& screen,Renderer::LegacyD3D9Backend& 
             SaveSplatReadback(d11,width,height,true,"object-failure-d3d11");
             std::cout << "center d9=" << std::hex << d9[width*(height/2)+width/2] << " d11=" << d11[width*(height/2)+width/2] << std::dec << '\n';
         }
-        std::cout<<"Static object pose="<<pose<<" pixels="<<covered<<" RGB="<<mean<<" edges="<<edges<<'\n';
+        std::cout<<"Static object pose="<<pose<<" pixels="<<covered<<" RGB="<<mean<<" edges="<<edges<<" alpha-errors="<<alphaErrors<<" alpha-boundary="<<alphaBoundary<<'\n';
+        Check(!alphaErrors && alphaBoundary<(width+height)/10,"original object alpha channel");
         Check(covered>1000 && mean<1.5 && edges<(width+height)/10,"static diffuse/transform/light/fog/cull parity");
         legacy.Present(); modern.Present();
-        if(pose==13) ObjectLegacyProbe::SelectionLight(false);
+        if(pose==13 || pose==23 || pose==26) ObjectLegacyProbe::SelectionLight(false);
     }
     // Same depth target as terrain, both submission orders, object above/below ground.
     {
@@ -186,7 +279,7 @@ static void StaticObjectChecks(LegacyProbe& screen,Renderer::LegacyD3D9Backend& 
     }
     objects.ReleaseBindings();
     std::weak_ptr<StaticObjectGeometry> weakGeometry=geometry; std::weak_ptr<TerrainTexture> weakTexture=texture;
-    geometry.reset(); texture.reset();
+    geometry.reset(); texture.reset(); alphaTexture.reset(); b5Texture.reset();
     Check(weakGeometry.expired() && weakTexture.expired() && !objects.LiveGeometryCount() && !objects.LiveTextureCount(),"static resource map-release lifetime");
     {
         DiligentStaticObjectRenderer invalid(modern); Check(invalid.Initialize(),"invalid input test initialize");

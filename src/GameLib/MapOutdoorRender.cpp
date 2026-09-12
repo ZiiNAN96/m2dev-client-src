@@ -329,6 +329,8 @@ struct FAreaRenderShadow
 	void operator () (CGraphicObjectInstance * pInstance)
 	{
 		pInstance->RenderShadow();
+		if (auto* thing = dynamic_cast<CGraphicThingInstance*>(pInstance))
+			SubmitStaticMapObject(*thing, StaticMapObjectPass::ShadowReceiver);
 		pInstance->Hide();
 	}
 };
@@ -343,6 +345,7 @@ struct FPCBlockerHide
 
 struct FRenderPCBlocker
 {
+	CGraphicImage* cameraAlpha;
 	void operator () (CGraphicObjectInstance * pInstance)
 	{
 		pInstance->Show();
@@ -359,6 +362,8 @@ struct FRenderPCBlocker
 		STATEMANAGER.SetTextureStageState(1, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1);
 
 		pInstance->RenderPCBlocker();
+		if (pThingInstance)
+			SubmitStaticMapObject(*pThingInstance, StaticMapObjectPass::CameraBlocker, cameraAlpha);
 	}
 };
 
@@ -427,6 +432,7 @@ void CMapOutdoor::RenderArea(bool bRenderAmbience)
 		}
 	}
 
+	BeginStaticMapObjects(m_bDrawShadow && m_bDrawChrShadow);
 	// PCBlocker
 	std::for_each(m_PCBlockerVector.begin(), m_PCBlockerVector.end(), FPCBlockerHide());
 
@@ -655,7 +661,7 @@ void CMapOutdoor::RenderPCBlocker()
 		STATEMANAGER.SaveTransform(D3DTS_TEXTURE1, &m_matBuildingTransparent);
 		STATEMANAGER.SetTexture(1, m_BuildingTransparentImageInstance.GetTexturePointer()->GetD3DTexture());
 
-		std::for_each(m_PCBlockerVector.begin(), m_PCBlockerVector.end(), FRenderPCBlocker());
+		std::for_each(m_PCBlockerVector.begin(), m_PCBlockerVector.end(), FRenderPCBlocker{m_BuildingTransparentImageInstance.GetGraphicImagePointer()});
 
 		STATEMANAGER.SetTexture(1, NULL);
 		STATEMANAGER.RestoreTransform(D3DTS_TEXTURE1);

@@ -55,4 +55,25 @@ inline std::vector<uint8_t> GradientDDS()
     }
     return bytes;
 }
+inline std::vector<uint8_t> AlphaDDS()
+{
+    auto bytes=GradientDDS();
+    const uint8_t levels[]{0,1,127,128,254,255,128,0};
+    for(uint32_t y=0;y<32;++y) for(uint32_t x=0;x<32;++x)
+        bytes[128+(y*32+x)*4+3]=levels[x/4];
+    return bytes;
+}
+inline std::vector<uint8_t> B5G5R5A1DDS()
+{
+    auto bytes=GradientDDS(); bytes.resize(128);
+    Word(bytes,8,0x2100F); Word(bytes,12,16); Word(bytes,16,16); Word(bytes,20,32); Word(bytes,28,5);
+    Word(bytes,88,16); Word(bytes,92,0x7c00); Word(bytes,96,0x3e0); Word(bytes,100,0x1f); Word(bytes,104,0x8000);
+    Word(bytes,108,0x401008);
+    for(uint32_t mip=0,size=16;mip<5;++mip,size=std::max(1u,size>>1))
+        for(uint32_t y=0;y<size;++y) for(uint32_t x=0;x<size;++x) {
+            const uint16_t pixel=uint16_t((((x+y)%2)!=0 ? 0x8000 : 0)|((31-mip*5)<<10)|((x*2%32)<<5)|(y*2%32));
+            bytes.push_back(uint8_t(pixel)); bytes.push_back(uint8_t(pixel>>8));
+        }
+    return bytes;
+}
 }

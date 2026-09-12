@@ -6,7 +6,7 @@
 
 namespace Renderer
 {
-enum class TerrainTextureFormat { Unknown, RGBA8, BGRA8, BGRX8, BC1, BC2, BC3, Alpha8 };
+enum class TerrainTextureFormat { Unknown, RGBA8, BGRA8, BGRX8, BC1, BC2, BC3, Alpha8, B5G5R5A1 };
 struct TerrainTextureMip
 {
     const void* data = nullptr;

@@ -29,7 +29,12 @@ struct Texture final : TerrainTexture
 {
     RefCntAutoPtr<ITexture> texture;
     RefCntAutoPtr<ISampler> sampler;
-    RefCntAutoPtr<IShaderResourceBinding> bindings[3];
+    RefCntAutoPtr<IShaderResourceBinding> bindings[12];
+    RefCntAutoPtr<ISampler> cameraSampler;
+    std::weak_ptr<Texture> cameraImage;
+    TerrainSampling cameraSampling{};
+    bool cameraAnisotropic=false;
+    uint32_t cameraMaxAnisotropy=1;
     TerrainSampling sampling{};
     bool anisotropic=false;
     uint32_t maxAnisotropy=1;
@@ -42,6 +47,9 @@ struct Constants
     std::array<float,16> normal;
     std::array<float,4> ambient, diffuse, direction, fogColor, fogParameters;
     std::array<uint32_t,4> modes;
+    std::array<float,16> cameraAlphaTransform;
+    std::array<float,4> pointPositionRange,pointAttenuation,pointAmbient,pointDiffuse;
+    std::array<uint32_t,4> alphaModes;
 };
 static_assert(sizeof(Constants)%16==0 && sizeof(StaticObjectVertex)==32);
 constexpr char shaderSource[] = R"(
@@ -50,17 +58,32 @@ cbuffer ObjectConstants {
  row_major float4x4 NormalTransform;
  float4 Ambient; float4 Diffuse; float4 LightDirection; float4 FogColor; float4 FogParameters;
  uint4 Modes;
+ row_major float4x4 CameraAlphaTransform;
+ float4 PointPositionRange; float4 PointAttenuation; float4 PointAmbient; float4 PointDiffuse;
+ uint4 AlphaModes;
 };
 Texture2D DiffuseTexture;
 SamplerState ObjectSampler;
-struct Output { float4 position:SV_POSITION; float2 uv:TEXCOORD0; float4 diffuse:COLOR0; float fog:TEXCOORD1; };
+Texture2D CameraAlphaTexture;
+SamplerState CameraAlphaSampler;
+struct Output { float4 position:SV_POSITION; float2 uv:TEXCOORD0; float4 diffuse:COLOR0; float fog:TEXCOORD1; float2 cameraUV:TEXCOORD2; };
 Output VS(float3 position:ATTRIB0, float3 normal:ATTRIB1, float2 uv:ATTRIB2) {
  Output o;
  float4 eye=mul(mul(float4(position,1),World),View);
  o.position=mul(eye,Projection); o.uv=uv;
  float3 n=mul(float4(normal,0),NormalTransform).xyz;
  if(Modes.z!=0) n=normalize(n);
- o.diffuse=float4(saturate(Ambient.rgb + Diffuse.rgb*max(0,dot(n,LightDirection.xyz))),Ambient.a);
+ float3 lighting=Ambient.rgb + Diffuse.rgb*max(0,dot(n,LightDirection.xyz));
+ if(PointPositionRange.w>0) {
+   float3 delta=PointPositionRange.xyz-eye.xyz;
+   float distance=length(delta);
+   if(distance<=PointPositionRange.w) {
+     float attenuation=1/max(1e-20,dot(PointAttenuation.xyz,float3(1,distance,distance*distance)));
+     lighting+=attenuation*(PointAmbient.rgb+PointDiffuse.rgb*max(0,dot(n,delta/max(distance,1e-20))));
+   }
+ }
+ o.diffuse=float4(saturate(lighting),Ambient.a);
+ o.cameraUV=mul(eye,CameraAlphaTransform).xy;
  // D3D9 fixed-function diffuse output is an 8-bit color before interpolation.
  o.diffuse=floor(o.diffuse*255+0.5)/255;
  float d=Modes.y!=0 ? length(eye.xyz) : abs(eye.z);
@@ -72,7 +95,13 @@ Output VS(float3 position:ATTRIB0, float3 normal:ATTRIB1, float2 uv:ATTRIB2) {
  return o;
 }
 float4 PS(Output i):SV_TARGET {
- float4 color=DiffuseTexture.Sample(ObjectSampler,i.uv)*i.diffuse;
+ float4 color=DiffuseTexture.Sample(ObjectSampler,i.uv);
+ color.rgb*=i.diffuse.rgb;
+ if(AlphaModes.x==0) color.a*=i.diffuse.a;
+ if(AlphaModes.x==2) color.a=i.diffuse.a;
+ if(AlphaModes.w!=0) color.a=CameraAlphaTexture.Sample(CameraAlphaSampler,i.cameraUV).a;
+ if(AlphaModes.y==1 && color.a<float(AlphaModes.z)/255.0) discard;
+ if(AlphaModes.y==2 && color.a<=float(AlphaModes.z)/255.0) discard;
  color.rgb=lerp(FogColor.rgb,color.rgb,i.fog);
  return color;
 }
@@ -82,7 +111,7 @@ struct DiligentStaticObjectRenderer::Impl
 {
     DiligentD3D11Backend& backend;
     RefCntAutoPtr<IBuffer> constants;
-    RefCntAutoPtr<IPipelineState> pipelines[3];
+    RefCntAutoPtr<IPipelineState> pipelines[12];
     std::shared_ptr<Counters> counters=std::make_shared<Counters>();
     uint32_t draws=0;
     bool failed=false;
@@ -116,11 +145,14 @@ bool DiligentStaticObjectRenderer::Initialize()
         if(!vs || !ps) return false;
         LayoutElement layout[]={{0,0,3,VT_FLOAT32,False,0,32},{1,0,3,VT_FLOAT32,False,12,32},{2,0,2,VT_FLOAT32,False,24,32}};
         ShaderResourceVariableDesc variables[]={{SHADER_TYPE_PIXEL,"DiffuseTexture",SHADER_RESOURCE_VARIABLE_TYPE_MUTABLE},
-            {SHADER_TYPE_PIXEL,"ObjectSampler",SHADER_RESOURCE_VARIABLE_TYPE_MUTABLE}};
-        for(unsigned cull=0;cull<3;++cull) {
+            {SHADER_TYPE_PIXEL,"ObjectSampler",SHADER_RESOURCE_VARIABLE_TYPE_MUTABLE},
+            {SHADER_TYPE_PIXEL,"CameraAlphaTexture",SHADER_RESOURCE_VARIABLE_TYPE_MUTABLE},
+            {SHADER_TYPE_PIXEL,"CameraAlphaSampler",SHADER_RESOURCE_VARIABLE_TYPE_MUTABLE}};
+        for(unsigned variant=0;variant<12;++variant) {
+            const auto cull=variant%3;
             GraphicsPipelineStateCreateInfo info;
             info.PSODesc.Name="Static object opaque diffuse"; info.PSODesc.PipelineType=PIPELINE_TYPE_GRAPHICS;
-            info.PSODesc.ResourceLayout.Variables=variables; info.PSODesc.ResourceLayout.NumVariables=2;
+            info.PSODesc.ResourceLayout.Variables=variables; info.PSODesc.ResourceLayout.NumVariables=4;
             auto& g=info.GraphicsPipeline;
             const auto& swap=s.backend.m_impl->swapChain->GetDesc();
             g.NumRenderTargets=1; g.RTVFormats[0]=swap.ColorBufferFormat; g.DSVFormat=swap.DepthBufferFormat;
@@ -128,11 +160,15 @@ bool DiligentStaticObjectRenderer::Initialize()
             g.RasterizerDesc.CullMode=cull==0 ? CULL_MODE_NONE : CULL_MODE_BACK;
             g.RasterizerDesc.FrontCounterClockwise=cull==1;
             g.RasterizerDesc.DepthClipEnable=True;
-            g.DepthStencilDesc.DepthEnable=True; g.DepthStencilDesc.DepthWriteEnable=True;
+            g.DepthStencilDesc.DepthEnable=True; g.DepthStencilDesc.DepthWriteEnable=variant<6;
             g.DepthStencilDesc.DepthFunc=COMPARISON_FUNC_LESS_EQUAL;
+            auto& blend=g.BlendDesc.RenderTargets[0];
+            blend.BlendEnable=(variant/3)%2!=0;
+            blend.SrcBlend=blend.SrcBlendAlpha=BLEND_FACTOR_SRC_ALPHA;
+            blend.DestBlend=blend.DestBlendAlpha=BLEND_FACTOR_INV_SRC_ALPHA;
             g.InputLayout.LayoutElements=layout; g.InputLayout.NumElements=3;
             info.pVS=vs; info.pPS=ps;
-            auto& pipeline=s.pipelines[cull];
+            auto& pipeline=s.pipelines[variant];
             device->CreateGraphicsPipelineState(info,&pipeline);
             if(!pipeline) return false;
             for(auto stage:{SHADER_TYPE_VERTEX,SHADER_TYPE_PIXEL})
@@ -175,7 +211,7 @@ TerrainTexturePtr DiligentStaticObjectRenderer::UploadTexture(const TerrainTextu
     uint32_t maxMips=1;
     for(uint32_t dim=std::max(data.width,data.height);dim>1;dim>>=1) ++maxMips;
     if(data.mips.size()>maxMips) return fail();
-    TEXTURE_FORMAT format=TEX_FORMAT_UNKNOWN; uint32_t block=0;
+    TEXTURE_FORMAT format=TEX_FORMAT_UNKNOWN; uint32_t block=0,pixelBytes=4;
     switch(data.format) {
     case TerrainTextureFormat::RGBA8: format=TEX_FORMAT_RGBA8_UNORM; break;
     case TerrainTextureFormat::BGRA8: format=TEX_FORMAT_BGRA8_UNORM; break;
@@ -183,13 +219,14 @@ TerrainTexturePtr DiligentStaticObjectRenderer::UploadTexture(const TerrainTextu
     case TerrainTextureFormat::BC1: format=TEX_FORMAT_BC1_UNORM; block=8; break;
     case TerrainTextureFormat::BC2: format=TEX_FORMAT_BC2_UNORM; block=16; break;
     case TerrainTextureFormat::BC3: format=TEX_FORMAT_BC3_UNORM; block=16; break;
+    case TerrainTextureFormat::B5G5R5A1: format=TEX_FORMAT_B5G5R5A1_UNORM; pixelBytes=2; break;
     default: return fail();
     }
     try {
         std::vector<TextureSubResData> mips;
         uint32_t w=data.width,h=data.height;
         for(const auto& mip:data.mips) {
-            const size_t row=block ? size_t((w+3)/4)*block : size_t(w)*4;
+            const size_t row=block ? size_t((w+3)/4)*block : size_t(w)*pixelBytes;
             const size_t rows=block ? (h+3)/4 : h;
             if(!mip.data || mip.rowStride<row || mip.size<row || (rows-1)>(mip.size-row)/mip.rowStride) return fail();
             TextureSubResData sub; sub.pData=mip.data; sub.Stride=mip.rowStride; mips.push_back(sub);
@@ -212,9 +249,12 @@ void DiligentStaticObjectRenderer::Draw(const StaticObjectGeometryPtr& geometry,
     auto& s=*m_impl;
     auto mesh=std::dynamic_pointer_cast<Geometry>(geometry);
     auto image=std::dynamic_pointer_cast<Texture>(texture);
+    auto cameraImage=draw.cameraAlpha ? std::dynamic_pointer_cast<Texture>(draw.cameraAlpha) : image;
     const auto cull=static_cast<uint32_t>(draw.cull);
-    if(!s.backend.m_impl || !s.backend.m_impl->inFrame || !mesh || !image ||
-       mesh->counters!=s.counters || image->counters!=s.counters || cull>=3 || !s.pipelines[cull] ||
+    const auto variant=cull+(draw.blend ? 3 : 0)+(draw.depthWrite ? 0 : 6);
+    if(!s.backend.m_impl || !s.backend.m_impl->inFrame || !mesh || !image || !cameraImage ||
+       mesh->counters!=s.counters || image->counters!=s.counters || cameraImage->counters!=s.counters ||
+       cull>=3 || !s.pipelines[variant] || draw.alphaReference>255 || static_cast<uint32_t>(draw.alphaTest)>2 ||
        !draw.indexCount || draw.indexCount%3 || draw.firstIndex>mesh->validationIndices.size() ||
        draw.indexCount>mesh->validationIndices.size()-draw.firstIndex || !draw.vertexCount ||
        draw.baseVertex>mesh->vertexCount || draw.vertexCount>mesh->vertexCount-draw.baseVertex ||
@@ -242,12 +282,34 @@ void DiligentStaticObjectRenderer::Draw(const StaticObjectGeometryPtr& geometry,
             image->anisotropic=draw.anisotropic; image->maxAnisotropy=draw.maxAnisotropy;
             for(auto& binding:image->bindings) binding.Release();
         }
-        auto& binding=image->bindings[cull];
+        if(!image->cameraSampler || image->cameraImage.lock()!=cameraImage ||
+           !(image->cameraSampling==draw.cameraAlphaSampling) || image->cameraAnisotropic!=draw.cameraAlphaAnisotropic ||
+           image->cameraMaxAnisotropy!=draw.cameraAlphaMaxAnisotropy) {
+            SamplerDesc sampler;
+            sampler.MinFilter=draw.cameraAlphaSampling.linearMin ? FILTER_TYPE_LINEAR : FILTER_TYPE_POINT;
+            sampler.MagFilter=draw.cameraAlphaSampling.linearMag ? FILTER_TYPE_LINEAR : FILTER_TYPE_POINT;
+            sampler.MipFilter=draw.cameraAlphaSampling.linearMip ? FILTER_TYPE_LINEAR : FILTER_TYPE_POINT;
+            if(draw.cameraAlphaAnisotropic) {
+                sampler.MinFilter=sampler.MagFilter=sampler.MipFilter=FILTER_TYPE_ANISOTROPIC;
+                sampler.MaxAnisotropy=draw.cameraAlphaMaxAnisotropy;
+            }
+            sampler.AddressU=draw.cameraAlphaSampling.wrapU ? TEXTURE_ADDRESS_WRAP : TEXTURE_ADDRESS_CLAMP;
+            sampler.AddressV=draw.cameraAlphaSampling.wrapV ? TEXTURE_ADDRESS_WRAP : TEXTURE_ADDRESS_CLAMP;
+            if(!draw.cameraAlphaSampling.useMips) sampler.MaxLOD=0;
+            image->cameraSampler.Release(); b.device->CreateSampler(sampler,&image->cameraSampler);
+            if(!image->cameraSampler) { s.failed=true; return; }
+            image->cameraImage=cameraImage; image->cameraSampling=draw.cameraAlphaSampling;
+            image->cameraAnisotropic=draw.cameraAlphaAnisotropic; image->cameraMaxAnisotropy=draw.cameraAlphaMaxAnisotropy;
+            for(auto& binding:image->bindings) binding.Release();
+        }
+        auto& binding=image->bindings[variant];
         if(!binding) {
-            s.pipelines[cull]->CreateShaderResourceBinding(&binding,true);
+            s.pipelines[variant]->CreateShaderResourceBinding(&binding,true);
             if(!binding) { s.failed=true; return; }
             binding->GetVariableByName(SHADER_TYPE_PIXEL,"DiffuseTexture")->Set(image->texture->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE));
             binding->GetVariableByName(SHADER_TYPE_PIXEL,"ObjectSampler")->Set(image->sampler);
+            binding->GetVariableByName(SHADER_TYPE_PIXEL,"CameraAlphaTexture")->Set(cameraImage->texture->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE));
+            binding->GetVariableByName(SHADER_TYPE_PIXEL,"CameraAlphaSampler")->Set(image->cameraSampler);
         }
         {
             MapHelper<Constants> mapped(b.context,s.constants,MAP_WRITE,MAP_FLAG_DISCARD);
@@ -261,8 +323,12 @@ void DiligentStaticObjectRenderer::Draw(const StaticObjectGeometryPtr& geometry,
             mapped->ambient=draw.ambient; mapped->diffuse=draw.diffuse; mapped->direction=draw.lightDirection;
             mapped->fogColor=draw.fogColor; mapped->fogParameters=draw.fogParameters;
             mapped->modes={static_cast<uint32_t>(draw.fog),draw.rangeFog,draw.normalizeNormals,0};
+            mapped->cameraAlphaTransform=draw.cameraAlphaTransform;
+            mapped->pointPositionRange=draw.pointPositionRange; mapped->pointAttenuation=draw.pointAttenuation;
+            mapped->pointAmbient=draw.pointAmbient; mapped->pointDiffuse=draw.pointDiffuse;
+            mapped->alphaModes={draw.diffuseAlphaOnly ? 2u : uint32_t(draw.textureAlpha),static_cast<uint32_t>(draw.alphaTest),draw.alphaReference,draw.cameraAlpha ? 1u : 0u};
         }
-        b.context->SetPipelineState(s.pipelines[cull]);
+        b.context->SetPipelineState(s.pipelines[variant]);
         IBuffer* vertex=mesh->vertices; Uint64 offset=0;
         b.context->SetVertexBuffers(0,1,&vertex,&offset,RESOURCE_STATE_TRANSITION_MODE_TRANSITION,SET_VERTEX_BUFFERS_FLAG_RESET);
         b.context->SetIndexBuffer(mesh->indices,0,RESOURCE_STATE_TRANSITION_MODE_TRANSITION);

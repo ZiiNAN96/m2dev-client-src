@@ -1,5 +1,6 @@
 #include "EterLib/StdAfx.h"
 #include "EterLib/TerrainTextureLoader.h"
+#include "EterLib/StaticObjectTextureLoader.h"
 #include "EterImageLib/DDSTextureLoader9.h"
 #include "TerrainTextureFixtures.h"
 #include "GameLib/TerrainAlphaImage.h"
@@ -87,6 +88,20 @@ int main()
             Check(!LoadTerrainTextureMemory(bad.data(),bad.size(),probe),"invalid DDS rejected");
         }
         Check(!LoadTerrainTextureMemory(nullptr,0,probe),"empty texture rejected");
+        auto staticDDS=TerrainFixture::B5G5R5A1DDS();
+        Check(LoadStaticObjectTextureMemory(staticDDS.data(),staticDDS.size(),probe)!=nullptr,"static B5G5R5A1 upload");
+        Check(probe.format==Renderer::TerrainTextureFormat::B5G5R5A1 && probe.mips.size()==5 &&
+              probe.strides[0]==32 && probe.mips[0].size()==512 && probe.mips[4].size()==2,"original 16-bit channel layout and five mips");
+        size_t cursor=128;
+        for(const auto& mip:probe.mips) {
+            Check(std::equal(mip.begin(),mip.end(),staticDDS.begin()+cursor),"16-bit mip bytes retained exactly");
+            cursor+=mip.size();
+        }
+        Check(!LoadTerrainTextureMemory(staticDDS.data(),staticDDS.size(),probe),"terrain texture format contract unchanged");
+        staticDDS.pop_back();
+        Check(!LoadStaticObjectTextureMemory(staticDDS.data(),staticDDS.size(),probe),"truncated static final mip rejected");
+        Check(!LoadStaticObjectTextureMemory(nullptr,0,probe),"empty static texture rejected");
+        std::cout<<"Static texture CPU: original B5G5R5A1/five mips/byte identity/truncation/terrain isolation PASS\n";
         std::cout<<"Terrain texture CPU: BC1/2/3, mip bounds, DDS rejection, TGA RGBA orientation PASS\n";
         return 0;
     }
