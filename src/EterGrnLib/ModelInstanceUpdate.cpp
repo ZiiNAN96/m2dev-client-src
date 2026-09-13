@@ -71,15 +71,19 @@ void CGrannyModelInstance::Deform(const Math::Matrix * c_pWorldMatrix)
 	/////////////////////////////////////////////
 	
 	UpdateWorldPose();
-	UpdateWorldMatrices(c_pWorldMatrix);
+	if (!UpdateWorldMatrices(c_pWorldMatrix)) return;
 
-    // ZiiNAN: Diligent GPU skinning prototype
-    const bool reference=captureActor && Renderer::actorDeformTargets.prototypeBody==this;
+    // ZiiNAN: GPU skinning actor coverage
+    const auto part=Renderer::actorDeformTargets.Find(this);
+    const bool reference=captureActor && m_pModel->GetActorSource()->deformVertexCount &&
+        (Renderer::actorDeformTargets.prototypeBody==this ||
+         (Renderer::actorDeformTargets.gpuSkinning && part!=Renderer::ActorPart::Unsupported));
     if(reference && Renderer::startupSkinningMode==Renderer::PrototypeSkinningMode::GPUPrototype) {
         const auto start=Renderer::PrototypeClock::now();
         const auto palette=GetSkinningPalette();
         if(Renderer::actorRenderer && palette && m_pModel->GetSkinningData() &&
-           Renderer::actorRenderer->PreparePrototype(m_actorRenderData.geometry,*m_pModel->GetSkinningData(),m_skinningRemaps,*palette)) {
+           Renderer::actorRenderer->PreparePrototype(m_actorRenderData.geometry,*m_pModel->GetSkinningData(),m_skinningRemaps,*palette,
+               m_pModel->GetActorSource().get(),part,Renderer::actorDeformTargets.category)) {
             m_actorRenderData.gpuPrototype=true; m_actorRenderData.ready=true;
             m_actorRenderData.capturedFrame=Renderer::actorFrameSerial;
             ++Renderer::prototypeFrames;
@@ -87,7 +91,9 @@ void CGrannyModelInstance::Deform(const Math::Matrix * c_pWorldMatrix)
             return;
         }
         if(m_actorRenderData.reports.insert("GPU prototype CPU fallback").second)
-            TraceError("GPU prototype: unsupported/failed preparation, using original CPU deformation");
+            TraceError("GPU skinning CPU fallback: model=%s part=%u status=%s palette=%s remaps=%zu; original CPU deformation",
+                m_pModel->GetGrannyModelPointer()->Name,static_cast<unsigned>(part),Renderer::SkinDataStatusName(m_skinningStatus),
+                palette ? "present" : "unavailable",m_skinningRemaps.size());
     }
     if(m_actorRenderData.gpuPrototype) {
         m_actorRenderData.geometry.reset(); m_actorRenderData.uploadedRevision=0;
@@ -211,12 +217,13 @@ void CGrannyModelInstance::UpdateWorldPose()
 
 }
 
-void CGrannyModelInstance::UpdateWorldMatrices(const Math::Matrix* c_pWorldMatrix)
+bool CGrannyModelInstance::UpdateWorldMatrices(const Math::Matrix* c_pWorldMatrix)
 {
+    if(!__RefreshLinkedLodBinding()) { m_actorRenderData.ready=false; return false; }
     __PrepareSkinningBindings();
 	// NO_MESH_BUG_FIX
 	if (!m_meshMatrices)
-		return;
+		return false;
 	// END_OF_NO_MESH_BUG_FIX
 	
 	assert(m_pModel != NULL);
@@ -250,6 +257,7 @@ void CGrannyModelInstance::UpdateWorldMatrices(const Math::Matrix* c_pWorldMatri
 #ifdef _TEST
 	TEST_matWorld = *c_pWorldMatrix;
 #endif
+    return true;
 }
 
 void CGrannyModelInstance::DeformPNTVertices(void * pvDest)

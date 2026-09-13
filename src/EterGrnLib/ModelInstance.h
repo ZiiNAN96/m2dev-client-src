@@ -85,7 +85,7 @@ class CGrannyModelInstance : public CGraphicCollisionObject
 		void	SetSpecularInfo(const char* c_szMtrlName, BOOL bEnable, float fPower);
 		
 		void	SetMainModelPointer(CGrannyModel* pkModel, CGraphicVertexBuffer* pkSharedDefromableVertexBuffer);
-		void	SetLinkedModelPointer(CGrannyModel* pkModel, CGraphicVertexBuffer* pkSharedDefromableVertexBuffer, CGrannyModelInstance** ppkSkeletonInst);
+		void	SetLinkedModelPointer(CGrannyModel* pkModel, CGraphicVertexBuffer* pkSharedDefromableVertexBuffer, CGrannyModelInstance** ppkSkeletonInst, bool refreshLinkedLodBinding = false);
 
 		// Motion
 		void	SetMotionPointer(const CGrannyMotion* pMotion, float blendTime=0.0f, int loopCount=0, float speedRatio=1.0f);
@@ -157,8 +157,9 @@ class CGrannyModelInstance : public CGraphicCollisionObject
 		// Update & Render
 		void	UpdateWorldPose();
         void __PrepareSkinningBindings();
+        bool __RefreshLinkedLodBinding();
         void __CaptureSkinningPose();
-		void	UpdateWorldMatrices(const Math::Matrix * c_pWorldMatrix);
+		bool	UpdateWorldMatrices(const Math::Matrix * c_pWorldMatrix);
 		void	DeformPNTVertices(void * pvDest);
 
 		void	RenderMeshNodeListWithOneTexture(CGrannyMesh::EType eMeshType, CGrannyMaterial::EType eMtrlType);
@@ -195,6 +196,8 @@ class CGrannyModelInstance : public CGraphicCollisionObject
         Renderer::ActorInstanceData m_actorRenderData; // ZiiNAN: No animation ownership.
         std::vector<std::shared_ptr<const Renderer::BoneRemap>> m_skinningRemaps;
         std::shared_ptr<const Renderer::SkeletonLayout> m_skinningBindingDestination;
+        // ZiiNAN: GPU skinning actor coverage - registered hair LOD links only.
+        std::shared_ptr<const Renderer::SkeletonLayout> m_linkedLodBindingDestination;
         std::shared_ptr<Renderer::BonePalette> m_skinningPalette;
         Renderer::SkinDataStatus m_skinningStatus=Renderer::SkinDataStatus::Empty;
         bool m_skinningIssueReported=false;

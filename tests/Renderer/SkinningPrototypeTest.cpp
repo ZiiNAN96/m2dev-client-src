@@ -221,8 +221,12 @@ int main(int argc,char** argv)
             const auto oldGeometry=std::weak_ptr<StaticObjectGeometry>(actor.GetActorRenderData().geometry);
             actor.SetMainModelPointer(armor.model,nullptr);
             { ActorDeformScope scope(target);actor.Deform(&world); }
-            Check(actor.GetActorRenderData().ready && !actor.GetActorRenderData().gpuPrototype && !actor.GetActorRenderData().vertices.empty(),"Unsupported armor CPU fallback");
+            Check(actor.GetActorRenderData().ready && actor.GetActorRenderData().gpuPrototype,"B4-X armor extends original B3 path");
             Check(oldGeometry.expired(),"Shape change releases old GPU reference geometry");
+            target.prototypeBody=nullptr;
+            { ActorDeformScope scope(target);actor.Deform(&world); }
+            Check(actor.GetActorRenderData().ready && !actor.GetActorRenderData().gpuPrototype && !actor.GetActorRenderData().vertices.empty(),"CPU-only comparison scope releases GPU geometry and deforms armor");
+            target.prototypeBody=&actor;
             actor.SetMainModelPointer(asset.model,nullptr);
             { ActorDeformScope scope(target);actor.Deform(&world); }
             Check(actor.GetActorRenderData().gpuPrototype,"Return to reference after CPU armor");

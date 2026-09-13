@@ -7,6 +7,7 @@ void CGrannyModelInstance::Clear()
     // ZiiNAN: GPU skinning static mesh data
     m_skinningRemaps.clear();
     m_skinningBindingDestination.reset();
+    m_linkedLodBindingDestination.reset();
     m_skinningPalette.reset();
     m_skinningStatus=Renderer::SkinDataStatus::Empty;
     m_skinningIssueReported=false;
@@ -31,7 +32,7 @@ void CGrannyModelInstance::SetMainModelPointer(CGrannyModel* pModel, CGraphicVer
 	SetLinkedModelPointer(pModel, pkSharedDeformableVertexBuffer, NULL);
 }
 
-void CGrannyModelInstance::SetLinkedModelPointer(CGrannyModel* pkModel, CGraphicVertexBuffer* pkSharedDeformableVertexBuffer, CGrannyModelInstance** ppkSkeletonInst)
+void CGrannyModelInstance::SetLinkedModelPointer(CGrannyModel* pkModel, CGraphicVertexBuffer* pkSharedDeformableVertexBuffer, CGrannyModelInstance** ppkSkeletonInst, bool refreshLinkedLodBinding)
 {
 	Clear();
 
@@ -53,6 +54,8 @@ void CGrannyModelInstance::SetLinkedModelPointer(CGrannyModel* pkModel, CGraphic
 	if (ppkSkeletonInst && *ppkSkeletonInst)
 	{
 		m_ppkSkeletonInst = ppkSkeletonInst;
+        if(refreshLinkedLodBinding && (*ppkSkeletonInst)->m_pModel->GetSkinningData())
+            m_linkedLodBindingDestination=(*ppkSkeletonInst)->m_pModel->GetSkinningData()->skeleton;
 		__CreateWorldPose(*ppkSkeletonInst);			
 		__CreateMeshBindingVector(*ppkSkeletonInst);
 	}

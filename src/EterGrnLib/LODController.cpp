@@ -248,7 +248,8 @@ void CGrannyLODController::AddModel(CGraphicThing * pThing, int iSrcModel, CGran
 
 	if (pSkelLODController)
 	{
-		pModelInstance->SetLinkedModelPointer(pModel, m_pkSharedDeformableVertexBuffer, &pSkelLODController->m_pCurrentModelInstance);
+        // ZiiNAN: GPU skinning actor coverage - keep native hair bindings current across body LODs.
+		pModelInstance->SetLinkedModelPointer(pModel, m_pkSharedDeformableVertexBuffer, &pSkelLODController->m_pCurrentModelInstance, true);
 	}
 	else
 	{		

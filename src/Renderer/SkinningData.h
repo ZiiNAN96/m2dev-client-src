@@ -19,6 +19,8 @@ inline constexpr SkinningMode productionSkinningMode = SkinningMode::CPU;
 inline constexpr size_t preparedBoneLimit = 256; // Preparation limit, not an asset/runtime limit.
 inline std::atomic_size_t liveSkinMeshes{}, liveBoneRemaps{}, liveBonePalettes{};
 inline std::atomic_uint64_t nextSkeletonIdentity{1}, skinPaletteUpdates{}, skinSidecarFailures{};
+// ZiiNAN: GPU skinning actor coverage
+inline std::atomic_uint64_t nextPaletteIdentity{1};
 
 struct SkinningVertex
 {
@@ -112,6 +114,7 @@ using SkinningMatrix = std::array<float,16>;
 static_assert(sizeof(SkinningMatrix)==64);
 struct BonePalette
 {
+    const uint64_t identity=nextPaletteIdentity.fetch_add(1);
     BonePalette() { ++liveBonePalettes; }
     ~BonePalette() { --liveBonePalettes; }
     BonePalette(const BonePalette&) = delete;

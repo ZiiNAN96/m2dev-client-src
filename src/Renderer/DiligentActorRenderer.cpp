@@ -3,6 +3,19 @@
 // ZiiNAN: One discard upload per completed pose, not per material group.
 namespace Renderer
 {
+// ZiiNAN: GPU skinning actor coverage
+bool DiligentActorRenderer::PreparePrototype(StaticObjectGeometryPtr& geometry, const SkinningModelData& data,
+    const std::vector<std::shared_ptr<const BoneRemap>>& remaps, const BonePalette& palette,
+    const ActorModelSource* source, ActorPart part, ActorCategory category)
+{
+    const auto previous=geometry;
+    if(!m_meshes.PreparePrototype(geometry,data,remaps,palette,source)) return false;
+    if(geometry!=previous) {
+        if(part!=ActorPart::Body) m_attachmentGeometry.emplace_back(geometry);
+        if(category==ActorCategory::Mount) m_mountGeometry.emplace_back(geometry);
+    }
+    return true;
+}
 void DiligentActorRenderer::ResetFrame()
 {
     m_meshes.ResetFrame(); m_actors.clear(); m_uploads=0; m_vertices=0; m_skinnedVertices=0;

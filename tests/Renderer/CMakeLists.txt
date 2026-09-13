@@ -95,3 +95,28 @@ target_include_directories(RendererSkinningPrototypeTest PRIVATE ${diligent_incl
 target_link_libraries(RendererSkinningPrototypeTest PRIVATE ${client_libraries} M2RendererDiligent Diligent-GraphicsEngineD3D11Interface)
 add_test(NAME Renderer.SkinningPrototype COMMAND RendererSkinningPrototypeTest "${M2_SKINNING_ASSET_ROOT}" "${CMAKE_BINARY_DIR}/phase-b3/parity-$<CONFIG>")
 set_tests_properties(Renderer.SkinningPrototype PROPERTIES LABELS "gpu;skinning;real-assets" TIMEOUT 120)
+
+# ZiiNAN: GPU skinning actor coverage
+add_executable(RendererSkinningCoverageTest SkinningCoverageTest.cpp)
+target_include_directories(RendererSkinningCoverageTest PRIVATE ${diligent_includes})
+target_link_libraries(RendererSkinningCoverageTest PRIVATE ${client_libraries} M2RendererDiligent Diligent-GraphicsEngineD3D11Interface)
+add_test(NAME Renderer.SkinningCoverage COMMAND RendererSkinningCoverageTest "${M2_SKINNING_ASSET_ROOT}")
+set_tests_properties(Renderer.SkinningCoverage PROPERTIES LABELS "gpu;skinning;real-assets" TIMEOUT 900)
+add_test(NAME Renderer.HairLodParity COMMAND RendererSkinningCoverageTest "${M2_SKINNING_ASSET_ROOT}" --lod-only)
+set_tests_properties(Renderer.HairLodParity PROPERTIES LABELS "gpu;skinning;real-assets" TIMEOUT 300)
+
+# ZiiNAN: GPU skinning stability validation
+add_executable(RendererSkinningStabilityTest SkinningStabilityTest.cpp)
+target_include_directories(RendererSkinningStabilityTest PRIVATE ${diligent_includes})
+target_link_libraries(RendererSkinningStabilityTest PRIVATE ${client_libraries} M2RendererDiligent Diligent-GraphicsEngineD3D11Interface)
+foreach(mode parity stress)
+    add_test(NAME Renderer.SkinningStability.${mode} COMMAND RendererSkinningStabilityTest
+        "${M2_SKINNING_ASSET_ROOT}" "${CMAKE_BINARY_DIR}/phase-b5x/${mode}-$<CONFIG>" ${mode})
+    set_tests_properties(Renderer.SkinningStability.${mode} PROPERTIES LABELS "gpu;skinning;real-assets;b5x" TIMEOUT 1800 RUN_SERIAL TRUE)
+endforeach()
+
+add_executable(RendererSkinningFallbackParityTest SkinningFallbackParityTest.cpp)
+target_include_directories(RendererSkinningFallbackParityTest PRIVATE ${diligent_includes})
+target_link_libraries(RendererSkinningFallbackParityTest PRIVATE ${client_libraries} M2RendererDiligent Diligent-GraphicsEngineD3D11Interface)
+add_test(NAME Renderer.SkinningFallbackParity COMMAND RendererSkinningFallbackParityTest "${M2_SKINNING_ASSET_ROOT}")
+set_tests_properties(Renderer.SkinningFallbackParity PROPERTIES LABELS "gpu;skinning;real-assets;b5x" TIMEOUT 120 RUN_SERIAL TRUE)

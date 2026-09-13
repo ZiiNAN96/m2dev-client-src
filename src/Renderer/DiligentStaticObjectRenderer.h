@@ -5,6 +5,7 @@
 
 namespace Renderer
 {
+struct ActorModelSource;
 class DiligentStaticObjectRenderer final : public IStaticObjectRenderer
 {
 public:
@@ -12,7 +13,7 @@ public:
     ~DiligentStaticObjectRenderer() override;
     bool Initialize(bool gpuPrototype = false);
     bool PreparePrototype(StaticObjectGeometryPtr&, const SkinningModelData&,
-        const std::vector<std::shared_ptr<const BoneRemap>>&, const BonePalette&);
+        const std::vector<std::shared_ptr<const BoneRemap>>&, const BonePalette&, const ActorModelSource* = nullptr);
     void ResetFrame();
     bool Failed() const;
     uint32_t DrawCount() const;

@@ -15,6 +15,35 @@ namespace Renderer
 class BackendTestAccess
 {
 public:
+    // ZiiNAN: GPU skinning parity validation
+    static void ValidateUploadedPalette(DiligentD3D11Backend& backend, const BonePalette& palette)
+    {
+        using namespace Diligent;
+        RefCntAutoPtr<IRenderDeviceD3D11> native(backend.m_impl->device,IID_RenderDeviceD3D11);
+        auto* device=native->GetD3D11Device();
+        Microsoft::WRL::ComPtr<ID3D11DeviceContext> context;device->GetImmediateContext(&context);
+        Microsoft::WRL::ComPtr<ID3D11Buffer> paletteBuffer;
+        for(UINT slot=0;slot<D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT;++slot) {
+            Microsoft::WRL::ComPtr<ID3D11Buffer> buffer;context->VSGetConstantBuffers(slot,1,&buffer);
+            if(buffer) { D3D11_BUFFER_DESC desc{};buffer->GetDesc(&desc);
+                if(desc.ByteWidth==gpuPrototypeBufferBones*sizeof(SkinningMatrix)) {
+                    Check(!paletteBuffer,"Exactly one bound vertex-shader bone palette");paletteBuffer=buffer;
+                }
+            }
+        }
+        Check(bool(paletteBuffer),"Production draw actually binds a bone constant buffer");
+        D3D11_BUFFER_DESC desc{};paletteBuffer->GetDesc(&desc);
+        desc.Usage=D3D11_USAGE_STAGING;desc.BindFlags=0;desc.CPUAccessFlags=D3D11_CPU_ACCESS_READ;desc.MiscFlags=0;
+        Microsoft::WRL::ComPtr<ID3D11Buffer> staging;
+        Check(SUCCEEDED(device->CreateBuffer(&desc,nullptr,&staging)),"Production palette staging buffer");
+        context->CopyResource(staging.Get(),paletteBuffer.Get());D3D11_MAPPED_SUBRESOURCE mapped{};
+        Check(SUCCEEDED(context->Map(staging.Get(),0,D3D11_MAP_READ,0,&mapped)),"Production palette readback");
+        std::array<SkinningMatrix,gpuPrototypeBufferBones> actual{};
+        memcpy(actual.data(),mapped.pData,sizeof(actual));context->Unmap(staging.Get(),0);
+        std::array<SkinningMatrix,gpuPrototypeBufferBones> expected{};
+        std::copy(palette.matrices.begin(),palette.matrices.end(),expected.begin());
+        Check(actual==expected,"Uploaded production matrices/order and zero tail exactly match current native palette");
+    }
     static Diligent::RefCntAutoPtr<Diligent::IQuery> BeginTiming(DiligentD3D11Backend& backend)
     {
         using namespace Diligent;

@@ -25,6 +25,8 @@ inline bool IsReferenceSkinningAsset(std::string_view path)
     return true;
 }
 inline std::atomic_size_t livePrototypeGeometry{}, livePrototypePalettes{};
+// ZiiNAN: GPU skinning actor coverage
+inline std::atomic_size_t livePrototypeStaticMeshes{};
 inline uint64_t prototypeFrames{}, prototypeBoneBytes{}, prototypeCpuFrames{}, prototypeCpuBytes{};
 inline double prototypePrepareUs{}, prototypeCpuSkinUs{};
 using PrototypeClock = std::chrono::steady_clock;
@@ -58,9 +60,14 @@ inline bool BuildPrototypeVertices(const SkinningModelData& data,
     std::vector<SkinningVertex>& vertices, std::vector<uint16_t>& indices)
 {
     vertices.clear(); indices.clear();
-    if(!IsReferenceSkinningModel(data) || !ValidPrototypePalette(palette) ||
-       remaps.size()!=data.meshes.size() || palette.skeleton!=data.skeleton) return false;
+    if(!data.skeleton || !data.HasSkinnedMeshes() || !ValidPrototypePalette(palette) ||
+       remaps.size()!=data.meshes.size() || data.status.size()!=data.meshes.size()) return false;
     for(size_t m=0;m<data.meshes.size();++m) {
+        if(data.status[m]==SkinDataStatus::Rigid || data.status[m]==SkinDataStatus::Empty) {
+            if(data.meshes[m]) return false;
+            continue;
+        }
+        if(data.status[m]!=SkinDataStatus::Ready || !data.meshes[m]) return false;
         const auto& mesh=*data.meshes[m]; const auto& remap=remaps[m];
         SkinDataDiagnostics diagnostics;
         if(!remap || remap->destination!=palette.skeleton || remap->meshToSkeleton.size()!=mesh.meshBoneCount ||
@@ -77,6 +84,17 @@ inline bool BuildPrototypeVertices(const SkinningModelData& data,
             vertices.push_back(vertex);
         }
         indices.insert(indices.end(),mesh.indices.begin(),mesh.indices.end());
+    }
+    return true;
+}
+
+// ZiiNAN: GPU skinning actor coverage
+inline bool ValidPrototypeModel(const SkinningModelData& data)
+{
+    if(!data.skeleton || !data.HasSkinnedMeshes() || data.status.size()!=data.meshes.size()) return false;
+    for(size_t m=0;m<data.meshes.size();++m) {
+        if(data.status[m]==SkinDataStatus::Ready) { if(!data.meshes[m]) return false; }
+        else if((data.status[m]!=SkinDataStatus::Rigid && data.status[m]!=SkinDataStatus::Empty) || data.meshes[m]) return false;
     }
     return true;
 }

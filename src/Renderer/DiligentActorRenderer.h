@@ -11,8 +11,9 @@ public:
     explicit DiligentActorRenderer(DiligentD3D11Backend& backend) : m_meshes(backend) {}
     bool Initialize() { return m_meshes.Initialize(startupSkinningMode==PrototypeSkinningMode::GPUPrototype); }
     bool PreparePrototype(StaticObjectGeometryPtr& geometry, const SkinningModelData& data,
-        const std::vector<std::shared_ptr<const BoneRemap>>& remaps, const BonePalette& palette) override
-    { return m_meshes.PreparePrototype(geometry,data,remaps,palette); }
+        const std::vector<std::shared_ptr<const BoneRemap>>& remaps, const BonePalette& palette,
+        const ActorModelSource* source = nullptr, ActorPart part = ActorPart::Body,
+        ActorCategory category = ActorCategory::Player) override;
     bool Failed() const { return m_meshes.Failed(); }
     void ResetFrame();
     StaticObjectGeometryPtr CreateGeometry(const ActorModelSource&, ActorPart part = ActorPart::Body, ActorCategory category = ActorCategory::Player) override;

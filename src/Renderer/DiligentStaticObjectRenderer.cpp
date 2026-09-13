@@ -1,5 +1,6 @@
 #include "DiligentStaticObjectRenderer.h"
 #include "GpuSkinningShader.h"
+#include "ActorRenderData.h"
 #include "DiligentD3D11BackendInternal.h"
 #include "Graphics/GraphicsEngine/interface/Buffer.h"
 #include "Graphics/GraphicsEngine/interface/PipelineState.h"
@@ -18,18 +19,36 @@ using namespace Diligent;
 namespace
 {
 struct Counters { uint32_t geometry=0, textures=0; };
+// ZiiNAN: GPU skinning actor coverage
+struct SkinMeshBuffers
+{
+    RefCntAutoPtr<IBuffer> vertices, indices, rigidVertices;
+    std::vector<std::shared_ptr<const StaticSkinnedMeshData>> meshes;
+    std::vector<std::shared_ptr<const BoneRemap>> remaps;
+    std::vector<uint16_t> validationIndices;
+    uint32_t deformCount=0, vertexCount=0;
+    SkinMeshBuffers() { ++livePrototypeStaticMeshes; }
+    ~SkinMeshBuffers() { --livePrototypeStaticMeshes; }
+};
+struct SkinPoseBuffer
+{
+    RefCntAutoPtr<IBuffer> buffer;
+    uint64_t identity=0, revision=0;
+    std::shared_ptr<const SkeletonLayout> skeleton;
+    SkinPoseBuffer() { ++livePrototypePalettes; }
+    ~SkinPoseBuffer() { --livePrototypePalettes; }
+};
 struct Geometry final : StaticObjectGeometry
 {
     RefCntAutoPtr<IBuffer> vertices, indices;
-    RefCntAutoPtr<IBuffer> bones;
-    std::vector<std::shared_ptr<const BoneRemap>> remaps;
-    std::shared_ptr<const SkeletonLayout> skeleton;
+    std::shared_ptr<SkinMeshBuffers> skin;
+    std::shared_ptr<SkinPoseBuffer> pose;
     std::vector<uint16_t> validationIndices;
     uint32_t vertexCount=0;
     bool dynamic=false; // ZiiNAN: Only actor VBs use discard updates.
     std::shared_ptr<Counters> counters;
     ~Geometry() override {
-        if(bones) { --livePrototypeGeometry; --livePrototypePalettes; }
+        if(skin) --livePrototypeGeometry;
         if(counters) --counters->geometry;
     }
 };
@@ -143,6 +162,8 @@ struct DiligentStaticObjectRenderer::Impl
     RefCntAutoPtr<IBuffer> constants;
     RefCntAutoPtr<IPipelineState> pipelines[24];
     std::shared_ptr<Counters> counters=std::make_shared<Counters>();
+    std::vector<std::weak_ptr<SkinMeshBuffers>> skinMeshes;
+    std::vector<std::weak_ptr<SkinPoseBuffer>> skinPoses;
     uint32_t draws=0;
     bool failed=false;
     explicit Impl(DiligentD3D11Backend& b):backend(b) {}
@@ -226,44 +247,77 @@ Output SkinningVS(float3 position:ATTRIB0, float3 normal:ATTRIB1, float2 uv:ATTR
 }
 StaticObjectGeometryPtr DiligentStaticObjectRenderer::UploadGeometry(const StaticObjectSource& data)
 { return CreateGeometry(data,false); }
-// ZiiNAN: Diligent GPU skinning prototype
+// ZiiNAN: GPU skinning actor coverage
 bool DiligentStaticObjectRenderer::PreparePrototype(StaticObjectGeometryPtr& geometry,
     const SkinningModelData& data, const std::vector<std::shared_ptr<const BoneRemap>>& remaps,
-    const BonePalette& palette)
+    const BonePalette& palette, const ActorModelSource* source)
 {
     auto& s=*m_impl;
     if(!s.backend.m_impl || !s.backend.m_impl->inFrame || !s.pipelines[12] ||
-       !IsReferenceSkinningModel(data) || !ValidPrototypePalette(palette) || palette.skeleton!=data.skeleton) return false;
+       !ValidPrototypeModel(data) || !ValidPrototypePalette(palette)) return false;
     auto mesh=std::dynamic_pointer_cast<Geometry>(geometry);
-    if(mesh && (!mesh->bones || mesh->remaps!=remaps || mesh->skeleton!=palette.skeleton || mesh->counters!=s.counters)) mesh.reset();
+    if(mesh && (!mesh->skin || !mesh->pose || mesh->skin->meshes!=data.meshes || mesh->skin->remaps!=remaps ||
+        mesh->pose->identity!=palette.identity || mesh->pose->skeleton!=palette.skeleton || mesh->counters!=s.counters)) mesh.reset();
     try {
+        auto* device=s.backend.m_impl->device.RawPtr();
         if(!mesh) {
-            std::vector<SkinningVertex> vertices; std::vector<uint16_t> indices;
-            if(!BuildPrototypeVertices(data,remaps,palette,vertices,indices)) return false;
+            std::erase_if(s.skinMeshes,[](const auto& entry){ return entry.expired(); });
+            std::erase_if(s.skinPoses,[](const auto& entry){ return entry.expired(); });
+            std::shared_ptr<SkinMeshBuffers> shared;
+            for(const auto& weak:s.skinMeshes) if(auto candidate=weak.lock())
+                if(candidate->meshes==data.meshes && candidate->remaps==remaps) { shared=std::move(candidate); break; }
+            if(!shared) {
+                std::vector<SkinningVertex> vertices; std::vector<uint16_t> indices;
+                if(!BuildPrototypeVertices(data,remaps,palette,vertices,indices) || vertices.empty()) return false;
+                if(source) {
+                    if(vertices.size()!=source->deformVertexCount || source->vertexCount!=vertices.size()+source->rigidVertices.size()) return false;
+                    indices=source->indices;
+                    for(const auto& vertex:source->rigidVertices) for(float value:vertex) if(!std::isfinite(value)) return false;
+                } else if(std::find(data.status.begin(),data.status.end(),SkinDataStatus::Rigid)!=data.status.end()) return false;
+                if(indices.empty() || vertices.size()>std::numeric_limits<uint32_t>::max()/sizeof(SkinningVertex) ||
+                    indices.size()>std::numeric_limits<uint32_t>::max()/sizeof(uint16_t)) return false;
+                shared=std::make_shared<SkinMeshBuffers>();
+                shared->deformCount=static_cast<uint32_t>(vertices.size());
+                shared->vertexCount=source ? source->vertexCount : shared->deformCount;
+                shared->meshes=data.meshes; shared->remaps=remaps;
+                BufferDesc desc; desc.Name="Shared original PWNT"; desc.Size=vertices.size()*sizeof(SkinningVertex);
+                desc.Usage=USAGE_IMMUTABLE; desc.BindFlags=BIND_VERTEX_BUFFER;
+                BufferData initial{vertices.data(),desc.Size}; device->CreateBuffer(desc,&initial,&shared->vertices);
+                if(source && !source->rigidVertices.empty()) {
+                    desc.Name="Shared rigid attachment PNT"; desc.Size=source->rigidVertices.size()*sizeof(StaticObjectVertex);
+                    initial={source->rigidVertices.data(),desc.Size}; device->CreateBuffer(desc,&initial,&shared->rigidVertices);
+                    if(!shared->rigidVertices) return false;
+                }
+                desc.Name="Shared original mesh-local indices"; desc.Size=indices.size()*sizeof(uint16_t); desc.BindFlags=BIND_INDEX_BUFFER;
+                initial={indices.data(),desc.Size}; device->CreateBuffer(desc,&initial,&shared->indices);
+                if(!shared->vertices || !shared->indices) return false;
+                shared->validationIndices=std::move(indices); s.skinMeshes.emplace_back(shared);
+            }
+            std::shared_ptr<SkinPoseBuffer> pose;
+            for(const auto& weak:s.skinPoses) if(auto candidate=weak.lock())
+                if(candidate->identity==palette.identity && candidate->skeleton==palette.skeleton) { pose=std::move(candidate); break; }
+            if(!pose) {
+                pose=std::make_shared<SkinPoseBuffer>(); pose->identity=palette.identity; pose->skeleton=palette.skeleton;
+                BufferDesc desc; desc.Name="Actor current composite palette"; desc.Size=gpuPrototypeBufferBones*sizeof(SkinningMatrix);
+                desc.Usage=USAGE_DYNAMIC; desc.BindFlags=BIND_UNIFORM_BUFFER; desc.CPUAccessFlags=CPU_ACCESS_WRITE;
+                device->CreateBuffer(desc,nullptr,&pose->buffer);
+                if(!pose->buffer) return false;
+                s.skinPoses.emplace_back(pose);
+            }
             mesh=std::make_shared<Geometry>();
-            BufferDesc desc; desc.Name="B3 immutable original PWNT"; desc.Size=vertices.size()*sizeof(SkinningVertex);
-            desc.Usage=USAGE_IMMUTABLE; desc.BindFlags=BIND_VERTEX_BUFFER;
-            BufferData initial{vertices.data(),desc.Size};
-            auto* device=s.backend.m_impl->device.RawPtr();
-            device->CreateBuffer(desc,&initial,&mesh->vertices);
-            desc.Name="B3 original mesh-local indices"; desc.Size=indices.size()*sizeof(uint16_t); desc.BindFlags=BIND_INDEX_BUFFER;
-            initial={indices.data(),desc.Size}; device->CreateBuffer(desc,&initial,&mesh->indices);
-            if(!mesh->vertices || !mesh->indices) return false;
-            desc.Name="B3 current composite palette"; desc.Size=gpuPrototypeBufferBones*sizeof(SkinningMatrix);
-            desc.Usage=USAGE_DYNAMIC; desc.BindFlags=BIND_UNIFORM_BUFFER; desc.CPUAccessFlags=CPU_ACCESS_WRITE;
-            device->CreateBuffer(desc,nullptr,&mesh->bones);
-            if(!mesh->bones) return false;
-            ++livePrototypeGeometry; ++livePrototypePalettes;
-            mesh->vertexCount=static_cast<uint32_t>(vertices.size()); mesh->validationIndices=std::move(indices);
-            mesh->remaps=remaps; mesh->skeleton=palette.skeleton; mesh->counters=s.counters; ++s.counters->geometry;
+            mesh->skin=shared; ++livePrototypeGeometry;
+            mesh->pose=pose; mesh->vertices=shared->vertices; mesh->indices=shared->indices;
+            mesh->vertexCount=shared->vertexCount; mesh->validationIndices=shared->validationIndices;
+            mesh->counters=s.counters; ++s.counters->geometry;
         }
-        {
-            MapHelper<SkinningMatrix> mapped(s.backend.m_impl->context,mesh->bones,MAP_WRITE,MAP_FLAG_DISCARD);
+        if(mesh->pose->revision!=palette.revision || !mesh->pose->revision) {
+            MapHelper<SkinningMatrix> mapped(s.backend.m_impl->context,mesh->pose->buffer,MAP_WRITE,MAP_FLAG_DISCARD);
             if(!mapped) return false;
             memset(mapped,0,gpuPrototypeBufferBones*sizeof(SkinningMatrix));
             memcpy(mapped,palette.matrices.data(),palette.matrices.size()*sizeof(SkinningMatrix));
+            mesh->pose->revision=palette.revision;
+            prototypeBoneBytes+=gpuPrototypeBufferBones*sizeof(SkinningMatrix);
         }
-        prototypeBoneBytes+=gpuPrototypeBufferBones*sizeof(SkinningMatrix);
         geometry=mesh;
         return true;
     } catch(...) { return false; }
@@ -366,7 +420,9 @@ void DiligentStaticObjectRenderer::Draw(const StaticObjectGeometryPtr& geometry,
         (draw.cameraAlpha ? std::dynamic_pointer_cast<Texture>(draw.cameraAlpha) : image);
     const auto cull=static_cast<uint32_t>(draw.cull);
     const auto materialVariant=cull+(draw.blend ? 3 : 0)+(draw.depthWrite ? 0 : 6);
-    const auto variant=materialVariant+(mesh && mesh->bones ? 12 : 0);
+    const bool rigid=mesh && mesh->skin && draw.baseVertex>=mesh->skin->deformCount;
+    const bool skin=mesh && mesh->skin && !rigid;
+    const auto variant=materialVariant+(skin ? 12 : 0);
     if(!s.backend.m_impl || !s.backend.m_impl->inFrame || !mesh || !image || !cameraImage ||
        mesh->counters!=s.counters || image->counters!=s.counters || cameraImage->counters!=s.counters ||
        cull>=3 || !s.pipelines[variant] || draw.alphaReference>255 || static_cast<uint32_t>(draw.alphaTest)>2 ||
@@ -376,6 +432,8 @@ void DiligentStaticObjectRenderer::Draw(const StaticObjectGeometryPtr& geometry,
        draw.indexCount>mesh->validationIndices.size()-draw.firstIndex || !draw.vertexCount ||
        draw.baseVertex>mesh->vertexCount || draw.vertexCount>mesh->vertexCount-draw.baseVertex ||
        static_cast<uint32_t>(draw.fog)>3) { s.failed=true; return; }
+    if((rigid && !mesh->skin->rigidVertices) ||
+       (skin && draw.vertexCount>mesh->skin->deformCount-draw.baseVertex)) { s.failed=true; return; }
     for(size_t i=draw.firstIndex;i<size_t(draw.firstIndex)+draw.indexCount;++i)
         if(mesh->validationIndices[i]>=draw.vertexCount) { s.failed=true; return; }
     try {
@@ -421,7 +479,7 @@ void DiligentStaticObjectRenderer::Draw(const StaticObjectGeometryPtr& geometry,
         }
         // ZiiNAN: Diligent GPU skinning prototype
         RefCntAutoPtr<IShaderResourceBinding> skinBinding;
-        auto& binding=mesh->bones ? skinBinding : image->bindings[materialVariant];
+        auto& binding=skin ? skinBinding : image->bindings[materialVariant];
         if(!binding) {
             s.pipelines[variant]->CreateShaderResourceBinding(&binding,true);
             if(!binding) { s.failed=true; return; }
@@ -429,7 +487,7 @@ void DiligentStaticObjectRenderer::Draw(const StaticObjectGeometryPtr& geometry,
             binding->GetVariableByName(SHADER_TYPE_PIXEL,"ObjectSampler")->Set(image->sampler);
             binding->GetVariableByName(SHADER_TYPE_PIXEL,"CameraAlphaTexture")->Set(cameraImage->texture->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE));
             binding->GetVariableByName(SHADER_TYPE_PIXEL,"CameraAlphaSampler")->Set(image->cameraSampler);
-            if(mesh->bones) binding->GetVariableByName(SHADER_TYPE_VERTEX,"SkinningPalette")->Set(mesh->bones);
+            if(skin) binding->GetVariableByName(SHADER_TYPE_VERTEX,"SkinningPalette")->Set(mesh->pose->buffer);
         }
         {
             MapHelper<Constants> mapped(b.context,s.constants,MAP_WRITE,MAP_FLAG_DISCARD);
@@ -458,12 +516,13 @@ void DiligentStaticObjectRenderer::Draw(const StaticObjectGeometryPtr& geometry,
         const auto& extent=b.swapChain->GetDesc();
         Viewport viewport{float(draw.viewport[0]),float(draw.viewport[1]),float(draw.viewport[2] ? draw.viewport[2] : extent.Width),float(draw.viewport[3] ? draw.viewport[3] : extent.Height),0,1};
         b.context->SetViewports(1,&viewport,extent.Width,extent.Height);
-        IBuffer* vertex=mesh->vertices; Uint64 offset=0;
+        IBuffer* vertex=rigid ? mesh->skin->rigidVertices : mesh->vertices; Uint64 offset=0;
         b.context->SetVertexBuffers(0,1,&vertex,&offset,RESOURCE_STATE_TRANSITION_MODE_TRANSITION,SET_VERTEX_BUFFERS_FLAG_RESET);
         b.context->SetIndexBuffer(mesh->indices,0,RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
         b.context->CommitShaderResources(binding,RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
         DrawIndexedAttribs attributes{draw.indexCount,VT_UINT16,DRAW_FLAG_VERIFY_ALL};
-        attributes.FirstIndexLocation=draw.firstIndex; attributes.BaseVertex=draw.baseVertex;
+        attributes.FirstIndexLocation=draw.firstIndex;
+        attributes.BaseVertex=draw.baseVertex-(rigid ? mesh->skin->deformCount : 0);
         b.context->DrawIndexed(attributes); ++s.draws;
     } catch(...) { s.failed=true; }
 }

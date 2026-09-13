@@ -32,6 +32,9 @@ struct ActorInstanceSet
 {
     std::array<const void*,5> instances{};
     const void* prototypeBody=nullptr;
+    // ZiiNAN: GPU skinning actor coverage; explicit CPU-only scopes remain usable by parity tests.
+    bool gpuSkinning=false;
+    ActorCategory category=ActorCategory::Player;
     ActorPart Find(const void* instance) const
     {
         if(instance) for(auto part:{ActorPart::Body,ActorPart::Weapon,ActorPart::WeaponLeft,ActorPart::Hair})
@@ -54,7 +57,8 @@ class IActorRenderer : public ITextureUploader
 public:
     // ZiiNAN: Diligent GPU skinning prototype
     virtual bool PreparePrototype(StaticObjectGeometryPtr&, const SkinningModelData&,
-        const std::vector<std::shared_ptr<const BoneRemap>>&, const BonePalette&) { return false; }
+        const std::vector<std::shared_ptr<const BoneRemap>>&, const BonePalette&, const ActorModelSource* = nullptr,
+        ActorPart = ActorPart::Body, ActorCategory = ActorCategory::Player) { return false; }
     virtual StaticObjectGeometryPtr CreateGeometry(const ActorModelSource&, ActorPart part = ActorPart::Body, ActorCategory category = ActorCategory::Player) = 0;
     virtual bool UpdateVertices(const StaticObjectGeometryPtr&, const std::vector<StaticObjectVertex>&, uint32_t deformedCount = 0, ActorCategory category = ActorCategory::Player) = 0;
     virtual void Draw(const void* actor, const StaticObjectGeometryPtr&, const TerrainTexturePtr&, const StaticObjectDraw&, ActorCategory category = ActorCategory::Player, ActorPart part = ActorPart::Body) = 0;

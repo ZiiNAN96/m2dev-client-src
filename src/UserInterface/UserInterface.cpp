@@ -341,7 +341,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     resourceLog << "PrototypeGeometry=" << Renderer::livePrototypeGeometry << " PrototypePalettes=" << Renderer::livePrototypePalettes
         << " GPUFrames=" << Renderer::prototypeFrames << " BoneBufferWrittenBytes=" << Renderer::prototypeBoneBytes
         << " PrepareUs=" << Renderer::prototypePrepareUs << " CPUReferenceFrames=" << Renderer::prototypeCpuFrames
-        << " CPUSkinUs=" << Renderer::prototypeCpuSkinUs << " CPUVertexBytes=" << Renderer::prototypeCpuBytes << '\n';
+        << " CPUSkinUs=" << Renderer::prototypeCpuSkinUs << " CPUVertexBytes=" << Renderer::prototypeCpuBytes
+        << " StaticSkinMeshes=" << Renderer::livePrototypeStaticMeshes << '\n';
 	::CoUninitialize();
 
 	SAFE_FREE_GLOBAL (szArgv);
