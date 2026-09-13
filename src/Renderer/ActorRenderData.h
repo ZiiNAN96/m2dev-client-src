@@ -7,13 +7,14 @@
 
 namespace Renderer
 {
-// ZiiNAN: Bounded 5B categories; native packets do not distinguish NPC-typed pets.
-enum class ActorCategory : uint32_t { Player, Npc, Mob, Mount, MountedPlayer, Unsupported };
+// ZiiNAN: All native actor types share the existing geometry/material contract.
+enum class ActorCategory : uint32_t { Player, Npc, Mob, Mount, MountedPlayer, Special, Unsupported };
 inline ActorCategory ClassifyActor(uint32_t type, uint32_t race)
 {
     if(type==6 && race<8) return ActorCategory::Player;
-    if(type==1 && race<20100) return ActorCategory::Npc;
-    if(type==0 && race<8000) return ActorCategory::Mob;
+    if(type==1) return ActorCategory::Npc;
+    if(type==0 || type==2 || type==7) return ActorCategory::Mob;
+    if(type<=10) return ActorCategory::Special;
     return ActorCategory::Unsupported;
 }
 struct ActorModelSource
@@ -57,6 +58,15 @@ public:
 };
 inline IActorRenderer* actorRenderer = nullptr;
 inline bool actorWorldFrame = false;
+// ZiiNAN: Character-select uses the same pose/material renderer in an explicit scope.
+struct ActorPreviewScope
+{
+    bool previous=actorWorldFrame;
+    explicit ActorPreviewScope(bool active) { if(active) actorWorldFrame=true; }
+    ~ActorPreviewScope() { actorWorldFrame=previous; }
+    ActorPreviewScope(const ActorPreviewScope&)=delete;
+    ActorPreviewScope& operator=(const ActorPreviewScope&)=delete;
+};
 inline uint64_t actorFrameSerial = 0; // ZiiNAN: Reject poses not deformed for the current world frame.
 // ZiiNAN: Diligent mount actor rendering
 struct ActorMountPair
@@ -94,11 +104,23 @@ struct ActorDrawTarget
     void (*submit)(void*, const void*, ActorPart, const ActorNativeDraw&) = nullptr;
 };
 inline ActorDrawTarget actorDrawTarget;
+// ZiiNAN: Scoped map Things reuse the same PNT draw hook, never the actor list.
+struct ThingDrawTarget { void* context=nullptr; void (*submit)(void*,const void*,const ActorNativeDraw&)=nullptr; };
+inline ThingDrawTarget thingDrawTarget;
+struct ThingDrawScope
+{
+    ThingDrawTarget previous=thingDrawTarget;
+    explicit ThingDrawScope(ThingDrawTarget target) { thingDrawTarget=target; }
+    ~ThingDrawScope() { thingDrawTarget=previous; }
+    ThingDrawScope(const ThingDrawScope&)=delete;
+    ThingDrawScope& operator=(const ThingDrawScope&)=delete;
+};
 inline void SubmitActorNativeDraw(const void* instance, const ActorNativeDraw& draw)
 {
     const auto part=actorDrawTarget.targets.Find(instance);
     if(part!=ActorPart::Unsupported && actorDrawTarget.submit)
         actorDrawTarget.submit(actorDrawTarget.context,instance,part,draw);
+    else if(thingDrawTarget.submit) thingDrawTarget.submit(thingDrawTarget.context,instance,draw);
 }
 struct ActorDrawScope
 {

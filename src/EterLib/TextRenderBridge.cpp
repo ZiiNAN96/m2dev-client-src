@@ -1,5 +1,6 @@
 // ZiiNAN: Diligent text rendering integration
 #include "StdAfx.h"
+#include "EterLib/NativeStateView.h"
 #include "TextRenderBridge.h"
 #include "GrpFontTexture.h"
 #include "NativeMaterialSnapshot.h"
@@ -28,8 +29,8 @@ void Submit(const void* pdt,uint32_t count,CGraphicFontTexture* font,HRESULT res
     if(!CaptureNativeMaterial(draw,error)) { Failure("text material: "+error); return; }
     auto* device=STATEMANAGER.GetDevice();
     D3DVIEWPORT9 viewport{}; RECT clip{}; DWORD scissor=0;
-    if(FAILED(device->GetViewport(&viewport)) || FAILED(device->GetScissorRect(&clip)) ||
-       FAILED(device->GetRenderState(D3DRS_SCISSORTESTENABLE,&scissor))) { Failure("text viewport/scissor"); return; }
+    if(FAILED(NativeStateView().GetViewport(&viewport)) || FAILED(NativeStateView().GetScissorRect(&clip)) ||
+       FAILED(NativeStateView().GetRenderState(D3DRS_SCISSORTESTENABLE,&scissor))) { Failure("text viewport/scissor"); return; }
     draw.ui=true; draw.strip=indexedQuad; draw.fog=0;
     draw.floatingText=floatingTextDepth!=0; // ZiiNAN: Diligent floating text rendering
     if(!draw.floatingText) draw.depthTest=draw.depthWrite=false;
@@ -37,7 +38,7 @@ void Submit(const void* pdt,uint32_t count,CGraphicFontTexture* font,HRESULT res
     draw.scissor=scissor!=0; draw.clip={clip.left,clip.top,clip.right,clip.bottom};
     if(draw.scissor && (clip.right<=clip.left || clip.bottom<=clip.top)) return;
     IDirect3DBaseTexture9* bound=nullptr;
-    if(FAILED(device->GetTexture(0,&bound))) { Failure("text texture snapshot"); return; }
+    if(FAILED(NativeStateView().GetTexture(0,&bound))) { Failure("text texture snapshot"); return; }
     draw.textured=bound!=nullptr;
     TerrainTexturePtr texture;
     if(bound && font) texture=font->GetTextTexture(bound);

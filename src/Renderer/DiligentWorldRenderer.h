@@ -8,7 +8,7 @@ namespace Renderer
 class DiligentWorldRenderer final : public IWorldRenderer
 {
     DiligentEffectRenderer m_draws;
-    std::array<uint32_t,3> m_counts{};
+    std::array<uint32_t,6> m_counts{};
     uint64_t m_waterVertices=0;
 public:
     explicit DiligentWorldRenderer(DiligentD3D11Backend& backend):m_draws(backend) {}

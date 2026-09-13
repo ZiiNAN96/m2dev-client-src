@@ -1,5 +1,4 @@
 #include "StdAfx.h"
-#include "Renderer/UIRenderData.h"
 #include "PythonEventManager.h"
 #include "PythonNetworkStream.h"
 #include "PythonNonPlayer.h"
@@ -794,7 +793,7 @@ void CPythonEventManager::ProcessEventSet(TEventSet * pEventSet)
 
 void CPythonEventManager::RenderEventSet(int iIndex)
 {
-	Renderer::UIExcludeScope excludeSpecialText; // ZiiNAN: Diligent text rendering integration excludes event-script text.
+    // ZiiNAN: Quest/dialog event lines use the existing UI text renderer, like ordinary labels.
 	if (!CheckEventSetIndex(iIndex))
 		return;
 

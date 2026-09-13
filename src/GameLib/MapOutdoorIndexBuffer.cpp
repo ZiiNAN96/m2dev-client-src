@@ -129,6 +129,7 @@ void CMapOutdoor::SetIndexBuffer()
 	for (uci = 0; uci < TERRAINPATCH_LODMAX; ++uci)
 	{
 		m_wNumIndices[uci] = count[uci];
+		if(uci==0 && Renderer::worldRenderer) m_projectionIndices.assign(m_pwaIndices[uci],m_pwaIndices[uci]+count[uci]);
 		if (Renderer::terrainRenderer)
 			m_terrainIndices[uci] = Renderer::terrainRenderer->UploadIndices(m_pwaIndices[uci], count[uci]);
 		if( !m_IndexBuffer[uci].Lock((void **) &pIndices) )

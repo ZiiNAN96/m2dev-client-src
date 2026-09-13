@@ -11,7 +11,7 @@ static void EffectGpuChecks(Renderer::LegacyD3D9Backend& legacy,Renderer::Dilige
     auto texture=LoadStaticObjectTextureMemory(bytes.data(),bytes.size(),effects);
     auto native=LegacyProbe::Texture(bytes);
     const std::array<float,16> identity={1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1};
-    for(unsigned test=0;test<62;++test) {
+    for(unsigned test=0;test<70;++test) {
         const unsigned width=test%2 ? 192 : 160,height=test%2 ? 144 : 120;
         Check(legacy.Resize(width,height) && modern.Resize(width,height),"effect resize");
         if(test%10==0) Check(modern.Resize(0,0) && !modern.BeginFrame() && modern.Resize(width,height),"effect suspend restore");
@@ -35,11 +35,25 @@ static void EffectGpuChecks(Renderer::LegacyD3D9Backend& legacy,Renderer::Dilige
         else if(test==53) { d.cull=2; d.blend=false; }
         else if(test<57) { d.src=test==54 ? 2 : test==55 ? 5 : 9; d.dst=13; }
         else if(test==57) { d.src=11; d.dst=6; }
-        else { d.blendOp=2+test-58; }
+        else if(test<62) { d.blendOp=2+test-58; }
+        else {
+            // ZiiNAN: Guild projected alpha, minimap cover and dungeon UV1/lightmap.
+            d.secondaryTexture=texture; d.secondaryTransform=identity;
+            d.secondarySampler.min=d.secondarySampler.mag=test%2 ? 1 : 2;
+            d.secondaryColorOp=test%3==0 ? 3 : 4;
+            d.secondaryAlphaOp=4; d.secondaryCoordinates=test<66 ? 0x20000 : 1;
+            d.secondaryTransformFlags=test<66 ? 2 : 0;
+            d.secondaryTransform[0]=.4f; d.secondaryTransform[5]=.4f;
+            d.secondaryTransform[12]=.5f; d.secondaryTransform[13]=.5f;
+        }
         std::vector<EffectVertex> v;
         const EffectVertex quad[]={{{-.8f,-.8f,.5f},0xa099cc66,{-.1f,.2f}},{{-.8f,.8f,.5f},0x70cc9966,{-.1f,1.3f}},
             {{.8f,-.8f,.5f},0xe06699cc,{1.2f,.2f}},{{.8f,.8f,.5f},0x80cc6699,{1.2f,1.3f}}};
         if(d.strip) v.assign(quad,quad+4); else for(unsigned i:{0u,1u,2u,2u,1u,3u}) v.push_back(quad[i]);
+        struct Vertex2 { EffectVertex base; std::array<float,2> uv1; };
+        std::vector<Vertex2> v2;
+        for(const auto& vertex:v) { v2.push_back({vertex,{1-vertex.uv[0],1-vertex.uv[1]}}); }
+        if(d.secondaryCoordinates==1) for(const auto& vertex:v2) d.secondaryUV.push_back(vertex.uv1);
         Check(legacy.BeginFrame() && modern.BeginFrame(),"effect begin frame");
         const ClearColor background={.1f,.2f,.3f,.4f}; legacy.Clear({true,background}); modern.Clear({true,background}); effects.ResetFrame();
         const auto rs=[&](D3DRENDERSTATETYPE type,DWORD value) { Check(SUCCEEDED(device->SetRenderState(type,value)),"effect native render state"); };
@@ -69,7 +83,22 @@ static void EffectGpuChecks(Renderer::LegacyD3D9Backend& legacy,Renderer::Dilige
             {D3DTS_VIEW,&d.matrices.view},{D3DTS_PROJECTION,&d.matrices.projection},{D3DTS_TEXTURE0,&d.textureTransform}})
             Check(SUCCEEDED(device->SetTransform(entry.first,reinterpret_cast<const D3DMATRIX*>(entry.second->data()))),"effect native transforms");
         device->SetVertexShader(nullptr); device->SetPixelShader(nullptr); device->SetFVF(D3DFVF_XYZ|D3DFVF_DIFFUSE|D3DFVF_TEX1);
-        Check(SUCCEEDED(device->DrawPrimitiveUP(d.strip ? D3DPT_TRIANGLESTRIP : D3DPT_TRIANGLELIST,2,v.data(),24)),"effect native draw");
+        if(d.secondaryTexture) {
+            device->SetTexture(1,native.Get()); device->SetFVF(D3DFVF_XYZ|D3DFVF_DIFFUSE|D3DFVF_TEX2);
+            for(auto entry:{std::pair{D3DTSS_COLOROP,d.secondaryColorOp},{D3DTSS_COLORARG1,d.secondaryColorArg1},
+                {D3DTSS_COLORARG2,d.secondaryColorArg2},{D3DTSS_ALPHAOP,d.secondaryAlphaOp},
+                {D3DTSS_ALPHAARG1,d.secondaryAlphaArg1},{D3DTSS_ALPHAARG2,d.secondaryAlphaArg2},
+                {D3DTSS_TEXCOORDINDEX,d.secondaryCoordinates},{D3DTSS_TEXTURETRANSFORMFLAGS,d.secondaryTransformFlags}})
+                device->SetTextureStageState(1,entry.first,entry.second);
+            device->SetTextureStageState(2,D3DTSS_COLOROP,D3DTOP_DISABLE);
+            const auto& s=d.secondarySampler;
+            for(auto entry:{std::pair{D3DSAMP_ADDRESSU,s.addressU},{D3DSAMP_ADDRESSV,s.addressV},
+                {D3DSAMP_MINFILTER,s.min},{D3DSAMP_MAGFILTER,s.mag},{D3DSAMP_MIPFILTER,s.mip}})
+                device->SetSamplerState(1,entry.first,entry.second);
+            device->SetTransform(D3DTS_TEXTURE1,reinterpret_cast<const D3DMATRIX*>(d.secondaryTransform.data()));
+        }
+        Check(SUCCEEDED(device->DrawPrimitiveUP(d.strip ? D3DPT_TRIANGLESTRIP : D3DPT_TRIANGLELIST,2,
+            d.secondaryTexture ? static_cast<const void*>(v2.data()) : static_cast<const void*>(v.data()),d.secondaryTexture ? 32 : 24)),"effect native draw");
         effects.Draw(v.data(),uint32_t(v.size()),d.textured ? texture : TerrainTexturePtr{},d,EffectPart::Particle);
         Check(!effects.Failed() && effects.DrawCount(EffectPart::Particle)==1,"effect material submission");
         legacy.EndFrame(); modern.EndFrame();
@@ -93,14 +122,18 @@ static void EffectGpuChecks(Renderer::LegacyD3D9Backend& legacy,Renderer::Dilige
     draw.strip=false;
     Check(modern.BeginFrame(),"effect growth frame"); effects.ResetFrame(); modern.Clear({true,ClearColor{0,0,0,1}});
     effects.Draw(large.data(),uint32_t(large.size()),{},draw,EffectPart::Mesh);
-    Check(effects.BufferBytes()>=large.size()*24 && effects.UploadBytes()==large.size()*24,"effect dynamic buffer growth/byte accounting");
+    // ZiiNAN: Internal M11 upload adds UV1; the native CPU EffectVertex remains 24 bytes.
+    Check(sizeof(EffectVertex)==24 && effects.BufferBytes()>=large.size()*32 && effects.UploadBytes()==large.size()*32,"effect dynamic buffer growth/byte accounting");
     modern.EndFrame();
     const auto clean=BackendTestAccess::Read(modern,false);
     Check(modern.BeginFrame(),"effect state isolation frame"); modern.Clear({true,ClearColor{0,0,0,1}});
     auto poison=draw; poison.blend=true; poison.src=2; poison.dst=2; poison.alphaTest=true; poison.alphaReference=255; poison.cull=2; poison.depthWrite=true;
+    poison.secondaryTexture=texture; poison.secondaryTransform=identity;
+    poison.secondaryColorOp=4; poison.secondaryAlphaOp=4;
     effects.Draw(large.data(),3,{},poison,EffectPart::FlyTrace);
     effects.Draw(large.data(),uint32_t(large.size()),{},draw,EffectPart::Mesh); modern.EndFrame();
     Check(clean==BackendTestAccess::Read(modern,false),"effect predecessor-independent material state");
+    poison.secondaryTexture.reset();
     effects.ResetFrame(); texture.reset(); Check(effects.LiveTextureCount()==0,"effect texture released after end");
     effects.Shutdown(); Check(effects.LiveBufferCount()==0 && effects.LiveTextureCount()==0 && !effects.Failed(),"effect shutdown resources zero");
     std::cout<<"Effect native parity / growth / state isolation / texture lifetime / shutdown: PASS\n";

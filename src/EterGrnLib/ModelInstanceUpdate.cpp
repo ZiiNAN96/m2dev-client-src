@@ -2,6 +2,7 @@
 #include "Eterbase/Debug.h"
 #include "ModelInstance.h"
 #include "Model.h"
+#include "Renderer/WorldRenderData.h"
 
 
 void CGrannyModelInstance::Update(DWORD dwAniFPS)
@@ -60,7 +61,9 @@ void CGrannyModelInstance::Deform(const D3DXMATRIX * c_pWorldMatrix)
 		return;
 
     // ZiiNAN: A failed native deformation must not submit a stale actor pose.
-    const bool captureActor=Renderer::actorDeformTargets.Find(this)!=Renderer::ActorPart::Unsupported && m_pModel->GetActorSource()!=nullptr;
+    const bool captureActor=m_pModel->GetActorSource()!=nullptr &&
+        (Renderer::actorDeformTargets.Find(this)!=Renderer::ActorPart::Unsupported ||
+         (Renderer::worldSurfaceFrame && !m_pModel->GetStaticObjectSource()));
     if(captureActor) m_actorRenderData.ready=false;
 
 	// DELETED

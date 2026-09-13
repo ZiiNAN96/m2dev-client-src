@@ -45,9 +45,33 @@ struct EffectDraw
     std::array<uint32_t,4> viewport{};
     std::array<int32_t,4> clip{};
     uint32_t colorWriteMask=15;
+    // ZiiNAN: Native stage 1 for minimap cover, dungeon lightmap and guild projection only.
+    TerrainTexturePtr secondaryTexture;
+    EffectSampler secondarySampler;
+    std::array<float,16> secondaryTransform{};
+    std::vector<std::array<float,2>> secondaryUV;
+    uint32_t secondaryColorOp=1,secondaryColorArg1=2,secondaryColorArg2=1;
+    uint32_t secondaryAlphaOp=1,secondaryAlphaArg1=2,secondaryAlphaArg2=1;
+    uint32_t secondaryCoordinates=0,secondaryTransformFlags=0;
 };
 inline bool EffectColorOpSupported(uint32_t op) { return op>=1 && op<=6 || op==8; }
 inline bool EffectArgumentSupported(uint32_t arg) { return (arg&15)<=3 && (arg&~63u)==0; }
+inline bool SecondaryDrawValid(const EffectDraw& d,uint32_t count)
+{
+    if(!d.secondaryTexture) return d.secondaryUV.empty();
+    for(const auto& uv:d.secondaryUV) for(float value:uv) if(!std::isfinite(value)) return false;
+    for(float value:d.secondaryTransform) if(!std::isfinite(value)) return false;
+    const auto& s=d.secondarySampler;
+    return (d.secondaryUV.empty() || d.secondaryUV.size()==count) &&
+        EffectColorOpSupported(d.secondaryColorOp) && EffectColorOpSupported(d.secondaryAlphaOp) &&
+        EffectArgumentSupported(d.secondaryColorArg1) && EffectArgumentSupported(d.secondaryColorArg2) &&
+        EffectArgumentSupported(d.secondaryAlphaArg1) && EffectArgumentSupported(d.secondaryAlphaArg2) &&
+        (d.secondaryCoordinates==0 || d.secondaryCoordinates==1 || d.secondaryCoordinates==0x20000) &&
+        (d.secondaryCoordinates!=1 || d.secondaryUV.size()==count) &&
+        (d.secondaryTransformFlags==0 || d.secondaryTransformFlags==2) &&
+        s.addressU>=1 && s.addressU<=5 && s.addressV>=1 && s.addressV<=5 &&
+        s.min<=3 && s.mag<=3 && s.mip<=2 && s.anisotropy>=1 && s.anisotropy<=16 && std::isfinite(s.lodBias);
+}
 inline bool EffectDrawValid(const EffectDraw& d,uint32_t count)
 {
     return (d.lines ? count>=2 && count%2==0 : count>=3 && (d.strip || count%3==0)) &&
@@ -63,7 +87,7 @@ inline bool EffectDrawValid(const EffectDraw& d,uint32_t count)
         (d.textureTransformFlags==0 || d.textureTransformFlags==2) &&
         d.sampler.addressU>=1 && d.sampler.addressU<=5 && d.sampler.addressV>=1 && d.sampler.addressV<=5 &&
         d.sampler.min<=3 && d.sampler.mag<=3 && d.sampler.mip<=2 && d.sampler.anisotropy>=1 && d.sampler.anisotropy<=16 &&
-        d.colorWriteMask<=15 && std::isfinite(d.sampler.lodBias);
+        d.colorWriteMask<=15 && std::isfinite(d.sampler.lodBias) && SecondaryDrawValid(d,count);
 }
 struct EffectRuntimeCounts { uint32_t instances=0,systems=0,particles=0; };
 inline EffectRuntimeCounts effectRuntime;

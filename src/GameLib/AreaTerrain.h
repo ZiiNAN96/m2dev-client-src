@@ -80,12 +80,14 @@ class CTerrain : public CTerrainImpl, public CGraphicBase
 		// MiniMap
 		void						LoadMiniMapTexture(const char * c_pszFileName);
 		inline LPDIRECT3DTEXTURE9	GetMiniMapTexture() { return m_lpMiniMapTexture; }
+		CGraphicImage* GetMiniMapImage() { return m_MiniMapGraphicImageInstance.GetGraphicImagePointer(); }
 
 		// Marked Area
 		BOOL						IsMarked() { return m_bMarked; }
 		void						AllocateMarkedSplats(BYTE * pbyAlphaMap);
 		void						DeallocateMarkedSplats();
 		TTerrainSplatPatch &		GetMarkedSplatPatch() { return m_MarkedSplatPatch; }
+		Renderer::TerrainTexturePtr GetMarkedTexture() const { return m_markedDiligentTexture; }
 
 		// Coordinate
 		void			GetCoordinate(WORD * usCoordX, WORD * usCoordY)
@@ -147,6 +149,7 @@ class CTerrain : public CTerrainImpl, public CGraphicBase
 		BOOL					m_bMarked;
 		TTerrainSplatPatch		m_MarkedSplatPatch;
 		LPDIRECT3DTEXTURE9		m_lpMarkedTexture;
+		Renderer::TerrainTexturePtr m_markedDiligentTexture;
 
 	public:
 		CTerrainPatch *	GetTerrainPatchPtr(BYTE byPatchNumX, BYTE byPatchNumY);

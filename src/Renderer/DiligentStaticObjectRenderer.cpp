@@ -52,6 +52,7 @@ struct Constants
     std::array<float,4> pointPositionRange,pointAttenuation,pointAmbient,pointDiffuse;
     std::array<uint32_t,4> alphaModes;
     std::array<float,4> textureFactor; // ZiiNAN: Existing actor stage constant.
+    std::array<float,4> spotPositionRange,spotAttenuation,spotAmbient,spotDiffuse,spotDirection,spotCone;
 };
 static_assert(sizeof(Constants)%16==0 && sizeof(StaticObjectVertex)==32);
 constexpr char shaderSource[] = R"(
@@ -64,6 +65,7 @@ cbuffer ObjectConstants {
  float4 PointPositionRange; float4 PointAttenuation; float4 PointAmbient; float4 PointDiffuse;
  uint4 AlphaModes;
  float4 TextureFactor;
+ float4 SpotPositionRange; float4 SpotAttenuation; float4 SpotAmbient; float4 SpotDiffuse; float4 SpotDirection; float4 SpotCone;
 };
 Texture2D DiffuseTexture;
 SamplerState ObjectSampler;
@@ -86,6 +88,14 @@ Output VS(float3 position:ATTRIB0, float3 normal:ATTRIB1, float2 uv:ATTRIB2) {
    }
  }
  o.diffuse=float4(saturate(lighting),Ambient.a);
+ // ZiiNAN: The selection screen's existing fixed-function spotlight.
+ if(SpotPositionRange.w>0) {
+   float3 delta=SpotPositionRange.xyz-eye.xyz; float distance=length(delta);
+   float rho=dot(-delta/max(distance,1e-20),SpotDirection.xyz);
+   float cone=rho>=SpotCone.x ? 1 : (rho<=SpotCone.y ? 0 : pow(saturate((rho-SpotCone.y)/max(1e-20,SpotCone.x-SpotCone.y)),SpotCone.z));
+   if(distance<=SpotPositionRange.w) lighting+=cone/max(1e-20,dot(SpotAttenuation.xyz,float3(1,distance,distance*distance)))*(SpotAmbient.rgb+SpotDiffuse.rgb*max(0,dot(n,delta/max(distance,1e-20))));
+   o.diffuse.rgb=saturate(lighting);
+ }
  o.cameraUV=mul(eye,CameraAlphaTransform).xy;
  // ZiiNAN: Native camera-space reflection vector, transformed at the vertex stage.
  if(Modes.w==3) o.cameraUV=mul(float4(reflect(normalize(eye.xyz),n),1),CameraAlphaTransform).xy;
@@ -356,9 +366,11 @@ void DiligentStaticObjectRenderer::Draw(const StaticObjectGeometryPtr& geometry,
             if(!mapped) { s.failed=true; return; }
             mapped->matrices=draw.matrices; mapped->normal=draw.normalTransform;
             const auto& extent=b.swapChain->GetDesc();
+            const auto viewportWidth=draw.viewport[2] ? draw.viewport[2] : extent.Width;
+            const auto viewportHeight=draw.viewport[3] ? draw.viewport[3] : extent.Height;
             for(size_t row=0;row<4;++row) {
-                mapped->matrices.projection[row*4]+=draw.matrices.projection[row*4+3]/extent.Width;
-                mapped->matrices.projection[row*4+1]-=draw.matrices.projection[row*4+3]/extent.Height;
+                mapped->matrices.projection[row*4]+=draw.matrices.projection[row*4+3]/viewportWidth;
+                mapped->matrices.projection[row*4+1]-=draw.matrices.projection[row*4+3]/viewportHeight;
             }
             mapped->ambient=draw.ambient; mapped->diffuse=draw.diffuse; mapped->direction=draw.lightDirection;
             mapped->fogColor=draw.fogColor; mapped->fogParameters=draw.fogParameters;
@@ -367,9 +379,15 @@ void DiligentStaticObjectRenderer::Draw(const StaticObjectGeometryPtr& geometry,
             mapped->cameraAlphaTransform=draw.cameraAlphaTransform;
             mapped->pointPositionRange=draw.pointPositionRange; mapped->pointAttenuation=draw.pointAttenuation;
             mapped->pointAmbient=draw.pointAmbient; mapped->pointDiffuse=draw.pointDiffuse;
+            mapped->spotPositionRange=draw.spotPositionRange; mapped->spotAttenuation=draw.spotAttenuation;
+            mapped->spotAmbient=draw.spotAmbient; mapped->spotDiffuse=draw.spotDiffuse;
+            mapped->spotDirection=draw.spotDirection; mapped->spotCone=draw.spotCone;
             mapped->alphaModes={draw.factorAlphaOnly ? 4u : (draw.factorAlpha ? 3u : (draw.diffuseAlphaOnly ? 2u : uint32_t(draw.textureAlpha))),static_cast<uint32_t>(draw.alphaTest),draw.alphaReference,draw.cameraAlpha ? 1u : 0u};
         }
         b.context->SetPipelineState(s.pipelines[variant]);
+        const auto& extent=b.swapChain->GetDesc();
+        Viewport viewport{float(draw.viewport[0]),float(draw.viewport[1]),float(draw.viewport[2] ? draw.viewport[2] : extent.Width),float(draw.viewport[3] ? draw.viewport[3] : extent.Height),0,1};
+        b.context->SetViewports(1,&viewport,extent.Width,extent.Height);
         IBuffer* vertex=mesh->vertices; Uint64 offset=0;
         b.context->SetVertexBuffers(0,1,&vertex,&offset,RESOURCE_STATE_TRANSITION_MODE_TRANSITION,SET_VERTEX_BUFFERS_FLAG_RESET);
         b.context->SetIndexBuffer(mesh->indices,0,RESOURCE_STATE_TRANSITION_MODE_TRANSITION);

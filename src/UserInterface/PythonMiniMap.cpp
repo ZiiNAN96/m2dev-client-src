@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "Renderer/UIRenderData.h"
+#include "EterLib/UIRenderBridge.h"
 #include "EterLib/StateManager.h"
 #include "EterLib/GrpSubImage.h"
 #include "EterLib/Camera.h"
@@ -250,7 +251,6 @@ void CPythonMiniMap::Update(float fCenterX, float fCenterY)
 
 void CPythonMiniMap::Render(float fScreenX, float fScreenY)
 {
-	Renderer::UIExcludeScope excludeMiniMap; // ZiiNAN: Separate masked map renderer, not a normal UI image.
 	CPythonBackground& rkBG=CPythonBackground::Instance();
 	if (!rkBG.IsMapOutdoor())
 		return;
@@ -312,11 +312,21 @@ void CPythonMiniMap::Render(float fScreenX, float fScreenY)
 		{
 			CStateManager& rkSttMgr=CStateManager::Instance();
 			rkSttMgr.DrawIndexedPrimitive(D3DPT_TRIANGLELIST, byTerrainNum * 4, 4, byTerrainNum * 6, 2);
+			// ZiiNAN: Original minimap tiles and stage-1 circular cover.
+			if(Renderer::UIActive()) {
+				CTerrain* terrain=nullptr; rkBG.GetMapOutdoorRef().GetTerrainPointer(byTerrainNum,&terrain);
+				auto* image=terrain ? terrain->GetMiniMapImage() : nullptr;
+				if(!image || image->GetTexturePointer()->GetD3DTexture()!=pMiniMapTexture) Renderer::uiRenderer->ReportFailure();
+				else UIRenderBridge::Submit(m_uiMapVertices.data()+byTerrainNum*4,4,UIRenderBridge::Primitive::Strip,image,S_OK,{},
+					m_MiniMapFilterGraphicImageInstance.GetGraphicImagePointer()->GetUITexture(*Renderer::uiRenderer));
+			}
 		}
 		else
 		{
 			STATEMANAGER.SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TFACTOR);
 			STATEMANAGER.DrawIndexedPrimitive(D3DPT_TRIANGLELIST, byTerrainNum * 4, 4, byTerrainNum * 6, 2);
+			if(Renderer::UIActive()) UIRenderBridge::Submit(m_uiMapVertices.data()+byTerrainNum*4,4,UIRenderBridge::Primitive::Strip,nullptr,S_OK,{},
+				m_MiniMapFilterGraphicImageInstance.GetGraphicImagePointer()->GetUITexture(*Renderer::uiRenderer));
 			STATEMANAGER.SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
 		}
 	}
@@ -635,6 +645,9 @@ bool CPythonMiniMap::Create()
 			}
 		}
 
+		for(size_t i=0;i<m_uiMapVertices.size();++i) {
+			const auto& v=lpOrigMiniMapVertex[i]; m_uiMapVertices[i]={{v.x,v.y,v.z},0xffffffff,{v.u,v.v}};
+		}
 		m_VertexBuffer.Unlock();
 	}
 	
@@ -943,7 +956,6 @@ void CPythonMiniMap::UpdateAtlas()
 
 void CPythonMiniMap::RenderAtlas(float fScreenX, float fScreenY)
 {
-	Renderer::UIExcludeScope excludeAtlas;
 	if (!m_bShowAtlas)
 		return;
 

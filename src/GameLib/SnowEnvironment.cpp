@@ -93,8 +93,8 @@ void CSnowEnvironment::__BeginBlur()
 
 	ms_lpd3dDevice->GetRenderTarget(0, &m_lpOldSurface);
 	ms_lpd3dDevice->GetDepthStencilSurface(&m_lpOldDepthStencilSurface);
-	ms_lpd3dDevice->SetDepthStencilSurface(m_lpSnowDepthSurface);
-	ms_lpd3dDevice->SetRenderTarget(0, m_lpSnowRenderTargetSurface);
+	STATEMANAGER.SetDepthStencilSurface(m_lpSnowDepthSurface);
+	STATEMANAGER.SetRenderTarget(0, m_lpSnowRenderTargetSurface);
 	ms_lpd3dDevice->Clear(0L, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, 0x00000000, 1.0f, 0L);
 
 	STATEMANAGER.SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
@@ -147,8 +147,8 @@ void CSnowEnvironment::__ApplyBlur()
 
 	///////////////
 	{
-		ms_lpd3dDevice->SetDepthStencilSurface(m_lpOldDepthStencilSurface);
-		ms_lpd3dDevice->SetRenderTarget(0, m_lpOldSurface);
+		STATEMANAGER.SetDepthStencilSurface(m_lpOldDepthStencilSurface);
+		STATEMANAGER.SetRenderTarget(0, m_lpOldSurface);
 
 		STATEMANAGER.SetTexture(0,m_lpSnowTexture);
 		STATEMANAGER.SetRenderState( D3DRS_ALPHABLENDENABLE,   TRUE);

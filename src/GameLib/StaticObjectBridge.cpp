@@ -1,8 +1,10 @@
 #include "StdAfx.h"
+#include "EterLib/NativeStateView.h"
 #include "StaticObjectBridge.h"
 #include "EterGrnLib/ThingInstance.h"
 #include "EterLib/StateManager.h"
 #include "EterLib/StaticObjectTextureLoader.h"
+#include "Renderer/WorldRenderData.h"
 #include <unordered_map>
 #include <unordered_set>
 #include <fstream>
@@ -52,7 +54,7 @@ DWORD Stage(DWORD stage,D3DTEXTURESTAGESTATETYPE type)
 { DWORD value=0; STATEMANAGER.GetTextureStageState(stage,type,&value); return value; }
 float Float(D3DRENDERSTATETYPE type)
 { DWORD value=STATEMANAGER.GetRenderState(type); float result; memcpy(&result,&value,4); return result; }
-// Read-only access to existing legacy device light enable state, not a state-manager rewrite.
+// Shared material snapshot: CPU compatibility state in Diligent, native device in Legacy.
 class StateReader : public CGraphicBase
 {
 public:
@@ -60,16 +62,18 @@ public:
     {
         // ZiiNAN: Ensure deterministic actor material state
         if(actorLighting) d=StaticObjectDraw{};
-        // Some sampler fields were never initialized in the legacy cache. Read the
-        // real device defaults/settings without changing the legacy state manager.
-        const auto Sample=[](D3DSAMPLERSTATETYPE type) { DWORD value=0; return SUCCEEDED(ms_lpd3dDevice->GetSamplerState(0,type,&value)) ? value : ~DWORD(0); };
+        // Startup-seeded defaults avoid historically uninitialized legacy sampler cache fields.
+        const auto Sample=[](D3DSAMPLERSTATETYPE type) { DWORD value=0; return SUCCEEDED(NativeStateView().GetSamplerState(0,type,&value)) ? value : ~DWORD(0); };
         // RenderArea's imminent shadow setup changes base RGB to TEXTURE*DIFFUSE
         // and disables texture alpha. Preserve that lighting, not the shadow texture.
         const bool textureOnly=!shadowBase && Stage(0,D3DTSS_COLOROP)==D3DTOP_SELECTARG1;
         // ZiiNAN: Inspect the already applied native actor stages; never set legacy state.
         if(actorLighting) {
             const auto operation=Stage(1,D3DTSS_COLOROP);
-            if(operation!=D3DTOP_DISABLE) {
+            IDirect3DBaseTexture9* stage1=nullptr; NativeStateView().GetTexture(1,&stage1);
+            const bool disabledByNullTexture=!stage1 && operation==D3DTOP_SELECTARG1 && Stage(1,D3DTSS_COLORARG1)==D3DTA_TEXTURE;
+            if(stage1) stage1->Release();
+            if(operation!=D3DTOP_DISABLE && !disabledByNullTexture) {
                 if(Stage(1,D3DTSS_COLORARG1)!=D3DTA_CURRENT) return false;
                 if((operation==D3DTOP_ADD || operation==D3DTOP_MODULATE) &&
                    Stage(1,D3DTSS_COLORARG2)==D3DTA_TFACTOR && Stage(1,D3DTSS_ALPHAOP)==D3DTOP_DISABLE)
@@ -130,7 +134,7 @@ public:
                Stage(1,D3DTSS_TEXTURETRANSFORMFLAGS)!=D3DTTFF_COUNT2) return false;
             D3DXMATRIX matrix; STATEMANAGER.GetTransform(D3DTS_TEXTURE1,&matrix);
             memcpy(d.cameraAlphaTransform.data(),&matrix,64);
-            const auto CameraSample=[](D3DSAMPLERSTATETYPE type) { DWORD value=0; return SUCCEEDED(ms_lpd3dDevice->GetSamplerState(1,type,&value)) ? value : ~DWORD(0); };
+            const auto CameraSample=[](D3DSAMPLERSTATETYPE type) { DWORD value=0; return SUCCEEDED(NativeStateView().GetSamplerState(1,type,&value)) ? value : ~DWORD(0); };
             const auto min=CameraSample(D3DSAMP_MINFILTER),mag=CameraSample(D3DSAMP_MAGFILTER),mip=CameraSample(D3DSAMP_MIPFILTER);
             if(CameraSample(D3DSAMP_ADDRESSU)!=D3DTADDRESS_CLAMP || CameraSample(D3DSAMP_ADDRESSV)!=D3DTADDRESS_CLAMP ||
                (min!=D3DTEXF_POINT && min!=D3DTEXF_LINEAR && min!=D3DTEXF_ANISOTROPIC) ||
@@ -148,7 +152,7 @@ public:
         if(d.actorStage==ActorMaterialStage::Specular) {
             D3DXMATRIX matrix; STATEMANAGER.GetTransform(D3DTS_TEXTURE1,&matrix);
             memcpy(d.cameraAlphaTransform.data(),&matrix,64);
-            const auto SphereSample=[](D3DSAMPLERSTATETYPE type) { DWORD value=0; return SUCCEEDED(ms_lpd3dDevice->GetSamplerState(1,type,&value)) ? value : ~DWORD(0); };
+            const auto SphereSample=[](D3DSAMPLERSTATETYPE type) { DWORD value=0; return SUCCEEDED(NativeStateView().GetSamplerState(1,type,&value)) ? value : ~DWORD(0); };
             const auto min=SphereSample(D3DSAMP_MINFILTER),mag=SphereSample(D3DSAMP_MAGFILTER),mip=SphereSample(D3DSAMP_MIPFILTER);
             if(SphereSample(D3DSAMP_ADDRESSU)!=D3DTADDRESS_WRAP || SphereSample(D3DSAMP_ADDRESSV)!=D3DTADDRESS_WRAP ||
                (min!=D3DTEXF_POINT && min!=D3DTEXF_LINEAR && min!=D3DTEXF_ANISOTROPIC) ||
@@ -177,12 +181,16 @@ public:
             if(min!=D3DTEXF_ANISOTROPIC || mag!=D3DTEXF_ANISOTROPIC || mip!=D3DTEXF_LINEAR) return false;
             // Legacy's default MAXANISOTROPY may never enter the state cache.
             DWORD maximum=1;
-            if(FAILED(ms_lpd3dDevice->GetSamplerState(0,D3DSAMP_MAXANISOTROPY,&maximum)) || maximum<1 || maximum>16) return false;
+            if(FAILED(NativeStateView().GetSamplerState(0,D3DSAMP_MAXANISOTROPY,&maximum)) || maximum<1 || maximum>16) return false;
             d.maxAnisotropy=maximum;
         }
         D3DXMATRIX view,projection;
         STATEMANAGER.GetTransform(D3DTS_VIEW,&view); STATEMANAGER.GetTransform(D3DTS_PROJECTION,&projection);
         memcpy(d.matrices.view.data(),&view,64); memcpy(d.matrices.projection.data(),&projection,64);
+        if(actorLighting) {
+            D3DVIEWPORT9 viewport{}; if(FAILED(NativeStateView().GetViewport(&viewport))) return false;
+            d.viewport={viewport.X,viewport.Y,viewport.Width,viewport.Height};
+        }
         if(textureOnly) {
             // SELECTARG1 ignores lit RGB, including light 1 left on by character
             // selection. Lighting still supplies material alpha to ALPHAOP.
@@ -193,14 +201,14 @@ public:
         } else if(STATEMANAGER.GetRenderState(D3DRS_LIGHTING)) {
             D3DMATERIAL9 material; STATEMANAGER.GetMaterial(&material);
             D3DLIGHT9 light{}; BOOL enabled=FALSE;
-            if(FAILED(ms_lpd3dDevice->GetLightEnable(0,&enabled))) return false;
+            if(FAILED(NativeStateView().GetLightEnable(0,&enabled))) return false;
             for(DWORD i=1;i<8;++i) {
                 BOOL other=FALSE;
-                if(FAILED(ms_lpd3dDevice->GetLightEnable(i,&other)) || !other) continue;
+                if(FAILED(NativeStateView().GetLightEnable(i,&other)) || !other) continue;
                 // ZiiNAN: Same existing point light for the normal actor material, no new lights.
                 if((!cameraMask && !shadowBase && !actorLighting && !groundItem) || i!=1) return false;
                 D3DLIGHT9 point{};
-                if(FAILED(ms_lpd3dDevice->GetLight(1,&point)) || point.Type!=D3DLIGHT_POINT) return false;
+                if(FAILED(NativeStateView().GetLight(1,&point)) || point.Type!=D3DLIGHT_POINT) return false;
                 D3DXVECTOR3 position(point.Position.x,point.Position.y,point.Position.z);
                 D3DXVec3TransformCoord(&position,&position,&view);
                 d.pointPositionRange={position.x,position.y,position.z,point.Range};
@@ -208,7 +216,22 @@ public:
                 d.pointAmbient={material.Ambient.r*point.Ambient.r,material.Ambient.g*point.Ambient.g,material.Ambient.b*point.Ambient.b,0};
                 d.pointDiffuse={material.Diffuse.r*point.Diffuse.r,material.Diffuse.g*point.Diffuse.g,material.Diffuse.b*point.Diffuse.b,0};
             }
-            if(enabled) { STATEMANAGER.GetLight(0,&light); if(light.Type!=D3DLIGHT_DIRECTIONAL) return false; }
+            if(enabled) {
+                if(FAILED(NativeStateView().GetLight(0,&light))) return false;
+                if(actorLighting && light.Type==D3DLIGHT_SPOT) {
+                    // ZiiNAN: Diligent character-select actor rendering.
+                    D3DXVECTOR3 position(light.Position),direction(light.Direction);
+                    D3DXVec3TransformCoord(&position,&position,&view);
+                    D3DXVec3TransformNormal(&direction,&direction,&view); D3DXVec3Normalize(&direction,&direction);
+                    d.spotPositionRange={position.x,position.y,position.z,light.Range};
+                    d.spotAttenuation={light.Attenuation0,light.Attenuation1,light.Attenuation2,0};
+                    d.spotAmbient={material.Ambient.r*light.Ambient.r,material.Ambient.g*light.Ambient.g,material.Ambient.b*light.Ambient.b,0};
+                    d.spotDiffuse={material.Diffuse.r*light.Diffuse.r,material.Diffuse.g*light.Diffuse.g,material.Diffuse.b*light.Diffuse.b,0};
+                    d.spotDirection={direction.x,direction.y,direction.z,0};
+                    d.spotCone={std::cos(light.Theta*0.5f),std::cos(light.Phi*0.5f),light.Falloff,0};
+                    light={}; enabled=FALSE;
+                } else if(light.Type!=D3DLIGHT_DIRECTIONAL) return false;
+            }
             const D3DXCOLOR ambient(STATEMANAGER.GetRenderState(D3DRS_AMBIENT));
             d.ambient={material.Emissive.r+material.Ambient.r*(ambient.r+light.Ambient.r),
                        material.Emissive.g+material.Ambient.g*(ambient.g+light.Ambient.g),
@@ -343,4 +366,61 @@ void ReleaseStaticMapObject(CGraphicThingInstance* thing)
     if(Renderer::staticObjectRenderer && !found->second.models.empty()) Renderer::staticObjectRenderer->ReleaseBindings();
     objects.erase(found);
     if(diagnostics.is_open()) diagnostics << "release live_objects=" << objects.size() << std::endl;
+}
+
+// ZiiNAN: Animated/blended map Things reuse completed CPU poses and the M5 material renderer.
+namespace {
+struct SpecialThingContext { CGraphicThingInstance& thing; CGraphicImage* cameraAlpha; };
+void SubmitSpecialThing(void* context,const void* native,const Renderer::ActorNativeDraw& group)
+{
+    using namespace Renderer;
+    auto& c=*static_cast<SpecialThingContext*>(context); CGrannyModelInstance* instance=nullptr;
+    for(DWORD i=0;i<c.thing.GetLODControllerCount();++i) {
+        auto* candidate=c.thing.GetLODControllerPointer(i)->GetModelInstance();
+        if(candidate==native) { instance=candidate; break; }
+    }
+    const auto fail=[&](const char* message) { Report(c.thing,message); if(worldRenderer) worldRenderer->ReportFailure(); };
+    if(!instance || !instance->GetModel()) { fail("ERROR: special thing instance"); return; }
+    auto& data=instance->GetActorRenderData(); const auto& source=instance->GetModel()->GetActorSource();
+    if(!source) { fail("ERROR: special thing PNT source"); return; }
+    if(!source->IsRigid() && (!data.ready || data.capturedFrame!=actorFrameSerial)) return;
+    StaticObjectDraw draw;
+    if(!CaptureStaticMapObjectDraw(draw,c.cameraAlpha!=nullptr,false,c.cameraAlpha==nullptr)) { fail("ERROR: special thing material state"); return; }
+    auto& palette=instance->GetStaticObjectMaterialPalette();
+    if(group.material>=palette.GetMaterialCount()) { fail("ERROR: special thing material index"); return; }
+    auto& material=palette.GetMaterialRef(group.material);
+    const auto load=[&](CGraphicImage* image) -> TerrainTexturePtr {
+        if(!image) return {}; auto& texture=data.textures[image->GetFileName()];
+        if(!texture) texture=LoadStaticObjectTextureFile(image->GetFileName(),*actorRenderer); return texture;
+    };
+    auto texture=load(material.GetImagePointer(0));
+    if(!texture) { fail("ERROR: special thing diffuse image"); return; }
+    if(c.cameraAlpha) { draw.cameraAlpha=load(c.cameraAlpha); if(!draw.cameraAlpha) { fail("ERROR: special thing camera mask"); return; } }
+    if(draw.actorStage==ActorMaterialStage::Specular) {
+        draw.sphereMap=load(material.GetSphereMapImage()); if(!draw.sphereMap) { fail("ERROR: special thing sphere image"); return; }
+    }
+    const auto* world=instance->GetStaticObjectWorldMatrix(group.mesh);
+    if(!world) { fail("ERROR: special thing matrix"); return; }
+    memcpy(draw.matrices.world.data(),world,64);
+    D3DXMATRIX view,normal; memcpy(&view,draw.matrices.view.data(),64); normal=(*world)*view;
+    if(!D3DXMatrixInverse(&normal,nullptr,&normal)) { fail("ERROR: singular special thing matrix"); return; }
+    D3DXMatrixTranspose(&normal,&normal); memcpy(draw.normalTransform.data(),&normal,64);
+    draw.baseVertex=group.baseVertex+(group.rigid ? source->deformVertexCount : 0);
+    draw.vertexCount=group.vertexCount; draw.firstIndex=group.firstIndex; draw.indexCount=group.indexCount;
+    if(!data.geometry) data.geometry=actorRenderer->CreateGeometry(*source,ActorPart::Body,ActorCategory::Special);
+    if(!data.geometry) { fail("ERROR: special thing geometry"); return; }
+    if(!source->IsRigid() && data.uploadedRevision!=data.revision) {
+        if(!actorRenderer->UpdateVertices(data.geometry,data.vertices,source->deformVertexCount,ActorCategory::Special)) { fail("ERROR: special thing pose upload"); return; }
+        data.uploadedRevision=data.revision;
+    }
+    actorRenderer->Draw(&c.thing,data.geometry,texture,draw,ActorCategory::Special);
+    Report(c.thing,"submitted: native animated/blended map thing");
+}
+}
+bool DrawSpecialMapObject(CGraphicThingInstance& thing,bool blend,CGraphicImage* cameraAlpha)
+{
+    if(!Renderer::actorRenderer || !Renderer::worldSurfaceFrame || (!thing.IsMotionThing() && !thing.HaveBlendThing())) return false;
+    SpecialThingContext context{thing,cameraAlpha}; Renderer::ThingDrawScope scope({&context,SubmitSpecialThing});
+    if(blend) thing.BlendRender(); else if(cameraAlpha) thing.RenderPCBlocker(); else thing.Render();
+    return true;
 }

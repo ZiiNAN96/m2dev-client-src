@@ -9,10 +9,30 @@
 #include "PythonApplication.h"
 #include "EterLib/LegacyD3D9Backend.h"
 #include "PythonCharacterManager.h"
+#include "Renderer/ActorRenderData.h"
+#include "Renderer/TreeRenderData.h"
+#include "Renderer/WorldRenderData.h"
+#include "Renderer/UIRenderData.h"
 
 #include "ProcessScanner.h"
 
 #include <utf8.h>
+#include <fstream>
+
+// ZiiNAN: Optional audit evidence separates attempted compatibility draws from GPU calls.
+static void LogDiligentNativeCounters()
+{
+    if(!STATEMANAGER.IsDiligentRendering()) return;
+    static const bool enabled=GetEnvironmentVariableA("M2_RENDERER_AUDIT",nullptr,0)!=0 ||
+        GetFileAttributesA("config/renderer-audit.enabled")!=INVALID_FILE_ATTRIBUTES;
+    if(!enabled) return;
+    static std::ofstream log("native-render-audit.log",std::ios::trunc);
+    static uint64_t frame=0;
+    const auto c=STATEMANAGER.GetNativeCounters();
+    if(++frame%120==0 || c.draws || c.states || c.textures || c.targets)
+        log<<"frame="<<frame<<" draws="<<c.draws<<" states="<<c.states<<" texture_binds="<<c.textures
+           <<" target_changes="<<c.targets<<" suppressed_draws="<<c.suppressedDraws<<std::endl;
+}
 
 extern void GrannyCreateSharedDeformBuffer();
 extern void GrannyDestroySharedDeformBuffer();
@@ -166,6 +186,11 @@ void CPythonApplication::Exit()
 
 void CPythonApplication::RenderGame()
 {
+    // ZiiNAN: Indoor worlds do not require a terrain submission in the previous frame.
+    if(Renderer::uiFrame && Renderer::worldRenderer) {
+        Renderer::actorWorldFrame=Renderer::treeWorldFrame=true;
+        Renderer::effectWorldFrame=Renderer::worldSurfaceFrame=true;
+    }
 	float fAspect = m_kWndMgr.GetAspect();
 	float fFarClip = m_pyBackground.GetFarClip();
 
@@ -491,6 +516,7 @@ bool CPythonApplication::Process()
 					return false;
 				}
 				//DWORD t2 = ELTimer_GetMSec();
+                LogDiligentNativeCounters();
 
 				DWORD dwRenderEndTime = ELTimer_GetMSec();
 
@@ -922,6 +948,7 @@ bool CPythonApplication::Create(PyObject * poSelf, const char * c_szName, int wi
 				PyErr_SetString(PyExc_RuntimeError, "Diligent terrain initialization failed");
 				return false;
 			}
+            STATEMANAGER.EnableDiligentRendering(); // ZiiNAN: No native draw/state execution after startup selection.
 		}
 
 		GrannyCreateSharedDeformBuffer();

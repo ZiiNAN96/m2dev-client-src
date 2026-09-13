@@ -19,6 +19,7 @@ void CMapOutdoor::SetShadowTextureSize(WORD size)
 
 void CMapOutdoor::CreateCharacterShadowTexture()
 {
+    if(Renderer::worldRenderer) return; // ZiiNAN: Deferred shadow milestone, Legacy unchanged.
 	extern bool GRAPHICS_CAPS_CAN_NOT_DRAW_SHADOW;
 
 	if (GRAPHICS_CAPS_CAN_NOT_DRAW_SHADOW)
@@ -66,6 +67,7 @@ DWORD dwLightEnable = FALSE;
 
 bool CMapOutdoor::BeginRenderCharacterShadowToTexture()
 {
+    if(Renderer::worldRenderer) return false;
 	D3DXMATRIX matLightView, matLightProj;
 	
 	CCamera* pCurrentCamera = CCameraManager::Instance().GetCurrentCamera();
@@ -108,8 +110,8 @@ bool CMapOutdoor::BeginRenderCharacterShadowToTexture()
 	ms_lpd3dDevice->GetDepthStencilSurface(&m_lpBackupDepthSurface);
 	ms_lpd3dDevice->GetRenderTarget(0, &m_lpBackupRenderTargetSurface);
 
-	ms_lpd3dDevice->SetRenderTarget(0, m_lpCharacterShadowMapRenderTargetSurface);
-	ms_lpd3dDevice->SetDepthStencilSurface(m_lpCharacterShadowMapDepthSurface);
+	STATEMANAGER.SetRenderTarget(0, m_lpCharacterShadowMapRenderTargetSurface);
+	STATEMANAGER.SetDepthStencilSurface(m_lpCharacterShadowMapDepthSurface);
 	
 	ms_lpd3dDevice->Clear(0, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, 0xFFFFFFFF, 1.0f, 0);
 	
@@ -121,10 +123,11 @@ bool CMapOutdoor::BeginRenderCharacterShadowToTexture()
 
 void CMapOutdoor::EndRenderCharacterShadowToTexture()
 {
+    if(Renderer::worldRenderer) return;
 	ms_lpd3dDevice->SetViewport(&m_BackupViewport);
 
-	ms_lpd3dDevice->SetDepthStencilSurface(m_lpBackupDepthSurface);
-	ms_lpd3dDevice->SetRenderTarget(0, m_lpBackupRenderTargetSurface);
+	STATEMANAGER.SetDepthStencilSurface(m_lpBackupDepthSurface);
+	STATEMANAGER.SetRenderTarget(0, m_lpBackupRenderTargetSurface);
 
 	SAFE_RELEASE(m_lpBackupRenderTargetSurface);
 	SAFE_RELEASE(m_lpBackupDepthSurface);

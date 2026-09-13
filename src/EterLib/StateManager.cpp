@@ -5,6 +5,65 @@
 //#define StateManager_Assert(a) if (!(a)) puts("assert"#a)
 #define StateManager_Assert(a) assert(a)
 
+// ZiiNAN: Seed API defaults once (and after native reset), never query live material state per draw.
+void CStateManager::SeedNativeStateView()
+{
+    for(DWORD i=0;i<256;++i) m_lpD3DDev->GetRenderState(D3DRENDERSTATETYPE(i),&m_CurrentState.m_RenderStates[i]);
+    for(DWORD stage=0;stage<8;++stage) {
+        for(DWORD i=0;i<128;++i) {
+            m_lpD3DDev->GetTextureStageState(stage,D3DTEXTURESTAGESTATETYPE(i),&m_CurrentState.m_TextureStates[stage][i]);
+            m_CurrentState.m_SamplerStates[stage][i]=0;
+            m_lpD3DDev->GetSamplerState(stage,D3DSAMPLERSTATETYPE(i),&m_CurrentState.m_SamplerStates[stage][i]);
+        }
+        m_lightEnabled[stage]=FALSE;
+        m_lightValid[stage]=SUCCEEDED(m_lpD3DDev->GetLight(stage,&m_lights[stage]));
+        m_lpD3DDev->GetLightEnable(stage,&m_lightEnabled[stage]);
+    }
+    m_lpD3DDev->GetViewport(&m_viewport); m_lpD3DDev->GetScissorRect(&m_scissor);
+}
+void CStateManager::EnableDiligentRendering()
+{
+    if(m_diligentRendering) return;
+    SeedNativeStateView();
+    for(DWORD i=0;i<300;++i) m_lpD3DDev->GetTransform(D3DTRANSFORMSTATETYPE(i),&m_CurrentState.m_Matrices[i]);
+    m_lpD3DDev->GetMaterial(&m_CurrentState.m_D3DMaterial);
+    m_lpD3DDev->GetVertexShaderConstantF(0,m_vertexConstants[0],96);
+    for(DWORD i=0;i<8;++i) {
+        m_lpD3DDev->GetTexture(i,m_textureOwners[i].ReleaseAndGetAddressOf());
+        m_CurrentState.m_Textures[i]=m_textureOwners[i].Get();
+        m_lpD3DDev->SetTexture(i,nullptr);
+    }
+    m_lpD3DDev->GetVertexShader(m_vertexShaderOwner.ReleaseAndGetAddressOf());
+    m_lpD3DDev->GetPixelShader(m_pixelShaderOwner.ReleaseAndGetAddressOf());
+    m_diligentRendering=true;
+    ResetNativeCounters();
+}
+HRESULT CStateManager::SetViewport(const D3DVIEWPORT9* viewport)
+{
+    if(!viewport || !viewport->Width || !viewport->Height || viewport->MinZ>viewport->MaxZ) return D3DERR_INVALIDCALL;
+    m_viewport=*viewport;
+    if(m_diligentRendering) return S_OK;
+    ++m_nativeCounters.states; return m_lpD3DDev->SetViewport(viewport);
+}
+HRESULT CStateManager::LightEnable(DWORD index,BOOL enabled)
+{
+    if(index>=8) return D3DERR_INVALIDCALL;
+    m_lightEnabled[index]=enabled;
+    if(m_diligentRendering) return S_OK;
+    ++m_nativeCounters.states; return m_lpD3DDev->LightEnable(index,enabled);
+}
+void CStateManager::ForgetDiligentTexture(IDirect3DBaseTexture9* texture)
+{
+    if(!m_diligentRendering || !texture) return;
+    for(DWORD i=0;i<8;++i) if(m_textureOwners[i].Get()==texture) {
+        m_CurrentState.m_Textures[i]=nullptr; m_textureOwners[i].Reset();
+    }
+}
+HRESULT CStateManager::SetRenderTarget(DWORD index,IDirect3DSurface9* surface)
+{ ++m_nativeCounters.targets; return m_lpD3DDev->SetRenderTarget(index,surface); }
+HRESULT CStateManager::SetDepthStencilSurface(IDirect3DSurface9* surface)
+{ ++m_nativeCounters.targets; return m_lpD3DDev->SetDepthStencilSurface(surface); }
+
 struct SLightData
 {
 	D3DLIGHT9 m_akD3DLight[8];
@@ -17,7 +76,8 @@ void CStateManager::SetLight(DWORD index, CONST D3DLIGHT9* pLight)
 	assert(index < 8);
 	m_kLightData.m_akD3DLight[index] = *pLight;
 
-	m_lpD3DDev->SetLight(index, pLight);
+    m_lights[index]=*pLight; m_lightValid[index]=true;
+    if(!m_diligentRendering) { ++m_nativeCounters.states; m_lpD3DDev->SetLight(index,pLight); }
 }
 
 void CStateManager::GetLight(DWORD index, D3DLIGHT9* pLight)
@@ -28,16 +88,18 @@ void CStateManager::GetLight(DWORD index, D3DLIGHT9* pLight)
 
 void CStateManager::SetScissorRect(const RECT& c_rRect)
 {
-	m_lpD3DDev->SetScissorRect(&c_rRect);
+    m_scissor=c_rRect;
+    if(!m_diligentRendering) { ++m_nativeCounters.states; m_lpD3DDev->SetScissorRect(&c_rRect); }
 }
 
 void CStateManager::GetScissorRect(RECT* pRect)
 {
-	m_lpD3DDev->GetScissorRect(pRect);
+    if(m_diligentRendering) *pRect=m_scissor; else m_lpD3DDev->GetScissorRect(pRect);
 }
 
 bool CStateManager::BeginScene()
 {
+    ResetNativeCounters();
 	m_bScene = true;
 
 	D3DXMATRIX m4Proj;
@@ -50,14 +112,14 @@ bool CStateManager::BeginScene()
 	SetTransform(D3DTS_PROJECTION, &m4Proj);
 	SetTransform(D3DTS_VIEW, &m4View);
 
-	if (FAILED(m_lpD3DDev->BeginScene()))
+	if (!m_diligentRendering && FAILED(m_lpD3DDev->BeginScene()))
 		return false;
 	return true;
 }
 
 void CStateManager::EndScene()
 {
-	m_lpD3DDev->EndScene();
+	if(!m_diligentRendering) m_lpD3DDev->EndScene();
 	m_bScene = false;
 }
 
@@ -140,8 +202,13 @@ void CStateManager::Restore()
 
 void CStateManager::SetDefaultState()
 {
+    if(m_diligentRendering) {
+        for(auto& owner:m_textureOwners) owner.Reset();
+        m_vertexShaderOwner.Reset(); m_pixelShaderOwner.Reset();
+    }
 	m_CurrentState.ResetState();
 	m_CurrentState_Copy.ResetState();
+    if(m_diligentRendering) SeedNativeStateView();
 
 	for (auto& stack : m_RenderStateStack)
 		stack.clear();
@@ -429,7 +496,7 @@ void CStateManager::RestoreMaterial()
 void CStateManager::SetMaterial(const D3DMATERIAL9* pMaterial)
 {
 	m_CurrentState.m_D3DMaterial = *pMaterial;
-	m_lpD3DDev->SetMaterial(&m_CurrentState.m_D3DMaterial);
+	if(!m_diligentRendering) { ++m_nativeCounters.states; m_lpD3DDev->SetMaterial(&m_CurrentState.m_D3DMaterial); }
 }
 
 void CStateManager::GetMaterial(D3DMATERIAL9* pMaterial)
@@ -484,7 +551,7 @@ void CStateManager::SetRenderState(D3DRENDERSTATETYPE Type, DWORD Value)
 	if (m_CurrentState.m_RenderStates[Type] == Value)
 		return;
 
-	m_lpD3DDev->SetRenderState(Type, Value);
+	if(!m_diligentRendering) { ++m_nativeCounters.states; m_lpD3DDev->SetRenderState(Type, Value); }
 	m_CurrentState.m_RenderStates[Type] = Value;
 }
 
@@ -511,7 +578,8 @@ void CStateManager::SetTexture(DWORD dwStage, LPDIRECT3DBASETEXTURE9 pTexture)
 	if (pTexture == m_CurrentState.m_Textures[dwStage])
 		return;
 
-	m_lpD3DDev->SetTexture(dwStage, pTexture);
+    if(m_diligentRendering) m_textureOwners[dwStage]=pTexture;
+    else { ++m_nativeCounters.textures; m_lpD3DDev->SetTexture(dwStage,pTexture); }
 	m_CurrentState.m_Textures[dwStage] = pTexture;
 }
 
@@ -545,7 +613,7 @@ void CStateManager::SetTextureStageState(DWORD dwStage, D3DTEXTURESTAGESTATETYPE
 	if (m_CurrentState.m_TextureStates[dwStage][Type] == dwValue)
 		return;
 
-	m_lpD3DDev->SetTextureStageState(dwStage, Type, dwValue);
+	if(!m_diligentRendering) { ++m_nativeCounters.states; m_lpD3DDev->SetTextureStageState(dwStage, Type, dwValue); }
 	m_CurrentState.m_TextureStates[dwStage][Type] = dwValue;
 }
 
@@ -576,7 +644,7 @@ void CStateManager::SetSamplerState(DWORD dwStage, D3DSAMPLERSTATETYPE Type, DWO
 {
 	if (m_CurrentState.m_SamplerStates[dwStage][Type] == dwValue)
 		return;
-	m_lpD3DDev->SetSamplerState(dwStage, Type, dwValue);
+	if(!m_diligentRendering) { ++m_nativeCounters.states; m_lpD3DDev->SetSamplerState(dwStage, Type, dwValue); }
 	m_CurrentState.m_SamplerStates[dwStage][Type] = dwValue;
 }
 void CStateManager::GetSamplerState(DWORD dwStage, D3DSAMPLERSTATETYPE Type, DWORD* pdwValue)
@@ -602,7 +670,8 @@ void CStateManager::SetVertexShader(LPDIRECT3DVERTEXSHADER9 dwShader)
 	if (m_CurrentState.m_dwVertexShader == dwShader)
 		return;
 
-	m_lpD3DDev->SetVertexShader(dwShader);
+    if(m_diligentRendering) m_vertexShaderOwner=dwShader;
+    else { ++m_nativeCounters.states; m_lpD3DDev->SetVertexShader(dwShader); }
 	m_CurrentState.m_dwVertexShader = dwShader;
 }
 
@@ -615,12 +684,12 @@ void CStateManager::GetVertexShader(LPDIRECT3DVERTEXSHADER9* pdwShader)
 void CStateManager::SaveVertexProcessing(BOOL IsON)
 {
 	m_VertexProcessingStack.push_back(m_CurrentState.m_bVertexProcessing);
-	m_lpD3DDev->SetSoftwareVertexProcessing(IsON);
+	if(!m_diligentRendering) { ++m_nativeCounters.states; m_lpD3DDev->SetSoftwareVertexProcessing(IsON); }
 	m_CurrentState.m_bVertexProcessing = IsON;
 }
 void CStateManager::RestoreVertexProcessing()
 {
-	m_lpD3DDev->SetSoftwareVertexProcessing(m_VertexProcessingStack.back());
+	if(!m_diligentRendering) { ++m_nativeCounters.states; m_lpD3DDev->SetSoftwareVertexProcessing(m_VertexProcessingStack.back()); }
 	m_VertexProcessingStack.pop_back();
 }
 // Vertex Declaration
@@ -636,7 +705,7 @@ void CStateManager::RestoreVertexDeclaration()
 }
 void CStateManager::SetVertexDeclaration(LPDIRECT3DVERTEXDECLARATION9 dwShader)
 {
-	m_lpD3DDev->SetVertexDeclaration(dwShader);
+	if(!m_diligentRendering) { ++m_nativeCounters.states; m_lpD3DDev->SetVertexDeclaration(dwShader); }
 	m_CurrentState.m_dwVertexDeclaration = dwShader;
 }
 void CStateManager::GetVertexDeclaration(LPDIRECT3DVERTEXDECLARATION9* pdwShader)
@@ -658,7 +727,7 @@ void CStateManager::SetFVF(DWORD dwShader)
 {
 	//if (m_CurrentState.m_dwFVF == dwShader)
 	//	return;
-	m_lpD3DDev->SetFVF(dwShader);
+	if(!m_diligentRendering) { ++m_nativeCounters.states; m_lpD3DDev->SetFVF(dwShader); }
 	m_CurrentState.m_dwFVF = dwShader;
 }
 void CStateManager::GetFVF(DWORD* pdwShader)
@@ -684,7 +753,8 @@ void CStateManager::SetPixelShader(LPDIRECT3DPIXELSHADER9 dwShader)
 	if (m_CurrentState.m_dwPixelShader == dwShader)
 		return;
 
-	m_lpD3DDev->SetPixelShader(dwShader);
+    if(m_diligentRendering) m_pixelShaderOwner=dwShader;
+    else { ++m_nativeCounters.states; m_lpD3DDev->SetPixelShader(dwShader); }
 	m_CurrentState.m_dwPixelShader = dwShader;
 }
 
@@ -720,8 +790,9 @@ void CStateManager::SetTransform(D3DTRANSFORMSTATETYPE Type, const D3DXMATRIX* p
 {
 	m_CurrentState.m_Matrices[Type] = *pMatrix;
 
-	if (m_bScene)
-		m_lpD3DDev->SetTransform(Type, &m_CurrentState.m_Matrices[Type]);
+	if (m_bScene) {
+        if(!m_diligentRendering) { ++m_nativeCounters.states; m_lpD3DDev->SetTransform(Type, &m_CurrentState.m_Matrices[Type]); }
+    }
 	else
 		assert(D3DTS_VIEW == Type || D3DTS_PROJECTION == Type || D3DTS_WORLD == Type);
 }
@@ -733,12 +804,14 @@ void CStateManager::GetTransform(D3DTRANSFORMSTATETYPE Type, D3DXMATRIX* pMatrix
 
 void CStateManager::SetVertexShaderConstant(DWORD dwRegister, CONST void* pConstantData, DWORD dwConstantCount)
 {
-	m_lpD3DDev->SetVertexShaderConstantF(dwRegister, (const float*)pConstantData, dwConstantCount);
+    if(dwRegister<=96 && dwConstantCount<=96-dwRegister) memcpy(m_vertexConstants[dwRegister],pConstantData,dwConstantCount*16);
+    if(!m_diligentRendering) { ++m_nativeCounters.states; m_lpD3DDev->SetVertexShaderConstantF(dwRegister,(const float*)pConstantData,dwConstantCount); }
 }
 
 void CStateManager::SetPixelShaderConstant(DWORD dwRegister, CONST void* pConstantData, DWORD dwConstantCount)
 {
-	m_lpD3DDev->SetVertexShaderConstantF(dwRegister, (const float*)pConstantData, dwConstantCount);
+    if(dwRegister<=96 && dwConstantCount<=96-dwRegister) memcpy(m_vertexConstants[dwRegister],pConstantData,dwConstantCount*16);
+    if(!m_diligentRendering) { ++m_nativeCounters.states; m_lpD3DDev->SetVertexShaderConstantF(dwRegister,(const float*)pConstantData,dwConstantCount); }
 }
 
 void CStateManager::SaveStreamSource(UINT StreamNumber, LPDIRECT3DVERTEXBUFFER9 pStreamData, UINT Stride)
@@ -762,7 +835,7 @@ void CStateManager::SetStreamSource(UINT StreamNumber, LPDIRECT3DVERTEXBUFFER9 p
 	if (m_CurrentState.m_StreamData[StreamNumber] == kStreamData)
 		return;
 
-	m_lpD3DDev->SetStreamSource(StreamNumber, pStreamData, 0, Stride);
+	if(!m_diligentRendering) { ++m_nativeCounters.states; m_lpD3DDev->SetStreamSource(StreamNumber, pStreamData, 0, Stride); }
 	m_CurrentState.m_StreamData[StreamNumber] = kStreamData;
 }
 
@@ -786,7 +859,7 @@ void CStateManager::SetIndices(LPDIRECT3DINDEXBUFFER9 pIndexData, UINT BaseVerte
 	if (m_CurrentState.m_IndexData == kIndexData)
 		return;
 
-	m_lpD3DDev->SetIndices(pIndexData);
+	if(!m_diligentRendering) { ++m_nativeCounters.states; m_lpD3DDev->SetIndices(pIndexData); }
 	m_CurrentState.m_IndexData = kIndexData;
 }
 
@@ -796,6 +869,8 @@ HRESULT CStateManager::DrawPrimitive(D3DPRIMITIVETYPE PrimitiveType, UINT StartV
 	++m_iDrawCallCount;
 #endif
 
+    if(m_diligentRendering) { ++m_nativeCounters.suppressedDraws; return S_OK; }
+    ++m_nativeCounters.draws;
 	return (m_lpD3DDev->DrawPrimitive(PrimitiveType, StartVertex, PrimitiveCount));
 }
 
@@ -806,6 +881,8 @@ HRESULT CStateManager::DrawPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UINT Prim
 #endif
 
 	m_CurrentState.m_StreamData[0] = NULL;
+    if(m_diligentRendering) { ++m_nativeCounters.suppressedDraws; return S_OK; }
+    ++m_nativeCounters.draws;
 	return (m_lpD3DDev->DrawPrimitiveUP(PrimitiveType, PrimitiveCount, pVertexStreamZeroData, VertexStreamZeroStride));
 }
 
@@ -815,6 +892,8 @@ HRESULT CStateManager::DrawIndexedPrimitive(D3DPRIMITIVETYPE PrimitiveType, UINT
 	++m_iDrawCallCount;
 #endif
 
+    if(m_diligentRendering) { ++m_nativeCounters.suppressedDraws; return S_OK; }
+    ++m_nativeCounters.draws;
 	return (m_lpD3DDev->DrawIndexedPrimitive(PrimitiveType, 0, minIndex, NumVertices, startIndex, primCount));
 }
 
@@ -824,6 +903,8 @@ HRESULT CStateManager::DrawIndexedPrimitive(D3DPRIMITIVETYPE PrimitiveType, INT 
 	++m_iDrawCallCount;
 #endif
 
+    if(m_diligentRendering) { ++m_nativeCounters.suppressedDraws; return S_OK; }
+    ++m_nativeCounters.draws;
 	return (m_lpD3DDev->DrawIndexedPrimitive(PrimitiveType, baseVertexIndex, minIndex, NumVertices, startIndex, primCount));
 }
 
@@ -835,6 +916,8 @@ HRESULT CStateManager::DrawIndexedPrimitiveUP(D3DPRIMITIVETYPE PrimitiveType, UI
 
 	m_CurrentState.m_IndexData = NULL;
 	m_CurrentState.m_StreamData[0] = NULL;
+    if(m_diligentRendering) { ++m_nativeCounters.suppressedDraws; return S_OK; }
+    ++m_nativeCounters.draws;
 	return (m_lpD3DDev->DrawIndexedPrimitiveUP(PrimitiveType, MinVertexIndex, NumVertexIndices, PrimitiveCount, pIndexData, IndexDataFormat, pVertexStreamZeroData, VertexStreamZeroStride));
 }
 

@@ -70,8 +70,8 @@ void CGraphicShadowTexture::Begin()
 	ms_lpd3dDevice->GetDepthStencilSurface(&m_lpd3dOldDepthBufferSurface);
 	ms_lpd3dDevice->GetViewport(&m_d3dOldViewport);
 
-	ms_lpd3dDevice->SetDepthStencilSurface(m_lpd3dDepthSurface);
-	ms_lpd3dDevice->SetRenderTarget(0, m_lpd3dShadowSurface);
+	STATEMANAGER.SetDepthStencilSurface(m_lpd3dDepthSurface);
+	STATEMANAGER.SetRenderTarget(0, m_lpd3dShadowSurface);
 
 	D3DVIEWPORT9 d3dViewport;
 	d3dViewport.MinZ = 0.0f;
@@ -128,8 +128,8 @@ void CGraphicShadowTexture::End()
 
 	ms_lpd3dDevice->EndScene();	
 
-	ms_lpd3dDevice->SetDepthStencilSurface(m_lpd3dOldDepthBufferSurface);
-	ms_lpd3dDevice->SetRenderTarget(0, m_lpd3dOldBackBufferSurface);
+	STATEMANAGER.SetDepthStencilSurface(m_lpd3dOldDepthBufferSurface);
+	STATEMANAGER.SetRenderTarget(0, m_lpd3dOldBackBufferSurface);
 	ms_lpd3dDevice->SetViewport(&m_d3dOldViewport);
 
 	m_lpd3dOldBackBufferSurface->Release();		

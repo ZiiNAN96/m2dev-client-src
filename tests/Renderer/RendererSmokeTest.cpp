@@ -169,6 +169,16 @@ int main(int argc, char** argv)
             Check(!backend->Resize(w, h), "Resize inside frame must fail");
             backend->Clear({true, color});
             backend->Clear({}); // Depth-only clear must preserve the color buffer.
+            // ZiiNAN: Exercise the production screenshot readback, including resized extents.
+#ifdef M2_ENABLE_DILIGENT_D3D11
+            if(diligent) {
+                std::vector<uint8_t> rgb; uint32_t rw=0,rh=0;
+                Check(static_cast<DiligentD3D11Backend*>(backend.get())->CaptureRGB(rgb,rw,rh),"screenshot readback");
+                Check(rw==w && rh==h && rgb.size()==size_t(w)*h*3,"screenshot extent/stride");
+                for(size_t i:{size_t(0),size_t(w)*(h/2)+w/2,size_t(w)*h-1})
+                    for(unsigned c=0;c<3;++c) Check(std::abs(int(rgb[i*3+c])-int(color[c]*255))<=1,"screenshot RGB channels");
+            }
+#endif
             backend->EndFrame();
             readback(w, h, color);
             backend->Present();

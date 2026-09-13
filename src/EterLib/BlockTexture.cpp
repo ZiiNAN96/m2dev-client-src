@@ -4,6 +4,7 @@
 #include "GrpDib.h"
 #include "Eterbase/Stl.h"
 #include "Eterlib/StateManager.h"
+#include "UIRenderBridge.h"
 
 void CBlockTexture::SetClipRect(const RECT & c_rRect)
 {
@@ -100,6 +101,15 @@ void CBlockTexture::Render(int ix, int iy)
 		STATEMANAGER.SaveRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
 
 		STATEMANAGER.DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 4, 0, 2);
+		// ZiiNAN: Original notice-banner DIB blocks, unchanged text rasterization.
+		if(Renderer::UIActive()) {
+			if(!m_uiTexture && !m_uiPixels.empty()) {
+				Renderer::TerrainTextureData data{m_dwWidth,m_dwHeight,Renderer::TerrainTextureFormat::BGRA8,
+					{{m_uiPixels.data(),m_uiPixels.size()*4,size_t(m_dwWidth)*4}}};
+				m_uiTexture=Renderer::uiRenderer->UploadTexture(data);
+			}
+			UIRenderBridge::Submit(vertices,4,UIRenderBridge::Primitive::IndexedQuad,nullptr,S_OK,m_uiTexture);
+		}
 
 		STATEMANAGER.RestoreRenderState(D3DRS_DESTBLEND);
 		STATEMANAGER.RestoreRenderState(D3DRS_SRCBLEND);
@@ -146,11 +156,16 @@ void CBlockTexture::InvalidateRect(const RECT & c_rsrcRect)
 	DWORD * pdwDst = (DWORD *)lockedRect.pBits;
 	DWORD dwDstWidth = lockedRect.Pitch>>2;
 	DWORD dwSrcWidth = m_pDIB->GetWidth();
+	if(Renderer::uiRenderer) {
+		m_uiTexture.reset();
+		if(m_uiPixels.empty()) m_uiPixels.resize(size_t(m_dwWidth)*m_dwHeight);
+	}
 	for (int y = 0; y < iclipHeight; ++y)
 	{
 		for (int x = 0; x < iclipWidth; ++x)
 		{
 			pdwDst[x] = pdwSrc[x];
+			if(Renderer::uiRenderer) m_uiPixels[size_t(y+clipRect.top)*m_dwWidth+x+clipRect.left]=pdwSrc[x];
 		}
 		pdwDst += dwDstWidth;
 		pdwSrc += dwSrcWidth;

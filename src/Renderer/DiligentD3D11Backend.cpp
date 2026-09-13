@@ -1,5 +1,6 @@
 #include "DiligentD3D11BackendInternal.h"
 #include "Graphics/GraphicsEngineD3D11/interface/EngineFactoryD3D11.h"
+#include "Graphics/GraphicsEngine/interface/Texture.h"
 
 namespace Renderer
 {
@@ -62,13 +63,44 @@ void DiligentD3D11Backend::Clear(const ClearInfo& info)
         m_impl->context->ClearRenderTarget(m_impl->swapChain->GetCurrentBackBufferRTV(),
                                           m_impl->color.data(), Diligent::RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
     m_impl->context->ClearDepthStencil(m_impl->swapChain->GetDepthBufferDSV(),
-        Diligent::CLEAR_DEPTH_FLAG, 1.0f, 0, Diligent::RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
+        Diligent::CLEAR_DEPTH_FLAG, info.depthValue, 0, Diligent::RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
 }
 
 void DiligentD3D11Backend::EndFrame()
 {
     if (m_impl)
         m_impl->inFrame = false;
+}
+
+// ZiiNAN: Read only a completed draw surface before Present, never a discarded swap buffer.
+bool DiligentD3D11Backend::CaptureRGB(std::vector<uint8_t>& pixels,uint32_t& width,uint32_t& height)
+{
+    using namespace Diligent;
+    pixels.clear(); width=height=0;
+    if(!m_impl || !m_impl->inFrame || m_impl->suspended) return false;
+    try {
+        auto& s=*m_impl; auto* source=s.swapChain->GetCurrentBackBufferRTV()->GetTexture();
+        auto desc=source->GetDesc();
+        if(desc.Format!=TEX_FORMAT_RGBA8_UNORM || !desc.Width || !desc.Height) return false;
+        desc.Name="M11 screenshot staging"; desc.Usage=USAGE_STAGING; desc.BindFlags=BIND_NONE;
+        desc.CPUAccessFlags=CPU_ACCESS_READ; desc.MiscFlags=MISC_TEXTURE_FLAG_NONE;
+        RefCntAutoPtr<ITexture> staging; s.device->CreateTexture(desc,nullptr,&staging);
+        if(!staging) return false;
+        CopyTextureAttribs copy; copy.pSrcTexture=source; copy.pDstTexture=staging;
+        copy.SrcTextureTransitionMode=copy.DstTextureTransitionMode=RESOURCE_STATE_TRANSITION_MODE_TRANSITION;
+        s.context->CopyTexture(copy); s.context->WaitForIdle();
+        pixels.resize(size_t(desc.Width)*desc.Height*3);
+        MappedTextureSubresource mapped;
+        s.context->MapTextureSubresource(staging,0,0,MAP_READ,MAP_FLAG_NONE,nullptr,mapped);
+        if(!mapped.pData) { pixels.clear(); return false; }
+        for(uint32_t y=0;y<desc.Height;++y) {
+            const auto* src=static_cast<const uint8_t*>(mapped.pData)+y*mapped.Stride;
+            auto* dst=pixels.data()+size_t(y)*desc.Width*3;
+            for(uint32_t x=0;x<desc.Width;++x) { memcpy(dst+x*3,src+x*4,3); }
+        }
+        s.context->UnmapTextureSubresource(staging,0,0);
+        width=desc.Width; height=desc.Height; return true;
+    } catch(...) { pixels.clear(); return false; }
 }
 
 void DiligentD3D11Backend::Present()

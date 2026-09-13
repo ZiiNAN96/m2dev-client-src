@@ -3,6 +3,9 @@
 #include "PythonBackground.h"
 #include "EterLib/StateManager.h"
 #include "GameLib/MapOutDoor.h"
+#ifdef M2_RENDERER_DIAGNOSTICS
+#include "../../tests/Renderer/SpecialClientProbe.h"
+#endif
 
 PyObject * backgroundIsSoftwareTiling(PyObject * poSelf, PyObject * poArgs)
 {
@@ -578,6 +581,9 @@ void initBackground()
 		{ "RegisterDungeonMapName",				backgroundRegisterDungeonMapName,			METH_VARARGS },
 
 		{ "VisibleGuildArea",					backgroundVisibleGuildArea,					METH_VARARGS },
+#ifdef M2_RENDERER_DIAGNOSTICS
+        { "testGuildArea", backgroundTestGuildArea, METH_VARARGS },
+#endif
 		{ "DisableGuildArea",					backgroundDisableGuildArea,					METH_VARARGS },
 
 		{ "WarpTest",							backgroundWarpTest,							METH_VARARGS },

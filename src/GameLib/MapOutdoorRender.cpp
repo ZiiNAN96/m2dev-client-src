@@ -8,6 +8,8 @@
 
 #include "EterLib/Camera.h"
 #include "EterLib/StateManager.h"
+#include "EterLib/NativeMaterialSnapshot.h"
+#include "EterLib/StaticObjectTextureLoader.h"
 
 
 #define MAX_RENDER_SPALT 150
@@ -357,12 +359,13 @@ struct FRenderPCBlocker
 			if (pThingInstance->HaveBlendThing())
 			{
 				STATEMANAGER.SetTextureStageState(1, D3DTSS_ALPHAOP,   D3DTOP_DISABLE);
-				pThingInstance->BlendRender();
+                if(!DrawSpecialMapObject(*pThingInstance,true)) pThingInstance->BlendRender();
 				return;
 			}
 		}
 		STATEMANAGER.SetTextureStageState(1, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1);
 
+        if(pThingInstance && DrawSpecialMapObject(*pThingInstance,false,cameraAlpha)) return;
 		pInstance->RenderPCBlocker();
 		if (pThingInstance)
 			SubmitStaticMapObject(*pThingInstance, StaticMapObjectPass::CameraBlocker, cameraAlpha);
@@ -403,6 +406,7 @@ struct CMapOutdoor_FOpaqueThingInstanceRender
 {
 	inline void operator () (CGraphicThingInstance * pkThingInst)
 	{
+        if(DrawSpecialMapObject(*pkThingInst,false)) return;
 		pkThingInst->Render();
         SubmitStaticMapObject(*pkThingInst);
 	}
@@ -411,7 +415,7 @@ struct CMapOutdoor_FBlendThingInstanceRender
 {
 	inline void operator () (CGraphicThingInstance * pkThingInst)
 	{
-		pkThingInst->BlendRender();
+        if(!DrawSpecialMapObject(*pkThingInst,true)) pkThingInst->BlendRender();
 	}
 };
 
@@ -985,4 +989,19 @@ void CMapOutdoor::DrawPatchAttr(long patchnum)
 	STATEMANAGER.SetStreamSource(0, pTerrainPatchProxy->HardwareTransformPatch_GetVertexBufferPtr()->GetD3DVertexBuffer(), m_iPatchTerrainVertexSize);
 
 	STATEMANAGER.DrawIndexedPrimitive(D3DPT_TRIANGLESTRIP, 0, m_iPatchTerrainVertexCount, 0, m_wNumIndices[0] - 2);
+	// ZiiNAN: Existing guild-area geometry and generated alpha projection, in native order.
+	if(Renderer::worldRenderer && Renderer::worldSurfaceFrame) {
+		auto* renderer=Renderer::worldRenderer; const auto* source=pTerrainPatchProxy->GetProjectionVertices();
+		Renderer::EffectDraw draw; std::string error;
+		if(!source || !CaptureNativeMaterial(draw,error,true)) { renderer->ReportFailure(); return; }
+		draw.secondaryTexture=pTerrain->GetMarkedTexture();
+		if(!m_projectionTexture) m_projectionTexture=LoadStaticObjectTextureFile(m_attrImageInstance.GetGraphicImagePointer()->GetFileName(),*renderer);
+		if(!draw.secondaryTexture || !m_projectionTexture) { renderer->ReportFailure(); return; }
+		std::vector<Renderer::EffectVertex> vertices; vertices.reserve(m_projectionIndices.size());
+		for(auto index:m_projectionIndices) {
+			if(index>=source->size()) { renderer->ReportFailure(); return; }
+			vertices.push_back((*source)[index]);
+		}
+		renderer->Draw(vertices.data(),uint32_t(vertices.size()),m_projectionTexture,draw,Renderer::WorldPart::Guild);
+	}
 }

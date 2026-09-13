@@ -9,7 +9,10 @@ int main()
        ClassifyActor(0,101)!=ActorCategory::Mob || ClassifyActor(0,691)!=ActorCategory::Mob) return 1;
     for(auto pair:{std::pair{6u,20114u},std::pair{1u,20114u},std::pair{1u,34001u},
                    std::pair{0u,34001u},std::pair{7u,101u},std::pair{8u,20101u},std::pair{2u,8001u}})
-        if(ClassifyActor(pair.first,pair.second)!=ActorCategory::Unsupported) return 2;
+        if(ClassifyActor(pair.first,pair.second)==ActorCategory::Unsupported) return 2;
+    for(uint32_t type=0;type<=10;++type)
+        if(ClassifyActor(type,40000)==ActorCategory::Unsupported) return 16;
+    if(ClassifyActor(11,0)!=ActorCategory::Unsupported || ClassifyActor(~0u,0)!=ActorCategory::Unsupported) return 17;
     int body=0,attachment=0,left=0,hair=0,foreign=0,reservedHead=0,calls=0;
     ActorNativeDraw group{};
     const auto record=[](void* context,const void*,ActorPart,const ActorNativeDraw&) { ++*static_cast<int*>(context); };
@@ -43,7 +46,7 @@ int main()
     rigid.deformVertexCount=0; rigid.rigidVertices.pop_back(); if(rigid.IsRigid()) return 10;
     // ZiiNAN: Diligent mount actor rendering
     int mount=0,pet=0,otherMount=0;
-    const auto unsupported=ClassifyActor(6,20114);
+    const auto unsupported=ActorCategory::Unsupported;
     {
         ActorMountScope pair({&body,&mount});
         if(actorMountPair.Classify(&mount,unsupported)!=ActorCategory::Mount ||
@@ -57,6 +60,6 @@ int main()
     }
     if(actorMountPair || actorMountPair.Classify(&mount,unsupported)!=ActorCategory::Unsupported ||
        ActorMountPair{&body,&body} || ActorMountPair{nullptr,&mount}) return 15;
-    std::cout<<"Player/NPC/mob / companion exclusion / exact body and attachment parts / nested scopes / rigid contract: PASS\n";
+    std::cout<<"All native actor types / unknown type exclusion / exact body and attachment parts / nested scopes / rigid contract: PASS\n";
     std::cout<<"Mount ownership / mounted rider / foreign companion exclusion / nested scope / teardown: PASS\n";
 }

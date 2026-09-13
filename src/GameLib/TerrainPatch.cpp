@@ -43,6 +43,7 @@ bool CTerrainPatch::SOFTWARE_TRANSFORM_PATCH_ENABLE=TRUE;
 void CTerrainPatch::Clear()
 {
 	terrainGeometry.reset();
+	projectionVertices.clear();
 	waterGeometry.reset();
 	m_kHT.m_kVB.Destroy();
 	m_kST.Destroy();
@@ -92,6 +93,11 @@ void CTerrainPatch::BuildWaterVertexBuffer(SWaterVertex* akSrcVertex, UINT uWate
 		
 void CTerrainPatch::BuildTerrainVertexBuffer(HardwareTransformPatch_SSourceVertex* akSrcVertex)
 {
+	// ZiiNAN: Original patch positions for guild-land projection, no terrain changes.
+	if(Renderer::worldRenderer) {
+		projectionVertices.resize(TERRAIN_VERTEX_COUNT);
+		for(size_t i=0;i<projectionVertices.size();++i) memcpy(projectionVertices[i].position.data(),&akSrcVertex[i].kPosition,12);
+	}
 	static_assert(sizeof(HardwareTransformPatch_SSourceVertex) == 24);
 	if (Renderer::terrainRenderer)
 		terrainGeometry = Renderer::terrainRenderer->UploadVertices(akSrcVertex, TERRAIN_VERTEX_COUNT, sizeof(*akSrcVertex));

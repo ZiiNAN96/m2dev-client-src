@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "Renderer/WorldRenderData.h"
 #include "Eterlib/StateManager.h"
 #include "ModelInstance.h"
 #include "Model.h"
@@ -270,6 +271,10 @@ void CGrannyModelInstance::RenderMeshNodeListWithTwoTexture(CGrannyMesh::EType e
 			const CGrannyMaterial& rkMtrl=m_kMtrlPal.GetMaterialRef(pTriGroupNode->mtrlIndex);
 			STATEMANAGER.SetTexture(0, rkMtrl.GetD3DTexture(0));
 			STATEMANAGER.SetTexture(1, rkMtrl.GetD3DTexture(1));
+			// ZiiNAN: Snapshot only the explicitly scoped DungeonBlock material draw.
+			if(Renderer::specialMeshTarget.instance==this && Renderer::specialMeshTarget.submit)
+				Renderer::specialMeshTarget.submit(this,{uint32_t(pMeshNode->iMesh),uint32_t(pTriGroupNode->mtrlIndex),
+					uint32_t(pTriGroupNode->idxPos),uint32_t(pTriGroupNode->triCount*3),uint32_t(vtxMeshBasePos),uint32_t(vtxCount)});
 			STATEMANAGER.DrawIndexedPrimitive(D3DPT_TRIANGLELIST, vtxMeshBasePos, 0, vtxCount, pTriGroupNode->idxPos, pTriGroupNode->triCount);
 			pTriGroupNode = pTriGroupNode->pNextTriGroupNode;
 		}

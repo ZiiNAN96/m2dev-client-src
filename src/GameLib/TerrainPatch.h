@@ -54,6 +54,7 @@ public:
 
 	static bool SOFTWARE_TRANSFORM_PATCH_ENABLE;
 	Renderer::TerrainBufferPtr terrainGeometry;
+	std::vector<Renderer::EffectVertex> projectionVertices;
 	// ZiiNAN: Original water vertices, owned and released by their native terrain patch.
 	Renderer::WaterGeometryPtr waterGeometry;
 	
@@ -183,6 +184,7 @@ public:
 
 	void SetTerrainPatch(CTerrainPatch * pTerrainPatch)								{ m_pTerrainPatch = pTerrainPatch;}
 	Renderer::TerrainBufferPtr GetTerrainGeometry() const { return m_pTerrainPatch ? m_pTerrainPatch->terrainGeometry : nullptr; }
+	const std::vector<Renderer::EffectVertex>* GetProjectionVertices() const { return m_pTerrainPatch ? &m_pTerrainPatch->projectionVertices : nullptr; }
 	Renderer::WaterGeometryPtr GetWaterGeometry() const { return m_pTerrainPatch ? m_pTerrainPatch->waterGeometry : nullptr; }
 
 	bool isWaterExists();

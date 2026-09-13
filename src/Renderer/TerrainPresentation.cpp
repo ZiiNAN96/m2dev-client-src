@@ -30,7 +30,13 @@ class TerrainPresentation final : public ITerrainPresentation
     std::unique_ptr<DiligentTextRenderer> m_text;
     std::ofstream m_diagnostics;
     uint32_t m_frame = 0;
+    ScreenshotSink m_screenshot;
 public:
+    bool RequestScreenshot(ScreenshotSink sink) override
+    {
+        if(!sink || m_screenshot) return false;
+        m_screenshot=std::move(sink); return true;
+    }
     bool Initialize(HWND parent, uint32_t width, uint32_t height)
     {
         if (terrainRenderer || !IsWindow(parent) || !width || !height) return false;
@@ -69,12 +75,14 @@ public:
         worldRenderer=m_world.get();
         uiRenderer=m_ui.get();
         textRenderer=m_text.get();
+        activePresentation=this;
         // Experimental backend only; bounded frame summaries go to a file, never the console.
         m_diagnostics.open("terrain-renderer.log", std::ios::trunc);
         return true;
     }
     ~TerrainPresentation() override
     {
+        if(activePresentation==this) activePresentation=nullptr;
         // ZiiNAN: Native image owners release UI handles before the renderer's final bindings/buffers.
         uiFrame=uiMode=false;
         if(textRenderer==m_text.get()) textRenderer=nullptr;
@@ -148,7 +156,7 @@ public:
         const bool worldWasVisible=m_terrain->HasTerrain();
         m_terrain->ResetFrame();
         m_objects->ResetFrame();
-        // ZiiNAN: Never compose actors into login/selection; reject stale frame snapshots.
+        // ZiiNAN: Reject stale world snapshots; selection enters its own explicit actor scope.
         m_actors->ResetFrame(); ++actorFrameSerial; actorWorldFrame=false;
         m_trees->ResetFrame(); treeWorldFrame=false;
         m_effects->ResetFrame(); effectWorldFrame=false; ++effectFrameSerial; effectVisibleParticles=0;
@@ -168,15 +176,22 @@ public:
     bool Present() override
     {
         if (!m_inFrame) return false;
+        if(m_screenshot) {
+            std::vector<uint8_t> rgb; uint32_t width=0,height=0;
+            auto sink=std::move(m_screenshot); m_screenshot={};
+            const bool saved=m_backend.CaptureRGB(rgb,width,height) && sink(rgb,width,height);
+            m_diagnostics<<"screenshot saved="<<saved<<" size="<<width<<'x'<<height<<std::endl;
+        }
         m_backend.EndFrame();
         uiFrame=uiMode=false;
-        actorWorldFrame=false; // ZiiNAN: Actor submissions only inside a world frame.
+        actorWorldFrame=false; // ZiiNAN: No actor submissions outside the completed frame.
         treeWorldFrame=false;
         m_inFrame = false;
         effectWorldFrame=false;
         worldSurfaceFrame=false;
         if (m_terrain->Failed() || m_objects->Failed() || m_actors->Failed() || m_trees->Failed() || m_effects->Failed() || m_world->Failed() || m_ui->Failed() || m_text->Failed()) return false;
-        const bool visible = m_terrain->HasTerrain() || m_ui->DrawCount()!=0 || m_text->DrawCount()!=0;
+        const bool visible = m_terrain->HasTerrain() || m_ui->DrawCount()!=0 || m_text->DrawCount()!=0 || m_actors->DrawCount()!=0 ||
+            m_world->DrawCount(WorldPart::Dungeon)!=0 || m_world->DrawCount(WorldPart::Sky)!=0;
         if (m_diagnostics && (++m_frame % 120 == 0 || visible != m_visible))
         {
             const auto size=m_terrain->LastTextureSize();
@@ -209,6 +224,7 @@ public:
                           << " actor_textures=" << m_actors->LiveTextureCount() << " actor_index_uploads=" << m_actors->IndexUploads() << std::endl;
             // ZiiNAN: Same renderer, separate measured player/NPC/mob coverage.
             m_diagnostics << "players_visible=" << m_actors->Visible(ActorCategory::Player)
+                          << " special_actors_visible=" << m_actors->Visible(ActorCategory::Special)
                           << " npcs_visible=" << m_actors->Visible(ActorCategory::Npc)
                           << " mobs_visible=" << m_actors->Visible(ActorCategory::Mob)
                           << " skinned_vertices=" << m_actors->SkinnedVerticesUploaded() << std::endl;
@@ -242,6 +258,9 @@ public:
                           << " snow_draws=" << m_effects->DrawCount(EffectPart::Snow)
                           << " effect_vertices=" << m_effects->Vertices() << " effect_upload_bytes=" << m_effects->UploadBytes()
                           << " effect_buffer_bytes=" << m_effects->BufferBytes() << " effect_textures=" << m_effects->LiveTextureCount() << std::endl;
+            m_diagnostics<<"guild_draws="<<m_world->DrawCount(WorldPart::Guild)
+                         <<" dungeon_draws="<<m_world->DrawCount(WorldPart::Dungeon)
+                         <<" lens_flare_draws="<<m_world->DrawCount(WorldPart::LensFlare)<<std::endl;
         }
         if (visible) m_backend.Present();
         if (visible != m_visible)
@@ -257,6 +276,10 @@ public:
         if (width && height && !SetWindowPos(m_surface, nullptr, 0, 0, width, height,
                                              SWP_NOZORDER | SWP_NOACTIVATE)) return false;
         return m_backend.Resize(width, height);
+    }
+    void ClearDepth(float depth) override
+    {
+        if(m_inFrame) { ClearInfo clear; clear.depthValue=depth; m_backend.Clear(clear); }
     }
 };
 }

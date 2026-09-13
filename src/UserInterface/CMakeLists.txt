@@ -3,7 +3,7 @@
 add_executable(UserInterface WIN32 ${FILE_SOURCES} ${CMAKE_SOURCE_DIR}/src/UserInterface/UserInterface.rc)
 if(M2_BUILD_RENDERER_TESTS)
     # ZiiNAN: Local floating-text fixture entry points are absent from non-test builds.
-    set_source_files_properties(PythonCharacterModule.cpp PROPERTIES COMPILE_DEFINITIONS M2_RENDERER_DIAGNOSTICS)
+    set_source_files_properties(PythonCharacterModule.cpp PythonBackgroundModule.cpp PROPERTIES COMPILE_DEFINITIONS M2_RENDERER_DIAGNOSTICS)
 endif()
 set_target_properties(UserInterface PROPERTIES LINK_FLAGS "/level='requireAdministrator' /uiAccess='false'"
 	RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin

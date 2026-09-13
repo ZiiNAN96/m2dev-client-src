@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "EterLib/NativeStateView.h"
 #include "EterLib/StateManager.h"
 #include "PackLib/PackManager.h"
 
@@ -252,12 +253,12 @@ void CMapManager::BeginEnvironment()
 	// Directional Light
 	if (mc_pcurEnvironmentData->bDirLightsEnable[ENV_DIRLIGHT_BACKGROUND])
 	{
-		ms_lpd3dDevice->LightEnable(0, TRUE);
+		STATEMANAGER.LightEnable(0, TRUE);
 
 		rkMap.ApplyLight((DWORD)mc_pcurEnvironmentData, mc_pcurEnvironmentData->DirLights[ENV_DIRLIGHT_BACKGROUND]);		
 	}
 	else
-		ms_lpd3dDevice->LightEnable(0, FALSE);
+		STATEMANAGER.LightEnable(0, FALSE);
 
 	if (mc_pcurEnvironmentData->bFogEnable)
 	{
@@ -658,4 +659,3 @@ void CMapManager::__LoadMapInfoVector()
 
 	return;
 }
-

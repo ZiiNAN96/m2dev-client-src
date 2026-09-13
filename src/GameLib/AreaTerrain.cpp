@@ -1186,6 +1186,12 @@ void CTerrain::AllocateMarkedSplats(BYTE * pbyAlphaMap)
 	} while(FAILED(hr));
 
 	PutImage32(pbyAlphaMap, (BYTE*) d3dlr.pBits, ATTRMAP_XSIZE, d3dlr.Pitch, ATTRMAP_XSIZE, ATTRMAP_YSIZE);
+	if(Renderer::worldRenderer) {
+		// ZiiNAN: Upload the exact generated guild alpha bytes while they are CPU-visible.
+		Renderer::TerrainTextureData data{ATTRMAP_XSIZE,ATTRMAP_YSIZE,Renderer::TerrainTextureFormat::BGRA8,
+			{{d3dlr.pBits,size_t(d3dlr.Pitch)*ATTRMAP_YSIZE,size_t(d3dlr.Pitch)}}};
+		m_markedDiligentTexture=Renderer::worldRenderer->UploadTexture(data);
+	}
 
 	do
 	{
@@ -1198,6 +1204,9 @@ void CTerrain::AllocateMarkedSplats(BYTE * pbyAlphaMap)
 
 void CTerrain::DeallocateMarkedSplats()
 {
+    if(CStateManager::InstancePtr()) STATEMANAGER.ForgetDiligentTexture(m_lpMarkedTexture);
+	if(Renderer::worldRenderer && m_markedDiligentTexture) Renderer::worldRenderer->ReleaseBindings();
+	m_markedDiligentTexture.reset();
 	TTerainSplat & rSplat = m_MarkedSplatPatch.Splats[0];
 	if (m_lpMarkedTexture)
 	{

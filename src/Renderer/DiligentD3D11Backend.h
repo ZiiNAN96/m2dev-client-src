@@ -2,6 +2,7 @@
 
 #include "IRenderBackend.h"
 #include <memory>
+#include <vector>
 
 namespace Renderer
 {
@@ -19,6 +20,7 @@ public:
     void Present() override;
     bool Resize(uint32_t width, uint32_t height) override;
     void Shutdown() override;
+    bool CaptureRGB(std::vector<uint8_t>& pixels,uint32_t& width,uint32_t& height);
 
 private:
     friend class BackendTestAccess;

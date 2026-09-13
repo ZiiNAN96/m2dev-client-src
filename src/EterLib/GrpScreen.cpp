@@ -3,6 +3,8 @@
 #include "Camera.h"
 #include "StateManager.h"
 #include "UIRenderBridge.h"
+#include "Renderer/TerrainPresentation.h"
+#include "WorldRenderBridge.h"
 
 #include <comdef.h>
 #include <utf8.h>
@@ -93,6 +95,7 @@ void CScreen::RenderBar3d(float sx, float sy, float sz, float ex, float ey, floa
 		STATEMANAGER.SetFVF(D3DFVF_XYZ|D3DFVF_DIFFUSE|D3DFVF_TEX1);
 		const auto nativeDraw=STATEMANAGER.DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
 		UIRenderBridge::Quad(vertices,nullptr,nativeDraw); // ZiiNAN: Only captured in explicit UI mode.
+        WorldRenderBridge::SubmitQuad(vertices,nativeDraw); // ZiiNAN: Only the scoped native flare overlay.
 	}
 }
 
@@ -625,12 +628,15 @@ void CScreen::SetClearStencil(DWORD stencil)
 
 void CScreen::ClearDepthBuffer()
 {
+	if(Renderer::activePresentation) Renderer::activePresentation->ClearDepth(ms_clearDepth);
+    if(STATEMANAGER.IsDiligentRendering()) return;
 	assert(ms_lpd3dDevice != NULL);
 	ms_lpd3dDevice->Clear(0L, NULL, D3DCLEAR_ZBUFFER, ms_clearColor, ms_clearDepth, ms_clearStencil);
 }
 
 void CScreen::Clear()
 {
+    if(STATEMANAGER.IsDiligentRendering()) return;
 	assert(ms_lpd3dDevice != NULL);
 	ms_lpd3dDevice->Clear(0L, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, ms_clearColor, ms_clearDepth, ms_clearStencil);
 }

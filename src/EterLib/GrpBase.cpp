@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "EterLib/NativeStateView.h"
 #include "EterBase/Utils.h"
 #include "EterBase/Timer.h"
 #include "GrpBase.h"
@@ -231,7 +232,7 @@ void CGraphicBase::SetSimpleCamera(float x, float y, float z, float pitch, float
 	UpdateViewMatrix();
 
 	// This is levites's virtual(?) code which you should not trust.
-	ms_lpd3dDevice->GetTransform(D3DTS_WORLD, &ms_matWorld);
+	NativeStateView().GetTransform(D3DTS_WORLD, &ms_matWorld);
 	D3DXMatrixMultiply(&ms_matWorldView, &ms_matWorld, &ms_matView);
 }
 
@@ -248,7 +249,7 @@ void CGraphicBase::SetAroundCamera(float distance, float pitch, float roll, floa
 	UpdateViewMatrix();
 
 	// This is levites's virtual(?) code which you should not trust.
-	ms_lpd3dDevice->GetTransform(D3DTS_WORLD, &ms_matWorld);
+	NativeStateView().GetTransform(D3DTS_WORLD, &ms_matWorld);
 	D3DXMatrixMultiply(&ms_matWorldView, &ms_matWorld, &ms_matView);
 }
 

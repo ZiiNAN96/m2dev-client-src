@@ -1,5 +1,6 @@
 // ZiiNAN: Diligent effect rendering integration; read-only native draw snapshot, no deferred simulation.
 #include "StdAfx.h"
+#include "EterLib/NativeStateView.h"
 #include "EffectRenderBridge.h"
 #include "EterLib/NativeMaterialSnapshot.h"
 #include "EterLib/StateManager.h"
@@ -75,7 +76,7 @@ HRESULT EffectRenderBridge::SubmitNativeDraw(D3DPRIMITIVETYPE topology,UINT prim
     }
     EffectDraw draw; draw.strip=topology==D3DPT_TRIANGLESTRIP;
     const uint32_t count=draw.strip ? primitives+2 : primitives*3;
-    IDirect3DBaseTexture9* bound=nullptr; STATEMANAGER.GetDevice()->GetTexture(0,&bound);
+    IDirect3DBaseTexture9* bound=nullptr; NativeStateView().GetTexture(0,&bound);
     draw.textured=bound!=nullptr;
     TerrainTexturePtr texture;
     if(bound) {

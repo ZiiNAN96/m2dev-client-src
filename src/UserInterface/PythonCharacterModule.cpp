@@ -1,6 +1,8 @@
 #include "StdAfx.h"
 #include "PythonCharacterManager.h"
 #include "PythonNonPlayer.h"
+#include "Renderer/ActorRenderData.h"
+#include "Renderer/UIRenderData.h"
 #ifdef M2_RENDERER_DIAGNOSTICS
 #include "../../tests/Renderer/FloatingClientProbe.h"
 #endif
@@ -37,12 +39,14 @@ PyObject * chrUpdate(PyObject * poSelf, PyObject * poArgs)
 
 PyObject * chrDeform(PyObject * poSelf, PyObject * poArgs)
 {
+	Renderer::ActorPreviewScope preview(Renderer::uiFrame && !Renderer::uiMode);
 	CPythonCharacterManager::Instance().Deform();
 	return Py_BuildNone();
 }
 
 PyObject * chrRender(PyObject * poSelf, PyObject * poArgs)
 {
+	Renderer::ActorPreviewScope preview(Renderer::uiFrame && !Renderer::uiMode);
 	CPythonCharacterManager::Instance().Render();
 	return Py_BuildNone();
 }

@@ -491,6 +491,7 @@ void CPythonBackground::RenderCollision()
 
 void CPythonBackground::RenderCharacterShadowToTexture()
 {
+    if(Renderer::worldRenderer) return; // ZiiNAN: Dynamic shadows are explicitly deferred in Diligent.
 	extern bool GRAPHICS_CAPS_CAN_NOT_DRAW_SHADOW;
 	if (GRAPHICS_CAPS_CAN_NOT_DRAW_SHADOW)
 		return;

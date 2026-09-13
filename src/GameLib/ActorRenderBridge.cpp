@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "EterLib/NativeStateView.h"
 #include "ActorRenderBridge.h"
 #include "ActorInstance.h"
 #include "StaticObjectBridge.h"
@@ -10,8 +11,7 @@
 static Renderer::ActorCategory RenderCategory(CActorInstance& actor)
 {
     static_assert(CActorInstance::TYPE_PC==6 && CActorInstance::TYPE_NPC==1 && CActorInstance::TYPE_ENEMY==0);
-    const auto ordinary=actor.IsPoly() ? Renderer::ActorCategory::Unsupported :
-        Renderer::ClassifyActor(actor.GetActorType(),actor.GetRace());
+    const auto ordinary=Renderer::ClassifyActor(actor.GetActorType(),actor.GetRace());
     return Renderer::actorMountPair.Classify(&actor,ordinary);
 }
 bool IsDiligentActorCandidate(CActorInstance& actor)
@@ -40,12 +40,12 @@ struct ActorStateDiagnostic : CGraphicBase
             }
             for(auto state:{D3DSAMP_ADDRESSU,D3DSAMP_ADDRESSV,D3DSAMP_MINFILTER,D3DSAMP_MAGFILTER,
                 D3DSAMP_MIPFILTER,D3DSAMP_MAXMIPLEVEL,D3DSAMP_MIPMAPLODBIAS,D3DSAMP_MAXANISOTROPY}) {
-                DWORD value=0; const auto result=ms_lpd3dDevice->GetSamplerState(stage,state,&value);
+                DWORD value=0; const auto result=NativeStateView().GetSamplerState(stage,state,&value);
                 out << "sampler " << stage << ':' << state << '=' << value << " hr=" << result << '\n';
             }
         }
         for(DWORD index=0;index<8;++index) {
-            BOOL enabled=FALSE; const auto result=ms_lpd3dDevice->GetLightEnable(index,&enabled);
+            BOOL enabled=FALSE; const auto result=NativeStateView().GetLightEnable(index,&enabled);
             out << "light " << index << '=' << enabled << " hr=" << result << '\n';
         }
     }
@@ -165,7 +165,7 @@ Renderer::ActorDrawTarget MakeAnimatedActorTarget(CActorInstance& actor)
     auto* instance=actor.GetLODControllerPointer(CRaceData::PART_MAIN)->GetModelInstance();
     if(!instance || !instance->GetModel()) return {};
     if(!IsDiligentActorCandidate(actor)) {
-        Report(actor,*instance,"excluded: actor category outside 5B body scope"); return {};
+        Report(actor,*instance,"excluded: unknown native actor category"); return {};
     }
     return {GetAnimatedActorParts(actor),&actor,Submit};
 }

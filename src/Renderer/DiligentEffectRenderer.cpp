@@ -29,7 +29,11 @@ struct Constants
     std::array<float,16> textureTransform;
     std::array<float,4> factor,fogColor,fogParameters,pixelOffset;
     std::array<uint32_t,4> color,alpha,modes,coordinates;
+    std::array<float,16> secondaryTransform;
+    std::array<uint32_t,4> secondaryColor,secondaryAlpha;
 };
+struct UploadVertex { EffectVertex base; std::array<float,2> secondaryUV; };
+static_assert(sizeof(UploadVertex)==32);
 static_assert(sizeof(Constants)%16==0);
 constexpr char source[]=R"(
 cbuffer EffectConstants {
@@ -37,14 +41,18 @@ cbuffer EffectConstants {
  row_major float4x4 TextureTransform;
  float4 Factor; float4 FogColor; float4 FogParameters; float4 PixelOffset;
  uint4 Color; uint4 Alpha; uint4 Modes; uint4 Coordinates;
+ row_major float4x4 SecondaryTransform; uint4 SecondaryColor; uint4 SecondaryAlpha;
 };
 Texture2D EffectTexture; SamplerState EffectSampler;
-struct Output { float4 position:SV_POSITION; float4 diffuse:COLOR0; float2 uv:TEXCOORD0; float fog:TEXCOORD1; };
-Output VS(float3 position:ATTRIB0,float4 diffuse:ATTRIB1,float2 uv:ATTRIB2) {
+Texture2D SecondaryTexture; SamplerState SecondarySampler;
+struct Output { float4 position:SV_POSITION; float4 diffuse:COLOR0; float2 uv:TEXCOORD0; float fog:TEXCOORD1; float2 secondaryUV:TEXCOORD2; };
+Output VS(float3 position:ATTRIB0,float4 diffuse:ATTRIB1,float2 uv:ATTRIB2,float2 uv2:ATTRIB3) {
  Output o; float4 eye=mul(mul(float4(position,1),World),View); o.position=mul(eye,Projection);
  o.diffuse=diffuse.bgra;
  float4 tex=Coordinates.x!=0 ? eye : float4(uv,1,0);
  o.uv=Coordinates.y!=0 ? mul(tex,TextureTransform).xy : tex.xy;
+ float4 second=Coordinates.z==0x20000 ? eye : float4(Coordinates.z==1 ? uv2 : uv,1,0);
+ o.secondaryUV=Coordinates.w!=0 ? mul(second,SecondaryTransform).xy : second.xy;
  float d=Modes.y!=0 ? length(eye.xyz) : abs(eye.z); o.fog=1;
  if(Modes.x==1) o.fog=exp(-FogParameters.z*d);
  if(Modes.x==2) o.fog=exp(-pow(FogParameters.z*d,2));
@@ -66,6 +74,10 @@ bool Compare(uint f,float a,float b) {
  if(f==1) return false; if(f==2) return a<b; if(f==3) return a==b; if(f==4) return a<=b;
  if(f==5) return a>b; if(f==6) return a!=b; if(f==7) return a>=b; return true;
 }
+float4 SecondArgument(uint arg,float4 diffuse,float4 current,float4 tex) {
+ if((arg&15)!=1) return Argument(arg,diffuse,tex);
+ float4 v=current; if((arg&32)!=0) v=v.aaaa; if((arg&16)!=0) v=1-v; return v;
+}
 float4 PS(Output i):SV_TARGET {
  float4 tex=Modes.z!=0 ? EffectTexture.Sample(EffectSampler,i.uv) : float4(1,1,1,1);
  float4 c=i.diffuse;
@@ -74,6 +86,11 @@ float4 PS(Output i):SV_TARGET {
   c.a=Operation(Alpha.x,Argument(Alpha.y,i.diffuse,tex),Argument(Alpha.z,i.diffuse,tex),i.diffuse).a;
   // ZiiNAN: Native textured sky with disabled alpha stage writes opaque alpha (GPU oracle).
   if(Alpha.x==1 && Modes.z!=0) c.a=1;
+ }
+ if(SecondaryColor.w!=0) {
+  float4 t=SecondaryTexture.Sample(SecondarySampler,i.secondaryUV); float4 previous=c;
+  c.rgb=Operation(SecondaryColor.x,SecondArgument(SecondaryColor.y,i.diffuse,previous,t),SecondArgument(SecondaryColor.z,i.diffuse,previous,t),previous).rgb;
+  c.a=Operation(SecondaryAlpha.x,SecondArgument(SecondaryAlpha.y,i.diffuse,previous,t),SecondArgument(SecondaryAlpha.z,i.diffuse,previous,t),previous).a;
  }
  if(Modes.w!=0 && !Compare(Alpha.w,floor(saturate(c.a)*255+0.5),float(Color.w))) discard;
  c.rgb=lerp(FogColor.rgb,c.rgb,i.fog); return c;
@@ -128,8 +145,10 @@ void DiligentEffectRenderer::ResetFrame()
 void DiligentEffectRenderer::ReleaseBindings()
 {
     auto& s=*m_impl;
-    for(auto& entry:s.pipelines) if(entry.second.bindings)
+    for(auto& entry:s.pipelines) if(entry.second.bindings) {
         entry.second.bindings->GetVariableByName(SHADER_TYPE_PIXEL,"EffectTexture")->Set(nullptr);
+        entry.second.bindings->GetVariableByName(SHADER_TYPE_PIXEL,"SecondaryTexture")->Set(nullptr);
+    }
 }
 void DiligentEffectRenderer::Shutdown()
 {
@@ -188,9 +207,10 @@ TerrainTexturePtr DiligentEffectRenderer::UploadTexture(const TerrainTextureData
 void DiligentEffectRenderer::Draw(const EffectVertex* vertices,uint32_t count,const TerrainTexturePtr& image,const EffectDraw& d,EffectPart part)
 {
     auto& s=*m_impl; auto texture=std::dynamic_pointer_cast<Texture>(image);
-    if(!s.backend.m_impl || !s.backend.m_impl->inFrame || !s.constants || !vertices || count>UINT32_MAX/sizeof(EffectVertex) ||
+    auto secondary=std::dynamic_pointer_cast<Texture>(d.secondaryTexture);
+    if(!s.backend.m_impl || !s.backend.m_impl->inFrame || !s.constants || !vertices || count>UINT32_MAX/sizeof(UploadVertex) ||
        !EffectDrawValid(d,count) || uint32_t(part)>=s.draws.size() || (d.textured && !texture) ||
-       (texture && texture->counts!=s.counts)) { s.failed=true; return; }
+       (texture && texture->counts!=s.counts) || (d.secondaryTexture && (!secondary || secondary->counts!=s.counts))) { s.failed=true; return; }
     for(uint32_t i=0;i<count;++i) {
         for(float f:vertices[i].position) if(!std::isfinite(f)) { s.failed=true; return; }
         for(float f:vertices[i].uv) if(!std::isfinite(f)) { s.failed=true; return; }
@@ -212,8 +232,10 @@ void DiligentEffectRenderer::Draw(const EffectVertex* vertices,uint32_t count,co
             GraphicsPipelineStateCreateInfo info;
             info.PSODesc.Name="Deterministic native effect draw"; info.PSODesc.PipelineType=PIPELINE_TYPE_GRAPHICS;
             ShaderResourceVariableDesc variables[]={{SHADER_TYPE_PIXEL,"EffectTexture",SHADER_RESOURCE_VARIABLE_TYPE_DYNAMIC},
-                {SHADER_TYPE_PIXEL,"EffectSampler",SHADER_RESOURCE_VARIABLE_TYPE_DYNAMIC}};
-            info.PSODesc.ResourceLayout.Variables=variables; info.PSODesc.ResourceLayout.NumVariables=2;
+                {SHADER_TYPE_PIXEL,"EffectSampler",SHADER_RESOURCE_VARIABLE_TYPE_DYNAMIC},
+                {SHADER_TYPE_PIXEL,"SecondaryTexture",SHADER_RESOURCE_VARIABLE_TYPE_DYNAMIC},
+                {SHADER_TYPE_PIXEL,"SecondarySampler",SHADER_RESOURCE_VARIABLE_TYPE_DYNAMIC}};
+            info.PSODesc.ResourceLayout.Variables=variables; info.PSODesc.ResourceLayout.NumVariables=4;
             auto& g=info.GraphicsPipeline; const auto& swap=b.swapChain->GetDesc();
             g.NumRenderTargets=1; g.RTVFormats[0]=swap.ColorBufferFormat; g.DSVFormat=swap.DepthBufferFormat;
             g.PrimitiveTopology=d.lines ? PRIMITIVE_TOPOLOGY_LINE_LIST : d.strip ? PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP : PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
@@ -226,34 +248,41 @@ void DiligentEffectRenderer::Draw(const EffectVertex* vertices,uint32_t count,co
             blend.SrcBlend=Factor(src,false,d.opaqueTargetAlpha); blend.DestBlend=Factor(dst,false,d.opaqueTargetAlpha);
             blend.SrcBlendAlpha=Factor(src,true,d.opaqueTargetAlpha); blend.DestBlendAlpha=Factor(dst,true,d.opaqueTargetAlpha);
             blend.BlendOp=blend.BlendOpAlpha=BLEND_OPERATION(d.blendOp);
-            LayoutElement layout[]={{0,0,3,VT_FLOAT32,False,0,24},{1,0,4,VT_UINT8,True,12,24},{2,0,2,VT_FLOAT32,False,16,24}};
-            g.InputLayout.LayoutElements=layout; g.InputLayout.NumElements=3; info.pVS=s.vs; info.pPS=s.ps;
+            LayoutElement layout[]={{0,0,3,VT_FLOAT32,False,0,32},{1,0,4,VT_UINT8,True,12,32},{2,0,2,VT_FLOAT32,False,16,32},{3,0,2,VT_FLOAT32,False,24,32}};
+            g.InputLayout.LayoutElements=layout; g.InputLayout.NumElements=4; info.pVS=s.vs; info.pPS=s.ps;
             b.device->CreateGraphicsPipelineState(info,&p.state); if(!p.state) { s.failed=true; return; }
             for(auto stage:{SHADER_TYPE_VERTEX,SHADER_TYPE_PIXEL}) if(auto* v=p.state->GetStaticVariableByName(stage,"EffectConstants")) v->Set(s.constants);
             p.state->CreateShaderResourceBinding(&p.bindings,true); if(!p.bindings) { s.failed=true; return; }
         }
-        auto& sampler=s.samplers[d.sampler];
+        const auto getSampler=[&](const EffectSampler& sampling) -> ISampler* {
+        auto& sampler=s.samplers[sampling];
         if(!sampler) {
             SamplerDesc desc;
-            desc.MinFilter=d.sampler.min>=2 ? FILTER_TYPE_LINEAR : FILTER_TYPE_POINT;
-            desc.MagFilter=d.sampler.mag>=2 ? FILTER_TYPE_LINEAR : FILTER_TYPE_POINT;
-            desc.MipFilter=d.sampler.mip==2 ? FILTER_TYPE_LINEAR : FILTER_TYPE_POINT;
-            if(d.sampler.min==3 || d.sampler.mag==3) { desc.MinFilter=desc.MagFilter=desc.MipFilter=FILTER_TYPE_ANISOTROPIC; desc.MaxAnisotropy=d.sampler.anisotropy; }
-            desc.AddressU=TEXTURE_ADDRESS_MODE(d.sampler.addressU); desc.AddressV=TEXTURE_ADDRESS_MODE(d.sampler.addressV);
-            desc.MinLOD=float(d.sampler.maxMip); desc.MipLODBias=d.sampler.lodBias;
-            if(!d.sampler.mip) desc.MaxLOD=desc.MinLOD;
-            for(unsigned i=0;i<4;++i) desc.BorderColor[i]=float((d.sampler.border>>((i==0 ? 2 : i==2 ? 0 : i)*8))&255)/255;
-            b.device->CreateSampler(desc,&sampler); if(!sampler) { s.failed=true; return; }
+            desc.MinFilter=sampling.min>=2 ? FILTER_TYPE_LINEAR : FILTER_TYPE_POINT;
+            desc.MagFilter=sampling.mag>=2 ? FILTER_TYPE_LINEAR : FILTER_TYPE_POINT;
+            desc.MipFilter=sampling.mip==2 ? FILTER_TYPE_LINEAR : FILTER_TYPE_POINT;
+            if(sampling.min==3 || sampling.mag==3) { desc.MinFilter=desc.MagFilter=desc.MipFilter=FILTER_TYPE_ANISOTROPIC; desc.MaxAnisotropy=sampling.anisotropy; }
+            desc.AddressU=TEXTURE_ADDRESS_MODE(sampling.addressU); desc.AddressV=TEXTURE_ADDRESS_MODE(sampling.addressV);
+            desc.MinLOD=float(sampling.maxMip); desc.MipLODBias=sampling.lodBias;
+            if(!sampling.mip) desc.MaxLOD=desc.MinLOD;
+            for(unsigned i=0;i<4;++i) desc.BorderColor[i]=float((sampling.border>>((i==0 ? 2 : i==2 ? 0 : i)*8))&255)/255;
+            b.device->CreateSampler(desc,&sampler);
         }
-        const uint64_t bytes=uint64_t(count)*sizeof(EffectVertex);
+        return sampler;
+        };
+        auto* sampler=getSampler(d.sampler); auto* secondarySampler=getSampler(d.secondarySampler);
+        if(!sampler || !secondarySampler) { s.failed=true; return; }
+        const uint64_t bytes=uint64_t(count)*sizeof(UploadVertex);
         if(bytes>s.capacity) {
             s.vertices.Release(); s.capacity=std::max<uint64_t>(4096,bytes);
             BufferDesc desc; desc.Name="CPU effect DISCARD upload"; desc.Size=s.capacity; desc.Usage=USAGE_DYNAMIC;
             desc.BindFlags=BIND_VERTEX_BUFFER; desc.CPUAccessFlags=CPU_ACCESS_WRITE;
             b.device->CreateBuffer(desc,nullptr,&s.vertices); if(!s.vertices) { s.capacity=0; s.failed=true; return; }
         }
-        { MapHelper<EffectVertex> mapped(b.context,s.vertices,MAP_WRITE,MAP_FLAG_DISCARD);
-          if(!mapped) { s.failed=true; return; } memcpy(mapped,vertices,size_t(bytes)); }
+        { MapHelper<UploadVertex> mapped(b.context,s.vertices,MAP_WRITE,MAP_FLAG_DISCARD);
+          if(!mapped) { s.failed=true; return; }
+          for(uint32_t i=0;i<count;++i) { mapped[i].base=vertices[i]; mapped[i].secondaryUV=d.secondaryUV.empty() ? vertices[i].uv : d.secondaryUV[i]; }
+        }
         {
             MapHelper<Constants> mapped(b.context,s.constants,MAP_WRITE,MAP_FLAG_DISCARD);
             if(!mapped) { s.failed=true; return; }
@@ -263,10 +292,15 @@ void DiligentEffectRenderer::Draw(const EffectVertex* vertices,uint32_t count,co
             mapped->pixelOffset={1.0f/(d.ui ? d.viewport[2] : swap.Width),-1.0f/(d.ui ? d.viewport[3] : swap.Height),0,0};
             mapped->color={d.colorOp,d.colorArg1,d.colorArg2,d.alphaReference}; mapped->alpha={d.alphaOp,d.alphaArg1,d.alphaArg2,d.alphaFunction};
             mapped->modes={d.fog,uint32_t(d.rangeFog),uint32_t(d.textured),uint32_t(d.alphaTest)};
-            mapped->coordinates={d.textureCoordinates,d.textureTransformFlags,0,0};
+            mapped->coordinates={d.textureCoordinates,d.textureTransformFlags,d.secondaryCoordinates,d.secondaryTransformFlags};
+            mapped->secondaryTransform=d.secondaryTransform;
+            mapped->secondaryColor={d.secondaryColorOp,d.secondaryColorArg1,d.secondaryColorArg2,uint32_t(bool(secondary))};
+            mapped->secondaryAlpha={d.secondaryAlphaOp,d.secondaryAlphaArg1,d.secondaryAlphaArg2,0};
         }
         p.bindings->GetVariableByName(SHADER_TYPE_PIXEL,"EffectTexture")->Set(texture ? texture->image->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE) : nullptr);
         p.bindings->GetVariableByName(SHADER_TYPE_PIXEL,"EffectSampler")->Set(sampler);
+        p.bindings->GetVariableByName(SHADER_TYPE_PIXEL,"SecondaryTexture")->Set(secondary ? secondary->image->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE) : nullptr);
+        p.bindings->GetVariableByName(SHADER_TYPE_PIXEL,"SecondarySampler")->Set(secondarySampler);
         b.context->SetPipelineState(p.state);
         // ZiiNAN: UI never inherits a world viewport or a previous widget's scissor state.
         if(d.ui) {
@@ -277,6 +311,9 @@ void DiligentEffectRenderer::Draw(const EffectVertex* vertices,uint32_t count,co
                 Rect rect(d.clip[0],d.clip[1],d.clip[2],d.clip[3]);
                 b.context->SetScissorRects(1,&rect,swap.Width,swap.Height);
             }
+        } else {
+            const auto& swap=b.swapChain->GetDesc(); Viewport viewport(0,0,float(swap.Width),float(swap.Height),0,1);
+            b.context->SetViewports(1,&viewport,swap.Width,swap.Height);
         }
         IBuffer* vb=s.vertices; Uint64 offset=0;
         b.context->SetVertexBuffers(0,1,&vb,&offset,RESOURCE_STATE_TRANSITION_MODE_TRANSITION,SET_VERTEX_BUFFERS_FLAG_RESET);

@@ -43,6 +43,9 @@ struct StaticObjectDraw
     TerrainTexturePtr sphereMap; // Uses the mutually exclusive native stage-1 matrix/sampling above.
     // Existing point light 1 left by character selection, needed by PCBlocker MODULATE.
     std::array<float,4> pointPositionRange{}, pointAttenuation{}, pointAmbient{}, pointDiffuse{};
+    // ZiiNAN: Original selection spotlight 0 and subviewport, not new lighting.
+    std::array<float,4> spotPositionRange{},spotAttenuation{},spotAmbient{},spotDiffuse{},spotDirection{},spotCone{};
+    std::array<uint32_t,4> viewport{};
     uint32_t firstIndex = 0, indexCount = 0, baseVertex = 0, vertexCount = 0;
 };
 class IStaticObjectRenderer : public ITextureUploader

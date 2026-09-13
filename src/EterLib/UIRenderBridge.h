@@ -7,7 +7,8 @@ class CGraphicImage;
 namespace UIRenderBridge
 {
 enum class Primitive { Strip, List, Fan, Lines, IndexedQuad };
-void Submit(const void* pdt,uint32_t count,Primitive,CGraphicImage*,HRESULT);
+void Submit(const void* pdt,uint32_t count,Primitive,CGraphicImage*,HRESULT,
+            Renderer::TerrainTexturePtr supplied={},Renderer::TerrainTexturePtr secondary={});
 inline void Quad(const void* pdt,CGraphicImage* image,HRESULT result)
 { Submit(pdt,4,Primitive::Strip,image,result); }
 inline void IndexedQuad(const void* pdt,CGraphicImage* image,HRESULT result)

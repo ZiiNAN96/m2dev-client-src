@@ -2,6 +2,7 @@
 #include "LegacyD3D9Backend.h"
 #include "GrpDevice.h"
 #include "GrpScreen.h"
+#include "StateManager.h"
 
 namespace Renderer
 {
@@ -59,6 +60,7 @@ void LegacyD3D9Backend::EndFrame()
 
 void LegacyD3D9Backend::Present()
 {
+    if(m_initialized && STATEMANAGER.IsDiligentRendering()) return;
     if (m_initialized && !m_suspended && !m_inFrame)
         m_screen.Show();
 }

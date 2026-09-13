@@ -1,5 +1,6 @@
 // ZiiNAN: Diligent special world rendering; synchronous snapshots, no second simulation.
 #include "StdAfx.h"
+#include "EterLib/NativeStateView.h"
 #include "WorldRenderBridge.h"
 #include "NativeMaterialSnapshot.h"
 #include "StateManager.h"
@@ -57,7 +58,7 @@ void WorldRenderBridge::Submit(const Renderer::EffectVertex* vertices,uint32_t c
         Report("unsupported material "+error+" color="+std::to_string(draw.colorOp)+" coords="+std::to_string(draw.textureCoordinates),true); return;
     }
     IDirect3DBaseTexture9* bound=nullptr;
-    STATEMANAGER.GetDevice()->GetTexture(0,&bound);
+    NativeStateView().GetTexture(0,&bound);
     draw.textured=bound!=nullptr;
     TerrainTexturePtr texture;
     // Gradient sky uses only diffuse; its native, potentially stale image is immaterial.

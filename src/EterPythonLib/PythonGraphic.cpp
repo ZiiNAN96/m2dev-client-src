@@ -1,6 +1,9 @@
 #include "StdAfx.h"
+#include "EterLib/NativeStateView.h"
+#include "Renderer/TerrainPresentation.h"
 #include "EterLib/StateManager.h"
 #include "EterLib/JpegFile.h"
+#include "EterImageLib/ScreenshotJPEG.h"
 #include "PythonGraphic.h"
 #include "EterLib/UIRenderBridge.h"
 #include <utf8.h>
@@ -88,21 +91,21 @@ void CPythonGraphic::SetOmniLight()
 	Light.Ambient.b = 1.0f;
 	Light.Ambient.a = 1.0f;
     Light.Range = 500.0f;
-	ms_lpd3dDevice->SetLight(0, &Light);
-	ms_lpd3dDevice->LightEnable(0, TRUE);
+	STATEMANAGER.SetLight(0, &Light);
+	STATEMANAGER.LightEnable(0, TRUE);
 
 	Light.Type = D3DLIGHT_POINT;
 	Light.Position = D3DXVECTOR3(0.0f, 200.0f, 200.0f);
 	Light.Attenuation0 = 0.1f;
 	Light.Attenuation1 = 0.01f;
 	Light.Attenuation2 = 0.0f;
-	ms_lpd3dDevice->SetLight(1, &Light);
-	ms_lpd3dDevice->LightEnable(1, TRUE);
+	STATEMANAGER.SetLight(1, &Light);
+	STATEMANAGER.LightEnable(1, TRUE);
 }
 
 void CPythonGraphic::SetViewport(float fx, float fy, float fWidth, float fHeight)
 {
-	ms_lpd3dDevice->GetViewport(&m_backupViewport);
+	NativeStateView().GetViewport(&m_backupViewport);
 
 	D3DVIEWPORT9 ViewPort;
 	ViewPort.X = fx;
@@ -112,7 +115,7 @@ void CPythonGraphic::SetViewport(float fx, float fy, float fWidth, float fHeight
 	ViewPort.MinZ = 0.0f;
 	ViewPort.MaxZ = 1.0f;
 	if (FAILED(
-		ms_lpd3dDevice->SetViewport(&ViewPort)
+		STATEMANAGER.SetViewport(&ViewPort)
 	))
 	{
 		Tracef("CPythonGraphic::SetViewport(%d, %d, %d, %d) - Error", 
@@ -124,11 +127,13 @@ void CPythonGraphic::SetViewport(float fx, float fy, float fWidth, float fHeight
 
 void CPythonGraphic::RestoreViewport()
 {
-	ms_lpd3dDevice->SetViewport(&m_backupViewport);
+	STATEMANAGER.SetViewport(&m_backupViewport);
 }
 
 void CPythonGraphic::SetGamma(float fGammaFactor)
 {
+    // ZiiNAN: Diligent is windowed-only; do not modify the unused fullscreen D3D9 gamma ramp.
+    if(STATEMANAGER.IsDiligentRendering()) return;
 	D3DCAPS9		d3dCaps;
 	D3DGAMMARAMP	NewRamp;
 	int				ui, val;
@@ -177,6 +182,13 @@ bool CPythonGraphic::SaveJPEG(const char * pszFileName, LPBYTE pbyBuffer, UINT u
 
 bool CPythonGraphic::SaveScreenShot(const char * c_pszFileName)
 {
+    // ZiiNAN: Queue capture of the next fully composed Diligent frame, before swap-chain Present.
+    if(Renderer::activePresentation) {
+        const std::string file=c_pszFileName; const bool tag=g_isScreenShotKey;
+        return Renderer::activePresentation->RequestScreenshot([this,file,tag](std::vector<uint8_t>& rgb,uint32_t w,uint32_t h) {
+            return FinishScreenShot(file.c_str(),w,h,SaveScreenshotJPEG(Utf8ToWide(file).c_str(),rgb,w,h),tag);
+        });
+    }
 	HRESULT hr;
 	LPDIRECT3DSURFACE9 lpSurface;
 	D3DSURFACE_DESC stSurfaceDesc;
@@ -304,12 +316,17 @@ bool CPythonGraphic::SaveScreenShot(const char * c_pszFileName)
 		pbyBuffer = NULL;
 	}
 
+    return FinishScreenShot(c_pszFileName,uWidth,uHeight,bSaved,g_isScreenShotKey);
+}
+
+bool CPythonGraphic::FinishScreenShot(const char* c_pszFileName,UINT uWidth,UINT uHeight,bool bSaved,bool tag)
+{
 	if(bSaved == false) {
 		TraceError("Failed to save JPEG file. (%s, %d, %d)", c_pszFileName, uWidth, uHeight);
 		return false;
 	}
 
-	if (g_isScreenShotKey)
+	if (tag)
 	{
 		// UTF-8 → UTF-16 conversion for Unicode path support
 		std::wstring wFileName = Utf8ToWide(c_pszFileName);

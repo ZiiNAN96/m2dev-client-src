@@ -29,6 +29,7 @@
 #include "Camera.h"
 #include "StateManager.h"
 #include "ResourceManager.h"
+#include "WorldRenderBridge.h"
 
 #include <math.h>
 using namespace std;
@@ -109,6 +110,7 @@ CLensFlare::CLensFlare() :
 
 CLensFlare::~CLensFlare()
 {
+    ReleaseWorldResources();
     delete[] m_pControlPixels;
     delete[] m_pTestPixels;
 }
@@ -181,6 +183,9 @@ void CLensFlare::Compute(const D3DXVECTOR3 & c_rv3LightDirection)
 
 void CLensFlare::DrawBeforeFlare()
 {
+    // ZiiNAN: Original sun and flare quads use the existing world material binder.
+    WorldRenderScope scope(m_diligentResources,Renderer::WorldPart::LensFlare);
+    WorldRenderBridge::Texture(m_SunFlareImageInstance.GetGraphicImagePointer());
     if (!m_bFlareVisible || !m_bEnabled || !m_bShowMainFlare)
         return;
 
@@ -260,7 +265,8 @@ void CLensFlare::DrawBeforeFlare()
 	STATEMANAGER.SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
 	
 	STATEMANAGER.SetFVF(D3DFVF_XYZ|D3DFVF_DIFFUSE|D3DFVF_TEX1);
-	STATEMANAGER.DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, vertices, sizeof(SVertex));
+    const auto nativeDraw=STATEMANAGER.DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, vertices, sizeof(SVertex));
+    WorldRenderBridge::SubmitQuad(vertices,nativeDraw);
 
 	STATEMANAGER.RestoreRenderState(D3DRS_LIGHTING);
 	STATEMANAGER.RestoreRenderState(D3DRS_ZENABLE); // glDisable(GL_DEPTH_TEST);
@@ -282,6 +288,7 @@ void CLensFlare::DrawBeforeFlare()
 
 void CLensFlare::DrawAfterFlare()
 {
+    WorldRenderScope scope(m_diligentResources,Renderer::WorldPart::LensFlare);
 	if (m_bEnabled && m_fAfterBright != 0.0f && m_bDrawBrightScreen)
 	{
 		SetDiffuseColor(m_afColor[0], m_afColor[1], m_afColor[2], m_fAfterBright);
@@ -500,7 +507,12 @@ CFlare::CFlare()
 
 CFlare::~CFlare()
 {
+    ReleaseWorldResources();
 }
+
+void CFlare::ReleaseWorldResources() { WorldRenderBridge::Release(m_diligentResources); }
+void CLensFlare::ReleaseWorldResources()
+{ WorldRenderBridge::Release(m_diligentResources); m_cFlare.ReleaseWorldResources(); }
 
 
 ///////////////////////////////////////////////////////////////////////  
@@ -534,6 +546,7 @@ void CFlare::Init(std::string strPath)
 //	CFlare::Draw
 void CFlare::Draw(float fBrightScale, int nWidth, int nHeight, int nX, int nY)
 {
+    WorldRenderScope scope(m_diligentResources,Renderer::WorldPart::LensFlare);
 	STATEMANAGER.SaveRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE);
 
 	float fDX = float(nX) - float(nWidth) / 2.0f;
@@ -592,7 +605,9 @@ void CFlare::Draw(float fBrightScale, int nWidth, int nHeight, int nX, int nY)
 		vertices[3].z = 0.0f;
 		vertices[3].color = d3dColor;
 
-		STATEMANAGER.DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, vertices, sizeof(TVertex));
+        WorldRenderBridge::Texture(m_vFlares[i]->m_imageInstance.GetGraphicImagePointer());
+        const auto nativeDraw=STATEMANAGER.DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, vertices, sizeof(TVertex));
+        WorldRenderBridge::SubmitQuad(vertices,nativeDraw);
 	}
 
 	STATEMANAGER.RestoreRenderState(D3DRS_DESTBLEND);

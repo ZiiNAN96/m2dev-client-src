@@ -46,6 +46,8 @@
 
 #include <vector>
 #include <stack>
+#include <wrl/client.h>
+#include <cstdint>
 
 #include "EterBase/Singleton.h"
 
@@ -338,6 +340,17 @@ public:
 	void StateManager_Apply();
 
 	LPDIRECT3DDEVICE9EX GetDevice();
+    // ZiiNAN: Startup-only CPU compatibility state, separate from native GPU execution.
+    void EnableDiligentRendering();
+    bool IsDiligentRendering() const { return m_diligentRendering; }
+    HRESULT SetViewport(const D3DVIEWPORT9* viewport);
+    HRESULT LightEnable(DWORD index,BOOL enabled);
+    HRESULT SetRenderTarget(DWORD index,IDirect3DSurface9* surface);
+    HRESULT SetDepthStencilSurface(IDirect3DSurface9* surface);
+    void ForgetDiligentTexture(IDirect3DBaseTexture9* texture);
+    struct NativeCounters { uint64_t draws=0,states=0,textures=0,targets=0,suppressedDraws=0; };
+    NativeCounters GetNativeCounters() const { return m_nativeCounters; }
+    void ResetNativeCounters() { m_nativeCounters={}; }
 
 #ifdef _DEBUG
 	void ResetDrawCallCounter();
@@ -346,6 +359,19 @@ public:
 
 private:
 	void SetDevice(LPDIRECT3DDEVICE9EX lpDevice);
+    friend class NativeStateView;
+    void SeedNativeStateView();
+    bool m_diligentRendering=false;
+    NativeCounters m_nativeCounters;
+    D3DVIEWPORT9 m_viewport{};
+    RECT m_scissor{};
+    D3DLIGHT9 m_lights[8]{};
+    BOOL m_lightEnabled[8]{};
+    bool m_lightValid[8]{};
+    float m_vertexConstants[96][4]{};
+    Microsoft::WRL::ComPtr<IDirect3DBaseTexture9> m_textureOwners[8];
+    Microsoft::WRL::ComPtr<IDirect3DVertexShader9> m_vertexShaderOwner;
+    Microsoft::WRL::ComPtr<IDirect3DPixelShader9> m_pixelShaderOwner;
 
 private:
 

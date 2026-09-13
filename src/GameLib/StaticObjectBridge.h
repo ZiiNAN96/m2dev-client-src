@@ -11,3 +11,4 @@ enum class StaticMapObjectPass { Opaque, ShadowReceiver, CameraBlocker, GroundIt
 // Existing map lists only; never actor or shadow-map generation passes.
 void SubmitStaticMapObject(CGraphicThingInstance&, StaticMapObjectPass = StaticMapObjectPass::Opaque, CGraphicImage* = nullptr);
 void ReleaseStaticMapObject(CGraphicThingInstance*);
+bool DrawSpecialMapObject(CGraphicThingInstance&,bool blend,CGraphicImage* cameraAlpha=nullptr);

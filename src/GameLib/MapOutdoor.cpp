@@ -192,6 +192,7 @@ bool CMapOutdoor::Destroy()
 {
 	// ZiiNAN: Release only Diligent environment handles at every native map boundary.
 	m_SkyBox.ReleaseWorldResources();
+    m_LensFlare.ReleaseWorldResources();
 	if(Renderer::worldRenderer) Renderer::worldRenderer->ReleaseBindings();
 	m_waterResources.textures.clear();
 	Renderer::waterTexturesResident=0;
@@ -363,6 +364,8 @@ void CMapOutdoor::CreateTerrainPatchProxyList()
 
 void CMapOutdoor::DestroyTerrainPatchProxyList()
 {
+	if(Renderer::worldRenderer && m_projectionTexture) Renderer::worldRenderer->ReleaseBindings();
+	m_projectionTexture.reset(); m_projectionIndices.clear();
 	if (m_pTerrainPatchProxyList)
 	{
 		delete [] m_pTerrainPatchProxyList;
@@ -994,12 +997,13 @@ BOOL CMapOutdoor::GetTerrainPointer(const BYTE c_byTerrainNum, CTerrain ** ppTer
 
 void CMapOutdoor::SetDrawShadow(bool bDrawShadow)
 {
-	m_bDrawShadow = bDrawShadow;
+    // ZiiNAN: M11 option B; no legacy shadow generation/receiver draws in Diligent.
+	m_bDrawShadow = bDrawShadow && !Renderer::worldRenderer;
 }
 
 void CMapOutdoor::SetDrawCharacterShadow(bool bDrawChrShadow)
 {
-	m_bDrawChrShadow = bDrawChrShadow;
+	m_bDrawChrShadow = bDrawChrShadow && !Renderer::worldRenderer;
 }
 
 DWORD CMapOutdoor::GetShadowMapColor(float fx, float fy)

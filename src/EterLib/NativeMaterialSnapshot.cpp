@@ -1,15 +1,16 @@
 // ZiiNAN: Shared read-only fixed-function snapshot for effects and world surfaces.
 #include "StdAfx.h"
+#include "EterLib/NativeStateView.h"
 #include "NativeMaterialSnapshot.h"
 #include "StateManager.h"
 
-bool CaptureNativeMaterial(Renderer::EffectDraw& d,std::string& error)
+bool CaptureNativeMaterial(Renderer::EffectDraw& d,std::string& error,bool allowSecondary)
 {
     auto* device=STATEMANAGER.GetDevice(); bool ok=device!=nullptr;
     if(!ok) return false;
-    const auto rs=[&](D3DRENDERSTATETYPE t) { DWORD v=0; ok=SUCCEEDED(device->GetRenderState(t,&v)) && ok; return v; };
-    const auto ts=[&](D3DTEXTURESTAGESTATETYPE t) { DWORD v=0; ok=SUCCEEDED(device->GetTextureStageState(0,t,&v)) && ok; return v; };
-    const auto ss=[&](D3DSAMPLERSTATETYPE t) { DWORD v=0; ok=SUCCEEDED(device->GetSamplerState(0,t,&v)) && ok; return v; };
+    const auto rs=[&](D3DRENDERSTATETYPE t) { DWORD v=0; ok=SUCCEEDED(NativeStateView().GetRenderState(t,&v)) && ok; return v; };
+    const auto ts=[&](D3DTEXTURESTAGESTATETYPE t) { DWORD v=0; ok=SUCCEEDED(NativeStateView().GetTextureStageState(0,t,&v)) && ok; return v; };
+    const auto ss=[&](D3DSAMPLERSTATETYPE t) { DWORD v=0; ok=SUCCEEDED(NativeStateView().GetSamplerState(0,t,&v)) && ok; return v; };
     const auto asFloat=[](DWORD v) { float f; memcpy(&f,&v,4); return f; };
     d.blend=rs(D3DRS_ALPHABLENDENABLE)!=0; d.src=rs(D3DRS_SRCBLEND); d.dst=rs(D3DRS_DESTBLEND); d.blendOp=rs(D3DRS_BLENDOP);
     d.depthTest=rs(D3DRS_ZENABLE)!=0; d.depthWrite=rs(D3DRS_ZWRITEENABLE)!=0; d.depthFunction=rs(D3DRS_ZFUNC);
@@ -24,7 +25,7 @@ bool CaptureNativeMaterial(Renderer::EffectDraw& d,std::string& error)
     d.sampler.maxMip=ss(D3DSAMP_MAXMIPLEVEL); d.sampler.lodBias=asFloat(ss(D3DSAMP_MIPMAPLODBIAS)); d.sampler.border=ss(D3DSAMP_BORDERCOLOR);
     for(auto entry:{std::pair<D3DTRANSFORMSTATETYPE,std::array<float,16>*>(D3DTS_WORLD,&d.matrices.world),
          {D3DTS_VIEW,&d.matrices.view},{D3DTS_PROJECTION,&d.matrices.projection},{D3DTS_TEXTURE0,&d.textureTransform}}) {
-        D3DXMATRIX matrix; ok=SUCCEEDED(device->GetTransform(entry.first,&matrix)) && ok; memcpy(entry.second->data(),&matrix,64);
+        D3DXMATRIX matrix; ok=SUCCEEDED(NativeStateView().GetTransform(entry.first,&matrix)) && ok; memcpy(entry.second->data(),&matrix,64);
     }
     if(rs(D3DRS_FOGENABLE)) {
         if(rs(D3DRS_FOGTABLEMODE)!=D3DFOG_NONE) { error="native fog table="+std::to_string(rs(D3DRS_FOGTABLEMODE)); return false; }
@@ -34,19 +35,32 @@ bool CaptureNativeMaterial(Renderer::EffectDraw& d,std::string& error)
         if(d.fog==3 && d.fogParameters[0]==d.fogParameters[1]) return false;
     }
     IDirect3DVertexShader9* vs=nullptr; IDirect3DPixelShader9* ps=nullptr;
-    device->GetVertexShader(&vs); device->GetPixelShader(&ps);
+    NativeStateView().GetVertexShader(&vs); NativeStateView().GetPixelShader(&ps);
     const bool shaders=vs || ps; if(vs) vs->Release(); if(ps) ps->Release();
-    IDirect3DBaseTexture9* second=nullptr; device->GetTexture(1,&second);
-    DWORD secondOp=0; device->GetTextureStageState(1,D3DTSS_COLOROP,&secondOp);
+    IDirect3DBaseTexture9* second=nullptr; NativeStateView().GetTexture(1,&second);
+    DWORD secondOp=0; NativeStateView().GetTextureStageState(1,D3DTSS_COLOROP,&secondOp);
     const bool secondUsed=second && secondOp!=D3DTOP_DISABLE; if(second) second->Release();
+    if(allowSecondary && secondUsed) {
+        const auto ts1=[&](D3DTEXTURESTAGESTATETYPE t) { DWORD v=0; ok=SUCCEEDED(NativeStateView().GetTextureStageState(1,t,&v)) && ok; return v; };
+        const auto ss1=[&](D3DSAMPLERSTATETYPE t) { DWORD v=0; ok=SUCCEEDED(NativeStateView().GetSamplerState(1,t,&v)) && ok; return v; };
+        d.secondaryColorOp=ts1(D3DTSS_COLOROP); d.secondaryColorArg1=ts1(D3DTSS_COLORARG1); d.secondaryColorArg2=ts1(D3DTSS_COLORARG2);
+        d.secondaryAlphaOp=ts1(D3DTSS_ALPHAOP); d.secondaryAlphaArg1=ts1(D3DTSS_ALPHAARG1); d.secondaryAlphaArg2=ts1(D3DTSS_ALPHAARG2);
+        d.secondaryCoordinates=ts1(D3DTSS_TEXCOORDINDEX); d.secondaryTransformFlags=ts1(D3DTSS_TEXTURETRANSFORMFLAGS);
+        auto& s=d.secondarySampler; s.addressU=ss1(D3DSAMP_ADDRESSU); s.addressV=ss1(D3DSAMP_ADDRESSV);
+        s.min=ss1(D3DSAMP_MINFILTER); s.mag=ss1(D3DSAMP_MAGFILTER); s.mip=ss1(D3DSAMP_MIPFILTER);
+        s.anisotropy=std::clamp(ss1(D3DSAMP_MAXANISOTROPY),DWORD(1),DWORD(16));
+        s.maxMip=ss1(D3DSAMP_MAXMIPLEVEL); s.lodBias=asFloat(ss1(D3DSAMP_MIPMAPLODBIAS)); s.border=ss1(D3DSAMP_BORDERCOLOR);
+        D3DXMATRIX matrix; ok=SUCCEEDED(NativeStateView().GetTransform(D3DTS_TEXTURE1,&matrix)) && ok; memcpy(d.secondaryTransform.data(),&matrix,64);
+    }
     IDirect3DSurface9* target=nullptr;
-    if(SUCCEEDED(device->GetRenderTarget(0,&target)) && target) {
+    if(STATEMANAGER.IsDiligentRendering()) d.opaqueTargetAlpha=true;
+    else if(SUCCEEDED(device->GetRenderTarget(0,&target)) && target) {
         D3DSURFACE_DESC desc{}; target->GetDesc(&desc); target->Release();
         d.opaqueTargetAlpha=desc.Format==D3DFMT_X8R8G8B8 || desc.Format==D3DFMT_R5G6B5;
     }
     // ZiiNAN: Diligent text rendering integration; LCD passes preserve target alpha.
     d.colorWriteMask=rs(D3DRS_COLORWRITEENABLE)&15u;
-    const bool valid=ok && !shaders && !secondUsed && !rs(D3DRS_SEPARATEALPHABLENDENABLE) && !rs(D3DRS_STENCILENABLE) &&
+    const bool valid=ok && !shaders && (!secondUsed || allowSecondary) && !rs(D3DRS_SEPARATEALPHABLENDENABLE) && !rs(D3DRS_STENCILENABLE) &&
         d.colorWriteMask<=15 && rs(D3DRS_FILLMODE)==D3DFILL_SOLID;
     if(!valid) error="native snapshot shaders="+std::to_string(shaders)+" second="+std::to_string(secondUsed)+
         " separate="+std::to_string(rs(D3DRS_SEPARATEALPHABLENDENABLE))+" stencil="+std::to_string(rs(D3DRS_STENCILENABLE))+
@@ -58,19 +72,19 @@ bool CaptureNativeMaterial(Renderer::EffectDraw& d,std::string& error)
 bool ResolveNativeWaterDiffuse(const Renderer::EffectVertex* input,uint32_t count,std::vector<Renderer::EffectVertex>& output)
 {
     auto* device=STATEMANAGER.GetDevice(); if(!device) return false;
-    DWORD lighting=0; if(FAILED(device->GetRenderState(D3DRS_LIGHTING,&lighting))) return false;
+    DWORD lighting=0; if(FAILED(NativeStateView().GetRenderState(D3DRS_LIGHTING,&lighting))) return false;
     if(!lighting) return true;
     D3DMATERIAL9 material{}; D3DXMATRIX world;
-    if(FAILED(device->GetMaterial(&material)) || FAILED(device->GetTransform(D3DTS_WORLD,&world))) return false;
+    if(FAILED(NativeStateView().GetMaterial(&material)) || FAILED(NativeStateView().GetTransform(D3DTS_WORLD,&world))) return false;
     DWORD ambient=0,colorVertex=0,ambientSource=0,emissiveSource=0,diffuseSource=0;
     for(auto entry:{std::pair{D3DRS_AMBIENT,&ambient},{D3DRS_COLORVERTEX,&colorVertex},
         {D3DRS_AMBIENTMATERIALSOURCE,&ambientSource},{D3DRS_EMISSIVEMATERIALSOURCE,&emissiveSource},{D3DRS_DIFFUSEMATERIALSOURCE,&diffuseSource}})
-        if(FAILED(device->GetRenderState(entry.first,entry.second))) return false;
+        if(FAILED(NativeStateView().GetRenderState(entry.first,entry.second))) return false;
     struct Light { D3DLIGHT9 value; };
     std::vector<Light> lights;
     for(DWORD i=0;i<8;++i) {
-        BOOL enabled=FALSE; if(FAILED(device->GetLightEnable(i,&enabled)) || !enabled) continue;
-        D3DLIGHT9 light{}; if(FAILED(device->GetLight(i,&light))) return false;
+        BOOL enabled=FALSE; if(FAILED(NativeStateView().GetLightEnable(i,&enabled)) || !enabled) continue;
+        D3DLIGHT9 light{}; if(FAILED(NativeStateView().GetLight(i,&light))) return false;
         if(light.Type<D3DLIGHT_POINT || light.Type>D3DLIGHT_DIRECTIONAL) return false;
         lights.push_back({light});
     }

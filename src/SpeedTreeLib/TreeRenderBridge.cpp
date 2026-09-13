@@ -1,5 +1,6 @@
 // ZiiNAN: Diligent SpeedTree rendering integration; synchronous CPU data and read-only legacy state.
 #include "StdAfx.h"
+#include "EterLib/NativeStateView.h"
 #include "TreeRenderBridge.h"
 #include "SpeedTreeWrapper.h"
 #include "EterLib/StateManager.h"
@@ -27,7 +28,7 @@ float StateFloat(D3DRENDERSTATETYPE type)
 bool Sampling(DWORD stage,TreeSampler& sampler)
 {
     auto* device=STATEMANAGER.GetDevice();
-    const auto get=[&](D3DSAMPLERSTATETYPE type) { DWORD value=0; return SUCCEEDED(device->GetSamplerState(stage,type,&value)) ? value : ~DWORD(0); };
+    const auto get=[&](D3DSAMPLERSTATETYPE type) { DWORD value=0; return SUCCEEDED(NativeStateView().GetSamplerState(stage,type,&value)) ? value : ~DWORD(0); };
     const auto u=get(D3DSAMP_ADDRESSU),v=get(D3DSAMP_ADDRESSV),min=get(D3DSAMP_MINFILTER),mag=get(D3DSAMP_MAGFILTER),mip=get(D3DSAMP_MIPFILTER);
     if((u!=D3DTADDRESS_WRAP && u!=D3DTADDRESS_CLAMP) || (v!=D3DTADDRESS_WRAP && v!=D3DTADDRESS_CLAMP) ||
        min<D3DTEXF_POINT || min>D3DTEXF_ANISOTROPIC || mag<D3DTEXF_POINT || mag>D3DTEXF_ANISOTROPIC ||
@@ -77,7 +78,7 @@ bool CaptureState(TreeDraw& draw,bool hasSecond)
                     {D3DTS_VIEW,&draw.matrices.view},{D3DTS_PROJECTION,&draw.matrices.projection},{D3DTS_TEXTURE1,&draw.textureTransform}}) {
         STATEMANAGER.GetTransform(entry.first,&matrix); memcpy(entry.second->data(),&matrix,64);
     }
-    if(draw.part==TreePart::Leaf && FAILED(STATEMANAGER.GetDevice()->GetVertexShaderConstantF(0,draw.legacyConstants[0].data(),96))) return false;
+    if(draw.part==TreePart::Leaf && FAILED(NativeStateView().GetVertexShaderConstantF(0,draw.legacyConstants[0].data(),96))) return false;
     if(STATEMANAGER.GetRenderState(D3DRS_FOGENABLE)) {
         if(STATEMANAGER.GetRenderState(D3DRS_FOGTABLEMODE)!=D3DFOG_NONE) return false;
         draw.fog=draw.part==TreePart::Leaf ? 4u : STATEMANAGER.GetRenderState(D3DRS_FOGVERTEXMODE);

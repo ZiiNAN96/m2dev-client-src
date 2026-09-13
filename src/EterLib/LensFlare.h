@@ -29,6 +29,7 @@
 
 #include "GrpImageInstance.h"
 #include "GrpScreen.h"
+#include "Renderer/WorldRenderData.h"
 
 #include <float.h>
 #include <string>
@@ -51,6 +52,7 @@ class CFlare
 public:
 	void Draw(float fBrightScale, int nWidth, int nHeight, int nX, int nY);
 	void Init(std::string strPath);
+    void ReleaseWorldResources();
 	
 	CFlare();
 	virtual ~CFlare();
@@ -71,6 +73,7 @@ private:
 	};
 	
 	std::vector<SFlarePiece *> m_vFlares;
+    Renderer::WorldResources m_diligentResources;
 };
 
 ///////////////////////////////////////////////////////////////////////  
@@ -86,6 +89,7 @@ public:
 	void			DrawBeforeFlare();
 	void			DrawAfterFlare();
 	void			DrawFlare();
+    void ReleaseWorldResources();
 	
 	void			SetMainFlare(std::string strSunFile, float fSunSize);
 	void			Initialize(std::string strPath);
@@ -119,6 +123,7 @@ private:
 	float			m_afColor[4];
 	
 	CGraphicImageInstance m_SunFlareImageInstance;
+    Renderer::WorldResources m_diligentResources;
 	
 	void            ReadDepthPixels(float * pPixels);
 	void			ClampBrightness();

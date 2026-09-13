@@ -1,5 +1,5 @@
 #pragma once
 #include "Renderer/EffectRenderData.h"
 #include <string>
-bool CaptureNativeMaterial(Renderer::EffectDraw&,std::string& error);
+bool CaptureNativeMaterial(Renderer::EffectDraw&,std::string& error,bool allowSecondary=false);
 bool ResolveNativeWaterDiffuse(const Renderer::EffectVertex*,uint32_t,std::vector<Renderer::EffectVertex>&);

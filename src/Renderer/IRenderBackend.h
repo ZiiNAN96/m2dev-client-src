@@ -22,6 +22,7 @@ struct ClearInfo
 {
     bool colorAndDepth = false; // false: depth only, matching the normal legacy frame.
     std::optional<ClearColor> color; // absent: preserve the legacy clear state.
+    float depthValue = 1.0f;
 };
 
 // Render-thread only. Select an implementation once, before initialization.

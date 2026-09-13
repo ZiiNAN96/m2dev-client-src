@@ -2,12 +2,57 @@
 #include "DungeonBlock.h"
 
 #include "EterLib/StateManager.h"
+#include "EterLib/NativeMaterialSnapshot.h"
+#include "EterLib/StaticObjectTextureLoader.h"
+#include "Renderer/WorldRenderData.h"
 
 class CDungeonModelInstance : public CGrannyModelInstance
 {
+		std::vector<std::array<float,10>> m_vertices;
+		std::vector<uint16_t> m_indices;
+		Renderer::WorldResources m_resources;
+		static void Submit(const void* native,const Renderer::SpecialMeshDraw& group)
+		{
+			auto& self=*const_cast<CDungeonModelInstance*>(static_cast<const CDungeonModelInstance*>(native));
+			auto* renderer=Renderer::worldRenderer;
+			if(!renderer || !Renderer::worldSurfaceFrame) return;
+			Renderer::EffectDraw draw; draw.strip=false; std::string error;
+			if(!CaptureNativeMaterial(draw,error,true) || group.material>=self.m_kMtrlPal.GetMaterialCount() ||
+				group.firstIndex>self.m_indices.size() || group.indexCount>self.m_indices.size()-group.firstIndex) { renderer->ReportFailure(); return; }
+			auto& material=self.m_kMtrlPal.GetMaterialRef(group.material);
+			auto load=[&](CGraphicImage* image) -> Renderer::TerrainTexturePtr {
+				if(!image) return {}; auto& texture=self.m_resources.textures[image->GetFileName()];
+				if(!texture) texture=LoadStaticObjectTextureFile(image->GetFileName(),*renderer); return texture;
+			};
+			auto texture=load(material.GetImagePointer(0)); draw.textured=material.GetImagePointer(0)!=nullptr;
+			draw.secondaryTexture=load(material.GetImagePointer(1));
+			if((draw.textured && !texture) || (material.GetImagePointer(1) && !draw.secondaryTexture)) { renderer->ReportFailure(); return; }
+			std::vector<Renderer::EffectVertex> vertices; vertices.reserve(group.indexCount);
+			for(uint32_t i=0;i<group.indexCount;++i) {
+				const auto index=self.m_indices[group.firstIndex+i];
+				if(index>=group.vertexCount || uint64_t(group.baseVertex)+index>=self.m_vertices.size()) { renderer->ReportFailure(); return; }
+				const auto& v=self.m_vertices[group.baseVertex+index];
+				vertices.push_back({{v[0],v[1],v[2]},0xffffffff,{v[6],v[7]}});
+				if(draw.secondaryTexture && draw.secondaryCoordinates==1) draw.secondaryUV.push_back({v[8],v[9]});
+			}
+			renderer->Draw(vertices.data(),uint32_t(vertices.size()),texture,draw,Renderer::WorldPart::Dungeon);
+		}
 	public:
 		CDungeonModelInstance() {}
-		virtual ~CDungeonModelInstance() {}
+		virtual ~CDungeonModelInstance() { if(Renderer::worldRenderer) Renderer::worldRenderer->ReleaseBindings(); }
+		bool CaptureDiligentSource()
+		{
+			if(!Renderer::worldRenderer) return true;
+			// ZiiNAN: Copy the actual native PNT2 buffer once; no Granny format or loader changes.
+			if(!m_pModel || m_pModel->GetDeformVertexCount()) return false;
+			D3DVERTEXBUFFER_DESC desc{}; auto* buffer=m_pModel->GetPNTD3DVertexBuffer();
+			if(!buffer || FAILED(buffer->GetDesc(&desc)) || desc.Size<size_t(m_pModel->GetRigidVertexCount())*40) return false;
+			void* vertices=nullptr; void* indices=nullptr;
+			if(!m_pModel->LockVertices(&indices,&vertices)) return false;
+			m_vertices.resize(m_pModel->GetRigidVertexCount()); m_indices.resize(m_pModel->GetIdxCount());
+			memcpy(m_vertices.data(),vertices,m_vertices.size()*40); memcpy(m_indices.data(),indices,m_indices.size()*2);
+			m_pModel->UnlockVertices(); return true;
+		}
 
 		void RenderDungeonBlock()
 		{
@@ -19,6 +64,7 @@ class CDungeonModelInstance : public CGrannyModelInstance
 			if (lpd3dRigidPNTVtxBuf)
 			{
 				STATEMANAGER.SetStreamSource(0, lpd3dRigidPNTVtxBuf, sizeof(TPNT2Vertex));
+				Renderer::SpecialMeshScope special({this,Submit});
 				RenderMeshNodeListWithTwoTexture(CGrannyMesh::TYPE_RIGID, CGrannyMaterial::TYPE_BLEND_PNT);
 			}
 		}
@@ -221,6 +267,10 @@ bool CDungeonBlock::Load(const char * c_szFileName)
 	{
 		CDungeonModelInstance * pModelInstance = new CDungeonModelInstance;
 		pModelInstance->SetMainModelPointer(m_pThing->GetModelPointer(i), &m_kDeformableVertexBuffer);
+		if(!pModelInstance->CaptureDiligentSource()) {
+			if(Renderer::worldRenderer) Renderer::worldRenderer->ReportFailure();
+			delete pModelInstance; return false;
+		}
 		DWORD dwVertexCount = pModelInstance->GetVertexCount();
 		m_kDeformableVertexBuffer.Destroy();
 		m_kDeformableVertexBuffer.Create(

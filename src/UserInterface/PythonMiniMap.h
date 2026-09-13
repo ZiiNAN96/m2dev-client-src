@@ -1,6 +1,7 @@
 #pragma once
 
 #include "PythonBackground.h"
+#include "Renderer/EffectRenderData.h"
 
 class CPythonMiniMap : public CScreen, public CSingleton<CPythonMiniMap>
 {
@@ -208,6 +209,7 @@ class CPythonMiniMap : public CScreen, public CSingleton<CPythonMiniMap>
 		bool							m_bShow;
 
 		CGraphicVertexBuffer			m_VertexBuffer;
+		std::array<Renderer::EffectVertex,36> m_uiMapVertices{};
 		CGraphicIndexBuffer				m_IndexBuffer;
 
 		D3DXMATRIX						m_matIdentity;
