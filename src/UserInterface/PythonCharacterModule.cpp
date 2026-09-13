@@ -1,6 +1,9 @@
 #include "StdAfx.h"
 #include "PythonCharacterManager.h"
 #include "PythonNonPlayer.h"
+#ifdef M2_RENDERER_DIAGNOSTICS
+#include "../../tests/Renderer/FloatingClientProbe.h"
+#endif
 
 PyObject * chrRaceToJob(PyObject * poSelf, PyObject * poArgs)
 {
@@ -1301,6 +1304,10 @@ void initchr()
 		{ "RaceToSex",					chrRaceToSex,							METH_VARARGS },
 
 		// For Test
+#ifdef M2_RENDERER_DIAGNOSTICS
+		{ "testRefreshTextTail", chrtestRefreshTextTail, METH_VARARGS },
+		{ "testAddDamageEffect", chrtestAddDamageEffect, METH_VARARGS },
+#endif
 		{ "testGetPKData",					chrtestGetPKData,					METH_VARARGS },
 		{ "FaintTest",						chrFaintTest,						METH_VARARGS },
 		{ "SetMoveSpeed",					chrSetMoveSpeed,					METH_VARARGS },

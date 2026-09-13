@@ -280,7 +280,7 @@ void CPythonTextTail::ArrangeTextTail()
 
 void CPythonTextTail::Render()
 {
-	Renderer::UIExcludeScope excludeTextTail; // ZiiNAN: Nameplates remain outside M9.
+	Renderer::FloatingTextScope floatingText; // ZiiNAN: Diligent floating text rendering
 	TTextTailList::iterator itor;
 
 	for (itor = m_CharacterTextTailList.begin(); itor != m_CharacterTextTailList.end(); ++itor)
@@ -762,6 +762,9 @@ CPythonTextTail::TTextTail * CPythonTextTail::RegisterTextTail(DWORD dwVirtualID
 
 void CPythonTextTail::DeleteTextTail(TTextTail * pTextTail)
 {
+	// ZiiNAN: Diligent floating text rendering; no visible entry may outlive its owner.
+	m_CharacterTextTailList.remove(pTextTail);
+	m_ItemTextTailList.remove(pTextTail);
 	if (pTextTail->pTextInstance)
 	{
 		CGraphicTextInstance::Delete(pTextTail->pTextInstance);
@@ -973,11 +976,15 @@ void CPythonTextTail::Initialize()
 
 void CPythonTextTail::Destroy()
 {
-	m_TextTailPool.Clear();
+	Clear();
 }
 
 void CPythonTextTail::Clear()
 {
+	// ZiiNAN: Release native text/mark owners before the pool storage is destroyed.
+	for (auto& entry : m_CharacterTextTailMap) DeleteTextTail(entry.second);
+	for (auto& entry : m_ItemTextTailMap) DeleteTextTail(entry.second);
+	for (auto& entry : m_ChatTailMap) DeleteTextTail(entry.second);
 	m_CharacterTextTailMap.clear();
 	m_CharacterTextTailList.clear();
 	m_ItemTextTailMap.clear();

@@ -30,7 +30,9 @@ void Submit(const void* pdt,uint32_t count,CGraphicFontTexture* font,HRESULT res
     D3DVIEWPORT9 viewport{}; RECT clip{}; DWORD scissor=0;
     if(FAILED(device->GetViewport(&viewport)) || FAILED(device->GetScissorRect(&clip)) ||
        FAILED(device->GetRenderState(D3DRS_SCISSORTESTENABLE,&scissor))) { Failure("text viewport/scissor"); return; }
-    draw.ui=true; draw.strip=indexedQuad; draw.depthTest=draw.depthWrite=false; draw.fog=0;
+    draw.ui=true; draw.strip=indexedQuad; draw.fog=0;
+    draw.floatingText=floatingTextDepth!=0; // ZiiNAN: Diligent floating text rendering
+    if(!draw.floatingText) draw.depthTest=draw.depthWrite=false;
     draw.viewport={viewport.X,viewport.Y,viewport.Width,viewport.Height};
     draw.scissor=scissor!=0; draw.clip={clip.left,clip.top,clip.right,clip.bottom};
     if(draw.scissor && (clip.right<=clip.left || clip.bottom<=clip.top)) return;

@@ -48,11 +48,8 @@ EffectRenderScope::EffectRenderScope(Renderer::EffectResources& resources,const 
     owner=nullptr; asset=filename; part=component;
     if(!Renderer::effectRenderer || !Renderer::effectWorldFrame) return;
     Frame();
-    std::string path=filename ? filename : "";
-    std::replace(path.begin(),path.end(),'\\','/');
-    std::transform(path.begin(),path.end(),path.begin(),[](unsigned char c) { return char(std::tolower(c)); });
-    // Damage numbers share EffectLib, but are explicitly outside milestone 7.
-    if(path.find("effect/affect/damagevalue/")==std::string::npos) owner=&resources;
+    // ZiiNAN: Diligent floating text rendering; damage keeps its native effect/texture lifetime.
+    owner=&resources;
 }
 EffectRenderScope::~EffectRenderScope()
 { owner=static_cast<Renderer::EffectResources*>(previous); asset=previousAsset; part=previousPart; }

@@ -30,7 +30,9 @@ void Submit(const void* pdt,uint32_t count,Primitive primitive,CGraphicImage* im
     D3DVIEWPORT9 viewport{}; RECT clip{}; DWORD scissor=0;
     if(FAILED(device->GetViewport(&viewport)) || FAILED(device->GetScissorRect(&clip)) ||
        FAILED(device->GetRenderState(D3DRS_SCISSORTESTENABLE,&scissor))) { Failure("UI viewport/scissor snapshot"); return; }
-    draw.ui=true; draw.depthTest=draw.depthWrite=false; draw.fog=0;
+    draw.ui=true; draw.fog=0;
+    draw.floatingText=floatingTextDepth!=0; // ZiiNAN: Ground-label boxes and guild marks share native tail depth.
+    if(!draw.floatingText) draw.depthTest=draw.depthWrite=false;
     draw.lines=primitive==Primitive::Lines; draw.strip=primitive==Primitive::Strip || primitive==Primitive::IndexedQuad;
     draw.viewport={viewport.X,viewport.Y,viewport.Width,viewport.Height};
     draw.scissor=scissor!=0; draw.clip={clip.left,clip.top,clip.right,clip.bottom};

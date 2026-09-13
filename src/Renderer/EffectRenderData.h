@@ -41,6 +41,7 @@ struct EffectDraw
     uint32_t fog=0,textureCoordinates=0,textureTransformFlags=0;
     // ZiiNAN: UI-only draw topology/viewport/scissor; world defaults remain unchanged.
     bool lines=false,ui=false,scissor=false;
+    bool floatingText=false; // ZiiNAN: Native depth is allowed only for projected world labels.
     std::array<uint32_t,4> viewport{};
     std::array<int32_t,4> clip{};
     uint32_t colorWriteMask=15;
@@ -50,7 +51,8 @@ inline bool EffectArgumentSupported(uint32_t arg) { return (arg&15)<=3 && (arg&~
 inline bool EffectDrawValid(const EffectDraw& d,uint32_t count)
 {
     return (d.lines ? count>=2 && count%2==0 : count>=3 && (d.strip || count%3==0)) &&
-        (!d.lines || d.ui) && (!d.scissor || d.ui) && (!d.ui || (d.viewport[2] && d.viewport[3] && !d.depthTest && !d.depthWrite && !d.fog)) &&
+        (!d.lines || d.ui) && (!d.scissor || d.ui) && (!d.floatingText || d.ui) &&
+        (!d.ui || (d.viewport[2] && d.viewport[3] && (d.floatingText || (!d.depthTest && !d.depthWrite)) && !d.fog)) &&
         d.src>=1 && d.src<=13 && d.dst>=1 && (d.dst<=11 || d.dst==13) &&
         d.blendOp>=1 && d.blendOp<=5 && d.cull<=2 && d.depthFunction>=1 && d.depthFunction<=8 &&
         d.alphaFunction>=1 && d.alphaFunction<=8 && d.alphaReference<=255 && d.fog<=3 &&

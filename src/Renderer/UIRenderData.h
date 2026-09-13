@@ -13,6 +13,15 @@ public:
 inline IUIRenderer* uiRenderer=nullptr;
 inline bool uiFrame=false,uiMode=false;
 inline uint32_t uiSuppressionDepth=0;
+// ZiiNAN: Diligent floating text rendering; preserve native projected-tail depth only in this scope.
+inline uint32_t floatingTextDepth=0;
+struct FloatingTextScope
+{
+    FloatingTextScope() { ++floatingTextDepth; }
+    ~FloatingTextScope() { --floatingTextDepth; }
+    FloatingTextScope(const FloatingTextScope&)=delete;
+    FloatingTextScope& operator=(const FloatingTextScope&)=delete;
+};
 inline bool UIActive() { return uiRenderer && uiFrame && uiMode && !uiSuppressionDepth; }
 struct UIExcludeScope
 {

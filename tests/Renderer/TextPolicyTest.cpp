@@ -14,7 +14,7 @@ int main()
     if(TextActive()) return 2;
     uiFrame=uiMode=true;
     if(!TextActive()) return 3;
-    { UIExcludeScope nameplates; if(TextActive()) return 4;
+    { UIExcludeScope eventText; if(TextActive()) return 4;
       { UIExcludeScope nested; if(TextActive()) return 5; } }
     if(!TextActive()) return 6;
     uiMode=false; if(TextActive()) return 7;
@@ -24,5 +24,13 @@ int main()
     if(draw.colorWriteMask!=15 || !EffectDrawValid(draw,4)) return 9;
     for(uint32_t mask=0;mask<16;++mask) { draw.colorWriteMask=mask; if(!EffectDrawValid(draw,4)) return 10; }
     draw.colorWriteMask=16; if(EffectDrawValid(draw,4)) return 11;
+    draw.colorWriteMask=15; draw.depthTest=draw.depthWrite=true;
+    if(EffectDrawValid(draw,4)) return 12;
+    draw.floatingText=true; if(!EffectDrawValid(draw,4)) return 13;
+    draw.ui=false; if(EffectDrawValid(draw,4)) return 14;
+    { FloatingTextScope outer; if(floatingTextDepth!=1) return 15;
+      { FloatingTextScope inner; if(floatingTextDepth!=2) return 16; }
+      if(floatingTextDepth!=1) return 17; }
+    if(floatingTextDepth) return 18;
     std::cout<<"Text startup/frame/UI gate, nested special-text exclusion, complete color mask: PASS\n";
 }

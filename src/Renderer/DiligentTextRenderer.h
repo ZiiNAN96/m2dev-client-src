@@ -18,7 +18,7 @@ public:
     TerrainTexturePtr UploadTexture(const TerrainTextureData& data) override { return m_draws.UploadTexture(data); }
     void Draw(const EffectVertex* vertices,uint32_t count,const TerrainTexturePtr& image,const EffectDraw& d) override
     {
-        if(!d.ui || d.depthTest || d.depthWrite || d.fog || d.lines) { ReportFailure(); return; }
+        if(!d.ui || (!d.floatingText && (d.depthTest || d.depthWrite)) || d.fog || d.lines) { ReportFailure(); return; }
         m_draws.Draw(vertices,count,image,d,EffectPart::Mesh);
     }
     uint32_t DrawCount() const { return m_draws.DrawCount(EffectPart::Mesh); }

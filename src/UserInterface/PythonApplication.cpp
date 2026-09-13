@@ -1123,13 +1123,13 @@ void CPythonApplication::Destroy()
 
 	m_pyMiniMap.Destroy();
 
-	m_pyTextTail.Destroy();
-	m_pyChat.Destroy();	
+	m_pyChat.Destroy();
 	m_kChrMgr.Destroy();
 	m_RaceManager.Destroy();
 
 	m_pyItem.Destroy();
 	m_kItemMgr.Destroy();
+	m_pyTextTail.Destroy(); // ZiiNAN: Floating-text owners detach before the tail pool is released.
 
 	m_pyBackground.Destroy();
 

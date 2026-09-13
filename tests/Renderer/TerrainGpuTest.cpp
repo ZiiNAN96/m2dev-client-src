@@ -205,6 +205,8 @@ static void TextureChecks(LegacyProbe& screen, Renderer::LegacyD3D9Backend& lega
 #include "WorldGpuChecks.h"
 #include "UIGpuChecks.h" // ZiiNAN: Native UI pixels and real Image/SubImage resource lifetime.
 #include "TextGpuChecks.h"
+#include "FloatingTextGpuChecks.h"
+#include "DamageRuntimeGpuChecks.h"
 
 int main()
 {
@@ -325,6 +327,8 @@ int main()
             WorldGpuChecks(legacy,modern);
             UIGpuChecks(screen,legacy,modern);
             TextGpuChecks(screen,legacy,modern);
+            FloatingTextGpuChecks(screen,legacy,modern);
+            DamageRuntimeGpuChecks(screen,legacy,modern);
             EffectRuntimeGpuChecks(screen,legacy,modern);
             patch.Clear(); Check(lifetime.expired(), "patch releases geometry");
             CTerrainPatch::SOFTWARE_TRANSFORM_PATCH_ENABLE = oldSoftware;
