@@ -6,6 +6,8 @@
 #include "DiligentTreeRenderer.h" // ZiiNAN: Diligent SpeedTree rendering integration
 #include "DiligentEffectRenderer.h" // ZiiNAN: Diligent effect rendering integration
 #include "DiligentWorldRenderer.h" // ZiiNAN: Diligent water and special world rendering.
+#include "DiligentUIRenderer.h" // ZiiNAN: UI shares the existing world surface, never a new widget system.
+#include "DiligentTextRenderer.h"
 #include <windows.h>
 #include <fstream>
 
@@ -24,6 +26,8 @@ class TerrainPresentation final : public ITerrainPresentation
     std::unique_ptr<DiligentTreeRenderer> m_trees;
     std::unique_ptr<DiligentEffectRenderer> m_effects;
     std::unique_ptr<DiligentWorldRenderer> m_world;
+    std::unique_ptr<DiligentUIRenderer> m_ui;
+    std::unique_ptr<DiligentTextRenderer> m_text;
     std::ofstream m_diagnostics;
     uint32_t m_frame = 0;
 public:
@@ -31,7 +35,7 @@ public:
     {
         if (terrainRenderer || !IsWindow(parent) || !width || !height) return false;
         m_parent = parent;
-        // Separate HWND/swapchain, no D3D9/D3D11 shared textures or UI compositing.
+        // Separate HWND/swapchain, no D3D9/D3D11 shared textures. M9 composes native UI primitives here.
         // Disabled child receives no input: existing game camera and UI handlers stay on the parent.
         m_surface = CreateWindowExW(0, L"STATIC", L"Metin2 Diligent terrain", WS_CHILD | WS_DISABLED,
                                     0, 0, width, height, parent, nullptr, GetModuleHandleW(nullptr), nullptr);
@@ -49,6 +53,11 @@ public:
         if(!m_effects->Initialize()) return false;
         m_world=std::make_unique<DiligentWorldRenderer>(m_backend);
         if(!m_world->Initialize()) return false;
+        m_ui=std::make_unique<DiligentUIRenderer>(m_backend);
+        if(!m_ui->Initialize()) return false;
+        // ZiiNAN: Diligent text rendering integration; initialized before native fonts load.
+        m_text=std::make_unique<DiligentTextRenderer>(m_backend);
+        if(!m_text->Initialize()) return false;
         const LONG_PTR style = GetWindowLongPtrW(parent, GWL_STYLE);
         m_addedClipChildren = !(style & WS_CLIPCHILDREN);
         if (m_addedClipChildren) SetWindowLongPtrW(parent, GWL_STYLE, style | WS_CLIPCHILDREN);
@@ -58,12 +67,30 @@ public:
         treeRenderer=m_trees.get();
         effectRenderer=m_effects.get();
         worldRenderer=m_world.get();
+        uiRenderer=m_ui.get();
+        textRenderer=m_text.get();
         // Experimental backend only; bounded frame summaries go to a file, never the console.
         m_diagnostics.open("terrain-renderer.log", std::ios::trunc);
         return true;
     }
     ~TerrainPresentation() override
     {
+        // ZiiNAN: Native image owners release UI handles before the renderer's final bindings/buffers.
+        uiFrame=uiMode=false;
+        if(textRenderer==m_text.get()) textRenderer=nullptr;
+        if(m_text) {
+            m_text->ResetFrame(); m_text->Shutdown();
+            if(m_diagnostics) m_diagnostics << "shutdown text_textures=" << m_text->LiveTextureCount()
+                << " text_buffers=" << m_text->LiveBufferCount() << std::endl;
+        }
+        m_text.reset();
+        if(uiRenderer==m_ui.get()) uiRenderer=nullptr;
+        if(m_ui) {
+            m_ui->ResetFrame(); m_ui->Shutdown();
+            if(m_diagnostics) m_diagnostics << "shutdown ui_textures=" << m_ui->LiveTextureCount()
+                << " ui_buffers=" << m_ui->LiveBufferCount() << std::endl;
+        }
+        m_ui.reset();
         worldSurfaceFrame=false;
         if(worldRenderer==m_world.get()) worldRenderer=nullptr;
         if(m_world) {
@@ -126,7 +153,10 @@ public:
         m_trees->ResetFrame(); treeWorldFrame=false;
         m_effects->ResetFrame(); effectWorldFrame=false; ++effectFrameSerial; effectVisibleParticles=0;
         m_world->ResetFrame(); worldSurfaceFrame=false; ++worldSurfaceSerial;
+        m_ui->ResetFrame(); uiFrame=uiMode=false;
+        m_text->ResetFrame();
         if (!m_backend.BeginFrame()) return false;
+        uiFrame=true;
         actorWorldFrame=worldWasVisible;
         treeWorldFrame=worldWasVisible;
         effectWorldFrame=worldWasVisible;
@@ -139,16 +169,23 @@ public:
     {
         if (!m_inFrame) return false;
         m_backend.EndFrame();
+        uiFrame=uiMode=false;
         actorWorldFrame=false; // ZiiNAN: Actor submissions only inside a world frame.
         treeWorldFrame=false;
         m_inFrame = false;
         effectWorldFrame=false;
         worldSurfaceFrame=false;
-        if (m_terrain->Failed() || m_objects->Failed() || m_actors->Failed() || m_trees->Failed() || m_effects->Failed() || m_world->Failed()) return false;
-        const bool visible = m_terrain->HasTerrain();
+        if (m_terrain->Failed() || m_objects->Failed() || m_actors->Failed() || m_trees->Failed() || m_effects->Failed() || m_world->Failed() || m_ui->Failed() || m_text->Failed()) return false;
+        const bool visible = m_terrain->HasTerrain() || m_ui->DrawCount()!=0 || m_text->DrawCount()!=0;
         if (m_diagnostics && (++m_frame % 120 == 0 || visible != m_visible))
         {
             const auto size=m_terrain->LastTextureSize();
+            m_diagnostics << "text_draws=" << m_text->DrawCount() << " text_vertices=" << m_text->Vertices()
+                << " text_textures=" << m_text->LiveTextureCount() << std::endl;
+            m_diagnostics << "ui_draws=" << m_ui->DrawCount() << " ui_quads=" << m_ui->Quads()
+                << " ui_lines=" << m_ui->Lines() << " ui_vertices=" << m_ui->Vertices()
+                << " ui_scissor_binds=" << m_ui->ScissorBinds() << " ui_texture_binds=" << m_ui->TextureBinds()
+                << " ui_textures=" << m_ui->LiveTextureCount() << std::endl;
             m_diagnostics << "water_patches=" << m_world->DrawCount(WorldPart::Water)
                 << " water_draws=" << m_world->DrawCount(WorldPart::Water) << " water_vertices=" << m_world->WaterVertices()
                 << " water_indices=0 water_geometry=" << waterGeometryCount.load() << " water_textures=" << waterTexturesResident

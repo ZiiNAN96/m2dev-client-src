@@ -2,6 +2,7 @@
 #include "EterLib/StateManager.h"
 #include "EterLib/JpegFile.h"
 #include "PythonGraphic.h"
+#include "EterLib/UIRenderBridge.h"
 #include <utf8.h>
 
 bool g_isScreenShotKey = false;
@@ -22,6 +23,7 @@ float CPythonGraphic::GetOrthoDepth()
 
 void CPythonGraphic::SetInterfaceRenderState()
 {
+	Renderer::uiMode=true; // ZiiNAN: Explicit UI boundary, not inferred from the last world draw.
 	STATEMANAGER.SetTransform(D3DTS_PROJECTION, &ms_matIdentity);
  	STATEMANAGER.SetTransform(D3DTS_VIEW, &ms_matIdentity);
 	STATEMANAGER.SetTransform(D3DTS_WORLD, &ms_matIdentity);
@@ -43,6 +45,7 @@ void CPythonGraphic::SetInterfaceRenderState()
 
 void CPythonGraphic::SetGameRenderState()
 {
+	Renderer::uiMode=false;
 	STATEMANAGER.SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_ANISOTROPIC);
 	STATEMANAGER.SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_ANISOTROPIC);
 	STATEMANAGER.SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
@@ -432,6 +435,7 @@ void CPythonGraphic::RenderImage(CGraphicImageInstance* pImageInstance, float x,
 
 	c_pTexture->SetTextureStage(0);
 
+	UIRenderBridge::ImageScope uiImage(pImageInstance->GetGraphicImagePointer());
 	RenderTextureBox(x,
 					 y,
 					 x + width,
@@ -489,7 +493,10 @@ void CPythonGraphic::RenderAlphaImage(CGraphicImageInstance* pImageInstance, flo
 	// 2004.11.18.myevan.DrawIndexPrimitiveUP -> DynamicVertexBuffer
 	CGraphicBase::SetDefaultIndexBuffer(DEFAULT_IB_FILL_RECT);
 	if (CGraphicBase::SetPDTStream(vertices, 4))
-		STATEMANAGER.DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 4, 0, 2);
+	{
+		const auto nativeDraw=STATEMANAGER.DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 4, 0, 2);
+		UIRenderBridge::IndexedQuad(vertices,pImageInstance->GetGraphicImagePointer(),nativeDraw);
+	}
 }
 
 void CPythonGraphic::RenderCoolTimeBox(float fxCenter, float fyCenter, float fRadius, float fTime)
@@ -568,7 +575,9 @@ void CPythonGraphic::RenderCoolTimeBox(float fxCenter, float fyCenter, float fRa
 		STATEMANAGER.SetTexture(0, NULL);
 		STATEMANAGER.SetTexture(1, NULL);
 		STATEMANAGER.SetFVF(D3DFVF_XYZ|D3DFVF_DIFFUSE|D3DFVF_TEX1);
-		STATEMANAGER.DrawPrimitive(D3DPT_TRIANGLEFAN, 0, iTriCount);
+		const auto nativeDraw=STATEMANAGER.DrawPrimitive(D3DPT_TRIANGLEFAN, 0, iTriCount);
+		// ZiiNAN: Keep original cooldown geometry/timing; expand only the fan topology.
+		UIRenderBridge::Submit(vertices.data(),UINT(vertices.size()),UIRenderBridge::Primitive::Fan,nullptr,nativeDraw);
 		STATEMANAGER.RestoreTextureStageState(0, D3DTSS_COLORARG1);
 		STATEMANAGER.RestoreTextureStageState(0, D3DTSS_COLOROP);
 		STATEMANAGER.RestoreTextureStageState(0, D3DTSS_ALPHAARG1);

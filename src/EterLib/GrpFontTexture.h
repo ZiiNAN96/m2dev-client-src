@@ -2,6 +2,7 @@
 
 #include "GrpTexture.h"
 #include "GrpImageTexture.h"
+#include "Renderer/TextRenderData.h"
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -43,6 +44,7 @@ class CGraphicFontTexture : public CGraphicTexture
 		void SelectTexture(DWORD dwTexture);
 
 		bool UpdateTexture();
+		Renderer::TerrainTexturePtr GetTextTexture(IDirect3DBaseTexture9* nativePage);
 
 		TCharacterInfomation* GetCharacterInfomation(wchar_t keyValue);
 		TCharacterInfomation* UpdateCharacterInfomation(TCharacterKey keyValue);
@@ -55,6 +57,7 @@ class CGraphicFontTexture : public CGraphicTexture
 		void Initialize();
 
 		bool AppendTexture();
+		void UploadTextPage();
 
 	protected:
 		typedef std::vector<CGraphicImageTexture*> TGraphicImageTexturePointerVector;
@@ -69,6 +72,7 @@ class CGraphicFontTexture : public CGraphicTexture
 		int m_atlasHeight;
 
 		TGraphicImageTexturePointerVector m_pFontTextureVector;
+		std::vector<Renderer::TerrainTexturePtr> m_textTextures;
 
 		TCharacterInfomationMap m_charInfoMap;
 

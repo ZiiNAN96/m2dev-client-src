@@ -2,6 +2,7 @@
 #include "GrpScreen.h"
 #include "Camera.h"
 #include "StateManager.h"
+#include "UIRenderBridge.h"
 
 #include <comdef.h>
 #include <utf8.h>
@@ -33,7 +34,8 @@ void CScreen::RenderLine3d(float sx, float sy, float sz, float ex, float ey, flo
 		STATEMANAGER.SetTexture(0, NULL);
 		STATEMANAGER.SetTexture(1, NULL);
 		STATEMANAGER.SetFVF(D3DFVF_XYZ|D3DFVF_DIFFUSE|D3DFVF_TEX1);
-		STATEMANAGER.DrawPrimitive(D3DPT_LINELIST, 0, 1);
+		const auto nativeDraw=STATEMANAGER.DrawPrimitive(D3DPT_LINELIST, 0, 1);
+		UIRenderBridge::Submit(vertices,2,UIRenderBridge::Primitive::Lines,nullptr,nativeDraw);
 	}
 }
 
@@ -65,7 +67,8 @@ void CScreen::RenderBox3d(float sx, float sy, float sz, float ex, float ey, floa
 		STATEMANAGER.SetTexture(0, NULL);
 		STATEMANAGER.SetTexture(1, NULL);
 		STATEMANAGER.SetFVF(D3DFVF_XYZ|D3DFVF_DIFFUSE|D3DFVF_TEX1);
-		STATEMANAGER.DrawPrimitive(D3DPT_LINELIST, 0, 4);
+		const auto nativeDraw=STATEMANAGER.DrawPrimitive(D3DPT_LINELIST, 0, 4);
+		UIRenderBridge::Submit(vertices,8,UIRenderBridge::Primitive::Lines,nullptr,nativeDraw);
 	}
 }
 
@@ -88,7 +91,8 @@ void CScreen::RenderBar3d(float sx, float sy, float sz, float ex, float ey, floa
 		STATEMANAGER.SetTexture(0, NULL);
 		STATEMANAGER.SetTexture(1, NULL);
 		STATEMANAGER.SetFVF(D3DFVF_XYZ|D3DFVF_DIFFUSE|D3DFVF_TEX1);
-		STATEMANAGER.DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
+		const auto nativeDraw=STATEMANAGER.DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
+		UIRenderBridge::Quad(vertices,nullptr,nativeDraw); // ZiiNAN: Only captured in explicit UI mode.
 	}
 }
 
@@ -110,7 +114,8 @@ void CScreen::RenderBar3d(const D3DXVECTOR3 * c_pv3Positions)
 		STATEMANAGER.SetTexture(0, NULL);
 		STATEMANAGER.SetTexture(1, NULL);
 		STATEMANAGER.SetFVF(D3DFVF_XYZ|D3DFVF_DIFFUSE|D3DFVF_TEX1);
-		STATEMANAGER.DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
+		const auto nativeDraw=STATEMANAGER.DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
+		UIRenderBridge::Quad(vertices,nullptr,nativeDraw);
 	}
 }
 
@@ -133,7 +138,8 @@ void CScreen::RenderGradationBar3d(float sx, float sy, float sz, float ex, float
 		STATEMANAGER.SetTexture(0, NULL);
 		STATEMANAGER.SetTexture(1, NULL);
 		STATEMANAGER.SetFVF(D3DFVF_XYZ|D3DFVF_DIFFUSE|D3DFVF_TEX1);
-		STATEMANAGER.DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
+		const auto nativeDraw=STATEMANAGER.DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
+		UIRenderBridge::Quad(vertices,nullptr,nativeDraw);
 	}
 }
 
@@ -406,7 +412,10 @@ void CScreen::RenderTextureBox(float sx, float sy, float ex, float ey, float z, 
 	// 2004.11.18.myevan.DrawIndexPrimitiveUP -> DynamicVertexBuffer
 	SetDefaultIndexBuffer(DEFAULT_IB_FILL_RECT);
 	if (SetPDTStream(vertices, 4))
-		STATEMANAGER.DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 4, 0, 2);
+	{
+		const auto nativeDraw=STATEMANAGER.DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 4, 0, 2);
+		if(UIRenderBridge::scopedImage) UIRenderBridge::IndexedQuad(vertices,UIRenderBridge::scopedImage,nativeDraw);
+	}
 	//OLD: STATEMANAGER.DrawIndexedPrimitiveUP(D3DPT_TRIANGLELIST, 0, 4, 2, &ms_fillRectIdxVector[0], D3DFMT_INDEX16, vertices, sizeof(TPDTVertex));
 }
 

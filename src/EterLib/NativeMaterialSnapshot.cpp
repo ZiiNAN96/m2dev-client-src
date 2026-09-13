@@ -44,8 +44,10 @@ bool CaptureNativeMaterial(Renderer::EffectDraw& d,std::string& error)
         D3DSURFACE_DESC desc{}; target->GetDesc(&desc); target->Release();
         d.opaqueTargetAlpha=desc.Format==D3DFMT_X8R8G8B8 || desc.Format==D3DFMT_R5G6B5;
     }
+    // ZiiNAN: Diligent text rendering integration; LCD passes preserve target alpha.
+    d.colorWriteMask=rs(D3DRS_COLORWRITEENABLE)&15u;
     const bool valid=ok && !shaders && !secondUsed && !rs(D3DRS_SEPARATEALPHABLENDENABLE) && !rs(D3DRS_STENCILENABLE) &&
-        (rs(D3DRS_COLORWRITEENABLE)&15)==15 && rs(D3DRS_FILLMODE)==D3DFILL_SOLID;
+        d.colorWriteMask<=15 && rs(D3DRS_FILLMODE)==D3DFILL_SOLID;
     if(!valid) error="native snapshot shaders="+std::to_string(shaders)+" second="+std::to_string(secondUsed)+
         " separate="+std::to_string(rs(D3DRS_SEPARATEALPHABLENDENABLE))+" stencil="+std::to_string(rs(D3DRS_STENCILENABLE))+
         " colorwrite="+std::to_string(rs(D3DRS_COLORWRITEENABLE))+" fill="+std::to_string(rs(D3DRS_FILLMODE));

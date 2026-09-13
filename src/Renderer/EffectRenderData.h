@@ -39,12 +39,19 @@ struct EffectDraw
     uint32_t src=5,dst=6,blendOp=1,cull=0,depthFunction=4,alphaFunction=5,alphaReference=0;
     uint32_t colorOp=4,colorArg1=3,colorArg2=2,alphaOp=4,alphaArg1=3,alphaArg2=2;
     uint32_t fog=0,textureCoordinates=0,textureTransformFlags=0;
+    // ZiiNAN: UI-only draw topology/viewport/scissor; world defaults remain unchanged.
+    bool lines=false,ui=false,scissor=false;
+    std::array<uint32_t,4> viewport{};
+    std::array<int32_t,4> clip{};
+    uint32_t colorWriteMask=15;
 };
 inline bool EffectColorOpSupported(uint32_t op) { return op>=1 && op<=6 || op==8; }
 inline bool EffectArgumentSupported(uint32_t arg) { return (arg&15)<=3 && (arg&~63u)==0; }
 inline bool EffectDrawValid(const EffectDraw& d,uint32_t count)
 {
-    return count>=3 && (d.strip || count%3==0) && d.src>=1 && d.src<=13 && d.dst>=1 && (d.dst<=11 || d.dst==13) &&
+    return (d.lines ? count>=2 && count%2==0 : count>=3 && (d.strip || count%3==0)) &&
+        (!d.lines || d.ui) && (!d.scissor || d.ui) && (!d.ui || (d.viewport[2] && d.viewport[3] && !d.depthTest && !d.depthWrite && !d.fog)) &&
+        d.src>=1 && d.src<=13 && d.dst>=1 && (d.dst<=11 || d.dst==13) &&
         d.blendOp>=1 && d.blendOp<=5 && d.cull<=2 && d.depthFunction>=1 && d.depthFunction<=8 &&
         d.alphaFunction>=1 && d.alphaFunction<=8 && d.alphaReference<=255 && d.fog<=3 &&
         (EffectColorOpSupported(d.colorOp) || d.colorOp==20) && EffectColorOpSupported(d.alphaOp) &&
@@ -54,7 +61,7 @@ inline bool EffectDrawValid(const EffectDraw& d,uint32_t count)
         (d.textureTransformFlags==0 || d.textureTransformFlags==2) &&
         d.sampler.addressU>=1 && d.sampler.addressU<=5 && d.sampler.addressV>=1 && d.sampler.addressV<=5 &&
         d.sampler.min<=3 && d.sampler.mag<=3 && d.sampler.mip<=2 && d.sampler.anisotropy>=1 && d.sampler.anisotropy<=16 &&
-        std::isfinite(d.sampler.lodBias);
+        d.colorWriteMask<=15 && std::isfinite(d.sampler.lodBias);
 }
 struct EffectRuntimeCounts { uint32_t instances=0,systems=0,particles=0; };
 inline EffectRuntimeCounts effectRuntime;

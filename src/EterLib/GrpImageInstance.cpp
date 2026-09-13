@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "GrpImageInstance.h"
 #include "StateManager.h"
+#include "UIRenderBridge.h"
 
 #include "EterBase/CRC32.h"
 //STATEMANAGER.SaveRenderState(D3DRS_SRCBLEND, D3DBLEND_INVDESTCOLOR);
@@ -91,7 +92,8 @@ void CGraphicImageInstance::OnRender()
 		STATEMANAGER.SetTexture(0, pTexture->GetD3DTexture());
 		STATEMANAGER.SetTexture(1, NULL);
 		STATEMANAGER.SetFVF(D3DFVF_XYZ|D3DFVF_DIFFUSE|D3DFVF_TEX1);
-		STATEMANAGER.DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 4, 0, 2);	
+		const auto nativeDraw=STATEMANAGER.DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 4, 0, 2);
+		UIRenderBridge::IndexedQuad(vertices,pImage,nativeDraw); // ZiiNAN: Existing UI quad, no widget changes.
 	}
 	//OLD: STATEMANAGER.DrawIndexedPrimitiveUP(D3DPT_TRIANGLELIST, 0, 4, 2, c_FillRectIndices, D3DFMT_INDEX16, vertices, sizeof(TPDTVertex));	
 	////////////////////////////////////////////////////////////	

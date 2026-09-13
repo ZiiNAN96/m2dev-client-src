@@ -22,6 +22,15 @@ add_executable(RendererWorldPolicyTest WorldPolicyTest.cpp)
 target_link_libraries(RendererWorldPolicyTest PRIVATE M2RendererInterface)
 add_test(NAME Renderer.WorldPolicy COMMAND RendererWorldPolicyTest)
 
+# ZiiNAN: UI contract remains testable without Diligent or Python UI startup.
+add_executable(RendererUIPolicyTest UIPolicyTest.cpp)
+target_link_libraries(RendererUIPolicyTest PRIVATE M2RendererInterface)
+add_test(NAME Renderer.UIPolicy COMMAND RendererUIPolicyTest)
+
+add_executable(RendererTextPolicyTest TextPolicyTest.cpp)
+target_link_libraries(RendererTextPolicyTest PRIVATE M2RendererInterface)
+add_test(NAME Renderer.TextPolicy COMMAND RendererTextPolicyTest)
+
 # ZiiNAN: Read-only original SpeedTree SDK probe; real asset paths are explicit arguments.
 add_executable(SpeedTreeAssetProbe SpeedTreeAssetProbe.cpp)
 target_link_libraries(SpeedTreeAssetProbe PRIVATE SpeedTree user32)

@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "Renderer/UIRenderData.h"
 #include "EterLib/StateManager.h"
 #include "EterLib/GrpSubImage.h"
 #include "EterLib/Camera.h"
@@ -249,6 +250,7 @@ void CPythonMiniMap::Update(float fCenterX, float fCenterY)
 
 void CPythonMiniMap::Render(float fScreenX, float fScreenY)
 {
+	Renderer::UIExcludeScope excludeMiniMap; // ZiiNAN: Separate masked map renderer, not a normal UI image.
 	CPythonBackground& rkBG=CPythonBackground::Instance();
 	if (!rkBG.IsMapOutdoor())
 		return;
@@ -941,6 +943,7 @@ void CPythonMiniMap::UpdateAtlas()
 
 void CPythonMiniMap::RenderAtlas(float fScreenX, float fScreenY)
 {
+	Renderer::UIExcludeScope excludeAtlas;
 	if (!m_bShowAtlas)
 		return;
 

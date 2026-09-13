@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "GrpImage.h"
 #include "DecodedImageData.h"
+#include "StaticObjectTextureLoader.h"
 
 CGraphicImage::CGraphicImage(const char * c_szFileName, DWORD dwFilter) : 
 CResource(c_szFileName),
@@ -15,11 +16,13 @@ CGraphicImage::~CGraphicImage()
 
 bool CGraphicImage::CreateDeviceObjects()
 {
+	m_uiTexture.reset();
 	return m_imageTexture.CreateDeviceObjects();
 }
 
 void CGraphicImage::DestroyDeviceObjects()
 {
+	m_uiTexture.reset();
 	m_imageTexture.DestroyDeviceObjects();
 }
 
@@ -64,6 +67,7 @@ const RECT& CGraphicImage::GetRectReference() const
 
 bool CGraphicImage::OnLoad(int iSize, const void * c_pvBuf)
 {
+	m_uiTexture.reset();
 	if (!c_pvBuf)
 		return false;
 
@@ -82,6 +86,7 @@ bool CGraphicImage::OnLoad(int iSize, const void * c_pvBuf)
 
 bool CGraphicImage::OnLoadFromDecodedData(const TDecodedImageData& decodedImage)
 {
+	m_uiTexture.reset();
 	if (!decodedImage.IsValid())
 		return false;
 
@@ -99,6 +104,7 @@ bool CGraphicImage::OnLoadFromDecodedData(const TDecodedImageData& decodedImage)
 
 void CGraphicImage::OnClear()
 {
+	m_uiTexture.reset();
 //	Tracef("Image Destroy : %s\n", m_pszFileName);
 	m_imageTexture.Destroy();
 	memset(&m_rect, 0, sizeof(m_rect));
@@ -107,4 +113,10 @@ void CGraphicImage::OnClear()
 bool CGraphicImage::OnIsEmpty() const
 {
 	return m_imageTexture.IsEmpty();
+}
+
+Renderer::TerrainTexturePtr CGraphicImage::GetUITexture(Renderer::ITextureUploader& uploader)
+{
+	if(!m_uiTexture && !IsEmpty()) m_uiTexture=LoadStaticObjectTextureFile(GetFileName(),uploader);
+	return m_uiTexture;
 }

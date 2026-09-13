@@ -203,6 +203,8 @@ static void TextureChecks(LegacyProbe& screen, Renderer::LegacyD3D9Backend& lega
 #include "EffectGpuChecks.h" // ZiiNAN: Original effect material/dynamic upload comparison.
 #include "EffectRuntimeGpuChecks.h"
 #include "WorldGpuChecks.h"
+#include "UIGpuChecks.h" // ZiiNAN: Native UI pixels and real Image/SubImage resource lifetime.
+#include "TextGpuChecks.h"
 
 int main()
 {
@@ -321,6 +323,8 @@ int main()
             TreeGpuChecks(screen,legacy,modern);
             EffectGpuChecks(legacy,modern);
             WorldGpuChecks(legacy,modern);
+            UIGpuChecks(screen,legacy,modern);
+            TextGpuChecks(screen,legacy,modern);
             EffectRuntimeGpuChecks(screen,legacy,modern);
             patch.Clear(); Check(lifetime.expired(), "patch releases geometry");
             CTerrainPatch::SOFTWARE_TRANSFORM_PATCH_ENABLE = oldSoftware;

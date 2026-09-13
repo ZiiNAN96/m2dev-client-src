@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "TextRenderBridge.h"
 #include "GrpTextInstance.h"
 #include "StateManager.h"
 #include "IME.h"
@@ -895,12 +896,16 @@ void CGraphicTextInstance::Render(RECT * pClipRect)
 			STATEMANAGER.SetTexture(0, NULL);
 			CGraphicBase::SetDefaultIndexBuffer(CGraphicBase::DEFAULT_IB_FILL_RECT);
 			if (CGraphicBase::SetPDTStream(vertices, 4))
-				STATEMANAGER.DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 4, 0, 2);
+			{
+				const auto result=STATEMANAGER.DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 4, 0, 2);
+				TextRenderBridge::Submit(vertices,4,nullptr,result,true);
+			}
 		}
 	}
 
 	// LCD subpixel two-pass rendering: correct per-channel alpha blending
-	auto DrawBatchLCD = [](const std::unordered_map<LPDIRECT3DTEXTURE9, std::vector<SVertex>>& batches, bool skipPass2) {
+	// ZiiNAN: Diligent text rendering integration; capture each original LCD pass after its native draw.
+	auto DrawBatchLCD = [pFontTexture](const std::unordered_map<LPDIRECT3DTEXTURE9, std::vector<SVertex>>& batches, bool skipPass2) {
 		for (const auto& [pTexture, vtxBatch] : batches) {
 			if (vtxBatch.empty())
 				continue;
@@ -914,8 +919,9 @@ void CGraphicTextInstance::Render(RECT * pClipRect)
 			STATEMANAGER.SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
 			STATEMANAGER.SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1);
 			STATEMANAGER.SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
-			STATEMANAGER.DrawPrimitiveUP(D3DPT_TRIANGLELIST,
+			const auto maskResult=STATEMANAGER.DrawPrimitiveUP(D3DPT_TRIANGLELIST,
 				vtxBatch.size() / 3, vtxBatch.data(), sizeof(SVertex));
+			TextRenderBridge::Submit(vtxBatch.data(),uint32_t(vtxBatch.size()),pFontTexture,maskResult);
 
 			if (!skipPass2) {
 				// Pass 2: dest.rgb += textColor.rgb * coverage.rgb
@@ -927,8 +933,9 @@ void CGraphicTextInstance::Render(RECT * pClipRect)
 				STATEMANAGER.SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
 				STATEMANAGER.SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
 				STATEMANAGER.SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
-				STATEMANAGER.DrawPrimitiveUP(D3DPT_TRIANGLELIST,
+				const auto colorResult=STATEMANAGER.DrawPrimitiveUP(D3DPT_TRIANGLELIST,
 					vtxBatch.size() / 3, vtxBatch.data(), sizeof(SVertex));
+				TextRenderBridge::Submit(vtxBatch.data(),uint32_t(vtxBatch.size()),pFontTexture,colorResult);
 			}
 		}
 	};
@@ -1018,7 +1025,10 @@ void CGraphicTextInstance::Render(RECT * pClipRect)
 
 		CGraphicBase::SetDefaultIndexBuffer(CGraphicBase::DEFAULT_IB_FILL_RECT);
 		if (CGraphicBase::SetPDTStream(vertices, 4))
-			STATEMANAGER.DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 4, 0, 2);
+		{
+			const auto result=STATEMANAGER.DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 4, 0, 2);
+			TextRenderBridge::Submit(vertices,4,nullptr,result,true);
+		}
 
 		int ulbegin = CIME::GetULBegin();
 		int ulend = CIME::GetULEnd();
@@ -1042,7 +1052,8 @@ void CGraphicTextInstance::Render(RECT * pClipRect)
 			vertices[2].position = TPosition(sx, ey, 0.0f);
 			vertices[3].position = TPosition(ex, ey, 0.0f);
 
-			STATEMANAGER.DrawIndexedPrimitiveUP(D3DPT_TRIANGLELIST, 0, 4, 2, c_FillRectIndices, D3DFMT_INDEX16, vertices, sizeof(TPDTVertex));
+			const auto result=STATEMANAGER.DrawIndexedPrimitiveUP(D3DPT_TRIANGLELIST, 0, 4, 2, c_FillRectIndices, D3DFMT_INDEX16, vertices, sizeof(TPDTVertex));
+			TextRenderBridge::Submit(vertices,4,nullptr,result,true);
 		}
 	}
 

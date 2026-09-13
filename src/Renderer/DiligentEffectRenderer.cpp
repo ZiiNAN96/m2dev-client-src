@@ -205,7 +205,8 @@ void DiligentEffectRenderer::Draw(const EffectVertex* vertices,uint32_t count,co
         if(dst>11) { s.failed=true; return; }
         const uint64_t key=uint64_t(d.strip)|(uint64_t(d.blend)<<1)|(uint64_t(d.depthTest)<<2)|(uint64_t(d.depthWrite)<<3)|
             (uint64_t(d.cull)<<4)|(uint64_t(d.depthFunction)<<6)|(uint64_t(src)<<10)|(uint64_t(dst)<<14)|
-            (uint64_t(d.blendOp)<<18)|(uint64_t(d.opaqueTargetAlpha)<<21);
+            (uint64_t(d.blendOp)<<18)|(uint64_t(d.opaqueTargetAlpha)<<21)|(uint64_t(d.lines)<<22)|(uint64_t(d.scissor)<<23)|
+            (uint64_t(d.colorWriteMask)<<24);
         auto& p=s.pipelines[key];
         if(!p.state) {
             GraphicsPipelineStateCreateInfo info;
@@ -215,11 +216,13 @@ void DiligentEffectRenderer::Draw(const EffectVertex* vertices,uint32_t count,co
             info.PSODesc.ResourceLayout.Variables=variables; info.PSODesc.ResourceLayout.NumVariables=2;
             auto& g=info.GraphicsPipeline; const auto& swap=b.swapChain->GetDesc();
             g.NumRenderTargets=1; g.RTVFormats[0]=swap.ColorBufferFormat; g.DSVFormat=swap.DepthBufferFormat;
-            g.PrimitiveTopology=d.strip ? PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP : PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+            g.PrimitiveTopology=d.lines ? PRIMITIVE_TOPOLOGY_LINE_LIST : d.strip ? PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP : PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
             g.RasterizerDesc.CullMode=d.cull==0 ? CULL_MODE_NONE : CULL_MODE_BACK;
             g.RasterizerDesc.FrontCounterClockwise=d.cull==1; g.RasterizerDesc.DepthClipEnable=True;
+            g.RasterizerDesc.ScissorEnable=d.scissor;
             g.DepthStencilDesc.DepthEnable=d.depthTest; g.DepthStencilDesc.DepthWriteEnable=d.depthWrite; g.DepthStencilDesc.DepthFunc=COMPARISON_FUNCTION(d.depthFunction);
             auto& blend=g.BlendDesc.RenderTargets[0]; blend.BlendEnable=d.blend;
+            blend.RenderTargetWriteMask=COLOR_MASK(d.colorWriteMask);
             blend.SrcBlend=Factor(src,false,d.opaqueTargetAlpha); blend.DestBlend=Factor(dst,false,d.opaqueTargetAlpha);
             blend.SrcBlendAlpha=Factor(src,true,d.opaqueTargetAlpha); blend.DestBlendAlpha=Factor(dst,true,d.opaqueTargetAlpha);
             blend.BlendOp=blend.BlendOpAlpha=BLEND_OPERATION(d.blendOp);
@@ -256,7 +259,8 @@ void DiligentEffectRenderer::Draw(const EffectVertex* vertices,uint32_t count,co
             if(!mapped) { s.failed=true; return; }
             mapped->matrices=d.matrices; mapped->textureTransform=d.textureTransform; mapped->factor=d.factor;
             mapped->fogColor=d.fogColor; mapped->fogParameters=d.fogParameters;
-            const auto& swap=b.swapChain->GetDesc(); mapped->pixelOffset={1.0f/swap.Width,-1.0f/swap.Height,0,0};
+            const auto& swap=b.swapChain->GetDesc();
+            mapped->pixelOffset={1.0f/(d.ui ? d.viewport[2] : swap.Width),-1.0f/(d.ui ? d.viewport[3] : swap.Height),0,0};
             mapped->color={d.colorOp,d.colorArg1,d.colorArg2,d.alphaReference}; mapped->alpha={d.alphaOp,d.alphaArg1,d.alphaArg2,d.alphaFunction};
             mapped->modes={d.fog,uint32_t(d.rangeFog),uint32_t(d.textured),uint32_t(d.alphaTest)};
             mapped->coordinates={d.textureCoordinates,d.textureTransformFlags,0,0};
@@ -264,6 +268,16 @@ void DiligentEffectRenderer::Draw(const EffectVertex* vertices,uint32_t count,co
         p.bindings->GetVariableByName(SHADER_TYPE_PIXEL,"EffectTexture")->Set(texture ? texture->image->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE) : nullptr);
         p.bindings->GetVariableByName(SHADER_TYPE_PIXEL,"EffectSampler")->Set(sampler);
         b.context->SetPipelineState(p.state);
+        // ZiiNAN: UI never inherits a world viewport or a previous widget's scissor state.
+        if(d.ui) {
+            Viewport viewport(float(d.viewport[0]),float(d.viewport[1]),float(d.viewport[2]),float(d.viewport[3]),0,1);
+            const auto& swap=b.swapChain->GetDesc();
+            b.context->SetViewports(1,&viewport,swap.Width,swap.Height);
+            if(d.scissor) {
+                Rect rect(d.clip[0],d.clip[1],d.clip[2],d.clip[3]);
+                b.context->SetScissorRects(1,&rect,swap.Width,swap.Height);
+            }
+        }
         IBuffer* vb=s.vertices; Uint64 offset=0;
         b.context->SetVertexBuffers(0,1,&vb,&offset,RESOURCE_STATE_TRANSITION_MODE_TRANSITION,SET_VERTEX_BUFFERS_FLAG_RESET);
         b.context->SetIndexBuffer(nullptr,0,RESOURCE_STATE_TRANSITION_MODE_TRANSITION);

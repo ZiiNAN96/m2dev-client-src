@@ -6,6 +6,7 @@
 
 #include "EterLib/StateManager.h"
 #include "UserInterface/Locale.h"
+#include "Renderer/UIRenderData.h"
 
 BOOL g_bOutlineBoxEnable = FALSE;
 

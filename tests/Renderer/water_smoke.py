@@ -38,10 +38,19 @@ ASSETS = {
 }
 
 
-def run():
-    width, height = systemSetting.GetWidth(), systemSetting.GetHeight()
+def run(ui_factory=None, title="Metin2 water milestone 8 test", size=None):
+    width, height = size or (systemSetting.GetWidth(), systemSetting.GetHeight())
+    if size and size != (systemSetting.GetWidth(), systemSetting.GetHeight()):
+        raise RuntimeError("UI fixture size must match the native device/window configuration")
     wndMgr.SetScreenSize(width, height)
-    app.Create("Metin2 water milestone 8 test", width, height, 1)
+    if ui_factory:
+        import mouseModule
+        app.SetMouseHandler(mouseModule.mouseController)
+        wndMgr.SetMouseHandler(mouseModule.mouseController)
+    app.Create(title, width, height, 1)
+    if ui_factory:
+        mouseModule.mouseController.Create()
+        mouseModule.mouseController.IsSoftwareCursor = True
     app.SetCameraMaxDistance(40000.0)
     app.SetSightRange(32000)
     app.SetArmorSpecularEnable(True)
@@ -70,6 +79,7 @@ def run():
             self.last_spawn = -1
             self.last_sample = -1
             self.frames = 0
+            self.panels = None
             self.SetSize(width, height)
             self.Show()
 
@@ -115,6 +125,8 @@ def run():
 
         def OnUpdate(self):
             elapsed = time.monotonic() - self.started
+            if self.panels:
+                self.panels.update(elapsed)
             phase = min(int(elapsed / PHASE_SECONDS), len(SCENES) - 1)
             suffix, x, y, mode, distance, pitch = SCENES[phase]
             new_scene = phase != self.phase
@@ -198,6 +210,9 @@ def run():
                 app.Exit()
 
         def OnRender(self):
+            if self.panels and not self.panels.world:
+                grp.SetInterfaceRenderState()
+                return
             x, y, z = self.position
             grp.SetPositionCamera(x, -y, z + 160.0, *self.camera)
             # Exercise the actual world composition, including native Snow/Area/Actor effect calls.
@@ -209,7 +224,13 @@ def run():
             return True
 
     window = EffectWindow()
+    # ZiiNAN: Optional original-UI fixture; M8's default test and production scripts stay unchanged.
+    if ui_factory:
+        window.panels = ui_factory(width, height)
     app.Loop()
+    if window.panels:
+        window.panels.destroy()
+        window.panels = None
     window.clear_effects()
     for vid in (58000, 58001, 58002):
         item.DeleteItem(vid)

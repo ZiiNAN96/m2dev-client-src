@@ -154,3 +154,9 @@ bool CGraphicSubImage::OnIsType(TType type)
 
 	return CGraphicImage::OnIsType(type);
 }
+
+// ZiiNAN: Subimages share the parent's original atlas and its resource lifetime.
+Renderer::TerrainTexturePtr CGraphicSubImage::GetUITexture(Renderer::ITextureUploader& uploader)
+{
+	return m_roImage.IsNull() ? Renderer::TerrainTexturePtr{} : m_roImage->GetUITexture(uploader);
+}

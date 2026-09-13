@@ -4,6 +4,7 @@
 #include "Ref.h"
 #include "Resource.h"
 #include "GrpImageTexture.h"
+#include "Renderer/TerrainRenderData.h"
 
 struct TDecodedImageData;
 
@@ -31,6 +32,8 @@ class CGraphicImage : public CResource
 		CGraphicTexture * GetTexturePointer();
 
 		bool OnLoadFromDecodedData(const TDecodedImageData& decodedImage);
+		// ZiiNAN: Lazy UI texture ownership follows the original image, not a global atlas cache.
+		virtual Renderer::TerrainTexturePtr GetUITexture(Renderer::ITextureUploader& uploader);
 
 	protected:
 		bool OnLoad(int iSize, const void * c_pvBuf);
@@ -43,6 +46,7 @@ class CGraphicImage : public CResource
 		CGraphicImageTexture	m_imageTexture;
 		RECT					m_rect;
 		DWORD					m_dwFilter;
+		Renderer::TerrainTexturePtr m_uiTexture;
 };
 
 #endif

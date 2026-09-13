@@ -16,6 +16,7 @@ class CGraphicSubImage : public CGraphicImage
 		virtual ~CGraphicSubImage();
 
 		bool CreateDeviceObjects();
+		Renderer::TerrainTexturePtr GetUITexture(Renderer::ITextureUploader& uploader) override;
 
 		bool SetImageFileName(const char* c_szFileName);
 

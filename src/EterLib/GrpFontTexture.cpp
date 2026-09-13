@@ -61,6 +61,7 @@ void CGraphicFontTexture::Destroy()
 	m_lpd3dTexture = NULL;
 	CGraphicTexture::Destroy();
 	stl_wipe(m_pFontTextureVector);
+	m_textTextures.clear();
 	m_charInfoMap.clear();
 
 	if (m_ftFace)
@@ -86,6 +87,7 @@ bool CGraphicFontTexture::CreateDeviceObjects()
 		cachedKeys.push_back(pair.first);
 
 	stl_wipe(m_pFontTextureVector);
+	m_textTextures.clear();
 	m_charInfoMap.clear();
 	m_x = 0;
 	m_y = 0;
@@ -112,6 +114,7 @@ void CGraphicFontTexture::DestroyDeviceObjects()
 {
 	m_lpd3dTexture = NULL;
 	stl_wipe(m_pFontTextureVector);
+	m_textTextures.clear();
 }
 
 bool CGraphicFontTexture::Create(const char* c_szFontName, int fontSize, bool bItalic)
@@ -222,7 +225,36 @@ bool CGraphicFontTexture::UpdateTexture()
 	}
 
 	pFontTexture->Unlock();
+	UploadTextPage();
 	return true;
+}
+
+// ZiiNAN: Diligent text rendering integration; publish the existing CPU atlas before page recycling.
+void CGraphicFontTexture::UploadTextPage()
+{
+	if (!Renderer::textRenderer || !m_pAtlasBuffer || m_pFontTextureVector.empty())
+		return;
+	m_textTextures.resize(m_pFontTextureVector.size());
+	Renderer::TerrainTextureData data;
+	data.width=m_atlasWidth; data.height=m_atlasHeight; data.format=Renderer::TerrainTextureFormat::BGRA8;
+	data.mips.push_back({m_pAtlasBuffer,size_t(m_atlasWidth)*m_atlasHeight*sizeof(DWORD),size_t(m_atlasWidth)*sizeof(DWORD)});
+	m_textTextures.back()=Renderer::textRenderer->UploadTexture(data);
+}
+
+Renderer::TerrainTexturePtr CGraphicFontTexture::GetTextTexture(IDirect3DBaseTexture9* nativePage)
+{
+	if (!Renderer::textRenderer)
+		return {};
+	for (size_t i=0;i<m_pFontTextureVector.size();++i)
+	{
+		if (m_pFontTextureVector[i]->GetD3DTexture()!=nativePage)
+			continue;
+		// Whitespace-only current pages have no dirty glyph pixels, but still form degenerate native quads.
+		if (i+1==m_pFontTextureVector.size() && (i>=m_textTextures.size() || !m_textTextures[i]))
+			UploadTextPage();
+		return i<m_textTextures.size() ? m_textTextures[i] : Renderer::TerrainTexturePtr{};
+	}
+	return {};
 }
 
 float CGraphicFontTexture::GetKerning(wchar_t prev, wchar_t cur)

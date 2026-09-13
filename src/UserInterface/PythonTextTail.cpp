@@ -2,6 +2,7 @@
 // 캐릭터를 따라다니는 텍스트 관련 소스 (이름, 길드이름, 길드마크 등)
 //
 #include "stdafx.h"
+#include "Renderer/UIRenderData.h"
 #include "InstanceBase.h"
 #include "resource.h"
 #include "PythonTextTail.h"
@@ -279,6 +280,7 @@ void CPythonTextTail::ArrangeTextTail()
 
 void CPythonTextTail::Render()
 {
+	Renderer::UIExcludeScope excludeTextTail; // ZiiNAN: Nameplates remain outside M9.
 	TTextTailList::iterator itor;
 
 	for (itor = m_CharacterTextTailList.begin(); itor != m_CharacterTextTailList.end(); ++itor)
