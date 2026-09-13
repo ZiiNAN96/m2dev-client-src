@@ -59,6 +59,7 @@ void CGraphicFontTexture::Destroy()
 	m_pAtlasBuffer = nullptr;
 
 	m_lpd3dTexture = NULL;
+    m_source.reset();
 	CGraphicTexture::Destroy();
 	stl_wipe(m_pFontTextureVector);
 	m_textTextures.clear();
@@ -113,6 +114,7 @@ bool CGraphicFontTexture::CreateDeviceObjects()
 void CGraphicFontTexture::DestroyDeviceObjects()
 {
 	m_lpd3dTexture = NULL;
+    m_source.reset();
 	stl_wipe(m_pFontTextureVector);
 	m_textTextures.clear();
 }
@@ -241,13 +243,13 @@ void CGraphicFontTexture::UploadTextPage()
 	m_textTextures.back()=Renderer::textRenderer->UploadTexture(data);
 }
 
-Renderer::TerrainTexturePtr CGraphicFontTexture::GetTextTexture(IDirect3DBaseTexture9* nativePage)
+Renderer::TerrainTexturePtr CGraphicFontTexture::GetTextTexture(TextureBinding page)
 {
 	if (!Renderer::textRenderer)
 		return {};
 	for (size_t i=0;i<m_pFontTextureVector.size();++i)
 	{
-		if (m_pFontTextureVector[i]->GetD3DTexture()!=nativePage)
+		if (m_pFontTextureVector[i]->GetTextureBinding()!=page)
 			continue;
 		// Whitespace-only current pages have no dirty glyph pixels, but still form degenerate native quads.
 		if (i+1==m_pFontTextureVector.size() && (i>=m_textTextures.size() || !m_textTextures[i]))
@@ -441,4 +443,5 @@ void CGraphicFontTexture::SelectTexture(DWORD dwTexture)
 {
 	assert(CheckTextureIndex(dwTexture));
 	m_lpd3dTexture = m_pFontTextureVector[dwTexture]->GetD3DTexture();
+    m_source = m_pFontTextureVector[dwTexture]->GetSource();
 }

@@ -1,8 +1,10 @@
 #include "StdAfx.h"
+#include "EterLib/NativeResourceAudit.h"
 #include "PackLib/PackManager.h"
 #include "GrpImageTexture.h"
 #include "EterImageLib/DDSTextureLoader9.h"
 #include "DecodedImageData.h"
+#include "TextureSource.h"
 
 #include <stb_image.h>
 
@@ -13,6 +15,8 @@
 
 bool CGraphicImageTexture::Lock(int* pRetPitch, void** ppRetPixels, int level)
 {
+	if (m_source) return m_source->Lock(size_t(level), pRetPitch, ppRetPixels);
+	if (!m_lpd3dTexture) return false;
 	D3DLOCKED_RECT lockedRect;
 	if (FAILED(m_lpd3dTexture->LockRect(level, &lockedRect, NULL, 0)))
 		return false;
@@ -24,6 +28,7 @@ bool CGraphicImageTexture::Lock(int* pRetPitch, void** ppRetPixels, int level)
 
 void CGraphicImageTexture::Unlock(int level)
 {
+	if (m_source) { m_source->Unlock(size_t(level)); return; }
 	assert(m_lpd3dTexture != NULL);
 	m_lpd3dTexture->UnlockRect(level);
 }
@@ -47,13 +52,27 @@ void CGraphicImageTexture::Destroy()
 
 bool CGraphicImageTexture::CreateDeviceObjects()
 {
-	assert(ms_lpd3dDevice != NULL);
+    // ZiiNAN: Backend-neutral graphics resource ownership
+    if (Renderer::UseNeutralResources()) {
+        if (!m_source && m_stFileName.empty()) {
+            const auto format = m_d3dFmt == D3DFMT_A8 ? Renderer::TerrainTextureFormat::Alpha8 : Renderer::TerrainTextureFormat::BGRA8;
+            m_source = Renderer::TextureResource::Dynamic(m_width,m_height,format);
+        } else if (!m_source) {
+            TPackFile file;
+            if (!CPackManager::Instance().GetFile(m_stFileName,file)) return false;
+            m_source = DecodeTextureSource(file.data(),file.size(),m_stFileName.c_str());
+        }
+        if (!m_source) return false;
+        m_width=m_source->desc.width; m_height=m_source->desc.height; m_bEmpty=false;
+        return true;
+    }
+	assert(Renderer::UseNeutralResources());
 	assert(m_lpd3dTexture == NULL);
 
 	if (m_stFileName.empty())
 	{
 		// 폰트 텍스쳐
-		if (FAILED(ms_lpd3dDevice->CreateTexture(m_width, m_height, 1, D3DUSAGE_DYNAMIC, m_d3dFmt, D3DPOOL_DEFAULT, &m_lpd3dTexture, nullptr)))
+		if (FAILED(M2_NATIVE_RESOURCE(Texture, ms_lpd3dDevice->CreateTexture(m_width, m_height, 1, D3DUSAGE_DYNAMIC, m_d3dFmt, D3DPOOL_DEFAULT, &m_lpd3dTexture, nullptr))))
 			return false;
 	}
 	else
@@ -71,7 +90,7 @@ bool CGraphicImageTexture::CreateDeviceObjects()
 
 bool CGraphicImageTexture::Create(UINT width, UINT height, D3DFORMAT d3dFmt, DWORD dwFilter)
 {
-	assert(ms_lpd3dDevice != NULL);
+	assert(Renderer::UseNeutralResources());
 	Destroy();
 
 	m_width = width;
@@ -87,6 +106,7 @@ void CGraphicImageTexture::CreateFromTexturePointer(const CGraphicTexture* c_pSr
 	if (m_lpd3dTexture)
 		m_lpd3dTexture->Release();
 
+	m_source = c_pSrcTexture->GetSource();
 	m_width = c_pSrcTexture->GetWidth();
 	m_height = c_pSrcTexture->GetHeight();
 	m_lpd3dTexture = c_pSrcTexture->GetD3DTexture();
@@ -99,6 +119,11 @@ void CGraphicImageTexture::CreateFromTexturePointer(const CGraphicTexture* c_pSr
 
 bool CGraphicImageTexture::CreateFromDDSTexture(UINT bufSize, const void* c_pvBuf)
 {
+    if (Renderer::UseNeutralResources()) {
+        m_source=DecodeTextureSource(c_pvBuf,bufSize,m_stFileName.c_str());
+        if (!m_source) return false;
+        m_width=m_source->desc.width; m_height=m_source->desc.height; m_bEmpty=false; return true;
+    }
 	if (FAILED(DirectX::CreateDDSTextureFromMemoryEx(ms_lpd3dDevice, reinterpret_cast<const uint8_t*>(c_pvBuf), bufSize, 0, D3DPOOL_DEFAULT, false, &m_lpd3dTexture)))
 		return false;
 
@@ -112,11 +137,12 @@ bool CGraphicImageTexture::CreateFromDDSTexture(UINT bufSize, const void* c_pvBu
 
 bool CGraphicImageTexture::CreateFromSTB(UINT bufSize, const void* c_pvBuf)
 {
+    if (Renderer::UseNeutralResources()) return CreateFromDDSTexture(bufSize,c_pvBuf);
 	int width, height, channels;
 	unsigned char* data = stbi_load_from_memory((stbi_uc*)c_pvBuf, bufSize, &width, &height, &channels, 4); // force RGBA
 	if (data) {
 		LPDIRECT3DTEXTURE9 texture;
-		if (SUCCEEDED(ms_lpd3dDevice->CreateTexture(width, height, 1, 0, channels == 4 ? D3DFMT_A8R8G8B8 : D3DFMT_X8R8G8B8, D3DPOOL_MANAGED, &texture, nullptr))) {
+		if (SUCCEEDED(M2_NATIVE_RESOURCE(Texture, ms_lpd3dDevice->CreateTexture(width, height, 1, 0, channels == 4 ? D3DFMT_A8R8G8B8 : D3DFMT_X8R8G8B8, D3DPOOL_MANAGED, &texture, nullptr)))) {
 			D3DLOCKED_RECT rect;
 			if (SUCCEEDED(texture->LockRect(0, &rect, nullptr, 0))) {
 				uint8_t* dstData = (uint8_t*)rect.pBits;
@@ -170,18 +196,19 @@ bool CGraphicImageTexture::CreateFromSTB(UINT bufSize, const void* c_pvBuf)
 
 bool CGraphicImageTexture::CreateFromMemoryFile(UINT bufSize, const void * c_pvBuf, D3DFORMAT d3dFmt, DWORD dwFilter)
 {
-	assert(ms_lpd3dDevice != NULL);
+	assert(Renderer::UseNeutralResources());
 	assert(m_lpd3dTexture == NULL);
 
 	m_bEmpty = true;
+    if (Renderer::UseNeutralResources()) return CreateFromDDSTexture(bufSize,c_pvBuf);
 
 	if (!CreateFromDDSTexture(bufSize, c_pvBuf)) {
 		if (!CreateFromSTB(bufSize, c_pvBuf)) {
 
 			D3DXIMAGE_INFO imageInfo;
-			if (FAILED(D3DXCreateTextureFromFileInMemoryEx(ms_lpd3dDevice, c_pvBuf, bufSize
+			if (FAILED(M2_NATIVE_RESOURCE(Texture, D3DXCreateTextureFromFileInMemoryEx(ms_lpd3dDevice, c_pvBuf, bufSize
 				, D3DX_DEFAULT_NONPOW2, D3DX_DEFAULT_NONPOW2, D3DX_DEFAULT, 0, d3dFmt, D3DPOOL_DEFAULT
-				, dwFilter, dwFilter, 0xffff00ff, &imageInfo, NULL, &m_lpd3dTexture))) {
+				, dwFilter, dwFilter, 0xffff00ff, &imageInfo, NULL, &m_lpd3dTexture)))) {
 				TraceError("CreateFromMemoryFile: Cannot create texture (%s, %u bytes)", m_stFileName.c_str(), bufSize);
 				return false;
 			}
@@ -213,9 +240,9 @@ bool CGraphicImageTexture::CreateFromMemoryFile(UINT bufSize, const void * c_pvB
 					IDirect3DTexture9* pkTexDst;
 
 
-					if (SUCCEEDED(D3DXCreateTexture(ms_lpd3dDevice
+					if (SUCCEEDED(M2_NATIVE_RESOURCE(Texture, D3DXCreateTexture(ms_lpd3dDevice
 						, imageInfo.Width >> uTexBias, imageInfo.Height >> uTexBias
-						, imageInfo.MipLevels, 0, format, D3DPOOL_DEFAULT, &pkTexDst))) {
+						, imageInfo.MipLevels, 0, format, D3DPOOL_DEFAULT, &pkTexDst)))) {
 						m_lpd3dTexture = pkTexDst;
 						for (int i = 0; i < imageInfo.MipLevels; ++i) {
 
@@ -260,13 +287,22 @@ bool CGraphicImageTexture::CreateFromDiskFile(const char * c_szFileName, D3DFORM
 
 bool CGraphicImageTexture::CreateFromDecodedData(const TDecodedImageData& decodedImage, D3DFORMAT d3dFmt, DWORD dwFilter)
 {
-	assert(ms_lpd3dDevice != NULL);
+	assert(Renderer::UseNeutralResources());
 	assert(m_lpd3dTexture == NULL);
 
 	if (!decodedImage.IsValid())
 		return false;
 
 	m_bEmpty = true;
+    if (Renderer::UseNeutralResources()) {
+        if (decodedImage.isDDS) return CreateFromDDSTexture(decodedImage.pixels.size(),decodedImage.pixels.data());
+        if (decodedImage.format != TDecodedImageData::FORMAT_RGBA8) return false;
+        Renderer::TerrainTextureData data{uint32_t(decodedImage.width),uint32_t(decodedImage.height),Renderer::TerrainTextureFormat::RGBA8,
+            {{decodedImage.pixels.data(),decodedImage.pixels.size(),size_t(decodedImage.width)*4}}};
+        m_source=Renderer::TextureResource::Copy(data);
+        if (!m_source) return false;
+        m_source->asset=m_stFileName; m_width=decodedImage.width; m_height=decodedImage.height; m_bEmpty=false; return true;
+    }
 
 	if (decodedImage.isDDS)
 	{
@@ -279,7 +315,7 @@ bool CGraphicImageTexture::CreateFromDecodedData(const TDecodedImageData& decode
 		LPDIRECT3DTEXTURE9 texture;
 		D3DFORMAT format = D3DFMT_A8R8G8B8;
 
-		if (FAILED(ms_lpd3dDevice->CreateTexture(
+		if (FAILED(M2_NATIVE_RESOURCE(Texture, ms_lpd3dDevice->CreateTexture(
 			decodedImage.width,
 			decodedImage.height,
 			1,
@@ -287,7 +323,7 @@ bool CGraphicImageTexture::CreateFromDecodedData(const TDecodedImageData& decode
 			format,
 			D3DPOOL_MANAGED,
 			&texture,
-			nullptr)))
+			nullptr))))
 		{
 			return false;
 		}

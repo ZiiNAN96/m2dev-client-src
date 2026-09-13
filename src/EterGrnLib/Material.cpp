@@ -139,6 +139,12 @@ bool CGrannyMaterial::IsEqual(granny_material* pgrnMaterial) const
 }
 
 
+TextureBinding CGrannyMaterial::GetTextureBinding(int stage) const
+{
+    auto* image=GetImagePointer(stage);
+    return image ? image->GetTexturePointer()->GetTextureBinding() : TextureBinding{};
+}
+
 LPDIRECT3DTEXTURE9 CGrannyMaterial::GetD3DTexture(int iStage) const
 {
 	const CGraphicImage::TRef & ratImage = m_roImage[iStage];
@@ -284,7 +290,7 @@ void CGrannyMaterial::Initialize()
 
 void CGrannyMaterial::__ApplyDiffuseRenderState()
 {
-	STATEMANAGER.SetTexture(0, GetD3DTexture(0));
+	STATEMANAGER.SetTexture(0, GetTextureBinding(0));
 
 	if (m_bTwoSideRender)
 	{
@@ -312,10 +318,10 @@ void CGrannyMaterial::__ApplySpecularRenderState()
 
 	CGraphicTexture* pkTexture=ms_akSphereMapInstance[m_bSphereMapIndex].GetTexturePointer();
 
-	STATEMANAGER.SetTexture(0, GetD3DTexture(0));
+	STATEMANAGER.SetTexture(0, GetTextureBinding(0));
 
 	if (pkTexture)
-		STATEMANAGER.SetTexture(1, pkTexture->GetD3DTexture());
+		STATEMANAGER.SetTexture(1, pkTexture->GetTextureBinding());
 	else
 		STATEMANAGER.SetTexture(1, NULL);
 
@@ -336,7 +342,7 @@ void CGrannyMaterial::__ApplySpecularRenderState()
 	STATEMANAGER.SetTextureStageState(1, D3DTSS_ALPHAARG1,	D3DTA_CURRENT);
 	STATEMANAGER.SetTextureStageState(1, D3DTSS_ALPHAOP,	D3DTOP_SELECTARG1);
 
-	STATEMANAGER.SetTransform(D3DTS_TEXTURE1, &ms_matSpecular);
+	STATEMANAGER.SetTransform(Renderer::MatrixTexture1, &ms_matSpecular);
 	STATEMANAGER.SaveTextureStageState(1, D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_COUNT2);
 	STATEMANAGER.SaveSamplerState(1, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP);
 	STATEMANAGER.SaveSamplerState(1, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP);

@@ -3,10 +3,11 @@
 #include <array>
 #include <vector>
 
-// Owns only the CPU alpha values already written by PutImage32/16, not a generator.
+// Owns the original terrain alpha source and its five filtered mip levels.
 class TerrainAlphaImage
 {
 public:
+    void Build(const uint8_t* source, bool fourBit);
     void Capture(uint32_t level, const void* packed, uint32_t size, size_t pitch, bool fourBit);
     void Clear();
     Renderer::TerrainSplatMaterialPtr Material(const Renderer::TerrainTexturePtr& color);

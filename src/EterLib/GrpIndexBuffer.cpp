@@ -1,24 +1,26 @@
 #include "StdAfx.h"
+#include "EterLib/NativeResourceAudit.h"
 #include "EterBase/Stl.h"
 #include "GrpIndexBuffer.h"
 #include "StateManager.h"
 
 LPDIRECT3DINDEXBUFFER9 CGraphicIndexBuffer::GetD3DIndexBuffer() const
 {
-	assert(m_lpd3dIdxBuf != NULL);
+	assert(m_lpd3dIdxBuf != NULL || m_cpuBuffer.Size());
 	return m_lpd3dIdxBuf;
 }
 
 void CGraphicIndexBuffer::SetIndices(int startIndex) const
 {
-	assert(ms_lpd3dDevice != NULL);
+	assert(Renderer::UseNeutralResources());
 	STATEMANAGER.SetIndices(m_lpd3dIdxBuf, startIndex);
 }
 
 
 bool CGraphicIndexBuffer::Lock(void** pretIndices) const
 {
-	assert(m_lpd3dIdxBuf != NULL);
+    if (m_cpuBuffer.Size()) return m_cpuBuffer.Lock(0,0,pretIndices);
+	assert(m_lpd3dIdxBuf != NULL || m_cpuBuffer.Size());
 
 	if (!m_lpd3dIdxBuf)
 		return false;
@@ -31,7 +33,8 @@ bool CGraphicIndexBuffer::Lock(void** pretIndices) const
 
 void CGraphicIndexBuffer::Unlock() const
 {
-	assert(m_lpd3dIdxBuf != NULL);
+    if (m_cpuBuffer.Size()) { m_cpuBuffer.Unlock(); return; }
+	assert(m_lpd3dIdxBuf != NULL || m_cpuBuffer.Size());
 
 	if (!m_lpd3dIdxBuf)
 		return;
@@ -41,7 +44,8 @@ void CGraphicIndexBuffer::Unlock() const
 
 bool CGraphicIndexBuffer::Lock(void** pretIndices)
 {
-	assert(m_lpd3dIdxBuf != NULL);
+    if (m_cpuBuffer.Size()) return m_cpuBuffer.Lock(0,0,pretIndices);
+	assert(m_lpd3dIdxBuf != NULL || m_cpuBuffer.Size());
 
 	if (!m_lpd3dIdxBuf)
 		return false;
@@ -54,7 +58,8 @@ bool CGraphicIndexBuffer::Lock(void** pretIndices)
 
 void CGraphicIndexBuffer::Unlock()
 {
-	assert(m_lpd3dIdxBuf != NULL);
+    if (m_cpuBuffer.Size()) { m_cpuBuffer.Unlock(); return; }
+	assert(m_lpd3dIdxBuf != NULL || m_cpuBuffer.Size());
 
 	if (!m_lpd3dIdxBuf)
 		return;
@@ -64,10 +69,15 @@ void CGraphicIndexBuffer::Unlock()
 
 bool CGraphicIndexBuffer::Copy(int bufSize, const void* srcIndices)
 {
-	assert(m_lpd3dIdxBuf != NULL);
+    if (m_cpuBuffer.Size()) {
+        if (!srcIndices || bufSize<0 || size_t(bufSize)>m_cpuBuffer.Size()) return false;
+        void* destination=nullptr; if (!m_cpuBuffer.Lock(0,0,&destination)) return false;
+        memcpy(destination,srcIndices,bufSize); return m_cpuBuffer.Unlock();
+    }
+	assert(m_lpd3dIdxBuf != NULL || m_cpuBuffer.Size());
 
 	BYTE* dstIndices;
-	if (FAILED(m_lpd3dIdxBuf->Lock(0, 0, (void**)&dstIndices, 0)))
+	if (!Lock((void**)&dstIndices))
 		return false;
 
 	memcpy(dstIndices, srcIndices, bufSize);
@@ -85,7 +95,7 @@ bool CGraphicIndexBuffer::Create(int faceCount, TFace* faces)
 		return false;
 
 	WORD* dstIndices;
-	if (FAILED(m_lpd3dIdxBuf->Lock(0, 0, (void**)&dstIndices, 0)))
+	if (!Lock((void**)&dstIndices))
 		return false;
 
 	for (int i = 0; i < faceCount; ++i, dstIndices += 3)
@@ -96,19 +106,21 @@ bool CGraphicIndexBuffer::Create(int faceCount, TFace* faces)
 		dstIndices[2] = curFace->indices[2];
 	}
 
-	m_lpd3dIdxBuf->Unlock();
+	Unlock();
 	return true;
 }
 
 bool CGraphicIndexBuffer::CreateDeviceObjects()
 {
-	if (FAILED(ms_lpd3dDevice->CreateIndexBuffer(
+    // ZiiNAN: Backend-neutral graphics resource ownership
+    if (Renderer::UseNeutralResources()) return m_cpuBuffer.Create(m_dwBufferSize);
+	if (FAILED(M2_NATIVE_RESOURCE(IndexBuffer, ms_lpd3dDevice->CreateIndexBuffer(
 		m_dwBufferSize,
 		D3DUSAGE_WRITEONLY,
 		m_d3dFmt,
 		D3DPOOL_DEFAULT,
 		&m_lpd3dIdxBuf,
-		NULL)
+		NULL))
 	))
 		return false;
 
@@ -117,6 +129,7 @@ bool CGraphicIndexBuffer::CreateDeviceObjects()
 
 void CGraphicIndexBuffer::DestroyDeviceObjects()
 {
+    m_cpuBuffer.Clear();
 	safe_release(m_lpd3dIdxBuf);
 }
 

@@ -28,6 +28,7 @@ class CGrannyModel : public CReferenceObject
 		void Destroy();
 
 		int GetRigidVertexCount() const;
+        size_t GetRigidVertexBytes() const { return m_pntVtxBuf.GetBufferSize(); }
 		int GetDeformVertexCount() const;
 		int GetVertexCount() const;
 

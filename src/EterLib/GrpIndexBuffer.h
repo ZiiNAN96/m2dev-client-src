@@ -1,6 +1,7 @@
 #pragma once
 
 #include "GrpBase.h"
+#include "Renderer/ResourceData.h"
 
 class CGraphicIndexBuffer : public CGraphicBase
 {
@@ -33,6 +34,7 @@ protected:
 	void Initialize();
 
 protected:
+        mutable Renderer::CpuBuffer m_cpuBuffer;
 	LPDIRECT3DINDEXBUFFER9	m_lpd3dIdxBuf;
 	DWORD					m_dwBufferSize;
 	D3DFORMAT				m_d3dFmt;

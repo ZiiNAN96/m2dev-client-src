@@ -1,4 +1,6 @@
 #include "StdAfx.h"
+#include "Renderer/ResourceData.h"
+#include "EterLib/NativeResourceAudit.h"
 #include "PythonApplication.h"
 #include "ProcessScanner.h"
 #include "PythonExceptionSender.h"
@@ -275,7 +277,9 @@ static int Main(HINSTANCE hInstance, LPSTR lpCmdLine, Renderer::BackendKind back
 
     const bool scriptSucceeded = pyLauncher.Create() && RunMainScript(pyLauncher, lpCmdLine);
     // ZiiNAN: A caught renderer initialization failure must not become a successful process exit.
-    const int result = app->HasRendererStartupFailed() ? 4 : (scriptSucceeded ? 0 : 3);
+    // ZiiNAN: A failed production frame/resize must not be reported as a clean shutdown.
+    const int result = app->HasRendererStartupFailed() ? 4 :
+        (app->HasRendererRuntimeFailed() ? 5 : (scriptSucceeded ? 0 : 3));
 
 	app->Clear();
 	timeEndPeriod (1);
@@ -308,12 +312,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	if (!rendererOptions.valid)
 	{
         rendererLog << "ERROR: Invalid/conflicting renderer selection; no fallback. ExitCode=2" << std::endl;
-		MessageBoxW(nullptr, L"Use --renderer=legacy-d3d9 or --renderer=diligent-d3d11. Select only one backend.",
+		MessageBoxW(nullptr, L"Legacy D3D9 has been removed. Use --renderer=diligent-d3d11 or omit the renderer argument. No fallback.",
 		            L"Invalid renderer selection", MB_OK | MB_ICONERROR);
 		return 2;
 	}
     // ZiiNAN: Production renderer selection is logged once, before any game/device setup.
-    rendererLog << "Renderer: " << (rendererOptions.backend == Renderer::BackendKind::DiligentD3D11 ? "Diligent D3D11" : "Legacy D3D9Ex") << std::endl;
+    rendererLog << "Renderer: " << "Diligent D3D11" << std::endl;
     rendererLog << "Selection=" << (rendererOptions.selected ? "explicit" : "default")
                 << " DiligentCompiled=" << diligentAvailable << std::endl;
 	if (rendererOptions.backend == Renderer::BackendKind::DiligentD3D11 && !diligentAvailable)
@@ -334,11 +338,15 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	int nArgc = 0;
 	auto szArgv = CommandLineToArgv (lpCmdLine, &nArgc);
 
+    // ZiiNAN: Backend-neutral graphics resource ownership
     const int result = Main(hInstance, lpCmdLine, rendererOptions.backend);
+    std::ofstream resourceLog("native-resource-audit.log",std::ios::trunc);
+    Renderer::WriteNativeResourceAudit(resourceLog);
 	::CoUninitialize();
 
 	SAFE_FREE_GLOBAL (szArgv);
     if(result == 4) rendererLog << "ERROR: Renderer initialization failed; no fallback." << std::endl;
+    if(result == 5) rendererLog << "ERROR: Renderer frame/resize failed; no fallback." << std::endl;
     rendererLog << "ExitCode=" << result << std::endl;
 	return result;
 }

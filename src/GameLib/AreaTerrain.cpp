@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "EterLib/NativeResourceAudit.h"
 #include "PRTerrainLib/StdAfx.h"
 
 #include "EterLib/ResourceManager.h"
@@ -778,6 +779,10 @@ void CTerrain::RAW_GenerateSplat(bool bBGLoading)
 
 LPDIRECT3DTEXTURE9 CTerrain::AddTexture32(BYTE byImageNum, BYTE * pbyImage, long lTextureWidth, long lTextureHeight)
 {
+    if (Renderer::UseNeutralResources()) {
+        m_rendererAlpha[byImageNum].Build(pbyImage,!ms_bSupportDXT);
+        return nullptr; // Native splat POD belongs exclusively to Legacy.
+    }
 	assert(NULL==m_lpAlphaTexture[byImageNum]);
 
 	if (m_lpAlphaTexture[byImageNum])
@@ -800,9 +805,9 @@ LPDIRECT3DTEXTURE9 CTerrain::AddTexture32(BYTE byImageNum, BYTE * pbyImage, long
 
 	UINT uiNewWidth = 256;
 	UINT uiNewHeight = 256;
-	hr = ms_lpd3dDevice->CreateTexture(
+	hr = M2_NATIVE_RESOURCE(Texture, ms_lpd3dDevice->CreateTexture(
 		uiNewWidth, uiNewHeight, 5, D3DUSAGE_DYNAMIC,
-		format, D3DPOOL_DEFAULT, &pkTex, nullptr);
+		format, D3DPOOL_DEFAULT, &pkTex, nullptr));
 	if (FAILED(hr))
 	{
 		TraceError("CTerrain::AddTexture32 - CreateTexture failed with hr=%p", hr);
@@ -1162,6 +1167,14 @@ void CTerrain::_CalculateTerrainPatch(BYTE byPatchNumX, BYTE byPatchNumY)
 
 void CTerrain::AllocateMarkedSplats(BYTE * pbyAlphaMap)
 {
+    if (Renderer::UseNeutralResources()) {
+        DeallocateMarkedSplats();
+        m_markedSource=Renderer::TextureResource::Dynamic(ATTRMAP_XSIZE,ATTRMAP_YSIZE,Renderer::TerrainTextureFormat::BGRA8);
+        if (!m_markedSource) return;
+        PutImage32(pbyAlphaMap,m_markedSource->mips[0].pixels.data(),ATTRMAP_XSIZE,ATTRMAP_XSIZE*4,ATTRMAP_XSIZE,ATTRMAP_YSIZE);
+        if (Renderer::worldRenderer) m_markedDiligentTexture=Renderer::worldRenderer->UploadTexture(m_markedSource->View());
+        m_bMarked=bool(m_markedDiligentTexture); return;
+    }
 	TTerainSplat & rAttrSplat = m_MarkedSplatPatch.Splats[0];
 	HRESULT hr;
 
@@ -1176,7 +1189,7 @@ void CTerrain::AllocateMarkedSplats(BYTE * pbyAlphaMap)
 
 	do
 	{
-		hr = ms_lpd3dDevice->CreateTexture(ATTRMAP_XSIZE, ATTRMAP_YSIZE, 1, D3DUSAGE_DYNAMIC, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &m_lpMarkedTexture, nullptr);
+		hr = M2_NATIVE_RESOURCE(Texture, ms_lpd3dDevice->CreateTexture(ATTRMAP_XSIZE, ATTRMAP_YSIZE, 1, D3DUSAGE_DYNAMIC, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &m_lpMarkedTexture, nullptr));
 	} while(FAILED(hr));
 
 	D3DLOCKED_RECT d3dlr;
@@ -1204,9 +1217,9 @@ void CTerrain::AllocateMarkedSplats(BYTE * pbyAlphaMap)
 
 void CTerrain::DeallocateMarkedSplats()
 {
-    if(CStateManager::InstancePtr()) STATEMANAGER.ForgetDiligentTexture(m_lpMarkedTexture);
 	if(Renderer::worldRenderer && m_markedDiligentTexture) Renderer::worldRenderer->ReleaseBindings();
 	m_markedDiligentTexture.reset();
+    m_markedSource.reset();
 	TTerainSplat & rSplat = m_MarkedSplatPatch.Splats[0];
 	if (m_lpMarkedTexture)
 	{

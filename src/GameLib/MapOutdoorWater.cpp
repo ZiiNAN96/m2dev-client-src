@@ -46,13 +46,13 @@ void CMapOutdoor::RenderWater()
 	STATEMANAGER.SaveRenderState(D3DRS_COLORVERTEX, TRUE);
 
 	const auto waterFrame=(ELTimer_GetMSec()/70)%30;
-	STATEMANAGER.SetTexture(0, m_WaterInstances[waterFrame].GetTexturePointer()->GetD3DTexture());
+	STATEMANAGER.SetTexture(0, m_WaterInstances[waterFrame].GetTexturePointer()->GetTextureBinding());
 	WorldRenderBridge::Texture(m_WaterInstances[waterFrame].GetGraphicImagePointer());
 
 	D3DXMatrixScaling(&matTexTransformWater, m_fWaterTexCoordBase, -m_fWaterTexCoordBase, 0.0f);
 	D3DXMatrixMultiply(&matTexTransformWater, &m_matViewInverse, &matTexTransformWater);
 	
-	STATEMANAGER.SaveTransform(D3DTS_TEXTURE0, &matTexTransformWater);
+	STATEMANAGER.SaveTransform(Renderer::MatrixTexture0, &matTexTransformWater);
 	STATEMANAGER.SetFVF(D3DFVF_XYZ|D3DFVF_DIFFUSE);
 
 	STATEMANAGER.SaveTextureStageState(0, D3DTSS_TEXCOORDINDEX, D3DTSS_TCI_CAMERASPACEPOSITION);
@@ -103,7 +103,7 @@ void CMapOutdoor::RenderWater()
 
 	m_matWorldForCommonUse._41 = 0.0f;
 	m_matWorldForCommonUse._42 = 0.0f;
-	STATEMANAGER.SetTransform(D3DTS_WORLD, &m_matWorldForCommonUse);
+	STATEMANAGER.SetTransform(Renderer::MatrixWorld, &m_matWorldForCommonUse);
 	
 	float fFogDistance = __GetFogDistance();
 
@@ -129,7 +129,7 @@ void CMapOutdoor::RenderWater()
 
 	//////////////////////////////////////////////////////////////////////////
 	// RenderState
-	STATEMANAGER.RestoreTransform(D3DTS_TEXTURE0);
+	STATEMANAGER.RestoreTransform(Renderer::MatrixTexture0);
 	STATEMANAGER.RestoreSamplerState(0, D3DSAMP_MINFILTER);
 	STATEMANAGER.RestoreSamplerState(0, D3DSAMP_MAGFILTER);
 	STATEMANAGER.RestoreSamplerState(0, D3DSAMP_MIPFILTER);
@@ -163,7 +163,7 @@ void CMapOutdoor::DrawWater(long patchnum)
 	if (!pkVB)
 		return;
 	
-	if (!pkVB->GetD3DVertexBuffer())
+	if (pkVB->IsEmpty())
 		return;
 
 	UINT uPriCount=rkTerrainPatchProxy.GetWaterFaceCount();

@@ -44,7 +44,7 @@ class CGraphicFontTexture : public CGraphicTexture
 		void SelectTexture(DWORD dwTexture);
 
 		bool UpdateTexture();
-		Renderer::TerrainTexturePtr GetTextTexture(IDirect3DBaseTexture9* nativePage);
+		Renderer::TerrainTexturePtr GetTextTexture(TextureBinding page);
 
 		TCharacterInfomation* GetCharacterInfomation(wchar_t keyValue);
 		TCharacterInfomation* UpdateCharacterInfomation(TCharacterKey keyValue);

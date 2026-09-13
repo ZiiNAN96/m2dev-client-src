@@ -19,7 +19,7 @@ void Granny_RenderBoxBones(const granny_skeleton* pkGrnSkeleton, const granny_wo
 		
 		D3DXMatrixMultiply(&matWorld, c_matBone, &matBase);
 		
-		STATEMANAGER.SetTransform(D3DTS_WORLD, &matWorld);
+		STATEMANAGER.SetTransform(Renderer::MatrixWorld, &matWorld);
 		screen.RenderBox3d(-5.0f, -5.0f, -5.0f, 5.0f, 5.0f, 5.0f);
 	}
 }
@@ -67,12 +67,12 @@ void CGrannyModelInstance::RenderWithOneTexture()
 
 	LPDIRECT3DVERTEXBUFFER9 lpd3dRigidPNTVtxBuf = m_pModel->GetPNTD3DVertexBuffer();
 
-	if (lpd3dDeformPNTVtxBuf)
+	if (lpd3dDeformPNTVtxBuf || (Renderer::UseNeutralResources() && m_pModel->GetDeformVertexCount()>0))
 	{
 		STATEMANAGER.SetStreamSource(0, lpd3dDeformPNTVtxBuf, sizeof(TPNTVertex));
 		RenderMeshNodeListWithOneTexture(CGrannyMesh::TYPE_DEFORM, CGrannyMaterial::TYPE_DIFFUSE_PNT);
 	}
-	if (lpd3dRigidPNTVtxBuf)
+	if (lpd3dRigidPNTVtxBuf || (Renderer::UseNeutralResources() && m_pModel->GetRigidVertexCount()>0))
 	{
 		STATEMANAGER.SetStreamSource(0, lpd3dRigidPNTVtxBuf, sizeof(TPNTVertex));
 		RenderMeshNodeListWithOneTexture(CGrannyMesh::TYPE_RIGID, CGrannyMaterial::TYPE_DIFFUSE_PNT);
@@ -91,13 +91,13 @@ void CGrannyModelInstance::BlendRenderWithOneTexture()
 
  	STATEMANAGER.SetVertexDeclaration(ms_pntVS);
 
-	if (lpd3dDeformPNTVtxBuf)
+	if (lpd3dDeformPNTVtxBuf || (Renderer::UseNeutralResources() && m_pModel->GetDeformVertexCount()>0))
 	{
 		STATEMANAGER.SetStreamSource(0, lpd3dDeformPNTVtxBuf, sizeof(TPNTVertex));
 		RenderMeshNodeListWithOneTexture(CGrannyMesh::TYPE_DEFORM, CGrannyMaterial::TYPE_BLEND_PNT);
 	}
 
-	if (lpd3dRigidPNTVtxBuf)
+	if (lpd3dRigidPNTVtxBuf || (Renderer::UseNeutralResources() && m_pModel->GetRigidVertexCount()>0))
 	{
 		STATEMANAGER.SetStreamSource(0, lpd3dRigidPNTVtxBuf, sizeof(TPNTVertex));
 		RenderMeshNodeListWithOneTexture(CGrannyMesh::TYPE_RIGID, CGrannyMaterial::TYPE_BLEND_PNT);
@@ -118,12 +118,12 @@ void CGrannyModelInstance::RenderWithTwoTexture()
 	// END_OF_WORK
 	LPDIRECT3DVERTEXBUFFER9 lpd3dRigidPNTVtxBuf = m_pModel->GetPNTD3DVertexBuffer();
 
-	if (lpd3dDeformPNTVtxBuf)
+	if (lpd3dDeformPNTVtxBuf || (Renderer::UseNeutralResources() && m_pModel->GetDeformVertexCount()>0))
 	{
 		STATEMANAGER.SetStreamSource(0, lpd3dDeformPNTVtxBuf, sizeof(TPNTVertex));
 		RenderMeshNodeListWithTwoTexture(CGrannyMesh::TYPE_DEFORM, CGrannyMaterial::TYPE_DIFFUSE_PNT);
 	}
-	if (lpd3dRigidPNTVtxBuf)
+	if (lpd3dRigidPNTVtxBuf || (Renderer::UseNeutralResources() && m_pModel->GetRigidVertexCount()>0))
 	{
 		STATEMANAGER.SetStreamSource(0, lpd3dRigidPNTVtxBuf, sizeof(TPNTVertex));
 		RenderMeshNodeListWithTwoTexture(CGrannyMesh::TYPE_RIGID, CGrannyMaterial::TYPE_DIFFUSE_PNT);
@@ -142,13 +142,13 @@ void CGrannyModelInstance::BlendRenderWithTwoTexture()
 
  	STATEMANAGER.SetVertexDeclaration(ms_pntVS);
 
-	if (lpd3dDeformPNTVtxBuf)
+	if (lpd3dDeformPNTVtxBuf || (Renderer::UseNeutralResources() && m_pModel->GetDeformVertexCount()>0))
 	{
 		STATEMANAGER.SetStreamSource(0, lpd3dDeformPNTVtxBuf, sizeof(TPNTVertex));
 		RenderMeshNodeListWithTwoTexture(CGrannyMesh::TYPE_DEFORM, CGrannyMaterial::TYPE_BLEND_PNT);
 	}
 
-	if (lpd3dRigidPNTVtxBuf)
+	if (lpd3dRigidPNTVtxBuf || (Renderer::UseNeutralResources() && m_pModel->GetRigidVertexCount()>0))
 	{
 		STATEMANAGER.SetStreamSource(0, lpd3dRigidPNTVtxBuf, sizeof(TPNTVertex));
 		RenderMeshNodeListWithTwoTexture(CGrannyMesh::TYPE_RIGID, CGrannyMaterial::TYPE_BLEND_PNT);
@@ -169,14 +169,14 @@ void CGrannyModelInstance::RenderWithoutTexture()
 	// END_OF_WORK
 	LPDIRECT3DVERTEXBUFFER9 lpd3dRigidPNTVtxBuf = m_pModel->GetPNTD3DVertexBuffer();
 
-	if (lpd3dDeformPNTVtxBuf)
+	if (lpd3dDeformPNTVtxBuf || (Renderer::UseNeutralResources() && m_pModel->GetDeformVertexCount()>0))
 	{
 		STATEMANAGER.SetStreamSource(0, lpd3dDeformPNTVtxBuf, sizeof(TPNTVertex));
 		RenderMeshNodeListWithoutTexture(CGrannyMesh::TYPE_DEFORM, CGrannyMaterial::TYPE_DIFFUSE_PNT);
 		RenderMeshNodeListWithoutTexture(CGrannyMesh::TYPE_DEFORM, CGrannyMaterial::TYPE_BLEND_PNT);
 	}
 
-	if (lpd3dRigidPNTVtxBuf)
+	if (lpd3dRigidPNTVtxBuf || (Renderer::UseNeutralResources() && m_pModel->GetRigidVertexCount()>0))
 	{
 		STATEMANAGER.SetStreamSource(0, lpd3dRigidPNTVtxBuf, sizeof(TPNTVertex));
 		RenderMeshNodeListWithoutTexture(CGrannyMesh::TYPE_RIGID, CGrannyMaterial::TYPE_DIFFUSE_PNT);
@@ -197,7 +197,7 @@ void CGrannyModelInstance::RenderMeshNodeListWithOneTexture(CGrannyMesh::EType e
 	assert(m_pModel != NULL);
 
 	LPDIRECT3DINDEXBUFFER9 lpd3dIdxBuf = m_pModel->GetD3DIndexBuffer();
-	assert(lpd3dIdxBuf != NULL);
+	assert(lpd3dIdxBuf != NULL || (Renderer::UseNeutralResources() && m_pModel->GetIdxCount()>0));
 
 	const CGrannyModel::TMeshNode * pMeshNode = m_pModel->GetMeshNodeList(eMeshType, eMtrlType);
 
@@ -207,7 +207,7 @@ void CGrannyModelInstance::RenderMeshNodeListWithOneTexture(CGrannyMesh::EType e
 		int vtxMeshBasePos = pMesh->GetVertexBasePosition();
 
 		STATEMANAGER.SetIndices(lpd3dIdxBuf, vtxMeshBasePos);
-		STATEMANAGER.SetTransform(D3DTS_WORLD, &m_meshMatrices[pMeshNode->iMesh]);
+		STATEMANAGER.SetTransform(Renderer::MatrixWorld, &m_meshMatrices[pMeshNode->iMesh]);
 
 		/////
 		const CGrannyMesh::TTriGroupNode* pTriGroupNode = pMesh->GetTriGroupNodeList(eMtrlType);
@@ -249,7 +249,7 @@ void CGrannyModelInstance::RenderMeshNodeListWithTwoTexture(CGrannyMesh::EType e
 	assert(m_pModel != NULL);
 
 	LPDIRECT3DINDEXBUFFER9 lpd3dIdxBuf = m_pModel->GetD3DIndexBuffer();
-	assert(lpd3dIdxBuf != NULL);
+	assert(lpd3dIdxBuf != NULL || (Renderer::UseNeutralResources() && m_pModel->GetIdxCount()>0));
 
 	const CGrannyModel::TMeshNode * pMeshNode = m_pModel->GetMeshNodeList(eMeshType, eMtrlType);
 
@@ -259,7 +259,7 @@ void CGrannyModelInstance::RenderMeshNodeListWithTwoTexture(CGrannyMesh::EType e
 		int vtxMeshBasePos = pMesh->GetVertexBasePosition();
 
 		STATEMANAGER.SetIndices(lpd3dIdxBuf, vtxMeshBasePos);
-		STATEMANAGER.SetTransform(D3DTS_WORLD, &m_meshMatrices[pMeshNode->iMesh]);
+		STATEMANAGER.SetTransform(Renderer::MatrixWorld, &m_meshMatrices[pMeshNode->iMesh]);
 
 		/////
 		const CGrannyMesh::TTriGroupNode* pTriGroupNode = pMesh->GetTriGroupNodeList(eMtrlType);
@@ -269,8 +269,8 @@ void CGrannyModelInstance::RenderMeshNodeListWithTwoTexture(CGrannyMesh::EType e
 			ms_faceCount += pTriGroupNode->triCount;
 
 			const CGrannyMaterial& rkMtrl=m_kMtrlPal.GetMaterialRef(pTriGroupNode->mtrlIndex);
-			STATEMANAGER.SetTexture(0, rkMtrl.GetD3DTexture(0));
-			STATEMANAGER.SetTexture(1, rkMtrl.GetD3DTexture(1));
+			STATEMANAGER.SetTexture(0, rkMtrl.GetTextureBinding(0));
+			STATEMANAGER.SetTexture(1, rkMtrl.GetTextureBinding(1));
 			// ZiiNAN: Snapshot only the explicitly scoped DungeonBlock material draw.
 			if(Renderer::specialMeshTarget.instance==this && Renderer::specialMeshTarget.submit)
 				Renderer::specialMeshTarget.submit(this,{uint32_t(pMeshNode->iMesh),uint32_t(pTriGroupNode->mtrlIndex),
@@ -290,7 +290,7 @@ void CGrannyModelInstance::RenderMeshNodeListWithoutTexture(CGrannyMesh::EType e
 	assert(m_pModel != NULL);
 
 	LPDIRECT3DINDEXBUFFER9 lpd3dIdxBuf = m_pModel->GetD3DIndexBuffer();
-	assert(lpd3dIdxBuf != NULL);
+	assert(lpd3dIdxBuf != NULL || (Renderer::UseNeutralResources() && m_pModel->GetIdxCount()>0));
 
 	const CGrannyModel::TMeshNode * pMeshNode = m_pModel->GetMeshNodeList(eMeshType, eMtrlType);
 
@@ -300,7 +300,7 @@ void CGrannyModelInstance::RenderMeshNodeListWithoutTexture(CGrannyMesh::EType e
 		int vtxMeshBasePos = pMesh->GetVertexBasePosition();
 
 		STATEMANAGER.SetIndices(lpd3dIdxBuf, vtxMeshBasePos);
-		STATEMANAGER.SetTransform(D3DTS_WORLD, &m_meshMatrices[pMeshNode->iMesh]);
+		STATEMANAGER.SetTransform(Renderer::MatrixWorld, &m_meshMatrices[pMeshNode->iMesh]);
 
 		/////
 		const CGrannyMesh::TTriGroupNode* pTriGroupNode = pMesh->GetTriGroupNodeList(eMtrlType);

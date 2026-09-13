@@ -16,7 +16,7 @@ EffectResources* owner=nullptr;
 const char* asset=nullptr;
 EffectPart part=EffectPart::Particle;
 uint64_t serial=~uint64_t(0);
-std::unordered_map<void*,std::string> textureNames;
+std::unordered_map<const void*,std::string> textureNames;
 std::unordered_map<std::string,std::weak_ptr<TerrainTexture>> textures;
 std::set<std::string> reported;
 std::ofstream diagnostics;
@@ -58,7 +58,7 @@ void EffectRenderBridge::Texture(CGraphicImage* image)
 {
     if(!Active() || !image) return;
     Frame();
-    if(auto* texture=image->GetTexturePointer()->GetD3DTexture()) textureNames[texture]=image->GetFileName();
+    if(auto* texture=image->GetTexturePointer()->GetTextureBinding().Identity()) textureNames[texture]=image->GetFileName();
 }
 void EffectRenderBridge::Part(Renderer::EffectPart p) { part=p; }
 void EffectRenderBridge::VisibleParticle() { if(Active()) ++Renderer::effectVisibleParticles; }
@@ -76,11 +76,11 @@ HRESULT EffectRenderBridge::SubmitNativeDraw(D3DPRIMITIVETYPE topology,UINT prim
     }
     EffectDraw draw; draw.strip=topology==D3DPT_TRIANGLESTRIP;
     const uint32_t count=draw.strip ? primitives+2 : primitives*3;
-    IDirect3DBaseTexture9* bound=nullptr; NativeStateView().GetTexture(0,&bound);
-    draw.textured=bound!=nullptr;
+    const auto bound=NativeStateView().GetTextureBinding(0);
+    draw.textured=bool(bound);
     TerrainTexturePtr texture;
     if(bound) {
-        auto found=textureNames.find(bound); bound->Release();
+        auto found=textureNames.find(bound.Identity());
         if(found==textureNames.end()) { Report("unresolved native texture",true); return result; }
         auto& owned=owner->textures[found->second];
         if(!owned) {

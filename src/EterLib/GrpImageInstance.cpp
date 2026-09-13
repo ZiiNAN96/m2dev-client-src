@@ -89,7 +89,7 @@ void CGraphicImageInstance::OnRender()
 	{
 		CGraphicBase::SetDefaultIndexBuffer(CGraphicBase::DEFAULT_IB_FILL_RECT);
 
-		STATEMANAGER.SetTexture(0, pTexture->GetD3DTexture());
+		STATEMANAGER.SetTexture(0, pTexture->GetTextureBinding());
 		STATEMANAGER.SetTexture(1, NULL);
 		STATEMANAGER.SetFVF(D3DFVF_XYZ|D3DFVF_DIFFUSE|D3DFVF_TEX1);
 		const auto nativeDraw=STATEMANAGER.DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 4, 0, 2);

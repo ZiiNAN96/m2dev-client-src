@@ -132,7 +132,7 @@ void CFlyTrace::Render()
 	D3DXMATRIX matWorld;
 	D3DXMatrixIdentity(&matWorld);
 	
-	STATEMANAGER.SaveTransform(D3DTS_WORLD, &matWorld);
+	STATEMANAGER.SaveTransform(Renderer::MatrixWorld, &matWorld);
 	STATEMANAGER.SetFVF(D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1);
 	STATEMANAGER.SaveRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
 	
@@ -281,7 +281,7 @@ void CFlyTrace::Render()
 	STATEMANAGER.RestoreRenderState(D3DRS_SRCBLEND);
 	STATEMANAGER.RestoreRenderState(D3DRS_ALPHABLENDENABLE);
 	STATEMANAGER.RestoreRenderState(D3DRS_CULLMODE);
-	STATEMANAGER.RestoreTransform(D3DTS_WORLD);
+	STATEMANAGER.RestoreTransform(Renderer::MatrixWorld);
 	//STATEMANAGER.RestoreRenderState(D3DRS_ZWRITEENABLE);
 	STATEMANAGER.RestoreRenderState(D3DRS_ZFUNC);
 	STATEMANAGER.RestoreRenderState(D3DRS_BLENDOP);

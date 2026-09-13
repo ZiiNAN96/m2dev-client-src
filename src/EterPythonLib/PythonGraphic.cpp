@@ -27,9 +27,9 @@ float CPythonGraphic::GetOrthoDepth()
 void CPythonGraphic::SetInterfaceRenderState()
 {
 	Renderer::uiMode=true; // ZiiNAN: Explicit UI boundary, not inferred from the last world draw.
-	STATEMANAGER.SetTransform(D3DTS_PROJECTION, &ms_matIdentity);
- 	STATEMANAGER.SetTransform(D3DTS_VIEW, &ms_matIdentity);
-	STATEMANAGER.SetTransform(D3DTS_WORLD, &ms_matIdentity);
+	STATEMANAGER.SetTransform(Renderer::MatrixProjection, &ms_matIdentity);
+	STATEMANAGER.SetTransform(Renderer::MatrixView, &ms_matIdentity);
+	STATEMANAGER.SetTransform(Renderer::MatrixWorld, &ms_matIdentity);
 
 	STATEMANAGER.SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_NONE);
 	STATEMANAGER.SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_NONE);
@@ -132,37 +132,7 @@ void CPythonGraphic::RestoreViewport()
 
 void CPythonGraphic::SetGamma(float fGammaFactor)
 {
-    // ZiiNAN: Diligent is windowed-only; do not modify the unused fullscreen D3D9 gamma ramp.
-    if(STATEMANAGER.IsDiligentRendering()) return;
-	D3DCAPS9		d3dCaps;
-	D3DGAMMARAMP	NewRamp;
-	int				ui, val;
-	
-	ms_lpd3dDevice->GetDeviceCaps(&d3dCaps);
-
-	if (D3DCAPS2_FULLSCREENGAMMA != (d3dCaps.Caps2 & D3DCAPS2_FULLSCREENGAMMA))
-		return;
-
-	for (int i = 0; i < 256; ++i)
-	{
-		val	= (int) (i * fGammaFactor * 255.0f);
-		ui = 0;
-		
-		if (val > 32767)
-		{
-			val = val - 32767;
-			ui = 1;
-		}
-
-		if (val > 32767)
-			val = 32767;
-		
-		NewRamp.red[i] = (WORD) (val | (32768 * ui));
-		NewRamp.green[i] = (WORD) (val | (32768 * ui));
-		NewRamp.blue[i] = (WORD) (val | (32768 * ui));
-	}
-
-	ms_lpd3dDevice->SetGammaRamp(0, D3DSGR_NO_CALIBRATION, &NewRamp);
+    // Diligent windowed rendering has no fullscreen D3D9 gamma ramp.
 }
 
 void GenScreenShotTag(const char* src, DWORD crc32, char* leaf, size_t leafLen)
@@ -189,134 +159,7 @@ bool CPythonGraphic::SaveScreenShot(const char * c_pszFileName)
             return FinishScreenShot(file.c_str(),w,h,SaveScreenshotJPEG(Utf8ToWide(file).c_str(),rgb,w,h),tag);
         });
     }
-	HRESULT hr;
-	LPDIRECT3DSURFACE9 lpSurface;
-	D3DSURFACE_DESC stSurfaceDesc;
-
-	if (FAILED(hr = ms_lpd3dDevice->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &lpSurface)))
-	{
-		TraceError("Failed to get back buffer (0x%08x)", hr);
-		return false;
-	}
-
-	if (FAILED(hr = lpSurface->GetDesc(&stSurfaceDesc)))
-	{
-		TraceError("Failed to get surface desc (0x%08x)", hr);
-		SAFE_RELEASE(lpSurface);
-		return false;
-	}
-
-	UINT uWidth = stSurfaceDesc.Width;
-	UINT uHeight = stSurfaceDesc.Height;
-
-	switch( stSurfaceDesc.Format ) {
-	case D3DFMT_R8G8B8 :
-	case D3DFMT_A8R8G8B8 :
-	case D3DFMT_X8R8G8B8 :
-	case D3DFMT_R5G6B5 :
-	case D3DFMT_X1R5G5B5 :
-	case D3DFMT_A1R5G5B5 :
-		break;
-	case D3DFMT_A4R4G4B4 :
-	case D3DFMT_R3G3B2 :
-	case D3DFMT_A8R3G3B2 :
-	case D3DFMT_X4R4G4B4 :
-	case D3DFMT_A2B10G10R10 :
-		TraceError("Unsupported BackBuffer Format(%d). Please contact Metin 2 Administrator.", stSurfaceDesc.Format);
-		SAFE_RELEASE(lpSurface);
-		return false;
-	}
-
-	D3DLOCKED_RECT lockRect;
-	if (FAILED(hr = lpSurface->LockRect(&lockRect, NULL, D3DLOCK_NO_DIRTY_UPDATE | D3DLOCK_READONLY | D3DLOCK_NOSYSLOCK)))
-	{
-		TraceError("Failed to lock the surface (0x%08x)", hr);
-		SAFE_RELEASE(lpSurface);
-		return false;
-	}
-
-	uint8_t* pbyBuffer = new uint8_t[uWidth * uHeight * 3];
-	if (pbyBuffer == NULL) {
-		lpSurface->UnlockRect();
-		lpSurface->Release();
-		lpSurface = NULL;
-		TraceError("Failed to allocate screenshot buffer");
-		return false;
-	}
-	uint8_t* pbySource = (uint8_t*) lockRect.pBits;
-	uint8_t* pbyDestination = (uint8_t*) pbyBuffer;
-	for(UINT y = 0; y < uHeight; ++y) {
-		uint8_t*pRow = pbySource;
-
-		switch( stSurfaceDesc.Format ) {
-		case D3DFMT_R8G8B8 :
-			for(UINT x = 0; x < uWidth; ++x) {
-				*pbyDestination++ = pRow[2];	// Blue
-				*pbyDestination++ = pRow[1];	// Green
-				*pbyDestination++ = pRow[0];	// Red
-				pRow += 3;
-			}
-			break;
-		case D3DFMT_A8R8G8B8 :
-		case D3DFMT_X8R8G8B8 :
-			for(UINT x = 0; x < uWidth; ++x) {
-				*pbyDestination++ = pRow[2];	// Blue
-				*pbyDestination++ = pRow[1];	// Green
-				*pbyDestination++ = pRow[0];	// Red
-				pRow += 4;
-			}
-			break;
-		case D3DFMT_R5G6B5 :
-			{
-				for(UINT x = 0; x < uWidth; ++x) {
-					UINT uColor		= *((UINT *) pRow);
-					uint8_t byBlue		= (uColor >> 11) & 0x1F;
-					uint8_t byGreen	= (uColor >> 5) & 0x3F;
-					uint8_t byRed		= uColor & 0x1F;
-
-					*pbyDestination++ = (byBlue << 3)	| (byBlue >> 2);		// Blue
-					*pbyDestination++ = (byGreen << 2)	| (byGreen >> 2);		// Green
-					*pbyDestination++ = (byRed << 3)	| (byRed >> 2);			// Red
-					pRow += 2;
-				}
-			}
-			break;
-		case D3DFMT_X1R5G5B5 :
-		case D3DFMT_A1R5G5B5 :
-			{
-				for(UINT x = 0; x < uWidth; ++x) {
-					UINT uColor		= *((UINT *) pRow);
-					uint8_t byBlue		= (uColor >> 10) & 0x1F;
-					uint8_t byGreen	= (uColor >> 5) & 0x1F;
-					uint8_t byRed		= uColor & 0x1F;
-
-					*pbyDestination++ = (byBlue << 3)	| (byBlue >> 2);		// Blue
-					*pbyDestination++ = (byGreen << 3)	| (byGreen >> 2);		// Green
-					*pbyDestination++ = (byRed << 3)	| (byRed >> 2);			// Red
-					pRow += 2;
-				}
-			}
-			break;
-		}
-
-		// increase by one line
-		pbySource += lockRect.Pitch;
-	}
-
-	if(lpSurface) {
-		lpSurface->UnlockRect();
-		lpSurface->Release();
-		lpSurface = NULL;
-	}
-
-	bool bSaved = SaveJPEG(c_pszFileName, pbyBuffer, uWidth, uHeight);
-
-	if(pbyBuffer) {
-		delete [] pbyBuffer;
-		pbyBuffer = NULL;
-	}
-
-    return FinishScreenShot(c_pszFileName,uWidth,uHeight,bSaved,g_isScreenShotKey);
+    return false;
 }
 
 bool CPythonGraphic::FinishScreenShot(const char* c_pszFileName,UINT uWidth,UINT uHeight,bool bSaved,bool tag)
@@ -414,7 +257,7 @@ void CPythonGraphic::PushState()
 
 	curState.matProj = ms_matProj;
 	curState.matView = ms_matView;
-	//STATEMANAGER.SaveTransform(D3DTS_WORLD, &m_SaveWorldMatrix);
+	//STATEMANAGER.SaveTransform(Renderer::MatrixWorld, &m_SaveWorldMatrix);
 
 	m_stateStack.push(curState);
 	//CCamera::Instance().PushParams();
@@ -430,7 +273,7 @@ void CPythonGraphic::PopState()
 	
 	TState & rState = m_stateStack.top();
 
-	//STATEMANAGER.RestoreTransform(D3DTS_WORLD);
+	//STATEMANAGER.RestoreTransform(Renderer::MatrixWorld);
 	ms_matProj = rState.matProj;
 	ms_matView = rState.matView;
 	
@@ -635,7 +478,7 @@ void CPythonGraphic::RenderUpButton(float sx, float sy, float ex, float ey)
 
 DWORD CPythonGraphic::GetAvailableMemory()
 {
-	return ms_lpd3dDevice->GetAvailableTextureMem();
+    return GetAvailableTextureMemory();
 }
 
 CPythonGraphic::CPythonGraphic()

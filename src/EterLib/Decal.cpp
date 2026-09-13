@@ -225,7 +225,7 @@ void CDecal::Render()
 {
 	D3DXMATRIX matWorld;
 	D3DXMatrixIdentity(&matWorld);
-	STATEMANAGER.SetTransform(D3DTS_WORLD, &matWorld);
+	STATEMANAGER.SetTransform(Renderer::MatrixWorld, &matWorld);
 	
 	STATEMANAGER.SetFVF(D3DFVF_XYZ|D3DFVF_DIFFUSE|D3DFVF_TEX1);
 	

@@ -70,7 +70,10 @@ include_directories("vendor/libsodium/src/libsodium/include")
 include_directories("vendor/freetype-2.13.3/include")
 
 # Add subdirectories for libraries and executables
-option(M2_ENABLE_DILIGENT_D3D11 "Build Diligent D3D11 as the default renderer (OFF: Legacy-only)" ON)
+option(M2_ENABLE_DILIGENT_D3D11 "Build the production Diligent D3D11 renderer (required)" ON)
+if(NOT M2_ENABLE_DILIGENT_D3D11)
+    message(FATAL_ERROR "M13B: Diligent OFF is unsupported. The Legacy D3D9 renderer was removed. Configure M2_ENABLE_DILIGENT_D3D11=ON.")
+endif()
 option(M2_BUILD_RENDERER_TESTS "Build renderer lifecycle and GPU smoke tests" ON)
 enable_testing()
 add_subdirectory(src/Renderer)

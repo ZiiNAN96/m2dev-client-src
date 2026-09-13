@@ -57,10 +57,10 @@ void CMapOutdoor::__RenderTerrain_RenderHardwareTransformPatch()
 
 	m_matWorldForCommonUse._41 = 0.0f;
 	m_matWorldForCommonUse._42 = 0.0f;
-	STATEMANAGER.SetTransform(D3DTS_WORLD, &m_matWorldForCommonUse);
+	STATEMANAGER.SetTransform(Renderer::MatrixWorld, &m_matWorldForCommonUse);
 
-	STATEMANAGER.SaveTransform(D3DTS_TEXTURE0, &m_matWorldForCommonUse);
-	STATEMANAGER.SaveTransform(D3DTS_TEXTURE1, &m_matWorldForCommonUse);
+	STATEMANAGER.SaveTransform(Renderer::MatrixTexture0, &m_matWorldForCommonUse);
+	STATEMANAGER.SaveTransform(Renderer::MatrixTexture1, &m_matWorldForCommonUse);
 
 	// Render State & TextureStageState
 	//////////////////////////////////////////////////////////////////////////
@@ -219,8 +219,8 @@ void CMapOutdoor::__RenderTerrain_RenderHardwareTransformPatch()
 
 	STATEMANAGER.RestoreRenderState(D3DRS_TEXTUREFACTOR);
 
-	STATEMANAGER.RestoreTransform(D3DTS_TEXTURE0);
-	STATEMANAGER.RestoreTransform(D3DTS_TEXTURE1);
+	STATEMANAGER.RestoreTransform(Renderer::MatrixTexture0);
+	STATEMANAGER.RestoreTransform(Renderer::MatrixTexture1);
 
 	STATEMANAGER.RestoreTextureStageState(0, D3DTSS_TEXCOORDINDEX);
 	STATEMANAGER.RestoreTextureStageState(0, D3DTSS_TEXTURETRANSFORMFLAGS);
@@ -272,7 +272,7 @@ void CMapOutdoor::__HardwareTransformPatch_RenderPatchSplat(long patchnum, WORD 
 	m_matWorldForCommonUse._42 = (float) (wCoordY * CTerrainImpl::TERRAIN_YSIZE);
 	D3DXMatrixMultiply(&matTexTransform, &m_matViewInverse, &m_matWorldForCommonUse);
 	D3DXMatrixMultiply(&matSplatAlphaTexTransform, &matTexTransform, &m_matSplatAlpha);
-	STATEMANAGER.SetTransform(D3DTS_TEXTURE1, &matSplatAlphaTexTransform);
+	STATEMANAGER.SetTransform(Renderer::MatrixTexture1, &matSplatAlphaTexTransform);
 
 	D3DXMATRIX matTiling;
 	D3DXMatrixScaling(&matTiling, 1.0f/640.0f, -1.0f/640.0f, 0.0f);
@@ -280,7 +280,7 @@ void CMapOutdoor::__HardwareTransformPatch_RenderPatchSplat(long patchnum, WORD 
 	matTiling._42=0.0f;
 	
 	D3DXMatrixMultiply(&matSplatColorTexTransform, &m_matViewInverse, &matTiling);
-	STATEMANAGER.SetTransform(D3DTS_TEXTURE0, &matSplatColorTexTransform);
+	STATEMANAGER.SetTransform(Renderer::MatrixTexture0, &matSplatColorTexTransform);
 					
 	CGraphicVertexBuffer* pkVB=pTerrainPatchProxy->HardwareTransformPatch_GetVertexBufferPtr();
 	if (!pkVB)
@@ -306,7 +306,7 @@ void CMapOutdoor::__HardwareTransformPatch_RenderPatchSplat(long patchnum, WORD 
 		const TTerrainTexture & rTexture = m_TextureSet.GetTexture(j);
 		
 		D3DXMatrixMultiply(&matSplatColorTexTransform, &m_matViewInverse, &rTexture.m_matTransform);
-		STATEMANAGER.SetTransform(D3DTS_TEXTURE0, &matSplatColorTexTransform);
+		STATEMANAGER.SetTransform(Renderer::MatrixTexture0, &matSplatColorTexTransform);
 		if (isFirst)
 		{
 			STATEMANAGER.SetTextureStageState(1, D3DTSS_ALPHAOP,   D3DTOP_DISABLE);
@@ -344,7 +344,7 @@ void CMapOutdoor::__HardwareTransformPatch_RenderPatchSplat(long patchnum, WORD 
 			const TTerrainTexture & rTexture = m_TextureSet.GetTexture(1);
 			
 			D3DXMatrixMultiply(&matSplatColorTexTransform, &m_matViewInverse, &rTexture.m_matTransform);
-			STATEMANAGER.SetTransform(D3DTS_TEXTURE0, &matSplatColorTexTransform);
+			STATEMANAGER.SetTransform(Renderer::MatrixTexture0, &matSplatColorTexTransform);
 			
 			STATEMANAGER.SetTexture(0, NULL);
 			STATEMANAGER.SetTexture(1, rSplat.pd3dTexture);
@@ -365,7 +365,7 @@ void CMapOutdoor::__HardwareTransformPatch_RenderPatchSplat(long patchnum, WORD 
 		D3DXMATRIX matShadowTexTransform;
 		D3DXMatrixMultiply(&matShadowTexTransform, &matTexTransform, &m_matStaticShadow);
 
-		STATEMANAGER.SetTransform(D3DTS_TEXTURE0, &matShadowTexTransform);
+		STATEMANAGER.SetTransform(Renderer::MatrixTexture0, &matShadowTexTransform);
  		STATEMANAGER.SetTexture(0, pTerrain->GetShadowTexture());		
 		
 		STATEMANAGER.SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
@@ -378,7 +378,7 @@ void CMapOutdoor::__HardwareTransformPatch_RenderPatchSplat(long patchnum, WORD 
 		STATEMANAGER.SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
 		if (m_bDrawChrShadow)
 		{
-			STATEMANAGER.SetTransform(D3DTS_TEXTURE1, &m_matDynamicShadow);
+			STATEMANAGER.SetTransform(Renderer::MatrixTexture1, &m_matDynamicShadow);
 
  			STATEMANAGER.SetTexture(1, m_lpCharacterShadowMapTexture);
 			STATEMANAGER.SetTextureStageState(1, D3DTSS_COLORARG1, D3DTA_TEXTURE);

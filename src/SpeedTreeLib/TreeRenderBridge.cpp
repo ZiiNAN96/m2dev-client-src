@@ -27,7 +27,6 @@ float StateFloat(D3DRENDERSTATETYPE type)
 { DWORD bits=STATEMANAGER.GetRenderState(type); float value; memcpy(&value,&bits,4); return value; }
 bool Sampling(DWORD stage,TreeSampler& sampler)
 {
-    auto* device=STATEMANAGER.GetDevice();
     const auto get=[&](D3DSAMPLERSTATETYPE type) { DWORD value=0; return SUCCEEDED(NativeStateView().GetSamplerState(stage,type,&value)) ? value : ~DWORD(0); };
     const auto u=get(D3DSAMP_ADDRESSU),v=get(D3DSAMP_ADDRESSV),min=get(D3DSAMP_MINFILTER),mag=get(D3DSAMP_MAGFILTER),mip=get(D3DSAMP_MIPFILTER);
     if((u!=D3DTADDRESS_WRAP && u!=D3DTADDRESS_CLAMP) || (v!=D3DTADDRESS_WRAP && v!=D3DTADDRESS_CLAMP) ||
@@ -74,8 +73,8 @@ bool CaptureState(TreeDraw& draw,bool hasSecond)
     }
     for(unsigned stage=0;stage<2;++stage) if((stage==0 || hasSecond) && !Sampling(stage,draw.samplers[stage])) return false;
     D3DXMATRIX matrix;
-    for(auto entry:{std::pair<D3DTRANSFORMSTATETYPE,std::array<float,16>*>(D3DTS_WORLD,&draw.matrices.world),
-                    {D3DTS_VIEW,&draw.matrices.view},{D3DTS_PROJECTION,&draw.matrices.projection},{D3DTS_TEXTURE1,&draw.textureTransform}}) {
+    for(auto entry:{std::pair<Renderer::MatrixSlot,std::array<float,16>*>(Renderer::MatrixWorld,&draw.matrices.world),
+                    {Renderer::MatrixView,&draw.matrices.view},{Renderer::MatrixProjection,&draw.matrices.projection},{Renderer::MatrixTexture1,&draw.textureTransform}}) {
         STATEMANAGER.GetTransform(entry.first,&matrix); memcpy(entry.second->data(),&matrix,64);
     }
     if(draw.part==TreePart::Leaf && FAILED(NativeStateView().GetVertexShaderConstantF(0,draw.legacyConstants[0].data(),96))) return false;
@@ -148,15 +147,15 @@ void TreeRenderBridge::Draw(CSpeedTreeWrapper const& tree,TreePart part,uint32_t
     if(!mesh->geometry) mesh->geometry=treeRenderer->UploadGeometry(mesh->source,part==TreePart::Billboard);
     if(!mesh->geometry) { Report(*data,"geometry upload",true); return; }
     if(part==TreePart::Billboard && !treeRenderer->UpdateVertices(mesh->geometry,mesh->source.vertices)) { Report(*data,"billboard update",true); return; }
-    const auto resolve=[&](LPDIRECT3DBASETEXTURE9 bound) -> CGraphicImage* {
+    const auto resolve=[&](TextureBinding bound) -> CGraphicImage* {
         if(!bound) return nullptr;
         for(auto* candidate:{&tree.m_BranchImageInstance,&tree.m_CompositeImageInstance,&tree.m_ShadowImageInstance})
-            if(!candidate->IsEmpty() && candidate->GetTextureReference().GetD3DTexture()==bound)
+            if(!candidate->IsEmpty() && candidate->GetTextureReference().GetTextureBinding()==bound)
                 return const_cast<CGraphicImageInstance*>(candidate)->GetGraphicImagePointer(); // Legacy read-only getter is not const-qualified.
-        if(cameraMask && cameraMask->GetTexturePointer()->GetD3DTexture()==bound) return cameraMask;
+        if(cameraMask && cameraMask->GetTexturePointer()->GetTextureBinding()==bound) return cameraMask;
         return nullptr;
     };
-    LPDIRECT3DBASETEXTURE9 bound[2]{}; STATEMANAGER.GetTexture(0,&bound[0]); STATEMANAGER.GetTexture(1,&bound[1]);
+    TextureBinding bound[2]{STATEMANAGER.GetTextureBinding(0),STATEMANAGER.GetTextureBinding(1)};
     TerrainTexturePtr images[2];
     for(unsigned stage=0;stage<2;++stage) {
         if(stage==1 && !bound[stage]) continue;

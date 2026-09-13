@@ -22,7 +22,7 @@ void CScreen::RenderLine3d(float sx, float sy, float sz, float ex, float ey, flo
 	if (GRAPHICS_CAPS_CAN_NOT_DRAW_LINE)
 		return;
 
-	assert(ms_lpd3dDevice != NULL);
+	assert(CRenderState::InstancePtr());
 
 	SPDTVertexRaw vertices[2] =
 	{
@@ -46,7 +46,7 @@ void CScreen::RenderBox3d(float sx, float sy, float sz, float ex, float ey, floa
 	if (GRAPHICS_CAPS_CAN_NOT_DRAW_LINE)
 		return;
 
-	assert(ms_lpd3dDevice != NULL);
+	assert(CRenderState::InstancePtr());
 
 	SPDTVertexRaw vertices[8] =
 	{
@@ -76,7 +76,7 @@ void CScreen::RenderBox3d(float sx, float sy, float sz, float ex, float ey, floa
 
 void CScreen::RenderBar3d(float sx, float sy, float sz, float ex, float ey, float ez)
 {
-	assert(ms_lpd3dDevice != NULL);
+	assert(CRenderState::InstancePtr());
 
 	SPDTVertexRaw vertices[4] =
 	{
@@ -101,7 +101,7 @@ void CScreen::RenderBar3d(float sx, float sy, float sz, float ex, float ey, floa
 
 void CScreen::RenderBar3d(const D3DXVECTOR3 * c_pv3Positions)
 {
-	assert(ms_lpd3dDevice != NULL);
+	assert(CRenderState::InstancePtr());
 	
 	SPDTVertexRaw vertices[4] =
 	{
@@ -124,7 +124,7 @@ void CScreen::RenderBar3d(const D3DXVECTOR3 * c_pv3Positions)
 
 void CScreen::RenderGradationBar3d(float sx, float sy, float sz, float ex, float ey, float ez, DWORD dwStartColor, DWORD dwEndColor)
 {
-	assert(ms_lpd3dDevice != NULL);
+	assert(CRenderState::InstancePtr());
 	if (sx==ex) return;
 	if (sy==ey) return;
 
@@ -166,7 +166,7 @@ void CScreen::RenderLineCube(float sx, float sy, float sz, float ex, float ey, f
 		STATEMANAGER.SetTexture(0, NULL);
 		STATEMANAGER.SetTexture(1, NULL);
 		STATEMANAGER.SetFVF(D3DFVF_XYZ|D3DFVF_DIFFUSE|D3DFVF_TEX1);
-		STATEMANAGER.SetTransform(D3DTS_WORLD, ms_lpd3dMatStack->GetTop());
+		STATEMANAGER.SetTransform(Renderer::MatrixWorld, ms_lpd3dMatStack->GetTop());
 		SetDefaultIndexBuffer(DEFAULT_IB_LINE_CUBE);
 
 		STATEMANAGER.DrawIndexedPrimitive(D3DPT_LINELIST, 0, 8, 0, 4*3);
@@ -193,7 +193,7 @@ void CScreen::RenderCube(float sx, float sy, float sz, float ex, float ey, float
 		STATEMANAGER.SetTexture(0, NULL);
 		STATEMANAGER.SetTexture(1, NULL);
 		STATEMANAGER.SetFVF(D3DFVF_XYZ|D3DFVF_DIFFUSE|D3DFVF_TEX1);
-		STATEMANAGER.SetTransform(D3DTS_WORLD, ms_lpd3dMatStack->GetTop());
+		STATEMANAGER.SetTransform(Renderer::MatrixWorld, ms_lpd3dMatStack->GetTop());
 
 		SetDefaultIndexBuffer(DEFAULT_IB_FILL_CUBE);
 		STATEMANAGER.DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 8, 0, 4*3);
@@ -233,7 +233,7 @@ void CScreen::RenderCube(float sx, float sy, float sz, float ex, float ey, float
 		STATEMANAGER.SetTexture(0, NULL);
 		STATEMANAGER.SetTexture(1, NULL);
 		STATEMANAGER.SetFVF(D3DFVF_XYZ|D3DFVF_DIFFUSE|D3DFVF_TEX1);
-		STATEMANAGER.SetTransform(D3DTS_WORLD, ms_lpd3dMatStack->GetTop());
+		STATEMANAGER.SetTransform(Renderer::MatrixWorld, ms_lpd3dMatStack->GetTop());
 
 		SetDefaultIndexBuffer(DEFAULT_IB_FILL_CUBE);
 		STATEMANAGER.DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 8, 0, 4*3);
@@ -327,13 +327,13 @@ public:
 	
 	CD3DXMeshRenderingOption(D3DFILLMODE d3dFillMode, const D3DXMATRIX & c_rmatWorld)
 	{
-		ms_lpd3dDevice->GetFVF(&m_dwVS);
+		STATEMANAGER.GetFVF(&m_dwVS);
 
 		STATEMANAGER.SaveTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TFACTOR);
 		STATEMANAGER.SaveTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
 		STATEMANAGER.SaveTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_DISABLE);
 		STATEMANAGER.SetRenderState(D3DRS_FILLMODE, d3dFillMode);
-		STATEMANAGER.SaveTransform(D3DTS_WORLD, &c_rmatWorld);
+		STATEMANAGER.SaveTransform(Renderer::MatrixWorld, &c_rmatWorld);
 
 		STATEMANAGER.SetTexture(0, NULL);
 		STATEMANAGER.SetTexture(1, NULL);
@@ -341,9 +341,9 @@ public:
 	
 	virtual ~CD3DXMeshRenderingOption()
 	{
-		ms_lpd3dDevice->SetFVF(m_dwVS);
+		STATEMANAGER.SetFVF(m_dwVS);
 
-		STATEMANAGER.RestoreTransform(D3DTS_WORLD);
+		STATEMANAGER.RestoreTransform(Renderer::MatrixWorld);
 		STATEMANAGER.RestoreTextureStageState(0, D3DTSS_COLORARG1);
 		STATEMANAGER.RestoreTextureStageState(0, D3DTSS_COLOROP);
 		STATEMANAGER.RestoreTextureStageState(0, D3DTSS_ALPHAOP);
@@ -390,7 +390,7 @@ void CScreen::RenderCylinder(const D3DXMATRIX * c_pmatWorld, float fx, float fy,
 
 void CScreen::RenderTextureBox(float sx, float sy, float ex, float ey, float z, float su, float sv, float eu, float ev)
 {
-	assert(ms_lpd3dDevice != NULL);
+	assert(CRenderState::InstancePtr());
 
 	TPDTVertex vertices[4];
 
@@ -425,7 +425,7 @@ void CScreen::RenderTextureBox(float sx, float sy, float ex, float ey, float z, 
 
 void CScreen::RenderBillboard(D3DXVECTOR3 * Position, D3DXCOLOR & Color)
 {
-	assert(ms_lpd3dDevice != NULL);
+	assert(CRenderState::InstancePtr());
 	
 	TPDTVertex vertices[4];
 	vertices[0].position = TPosition(Position[0].x, Position[0].y, Position[0].z);
@@ -628,82 +628,27 @@ void CScreen::SetClearStencil(DWORD stencil)
 
 void CScreen::ClearDepthBuffer()
 {
-	if(Renderer::activePresentation) Renderer::activePresentation->ClearDepth(ms_clearDepth);
-    if(STATEMANAGER.IsDiligentRendering()) return;
-	assert(ms_lpd3dDevice != NULL);
-	ms_lpd3dDevice->Clear(0L, NULL, D3DCLEAR_ZBUFFER, ms_clearColor, ms_clearDepth, ms_clearStencil);
+    if(Renderer::activePresentation) Renderer::activePresentation->ClearDepth(ms_clearDepth);
 }
 
 void CScreen::Clear()
 {
-    if(STATEMANAGER.IsDiligentRendering()) return;
-	assert(ms_lpd3dDevice != NULL);
-	ms_lpd3dDevice->Clear(0L, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, ms_clearColor, ms_clearDepth, ms_clearStencil);
+    // Color/depth clear is owned by the Diligent frame lifecycle.
 }
 
 BOOL CScreen::IsLostDevice()
 {
-	if (!ms_lpd3dDevice)
-		return TRUE;
-
-	IDirect3DDevice9Ex & rkD3DDev = *ms_lpd3dDevice;
-	HRESULT hrTestCooperativeLevel = rkD3DDev.TestCooperativeLevel();
-	if (FAILED(hrTestCooperativeLevel))
-		return TRUE;		
-	
-	return FALSE;
+    return FALSE;
 }
 
 BOOL CScreen::RestoreDevice()
 {
-	if (!ms_lpd3dDevice)
-		return FALSE;
-
-	IDirect3D9Ex& rkD3D = *ms_lpd3d;
-	IDirect3DDevice9Ex& rkD3DDev = *ms_lpd3dDevice;
-	D3DPRESENT_PARAMETERS& rkD3DPP = ms_d3dPresentParameter;
-	
-	HRESULT hrTestCooperativeLevel = rkD3DDev.TestCooperativeLevel();
-	
-	if (FAILED(hrTestCooperativeLevel))
-	{		
-		if (D3DERR_DEVICELOST == hrTestCooperativeLevel)
-		{
-			return FALSE;		
-		}
-
-		if (D3DERR_DEVICENOTRESET == hrTestCooperativeLevel)
-		{
-			D3DDISPLAYMODE d3dDisplayMode;
-			if (FAILED(rkD3D.GetAdapterDisplayMode(D3DADAPTER_DEFAULT, &d3dDisplayMode)))
-				return FALSE;
-					
-			rkD3DPP.BackBufferFormat = d3dDisplayMode.Format;
-			
-			HRESULT hrReset = rkD3DDev.Reset(&rkD3DPP);
-
-			if (FAILED(hrReset))
-			{
-				_com_error err(hrReset);
-				LPCWSTR errMsgW = err.ErrorMessage();   // wide string
-
-				std::string errUtf8 = WideToUtf8(errMsgW);
-				TraceError("%s", errUtf8.c_str());
-
-				return FALSE;
-			}
-			
-			STATEMANAGER.SetDefaultState();
-		}        
-	}
-
-	return TRUE;
-	
+    return FALSE;
 }
 
 bool CScreen::Begin()
 {
-	assert(ms_lpd3dDevice != NULL);
+	assert(CRenderState::InstancePtr());
 	ResetFaceCount();
 
 	if (!STATEMANAGER.BeginScene())
@@ -725,38 +670,17 @@ extern RECT g_rcBrowser;
 
 void CScreen::Show(HWND hWnd)
 {
-	assert(ms_lpd3dDevice != NULL);
-
-	if (g_isBrowserMode)
-	{
-		RECT rcTop={ static_cast<long>(0), static_cast<long>(0), static_cast<long>(ms_d3dPresentParameter.BackBufferWidth), static_cast<long>(g_rcBrowser.top)};
-		RECT rcBottom={0, g_rcBrowser.bottom, static_cast<long>(ms_d3dPresentParameter.BackBufferWidth), static_cast<long>(ms_d3dPresentParameter.BackBufferHeight)};
-		RECT rcLeft={0, g_rcBrowser.top, g_rcBrowser.left, g_rcBrowser.bottom};	
-		RECT rcRight={g_rcBrowser.right, g_rcBrowser.top, static_cast<long>(ms_d3dPresentParameter.BackBufferWidth), g_rcBrowser.bottom};		
-		
-		ms_lpd3dDevice->Present(&rcTop, &rcTop, hWnd, NULL);
-		ms_lpd3dDevice->Present(&rcBottom, &rcBottom, hWnd, NULL);
-		ms_lpd3dDevice->Present(&rcLeft, &rcLeft, hWnd, NULL);	
-		ms_lpd3dDevice->Present(&rcRight, &rcRight, hWnd, NULL);
-	}
-	else
-	{
-		HRESULT hr=ms_lpd3dDevice->Present(NULL, NULL, hWnd, NULL);
-		if (D3DERR_DEVICELOST == hr)
-			RestoreDevice();
-	}	
+    // Diligent presentation is owned by CPythonApplication.
 }
 
 void CScreen::Show(RECT * pSrcRect)
 {
-	assert(ms_lpd3dDevice != NULL);
-	ms_lpd3dDevice->Present(pSrcRect, NULL, NULL, NULL);
+
 }
 
 void CScreen::Show(RECT * pSrcRect, HWND hWnd)
 {
-	assert(ms_lpd3dDevice != NULL);
-	ms_lpd3dDevice->Present(pSrcRect, NULL, hWnd, NULL);
+
 }
 
 void CScreen::ProjectPosition(float x, float y, float z, float * pfX, float * pfY)
@@ -845,7 +769,7 @@ void CScreen::SetAddColorOperation(D3DXCOLOR & rColor)
 
 void CScreen::Identity()
 {
-	STATEMANAGER.SetTransform(D3DTS_WORLD, &ms_matIdentity);
+	STATEMANAGER.SetTransform(Renderer::MatrixWorld, &ms_matIdentity);
 }
 
 CScreen::CScreen()

@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "EterLib/NativeResourceAudit.h"
 #include "GrpVertexShader.h"
 #include "GrpD3DXBuffer.h"
 #include "StateManager.h"
@@ -62,10 +63,10 @@ bool CVertexShader::CreateFromDiskFile(const char* c_szFileName, const DWORD* c_
     }
 
     if (FAILED(
-        ms_lpd3dDevice->CreateVertexShader(
+        M2_NATIVE_RESOURCE(VertexShader, ms_lpd3dDevice->CreateVertexShader(
             (const DWORD*)lpd3dxShaderBuffer->GetBufferPointer(),
             &m_handle
-        )))
+        ))))
         return false;
 
     return true;

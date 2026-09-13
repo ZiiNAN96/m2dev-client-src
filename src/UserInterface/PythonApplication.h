@@ -131,6 +131,7 @@ class CPythonApplication : public CMSApplication, public CInputKeyboard, public 
 		explicit CPythonApplication(Renderer::BackendKind backend);
 		virtual ~CPythonApplication();
         bool HasRendererStartupFailed() const { return m_rendererStartupFailed; }
+        bool HasRendererRuntimeFailed() const { return m_rendererRuntimeFailed; }
 
 	public:
 		void ShowWebPage(const char* c_szURL, const RECT& c_rcWebPage);
@@ -355,9 +356,9 @@ class CPythonApplication : public CMSApplication, public CInputKeyboard, public 
 		CAccountConnector			m_kAccountConnector;
 
 		CGraphicDevice				m_grpDevice;
-		std::unique_ptr<Renderer::IRenderBackend> m_renderBackend;
 		const Renderer::BackendKind m_startupBackend;
         bool m_rendererStartupFailed = false;
+        bool m_rendererRuntimeFailed = false;
         bool FailRendererStartup(const char* message);
 		std::unique_ptr<Renderer::ITerrainPresentation> m_terrainPresentation;
 		CNetworkDevice				m_netDevice;

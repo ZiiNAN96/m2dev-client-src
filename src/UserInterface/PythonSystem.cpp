@@ -36,36 +36,14 @@ void CPythonSystem::GetDisplaySettings()
 	memset(m_ResolutionList, 0, sizeof(TResolution) * RESOLUTION_MAX_NUM);
 	m_ResolutionCount = 0;
 
-	LPDIRECT3D9EX lpD3D = CPythonGraphic::Instance().GetD3D();
-
-	D3DADAPTER_IDENTIFIER9 d3dAdapterIdentifier;
-	D3DDISPLAYMODE d3ddmDesktop;
-
-	lpD3D->GetAdapterIdentifier(0, 0, &d3dAdapterIdentifier);
-	lpD3D->GetAdapterDisplayMode(0, &d3ddmDesktop);
-
-	// 이 어뎁터가 가지고 있는 디스플래이 모드갯수를 나열한다..
-	DWORD dwNumAdapterModes = lpD3D->GetAdapterModeCount(0, d3ddmDesktop.Format);
-
-	for (UINT iMode = 0; iMode < dwNumAdapterModes; iMode++)
-	{
-		D3DDISPLAYMODE DisplayMode;
-		lpD3D->EnumAdapterModes(0, d3ddmDesktop.Format, iMode, &DisplayMode);
-		DWORD bpp = 0;
-
-		// 800 600 이상만 걸러낸다.
-		if (DisplayMode.Width < 800 || DisplayMode.Height < 600)
-			continue;
-
-		// 일단 16bbp 와 32bbp만 취급하자.
-		// 16bbp만 처리하게끔 했음 - [levites]
-		if (DisplayMode.Format == D3DFMT_R5G6B5)
-			bpp = 16;
-		else if (DisplayMode.Format == D3DFMT_X8R8G8B8)
-			bpp = 32;
-		else
-			continue;
-
+    // ZiiNAN: Display modes are OS data, not a reason to create a D3D9 device.
+    DEVMODEW mode{}; mode.dmSize=sizeof(mode);
+    for(DWORD index=0; EnumDisplaySettingsW(nullptr,index,&mode); ++index)
+    {
+        if(mode.dmPelsWidth<800 || mode.dmPelsHeight<600 || mode.dmBitsPerPel!=32) continue;
+        struct { DWORD Width,Height,RefreshRate; } DisplayMode{
+            mode.dmPelsWidth,mode.dmPelsHeight,mode.dmDisplayFrequency};
+        const DWORD bpp=32;
 		int check_res = false;
 
 		for (int i = 0; !check_res && i < m_ResolutionCount; ++i)

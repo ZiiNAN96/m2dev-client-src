@@ -15,6 +15,7 @@
 //--------------------------------------------------------------------------------------
 
 #include "StdAfx.h"
+#include "EterLib/NativeResourceAudit.h"
 #include "DDSTextureLoader9.h"
 
 #include <d3d9types.h>
@@ -820,16 +821,16 @@ namespace
 
             // Create the volume texture (let the runtime do the validation)
             ComPtr<IDirect3DVolumeTexture9> pTexture;
-            hr = device->CreateVolumeTexture(iWidth, iHeight, iDepth, iMipCount,
-                usage, fmt, pool, pTexture.GetAddressOf(), nullptr);
+            hr = M2_NATIVE_RESOURCE(VolumeTexture, device->CreateVolumeTexture(iWidth, iHeight, iDepth, iMipCount,
+                usage, fmt, pool, pTexture.GetAddressOf(), nullptr));
             if (FAILED(hr))
                 return hr;
 
             ComPtr<IDirect3DVolumeTexture9> pStagingTexture;
             if (pool == D3DPOOL_DEFAULT)
             {
-                hr = device->CreateVolumeTexture(iWidth, iHeight, iDepth, iMipCount,
-                    0u, fmt, D3DPOOL_SYSTEMMEM, pStagingTexture.GetAddressOf(), nullptr);
+                hr = M2_NATIVE_RESOURCE(VolumeTexture, device->CreateVolumeTexture(iWidth, iHeight, iDepth, iMipCount,
+                    0u, fmt, D3DPOOL_SYSTEMMEM, pStagingTexture.GetAddressOf(), nullptr));
                 if (FAILED(hr))
                     return hr;
             }
@@ -918,16 +919,16 @@ namespace
 
             // Create the cubemap (let the runtime do the validation)
             ComPtr<IDirect3DCubeTexture9> pTexture;
-            hr = device->CreateCubeTexture(iWidth, iMipCount,
-                usage, fmt, pool, pTexture.GetAddressOf(), nullptr);
+            hr = M2_NATIVE_RESOURCE(CubeTexture, device->CreateCubeTexture(iWidth, iMipCount,
+                usage, fmt, pool, pTexture.GetAddressOf(), nullptr));
             if (FAILED(hr))
                 return hr;
 
             ComPtr<IDirect3DCubeTexture9> pStagingTexture;
             if (pool == D3DPOOL_DEFAULT)
             {
-                hr = device->CreateCubeTexture(iWidth, iMipCount,
-                    0u, fmt, D3DPOOL_SYSTEMMEM, pStagingTexture.GetAddressOf(), nullptr);
+                hr = M2_NATIVE_RESOURCE(CubeTexture, device->CreateCubeTexture(iWidth, iMipCount,
+                    0u, fmt, D3DPOOL_SYSTEMMEM, pStagingTexture.GetAddressOf(), nullptr));
                 if (FAILED(hr))
                     return hr;
             }
@@ -1010,17 +1011,17 @@ namespace
                 usage |= D3DUSAGE_AUTOGENMIPMAP;
 
             ComPtr<IDirect3DTexture9> pTexture;
-            hr = device->CreateTexture(iWidth, iHeight, iMipCount,
+            hr = M2_NATIVE_RESOURCE(Texture, device->CreateTexture(iWidth, iHeight, iMipCount,
                 usage, fmt, pool,
-                pTexture.GetAddressOf(), nullptr);
+                pTexture.GetAddressOf(), nullptr));
             if (FAILED(hr))
                 return hr;
 
             ComPtr<IDirect3DTexture9> pStagingTexture;
             if (pool == D3DPOOL_DEFAULT)
             {
-                hr = device->CreateTexture(iWidth, iHeight, iMipCount,
-                    0u, fmt, D3DPOOL_SYSTEMMEM, pStagingTexture.GetAddressOf(), nullptr);
+                hr = M2_NATIVE_RESOURCE(Texture, device->CreateTexture(iWidth, iHeight, iMipCount,
+                    0u, fmt, D3DPOOL_SYSTEMMEM, pStagingTexture.GetAddressOf(), nullptr));
                 if (FAILED(hr))
                     return hr;
             }

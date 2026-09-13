@@ -1,4 +1,5 @@
 #include "DiligentD3D11BackendInternal.h"
+#include "TerrainPresentation.h"
 #include "Graphics/GraphicsEngineD3D11/interface/EngineFactoryD3D11.h"
 #include "Graphics/GraphicsEngine/interface/Texture.h"
 
@@ -31,6 +32,8 @@ bool DiligentD3D11Backend::Initialize(const InitializeInfo& info)
                                      Diligent::NativeWindow{info.window}, &state->swapChain);
         if (!state->swapChain)
             return false;
+        const auto& adapter=state->device->GetAdapterInfo();
+        graphicsCapabilities={adapter.Texture.MaxTexture2DDimension,adapter.Memory.LocalMemory};
         m_impl = std::move(state);
         return true;
     }

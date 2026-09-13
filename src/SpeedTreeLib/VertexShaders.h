@@ -1,3 +1,4 @@
+#include "EterLib/NativeResourceAudit.h"
 ///////////////////////////////////////////////////////////////////////  
 //	SpeedTreeRT DirectX Example
 //
@@ -141,7 +142,7 @@ static LPDIRECT3DVERTEXDECLARATION9 LoadBranchShader(LPDIRECT3DDEVICE9 pDx)
 	// assemble shader
 	LPDIRECT3DVERTEXDECLARATION9 dwShader = NULL;
 
-	if (pDx->CreateVertexDeclaration(pBranchShaderDecl, &dwShader) != D3D_OK)
+	if (M2_NATIVE_RESOURCE(Declaration, pDx->CreateVertexDeclaration(pBranchShaderDecl, &dwShader)) != D3D_OK)
 	{
 		wchar_t szError[1024];
 		swprintf_s(szError, L"Failed to create branch vertex shader.");
@@ -289,7 +290,7 @@ static void LoadLeafShader(LPDIRECT3DDEVICE9 pDx, LPDIRECT3DVERTEXDECLARATION9& 
 	const HRESULT hrAssemble = D3DXAssembleShader(g_achLeafVertexProgram, sizeof(g_achLeafVertexProgram) - 1, nullptr, nullptr, 0, &pCode, &pError);
 	if (SUCCEEDED(hrAssemble) && pCode)
 	{
-		const HRESULT hrCreateShader = pDx->CreateVertexShader((DWORD*)pCode->GetBufferPointer(), &pNewVertexShader);
+		const HRESULT hrCreateShader = M2_NATIVE_RESOURCE(VertexShader, pDx->CreateVertexShader((DWORD*)pCode->GetBufferPointer(), &pNewVertexShader));
 		if (FAILED(hrCreateShader))
 			TraceError("Failed to create leaf vertex shader (hr=0x%08X).", hrCreateShader);
 	}
@@ -298,7 +299,7 @@ static void LoadLeafShader(LPDIRECT3DDEVICE9 pDx, LPDIRECT3DVERTEXDECLARATION9& 
 		TraceError("Failed to assemble leaf vertex shader (hr=0x%08X). The error reported is [ %s ].", hrAssemble, pError ? pError->GetBufferPointer() : "unknown");
 	}
 
-	const HRESULT hrCreateDecl = pDx->CreateVertexDeclaration(leafVertexDecl, &pNewVertexDecl);
+	const HRESULT hrCreateDecl = M2_NATIVE_RESOURCE(Declaration, pDx->CreateVertexDeclaration(leafVertexDecl, &pNewVertexDecl));
 	if (FAILED(hrCreateDecl))
 		TraceError("Failed to create leaf vertex declaration (hr=0x%08X).", hrCreateDecl);
 

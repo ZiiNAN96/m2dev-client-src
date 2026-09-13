@@ -7,34 +7,10 @@
   not liable under any circumstances for any damages or loss whatsoever arising
   from the use or inability to use this file or items derived from it.
 
-	Comments:
-
-	  A simple class to manage rendering state.  Created as a singleton.
-	  Create it as a static global, or with new.  It doesn't matter as long as it is created
-	  before you use the CStateManager::GetSingleton() API to get a reference to it.
-
-	  Call it with STATEMANAGER.SetRenderState(...)
-	  Call it with STATEMANAGER.SetTextureStageState(...), etc.
-
-	  Call the 'Save' versions of the function if you want to deviate from the current state.
-	  Call the 'Restore' version to retrieve the last Save.
-
-	  There are two levels of caching:
-	  - All Sets/Saves/Restores are tracked for redundancy.  This reduces the size of the batch to
-	  be flushed
-	  - The flush function is called before rendering, and only copies state that is
-	  different from the current chip state.
-
-  If you get an assert it is probably because an API call failed.
-
-  See NVLink for a good example of how this class is used.
-
-  Don't be afraid of the vector being used to track the flush batch.  It will grow as big as
-  it needs to be and then stop, so it shouldn't be reallocated.
-
-  The state manager holds a reference to the d3d device.
-
-  - cmaughan@nvidia.com
+  CPU draw-description storage, derived from the original state manager.
+  Save/Restore scopes preserve producer semantics. No D3D9 device, native
+  state synchronization, or draw submission exists here. Legacy enum names
+  remain temporarily as material vocabulary until M13C.
 
 ******************************************************************************/
 
@@ -42,11 +18,13 @@
 #define __CSTATEMANAGER_H
 
 #include <d3d9.h>
+#include "../Renderer/MatrixState.h"
 #include <d3dx9.h>
 
 #include <vector>
 #include <stack>
 #include <wrl/client.h>
+#include "TextureBinding.h"
 #include <cstdint>
 
 #include "EterBase/Singleton.h"
@@ -64,7 +42,7 @@ static const DWORD STATEMANAGER_MAX_TEXTURESTATES = 128;
 static const DWORD STATEMANAGER_MAX_STAGES = 8;
 static const DWORD STATEMANAGER_MAX_VCONSTANTS = 96;
 static const DWORD STATEMANAGER_MAX_PCONSTANTS = 8;
-static const DWORD STATEMANAGER_MAX_TRANSFORMSTATES = 300;	// World1 lives way up there...
+static const DWORD STATEMANAGER_MAX_TRANSFORMSTATES = Renderer::MatrixSlotCount;
 static const DWORD STATEMANAGER_MAX_STREAMS = 16;
 
 static DWORD gs_DefaultRenderStates[STATEMANAGER_MAX_RENDERSTATES];
@@ -149,7 +127,7 @@ public:
 		DWORD					m_dwValue0;
 		DWORD					m_dwStage;
 		D3DRENDERSTATETYPE		m_RenderStateType;
-		D3DTRANSFORMSTATETYPE	m_TransformStateType;
+		Renderer::MatrixSlot	m_TransformStateType;
 	};
 
 	union
@@ -161,10 +139,10 @@ public:
 
 typedef std::vector<CStateID> TStateID;
 
-class CStateManagerState
+class CRenderStateState
 {
 public:
-	CStateManagerState()
+	CRenderStateState()
 	{
 	}
 
@@ -225,11 +203,11 @@ public:
 	BOOL					m_bVertexProcessing;
 };
 
-class CStateManager : public CSingleton<CStateManager>
+class CRenderState : public CSingleton<CRenderState>
 {
 public:
-	CStateManager(LPDIRECT3DDEVICE9EX lpDevice);
-	virtual ~CStateManager();
+	CRenderState();
+	virtual ~CRenderState();
 
 	void	SetDefaultState();
 	void	Restore();
@@ -258,9 +236,9 @@ public:
 	void	GetRenderState(D3DRENDERSTATETYPE Type, DWORD* pdwValue);
 
 	// Textures
-	void	SaveTexture(DWORD dwStage, LPDIRECT3DBASETEXTURE9 pTexture);
+	void	SaveTexture(DWORD dwStage, TextureBinding texture);
 	void	RestoreTexture(DWORD dwStage);
-	void	SetTexture(DWORD dwStage, LPDIRECT3DBASETEXTURE9 pTexture);
+	void	SetTexture(DWORD dwStage, TextureBinding texture);
 	void	GetTexture(DWORD dwStage, LPDIRECT3DBASETEXTURE9* ppTexture);
 
 	// Texture stage states
@@ -302,16 +280,16 @@ public:
 
 	// *** These states are cached, but not protected from multiple sends of the same value.
 	// Transform
-	void SaveTransform(D3DTRANSFORMSTATETYPE Transform, const D3DXMATRIX* pMatrix);
-	void RestoreTransform(D3DTRANSFORMSTATETYPE Transform);
+	void SaveTransform(Renderer::MatrixSlot Transform, const D3DXMATRIX* pMatrix);
+	void RestoreTransform(Renderer::MatrixSlot Transform);
 
 	// VertexProcessing
 	void SaveVertexProcessing(BOOL IsON);
 	void RestoreVertexProcessing();
 
 	// Don't cache-check the transform.  To much to do
-	void SetTransform(D3DTRANSFORMSTATETYPE Type, const D3DXMATRIX* pMatrix);
-	void GetTransform(D3DTRANSFORMSTATETYPE Type, D3DXMATRIX* pMatrix);
+	void SetTransform(Renderer::MatrixSlot Type, const D3DXMATRIX* pMatrix);
+	void GetTransform(Renderer::MatrixSlot Type, D3DXMATRIX* pMatrix);
 
 	// SetVertexShaderConstant
 	void SetVertexShaderConstant(DWORD dwRegister, CONST void* pConstantData, DWORD dwConstantCount);
@@ -336,18 +314,13 @@ public:
 	// Codes For Debug
 	DWORD GetRenderState(D3DRENDERSTATETYPE Type);
 
-	void StateManager_Capture();
-	void StateManager_Apply();
-
-	LPDIRECT3DDEVICE9EX GetDevice();
-    // ZiiNAN: Startup-only CPU compatibility state, separate from native GPU execution.
-    void EnableDiligentRendering();
+    // CPU material/lighting/sampler values; no device cache or native dispatch.
+    TextureBinding GetTextureBinding(DWORD stage) const { return m_textureBindings[stage]; }
     bool IsDiligentRendering() const { return m_diligentRendering; }
     HRESULT SetViewport(const D3DVIEWPORT9* viewport);
     HRESULT LightEnable(DWORD index,BOOL enabled);
     HRESULT SetRenderTarget(DWORD index,IDirect3DSurface9* surface);
     HRESULT SetDepthStencilSurface(IDirect3DSurface9* surface);
-    void ForgetDiligentTexture(IDirect3DBaseTexture9* texture);
     struct NativeCounters { uint64_t draws=0,states=0,textures=0,targets=0,suppressedDraws=0; };
     NativeCounters GetNativeCounters() const { return m_nativeCounters; }
     void ResetNativeCounters() { m_nativeCounters={}; }
@@ -358,10 +331,9 @@ public:
 #endif
 
 private:
-	void SetDevice(LPDIRECT3DDEVICE9EX lpDevice);
     friend class NativeStateView;
-    void SeedNativeStateView();
-    bool m_diligentRendering=false;
+    void InitializeDrawDefaults();
+    static constexpr bool m_diligentRendering=true;
     NativeCounters m_nativeCounters;
     D3DVIEWPORT9 m_viewport{};
     RECT m_scissor{};
@@ -369,26 +341,22 @@ private:
     BOOL m_lightEnabled[8]{};
     bool m_lightValid[8]{};
     float m_vertexConstants[96][4]{};
-    Microsoft::WRL::ComPtr<IDirect3DBaseTexture9> m_textureOwners[8];
-    Microsoft::WRL::ComPtr<IDirect3DVertexShader9> m_vertexShaderOwner;
-    Microsoft::WRL::ComPtr<IDirect3DPixelShader9> m_pixelShaderOwner;
+    TextureBinding m_textureBindings[8];
 
 private:
 
-	CStateManagerState	m_CurrentState;
-	CStateManagerState	m_CurrentState_Copy;
+	CRenderStateState	m_CurrentState;
 
 	bool				m_bForce;
 	bool				m_bScene;
 	DWORD				m_dwBestMinFilter;
 	DWORD				m_dwBestMagFilter;
-	LPDIRECT3DDEVICE9EX	m_lpD3DDev;
 
 	std::vector<DWORD>						m_RenderStateStack[STATEMANAGER_MAX_RENDERSTATES];
 	std::vector<DWORD>						m_SamplerStateStack[STATEMANAGER_MAX_STAGES][STATEMANAGER_MAX_TEXTURESTATES];
 	std::vector<DWORD>						m_TextureStageStateStack[STATEMANAGER_MAX_STAGES][STATEMANAGER_MAX_TEXTURESTATES];
 	std::vector<D3DXMATRIX>					m_TransformStack[STATEMANAGER_MAX_TRANSFORMSTATES];
-	std::vector<LPDIRECT3DBASETEXTURE9>		m_TextureStack[STATEMANAGER_MAX_STAGES];
+	std::vector<TextureBinding>		m_TextureStack[STATEMANAGER_MAX_STAGES];
 	std::vector<D3DMATERIAL9>				m_MaterialStack;
 	std::vector<DWORD>						m_FVFStack;
 	std::vector<LPDIRECT3DPIXELSHADER9>		m_PixelShaderStack;
@@ -405,6 +373,8 @@ private:
 #endif _DEBUG
 };
 
-#define STATEMANAGER (CStateManager::Instance())
+// ZiiNAN: CPU draw descriptions only; compatibility spelling avoids rewriting producers.
+using CStateManager = CRenderState;
+#define STATEMANAGER (CRenderState::Instance())
 
 #endif __CSTATEMANAGER_H

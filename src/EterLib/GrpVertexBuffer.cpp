@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "EterLib/NativeResourceAudit.h"
 #include "EterBase/Stl.h"
 #include "GrpVertexBuffer.h"
 #include "StateManager.h"
@@ -21,12 +22,13 @@ int CGraphicVertexBuffer::GetVertexCount() const
 
 void CGraphicVertexBuffer::SetStream(int stride, int layer) const
 {
-	assert(ms_lpd3dDevice != NULL);
+	assert(Renderer::UseNeutralResources());
 	STATEMANAGER.SetStreamSource(layer, m_lpd3dVB, stride);	
 }
 
 bool CGraphicVertexBuffer::LockRange(unsigned count, void** pretVertices) const
 {
+    if (m_cpuBuffer.Size()) return count && m_cpuBuffer.Lock(0,size_t(GetVertexStride())*count,pretVertices);
 	if (!m_lpd3dVB)
 		return false;
 
@@ -39,6 +41,7 @@ bool CGraphicVertexBuffer::LockRange(unsigned count, void** pretVertices) const
 
 bool CGraphicVertexBuffer::Lock(void ** pretVertices) const
 {
+    if (m_cpuBuffer.Size()) return m_cpuBuffer.Lock(0,0,pretVertices);
 	if (!m_lpd3dVB)
 		return false;
 
@@ -51,6 +54,7 @@ bool CGraphicVertexBuffer::Lock(void ** pretVertices) const
 
 bool CGraphicVertexBuffer::Unlock() const
 {
+    if (m_cpuBuffer.Size()) return m_cpuBuffer.Unlock();
 	if (!m_lpd3dVB)
 		return false;
 
@@ -61,11 +65,12 @@ bool CGraphicVertexBuffer::Unlock() const
 
 bool CGraphicVertexBuffer::IsEmpty() const
 {
-	return m_lpd3dVB == nullptr;
+	return m_lpd3dVB == nullptr && m_cpuBuffer.Size() == 0;
 }
 
 bool CGraphicVertexBuffer::LockDynamic(void** pretVertices)
 {
+    if (m_cpuBuffer.Size()) return m_cpuBuffer.Lock(0,0,pretVertices);
 	if (!m_lpd3dVB)
 		return false;
 
@@ -77,6 +82,7 @@ bool CGraphicVertexBuffer::LockDynamic(void** pretVertices)
 
 bool CGraphicVertexBuffer::Lock(void ** pretVertices)
 {
+    if (m_cpuBuffer.Size()) return m_cpuBuffer.Lock(0,0,pretVertices);
 	if (!m_lpd3dVB)
 		return false;
 
@@ -88,6 +94,7 @@ bool CGraphicVertexBuffer::Lock(void ** pretVertices)
 
 bool CGraphicVertexBuffer::Unlock()
 {
+    if (m_cpuBuffer.Size()) return m_cpuBuffer.Unlock();
 	if (!m_lpd3dVB)
 		return false;
 
@@ -98,6 +105,7 @@ bool CGraphicVertexBuffer::Unlock()
 
 bool CGraphicVertexBuffer::Copy(int bufSize, const void* srcVertices)
 {
+    if (m_cpuBuffer.Size() && (!srcVertices || bufSize<0 || size_t(bufSize)>m_cpuBuffer.Size())) return false;
 	void * dstVertices;
 
 	if (!Lock(&dstVertices))
@@ -111,17 +119,19 @@ bool CGraphicVertexBuffer::Copy(int bufSize, const void* srcVertices)
 
 bool CGraphicVertexBuffer::CreateDeviceObjects()
 {
-	assert(ms_lpd3dDevice != NULL);
+    // ZiiNAN: Backend-neutral graphics resource ownership
+    if (Renderer::UseNeutralResources()) return m_cpuBuffer.Create(m_dwBufferSize);
+	assert(Renderer::UseNeutralResources());
 	assert(m_lpd3dVB == NULL);
 
 	if (FAILED(
-		ms_lpd3dDevice->CreateVertexBuffer(
+		M2_NATIVE_RESOURCE(VertexBuffer, ms_lpd3dDevice->CreateVertexBuffer(
 		m_dwBufferSize, 
 		m_dwUsage, 
 		m_dwFVF, 
 		m_d3dPool, 
 		&m_lpd3dVB,
-		nullptr)
+		nullptr))
 		))
 		return false;
 
@@ -130,12 +140,13 @@ bool CGraphicVertexBuffer::CreateDeviceObjects()
 
 void CGraphicVertexBuffer::DestroyDeviceObjects()
 {
+    m_cpuBuffer.Clear();
 	safe_release(m_lpd3dVB);
 }
 
 bool CGraphicVertexBuffer::Create(int vtxCount, DWORD fvf, DWORD usage, D3DPOOL d3dPool)
 {
-	assert(ms_lpd3dDevice != NULL);
+	assert(Renderer::UseNeutralResources());
 	assert(vtxCount > 0);
 
 	Destroy();

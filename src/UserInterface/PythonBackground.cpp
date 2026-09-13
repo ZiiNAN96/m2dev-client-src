@@ -508,7 +508,7 @@ void CPythonBackground::RenderCharacterShadowToTexture()
 		m_eShadowLevel == SHADOW_GROUND_AND_SOLO)
 	{
 		D3DXMATRIX matWorld;
-		STATEMANAGER.GetTransform(D3DTS_WORLD, &matWorld);
+		STATEMANAGER.GetTransform(Renderer::MatrixWorld, &matWorld);
 
 		bool canRender=rkMap.BeginRenderCharacterShadowToTexture();
 		if (canRender)
@@ -522,7 +522,7 @@ void CPythonBackground::RenderCharacterShadowToTexture()
 		}
 		rkMap.EndRenderCharacterShadowToTexture();
 
-		STATEMANAGER.SetTransform(D3DTS_WORLD, &matWorld);
+		STATEMANAGER.SetTransform(Renderer::MatrixWorld, &matWorld);
 	}
 
 	DWORD t2=ELTimer_GetMSec();

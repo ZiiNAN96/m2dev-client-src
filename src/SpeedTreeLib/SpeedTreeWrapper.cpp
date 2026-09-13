@@ -33,6 +33,7 @@
 ///////////////////////////////////////////////////////////////////////  
 //	Include Files
 #include "StdAfx.h"
+#include "EterLib/NativeResourceAudit.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -96,7 +97,7 @@ void CSpeedTreeWrapper::OnRenderPCBlocker()
 	if (!ms_dwBranchVertexShader || !ms_pLeafVertexShaderDecl || !ms_pLeafVertexShader)
 		CSpeedTreeForestDirectX::Instance().EnsureVertexShaders();
 
-	if (ms_dwBranchVertexShader == 0)
+	if (ms_dwBranchVertexShader == 0 && !Renderer::UseNeutralResources())
 	{
 		ms_dwBranchVertexShader = LoadBranchShader(ms_lpd3dDevice);
 		//LogBox("Vertex Shader not assigned. You must call CSpeedTreeWrapper::SetVertexShader for this");
@@ -140,7 +141,7 @@ void CSpeedTreeWrapper::OnRenderPCBlocker()
 #ifdef WRAPPER_USE_CPU_WIND
 		m_pSpeedTree->GetGeometry(*m_pGeometryCache, SpeedTree_BranchGeometry);
 		
-		if (m_pGeometryCache->m_sBranches.m_usNumStrips > 0)
+		if (m_pBranchVertexBuffer && m_pGeometryCache->m_sBranches.m_usNumStrips > 0)
 		{
 			// update the vertex array
 			SFVFBranchVertex* pVertexBuffer = NULL;
@@ -153,10 +154,10 @@ void CSpeedTreeWrapper::OnRenderPCBlocker()
 		}
 #endif
 		
-		LPDIRECT3DTEXTURE9 lpd3dTexture;
+		TextureBinding lpd3dTexture;
 		
 		// set texture map
-		if ((lpd3dTexture = m_BranchImageInstance.GetTextureReference().GetD3DTexture()))
+		if ((lpd3dTexture = m_BranchImageInstance.GetTextureReference().GetTextureBinding()))
 			STATEMANAGER.SetTexture(0, lpd3dTexture);
 		
 		if (m_pGeometryCache->m_sBranches.m_usVertexCount > 0)
@@ -170,7 +171,7 @@ void CSpeedTreeWrapper::OnRenderPCBlocker()
 
 	RenderBranches();
 	
-	STATEMANAGER.SetTexture(0, m_CompositeImageInstance.GetTextureReference().GetD3DTexture());
+	STATEMANAGER.SetTexture(0, m_CompositeImageInstance.GetTextureReference().GetTextureBinding());
 	STATEMANAGER.SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
 	
 // 	SetupFrondForTreeType();
@@ -178,7 +179,7 @@ void CSpeedTreeWrapper::OnRenderPCBlocker()
 		// update the frond geometry for CPU wind
 #ifdef WRAPPER_USE_CPU_WIND
 		m_pSpeedTree->GetGeometry(*m_pGeometryCache, SpeedTree_FrondGeometry);
-		if (m_pGeometryCache->m_sFronds.m_usNumStrips > 0)
+		if (m_pFrondVertexBuffer && m_pGeometryCache->m_sFronds.m_usNumStrips > 0)
 		{
 			// update the vertex array
 			SFVFBranchVertex * pVertexBuffer = NULL;
@@ -192,7 +193,7 @@ void CSpeedTreeWrapper::OnRenderPCBlocker()
 #endif
 		
 		if (!m_CompositeImageInstance.IsEmpty())
-			STATEMANAGER.SetTexture(0, m_CompositeImageInstance.GetTextureReference().GetD3DTexture());
+			STATEMANAGER.SetTexture(0, m_CompositeImageInstance.GetTextureReference().GetTextureBinding());
 		
 		if (m_pGeometryCache->m_sFronds.m_usVertexCount > 0)
 		{
@@ -204,7 +205,7 @@ void CSpeedTreeWrapper::OnRenderPCBlocker()
 	}
 	RenderFronds();
 	
-	if (ms_pLeafVertexShaderDecl && ms_pLeafVertexShader)
+	if ((ms_pLeafVertexShaderDecl && ms_pLeafVertexShader) || Renderer::UseNeutralResources())
 	{
 		STATEMANAGER.SetVertexDeclaration(ms_pLeafVertexShaderDecl);
 		STATEMANAGER.SaveVertexShader(ms_pLeafVertexShader);
@@ -217,7 +218,7 @@ void CSpeedTreeWrapper::OnRenderPCBlocker()
 #endif
 			
 			if (!m_CompositeImageInstance.IsEmpty())
-				STATEMANAGER.SetTexture(0, m_CompositeImageInstance.GetTextureReference().GetD3DTexture());
+				STATEMANAGER.SetTexture(0, m_CompositeImageInstance.GetTextureReference().GetTextureBinding());
 		}
 		RenderLeaves();
 		STATEMANAGER.RestoreVertexShader();
@@ -245,7 +246,7 @@ void CSpeedTreeWrapper::OnRender()
 	if (!ms_dwBranchVertexShader || !ms_pLeafVertexShaderDecl || !ms_pLeafVertexShader)
 		CSpeedTreeForestDirectX::Instance().EnsureVertexShaders();
 
-	if (ms_dwBranchVertexShader == 0)
+	if (ms_dwBranchVertexShader == 0 && !Renderer::UseNeutralResources())
 	{
 		ms_dwBranchVertexShader = LoadBranchShader(ms_lpd3dDevice);
 		//LogBox("Vertex Shader not assigned. You must call CSpeedTreeWrapper::SetVertexShader for this");
@@ -285,13 +286,13 @@ void CSpeedTreeWrapper::OnRender()
 	SetupBranchForTreeType();
 	RenderBranches();
 	
-	STATEMANAGER.SetTexture(0, m_CompositeImageInstance.GetTextureReference().GetD3DTexture());
+	STATEMANAGER.SetTexture(0, m_CompositeImageInstance.GetTextureReference().GetTextureBinding());
 	STATEMANAGER.SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
 	
 	SetupFrondForTreeType();
 	RenderFronds();
 	
-	if (ms_pLeafVertexShaderDecl && ms_pLeafVertexShader)
+	if ((ms_pLeafVertexShaderDecl && ms_pLeafVertexShader) || Renderer::UseNeutralResources())
 	{
 		STATEMANAGER.SetVertexDeclaration(ms_pLeafVertexShaderDecl);
 		STATEMANAGER.SaveVertexShader(ms_pLeafVertexShader);
@@ -338,7 +339,7 @@ CSpeedTreeWrapper::~CSpeedTreeWrapper()
 		{			
 			m_pSpeedTree->GetGeometry(*m_pGeometryCache, SpeedTree_LeafGeometry, -1, -1, i);
 			
-			if (m_pGeometryCache->m_sLeaves0.m_usLeafCount > 0)
+			if (m_pLeafVertexBuffer && m_pGeometryCache->m_sLeaves0.m_usLeafCount > 0)
 				SAFE_RELEASE(m_pLeafVertexBuffer[i]);
 		}
 		
@@ -511,15 +512,16 @@ void CSpeedTreeWrapper::SetupBranchBuffers(void)
 	// check if this tree has branches
 	if (m_unBranchVertexCount > 1)
 	{
-		// create the vertex buffer for storing branch vertices
+		if (!Renderer::UseNeutralResources()) {
+        // create the vertex buffer for storing branch vertices
 		SFVFBranchVertex * pVertexBuffer = NULL;
 		
 #ifndef WRAPPER_USE_CPU_WIND
-		ms_lpd3dDevice->CreateVertexBuffer(m_unBranchVertexCount * sizeof(SFVFBranchVertex), D3DUSAGE_WRITEONLY, D3DFVF_SPEEDTREE_BRANCH_VERTEX, D3DPOOL_DEFAULT, &m_pBranchVertexBuffer, NULL);
+		M2_NATIVE_RESOURCE(VertexBuffer, ms_lpd3dDevice->CreateVertexBuffer(m_unBranchVertexCount * sizeof(SFVFBranchVertex), D3DUSAGE_WRITEONLY, D3DFVF_SPEEDTREE_BRANCH_VERTEX, D3DPOOL_DEFAULT, &m_pBranchVertexBuffer, NULL));
 		// fill the vertex buffer by interleaving SpeedTree data
 		m_pBranchVertexBuffer->Lock(0, 0, reinterpret_cast<void**>(&pVertexBuffer), 0);
 #else
-		ms_lpd3dDevice->CreateVertexBuffer(m_unBranchVertexCount * sizeof(SFVFBranchVertex), D3DUSAGE_DYNAMIC, D3DFVF_SPEEDTREE_BRANCH_VERTEX, D3DPOOL_DEFAULT, &m_pBranchVertexBuffer, NULL);
+		M2_NATIVE_RESOURCE(VertexBuffer, ms_lpd3dDevice->CreateVertexBuffer(m_unBranchVertexCount * sizeof(SFVFBranchVertex), D3DUSAGE_DYNAMIC, D3DFVF_SPEEDTREE_BRANCH_VERTEX, D3DPOOL_DEFAULT, &m_pBranchVertexBuffer, NULL));
 		// fill the vertex buffer by interleaving SpeedTree data
 		m_pBranchVertexBuffer->Lock(0, 0, reinterpret_cast<void**>(&pVertexBuffer), D3DLOCK_DISCARD | D3DLOCK_NOSYSLOCK);
 #endif
@@ -557,7 +559,8 @@ void CSpeedTreeWrapper::SetupBranchBuffers(void)
 			m_pBranchVertexBuffer->Unlock();
 		}
 		
-		const uint32_t unNumLodLevels = m_pSpeedTree->GetNumBranchLodLevels();
+		        }
+        const uint32_t unNumLodLevels = m_pSpeedTree->GetNumBranchLodLevels();
 		m_branchStripOffsets.clear();
 		m_branchStripLengths.clear();
 		if (unNumLodLevels > 0)
@@ -591,11 +594,11 @@ void CSpeedTreeWrapper::SetupBranchBuffers(void)
 		// set back to highest LOD for buffer fill
 		m_pSpeedTree->GetGeometry(*m_pGeometryCache, SpeedTree_BranchGeometry, 0);
 
-		if (totalIndexCount > 0)
+		if (totalIndexCount > 0 && !Renderer::UseNeutralResources())
 		{
 			// the first LOD level contains the most indices of all the levels, so
 			// we use its size to allocate the index buffer
-			ms_lpd3dDevice->CreateIndexBuffer(totalIndexCount * sizeof(uint16_t), D3DUSAGE_WRITEONLY, D3DFMT_INDEX16, D3DPOOL_DEFAULT, &m_pBranchIndexBuffer, NULL);
+			M2_NATIVE_RESOURCE(IndexBuffer, ms_lpd3dDevice->CreateIndexBuffer(totalIndexCount * sizeof(uint16_t), D3DUSAGE_WRITEONLY, D3DFMT_INDEX16, D3DPOOL_DEFAULT, &m_pBranchIndexBuffer, NULL));
 			
 			// fill the index buffer
 			uint16_t* pIndexBuffer = NULL;
@@ -625,14 +628,15 @@ void CSpeedTreeWrapper::SetupFrondBuffers(void)
 	// check if tree has fronds
 	if (m_unFrondVertexCount > 1)
 	{
-		// create the vertex buffer for storing frond vertices
+		if (!Renderer::UseNeutralResources()) {
+        // create the vertex buffer for storing frond vertices
 		SFVFBranchVertex * pVertexBuffer = NULL;
 #ifndef WRAPPER_USE_CPU_WIND
-		ms_lpd3dDevice->CreateVertexBuffer(m_unFrondVertexCount * sizeof(SFVFBranchVertex), D3DUSAGE_WRITEONLY, D3DFVF_SPEEDTREE_BRANCH_VERTEX, D3DPOOL_DEFAULT, &m_pFrondVertexBuffer, NULL);
+		M2_NATIVE_RESOURCE(VertexBuffer, ms_lpd3dDevice->CreateVertexBuffer(m_unFrondVertexCount * sizeof(SFVFBranchVertex), D3DUSAGE_WRITEONLY, D3DFVF_SPEEDTREE_BRANCH_VERTEX, D3DPOOL_DEFAULT, &m_pFrondVertexBuffer, NULL));
 		// fill the vertex buffer by interleaving SpeedTree data
 		m_pFrondVertexBuffer->Lock(0, 0, reinterpret_cast<void**>(&pVertexBuffer), 0);
 #else
-		ms_lpd3dDevice->CreateVertexBuffer(m_unFrondVertexCount * sizeof(SFVFBranchVertex), D3DUSAGE_DYNAMIC, D3DFVF_SPEEDTREE_BRANCH_VERTEX, D3DPOOL_DEFAULT, &m_pFrondVertexBuffer, NULL);
+		M2_NATIVE_RESOURCE(VertexBuffer, ms_lpd3dDevice->CreateVertexBuffer(m_unFrondVertexCount * sizeof(SFVFBranchVertex), D3DUSAGE_DYNAMIC, D3DFVF_SPEEDTREE_BRANCH_VERTEX, D3DPOOL_DEFAULT, &m_pFrondVertexBuffer, NULL));
 		// fill the vertex buffer by interleaving SpeedTree data
 		m_pFrondVertexBuffer->Lock(0, 0, reinterpret_cast<void**>(&pVertexBuffer), D3DLOCK_DISCARD | D3DLOCK_NOSYSLOCK);
 #endif		
@@ -668,7 +672,8 @@ void CSpeedTreeWrapper::SetupFrondBuffers(void)
 		}
 		m_pFrondVertexBuffer->Unlock();
 		
-		const uint32_t unNumLodLevels = m_pSpeedTree->GetNumFrondLodLevels();
+		        }
+        const uint32_t unNumLodLevels = m_pSpeedTree->GetNumFrondLodLevels();
 		m_frondStripOffsets.clear();
 		m_frondStripLengths.clear();
 		if (unNumLodLevels > 0)
@@ -702,11 +707,11 @@ void CSpeedTreeWrapper::SetupFrondBuffers(void)
 		// go back to highest LOD for buffer fill
 		m_pSpeedTree->GetGeometry(*m_pGeometryCache, SpeedTree_FrondGeometry, -1, 0);
 		
-		if (totalIndexCount > 0)
+		if (totalIndexCount > 0 && !Renderer::UseNeutralResources())
 		{
 			// the first LOD level contains the most indices of all the levels, so
 			// we use its size to allocate the index buffer
-			ms_lpd3dDevice->CreateIndexBuffer(totalIndexCount * sizeof(uint16_t), D3DUSAGE_WRITEONLY, D3DFMT_INDEX16, D3DPOOL_DEFAULT, &m_pFrondIndexBuffer, NULL);
+			M2_NATIVE_RESOURCE(IndexBuffer, ms_lpd3dDevice->CreateIndexBuffer(totalIndexCount * sizeof(uint16_t), D3DUSAGE_WRITEONLY, D3DFMT_INDEX16, D3DPOOL_DEFAULT, &m_pFrondIndexBuffer, NULL));
 			
 			// fill the index buffer
 			uint16_t * pIndexBuffer = NULL;
@@ -735,6 +740,8 @@ void CSpeedTreeWrapper::SetupLeafBuffers(void)
 	
 	// set up the leaf counts for each LOD
 	m_usNumLeafLods = m_pSpeedTree->GetNumLeafLodLevels();
+    // ZiiNAN: Backend-neutral graphics resource ownership
+    if (Renderer::UseNeutralResources()) return;
 	
 	// create array of vertex buffers (one for each LOD)
 	m_pLeafVertexBuffer = new LPDIRECT3DVERTEXBUFFER9[m_usNumLeafLods];
@@ -757,11 +764,11 @@ void CSpeedTreeWrapper::SetupLeafBuffers(void)
 		SFVFLeafVertex* pVertexBuffer = NULL;
 		// create the vertex buffer for storing leaf vertices
 #ifndef WRAPPER_USE_CPU_LEAF_PLACEMENT
-		ms_lpd3dDevice->CreateVertexBuffer(usLeafCount * 6 * sizeof(SFVFLeafVertex), D3DUSAGE_WRITEONLY, D3DFVF_SPEEDTREE_LEAF_VERTEX, D3DPOOL_DEFAULT, &m_pLeafVertexBuffer[unLod], nullptr);
+		M2_NATIVE_RESOURCE(VertexBuffer, ms_lpd3dDevice->CreateVertexBuffer(usLeafCount * 6 * sizeof(SFVFLeafVertex), D3DUSAGE_WRITEONLY, D3DFVF_SPEEDTREE_LEAF_VERTEX, D3DPOOL_DEFAULT, &m_pLeafVertexBuffer[unLod], nullptr));
 		// fill the vertex buffer by interleaving SpeedTree data
 		m_pLeafVertexBuffer[unLod]->Lock(0, 0, reinterpret_cast<void**>(&pVertexBuffer), 0);
 #else
-		ms_lpd3dDevice->CreateVertexBuffer(usLeafCount * 6 * sizeof(SFVFLeafVertex), D3DUSAGE_DYNAMIC, D3DFVF_SPEEDTREE_LEAF_VERTEX, D3DPOOL_DEFAULT, &m_pLeafVertexBuffer[unLod], NULL);
+		M2_NATIVE_RESOURCE(VertexBuffer, ms_lpd3dDevice->CreateVertexBuffer(usLeafCount * 6 * sizeof(SFVFLeafVertex), D3DUSAGE_DYNAMIC, D3DFVF_SPEEDTREE_LEAF_VERTEX, D3DPOOL_DEFAULT, &m_pLeafVertexBuffer[unLod], NULL));
 		// fill the vertex buffer by interleaving SpeedTree data
 		m_pLeafVertexBuffer[unLod]->Lock(0, 0, reinterpret_cast<void**>(&pVertexBuffer), D3DLOCK_DISCARD | D3DLOCK_NOSYSLOCK);
 #endif
@@ -932,7 +939,7 @@ void CSpeedTreeWrapper::SetupBranchForTreeType(void) const
 #ifdef WRAPPER_USE_CPU_WIND
 	m_pSpeedTree->GetGeometry(*m_pGeometryCache, SpeedTree_BranchGeometry);
 	
-	if (m_pGeometryCache->m_sBranches.m_usNumStrips > 0)
+	if (m_pBranchVertexBuffer && m_pGeometryCache->m_sBranches.m_usNumStrips > 0)
 	{
 		// update the vertex array
 		SFVFBranchVertex* pVertexBuffer = NULL;
@@ -945,15 +952,15 @@ void CSpeedTreeWrapper::SetupBranchForTreeType(void) const
 	}
 #endif
 	
-	LPDIRECT3DTEXTURE9 lpd3dTexture;
+	TextureBinding lpd3dTexture;
 	
     // set texture map
-    if ((lpd3dTexture = m_BranchImageInstance.GetTextureReference().GetD3DTexture()))
+    if ((lpd3dTexture = m_BranchImageInstance.GetTextureReference().GetTextureBinding()))
         STATEMANAGER.SetTexture(0, lpd3dTexture);
 	
 	// bind shadow texture
 #ifdef WRAPPER_RENDER_SELF_SHADOWS
-	if (ms_bSelfShadowOn && (lpd3dTexture = m_ShadowImageInstance.GetTextureReference().GetD3DTexture()))
+	if (ms_bSelfShadowOn && (lpd3dTexture = m_ShadowImageInstance.GetTextureReference().GetTextureBinding()))
 		STATEMANAGER.SetTexture(1, lpd3dTexture);
 	else
 		STATEMANAGER.SetTexture(1, NULL);
@@ -976,7 +983,7 @@ void CSpeedTreeWrapper::RenderBranches(void) const
 {
 	m_pSpeedTree->GetGeometry(*m_pGeometryCache, SpeedTree_BranchGeometry);
 	
-	if (m_pGeometryCache->m_sBranches.m_usVertexCount > 0 && m_pBranchIndexBuffer && !m_branchStripLengths.empty() && !m_branchStripOffsets.empty())
+	if (m_pGeometryCache->m_sBranches.m_usVertexCount > 0 && (m_pBranchIndexBuffer || Renderer::UseNeutralResources()) && !m_branchStripLengths.empty() && !m_branchStripOffsets.empty())
 	{
 		const int lod = m_pGeometryCache->m_sBranches.m_nDiscreteLodLevel;
 		if (lod < 0 || static_cast<size_t>(lod) >= m_branchStripLengths.size())
@@ -1017,7 +1024,7 @@ void CSpeedTreeWrapper::SetupFrondForTreeType(void) const
 	// update the frond geometry for CPU wind
 #ifdef WRAPPER_USE_CPU_WIND
 	m_pSpeedTree->GetGeometry(*m_pGeometryCache, SpeedTree_FrondGeometry);
-	if (m_pGeometryCache->m_sFronds.m_usNumStrips > 0)
+	if (m_pFrondVertexBuffer && m_pGeometryCache->m_sFronds.m_usNumStrips > 0)
 	{
 		// update the vertex array
 		SFVFBranchVertex * pVertexBuffer = NULL;
@@ -1031,13 +1038,13 @@ void CSpeedTreeWrapper::SetupFrondForTreeType(void) const
 #endif
 	
 	if (!m_CompositeImageInstance.IsEmpty())
-		STATEMANAGER.SetTexture(0, m_CompositeImageInstance.GetTextureReference().GetD3DTexture());
+		STATEMANAGER.SetTexture(0, m_CompositeImageInstance.GetTextureReference().GetTextureBinding());
 	
 	// bind shadow texture
 #ifdef WRAPPER_RENDER_SELF_SHADOWS
-	LPDIRECT3DTEXTURE9 lpd3dTexture;
+	TextureBinding lpd3dTexture;
 	
-	if ((lpd3dTexture = m_ShadowImageInstance.GetTextureReference().GetD3DTexture()))
+	if ((lpd3dTexture = m_ShadowImageInstance.GetTextureReference().GetTextureBinding()))
 		STATEMANAGER.SetTexture(1, lpd3dTexture);
 #endif
 	
@@ -1058,7 +1065,7 @@ void CSpeedTreeWrapper::RenderFronds(void) const
 {
 	m_pSpeedTree->GetGeometry(*m_pGeometryCache, SpeedTree_FrondGeometry);
 	
-	if (m_pGeometryCache->m_sFronds.m_usVertexCount > 0 && m_pFrondIndexBuffer && !m_frondStripLengths.empty() && !m_frondStripOffsets.empty())
+	if (m_pGeometryCache->m_sFronds.m_usVertexCount > 0 && (m_pFrondIndexBuffer || Renderer::UseNeutralResources()) && !m_frondStripLengths.empty() && !m_frondStripOffsets.empty())
 	{
 		const int lod = m_pGeometryCache->m_sFronds.m_nDiscreteLodLevel;
 		if (lod < 0 || static_cast<size_t>(lod) >= m_frondStripLengths.size())
@@ -1102,7 +1109,7 @@ void CSpeedTreeWrapper::SetupLeafForTreeType(void) const
 #endif
 	
 	if (!m_CompositeImageInstance.IsEmpty())
-		STATEMANAGER.SetTexture(0, m_CompositeImageInstance.GetTextureReference().GetD3DTexture());
+		STATEMANAGER.SetTexture(0, m_CompositeImageInstance.GetTextureReference().GetTextureBinding());
 	
 	// bind shadow texture
 #ifdef WRAPPER_RENDER_SELF_SHADOWS
@@ -1135,7 +1142,7 @@ void CSpeedTreeWrapper::RenderLeaves(void) const
 	// update leaf geometry
 	m_pSpeedTree->GetGeometry(*m_pGeometryCache, SpeedTree_LeafGeometry);
 
-	if (!m_pLeafVertexBuffer || m_usNumLeafLods == 0)
+	if ((!m_pLeafVertexBuffer && !Renderer::UseNeutralResources()) || m_usNumLeafLods == 0)
 		return;
 
 	const int maxLeafLod = static_cast<int>(m_usNumLeafLods);
@@ -1158,7 +1165,7 @@ void CSpeedTreeWrapper::RenderLeaves(void) const
 		if (unLod < 0 || unLod >= maxLeafLod)
 			continue;
 
-		if (!m_pLeafVertexBuffer[unLod])
+		if (!m_pLeafVertexBuffer || !m_pLeafVertexBuffer[unLod])
 			continue;
 		
 #if defined WRAPPER_USE_GPU_LEAF_PLACEMENT
@@ -1241,10 +1248,10 @@ void CSpeedTreeWrapper::RenderLeaves(void) const
 		if (unLod < 0 || unLod >= maxLeafLod || !pLeaf->m_bIsActive || pLeaf->m_usLeafCount == 0)
 			continue;
 
-		if (!m_pLeafVertexBuffer[unLod])
+		if (!Renderer::UseNeutralResources() && (!m_pLeafVertexBuffer || !m_pLeafVertexBuffer[unLod]))
 			continue;
 
-		STATEMANAGER.SetStreamSource(0, m_pLeafVertexBuffer[unLod], sizeof(SFVFLeafVertex));
+		STATEMANAGER.SetStreamSource(0, m_pLeafVertexBuffer ? m_pLeafVertexBuffer[unLod] : nullptr, sizeof(SFVFLeafVertex));
 		STATEMANAGER.SetRenderState(D3DRS_ALPHAREF, DWORD(pLeaf->m_fAlphaTestValue));
 		
 		ms_faceCount += pLeaf->m_usLeafCount * 2;
@@ -1276,7 +1283,7 @@ void CSpeedTreeWrapper::RenderBillboards(void) const
 	// render billboards in immediate mode (as close as DirectX comes to immediate mode)
 #ifdef WRAPPER_BILLBOARD_MODE
 	if (!m_CompositeImageInstance.IsEmpty())
-		STATEMANAGER.SetTexture(0, m_CompositeImageInstance.GetTextureReference().GetD3DTexture());
+		STATEMANAGER.SetTexture(0, m_CompositeImageInstance.GetTextureReference().GetTextureBinding());
 	
 	PositionTree();	
 	
@@ -1370,7 +1377,7 @@ void CSpeedTreeWrapper::PositionTree(void) const
 	D3DXMatrixTranslation(&matTranslation, vecPosition.x, vecPosition.y, vecPosition.z);
 
 	// store translation for client-side transformation
-	STATEMANAGER.SetTransform(D3DTS_WORLD, &matTranslation);
+	STATEMANAGER.SetTransform(Renderer::MatrixWorld, &matTranslation);
 
 	// store translation for use in vertex shader
 	D3DXVECTOR4 vecConstant(vecPosition[0], vecPosition[1], vecPosition[2], 0.0f);

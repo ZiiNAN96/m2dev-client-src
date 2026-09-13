@@ -1,6 +1,7 @@
 #pragma once
 
 #include "GrpBase.h"
+#include "Renderer/ResourceData.h"
 
 class CGraphicVertexBuffer : public CGraphicBase
 {
@@ -39,6 +40,7 @@ class CGraphicVertexBuffer : public CGraphicBase
 		void	Initialize();
 
 	protected:
+        mutable Renderer::CpuBuffer m_cpuBuffer;
 		LPDIRECT3DVERTEXBUFFER9 m_lpd3dVB;
 
 		DWORD					m_dwBufferSize;

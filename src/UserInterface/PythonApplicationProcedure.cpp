@@ -204,6 +204,7 @@ LRESULT CPythonApplication::WindowProcedure(HWND hWnd, UINT uiMsg, WPARAM wParam
 				wParam == SIZE_MINIMIZED ? 0 : LOWORD(lParam), wParam == SIZE_MINIMIZED ? 0 : HIWORD(lParam)))
 			{
 				TraceError("Diligent terrain resize failed");
+                m_rendererRuntimeFailed = true;
 				PostQuitMessage(1);
 			}
 			switch (wParam)
@@ -216,8 +217,7 @@ LRESULT CPythonApplication::WindowProcedure(HWND hWnd, UINT uiMsg, WPARAM wParam
 				
 						UINT uWidth=rcWnd.right-rcWnd.left; 
 						UINT uHeight=rcWnd.bottom-rcWnd.left; 
-						if (m_renderBackend)
-							m_renderBackend->Resize(uWidth, uHeight);
+						m_grpDevice.ResizeBackBuffer(uWidth, uHeight);
 					}
 					break;
 			}
@@ -238,8 +238,7 @@ LRESULT CPythonApplication::WindowProcedure(HWND hWnd, UINT uiMsg, WPARAM wParam
 				
 				UINT uWidth=rcWnd.right-rcWnd.left; 
 				UINT uHeight=rcWnd.bottom-rcWnd.left; 
-				if (m_renderBackend)
-					m_renderBackend->Resize(uWidth, uHeight);
+				m_grpDevice.ResizeBackBuffer(uWidth, uHeight);
 				OnSizeChange(short(LOWORD(lParam)), short(HIWORD(lParam)));
 			}
 			break; 

@@ -70,9 +70,8 @@ public:
         // ZiiNAN: Inspect the already applied native actor stages; never set legacy state.
         if(actorLighting) {
             const auto operation=Stage(1,D3DTSS_COLOROP);
-            IDirect3DBaseTexture9* stage1=nullptr; NativeStateView().GetTexture(1,&stage1);
+            const auto stage1=NativeStateView().GetTextureBinding(1);
             const bool disabledByNullTexture=!stage1 && operation==D3DTOP_SELECTARG1 && Stage(1,D3DTSS_COLORARG1)==D3DTA_TEXTURE;
-            if(stage1) stage1->Release();
             if(operation!=D3DTOP_DISABLE && !disabledByNullTexture) {
                 if(Stage(1,D3DTSS_COLORARG1)!=D3DTA_CURRENT) return false;
                 if((operation==D3DTOP_ADD || operation==D3DTOP_MODULATE) &&
@@ -132,7 +131,7 @@ public:
                Stage(1,D3DTSS_ALPHAARG1)!=D3DTA_TEXTURE ||
                Stage(1,D3DTSS_TEXCOORDINDEX)!=D3DTSS_TCI_CAMERASPACEPOSITION ||
                Stage(1,D3DTSS_TEXTURETRANSFORMFLAGS)!=D3DTTFF_COUNT2) return false;
-            D3DXMATRIX matrix; STATEMANAGER.GetTransform(D3DTS_TEXTURE1,&matrix);
+            D3DXMATRIX matrix; STATEMANAGER.GetTransform(Renderer::MatrixTexture1,&matrix);
             memcpy(d.cameraAlphaTransform.data(),&matrix,64);
             const auto CameraSample=[](D3DSAMPLERSTATETYPE type) { DWORD value=0; return SUCCEEDED(NativeStateView().GetSamplerState(1,type,&value)) ? value : ~DWORD(0); };
             const auto min=CameraSample(D3DSAMP_MINFILTER),mag=CameraSample(D3DSAMP_MAGFILTER),mip=CameraSample(D3DSAMP_MIPFILTER);
@@ -150,7 +149,7 @@ public:
         }
         // ZiiNAN: Original sphere-map matrix and sampler, separate from camera-blocker alpha.
         if(d.actorStage==ActorMaterialStage::Specular) {
-            D3DXMATRIX matrix; STATEMANAGER.GetTransform(D3DTS_TEXTURE1,&matrix);
+            D3DXMATRIX matrix; STATEMANAGER.GetTransform(Renderer::MatrixTexture1,&matrix);
             memcpy(d.cameraAlphaTransform.data(),&matrix,64);
             const auto SphereSample=[](D3DSAMPLERSTATETYPE type) { DWORD value=0; return SUCCEEDED(NativeStateView().GetSamplerState(1,type,&value)) ? value : ~DWORD(0); };
             const auto min=SphereSample(D3DSAMP_MINFILTER),mag=SphereSample(D3DSAMP_MAGFILTER),mip=SphereSample(D3DSAMP_MIPFILTER);
@@ -185,7 +184,7 @@ public:
             d.maxAnisotropy=maximum;
         }
         D3DXMATRIX view,projection;
-        STATEMANAGER.GetTransform(D3DTS_VIEW,&view); STATEMANAGER.GetTransform(D3DTS_PROJECTION,&projection);
+        STATEMANAGER.GetTransform(Renderer::MatrixView,&view); STATEMANAGER.GetTransform(Renderer::MatrixProjection,&projection);
         memcpy(d.matrices.view.data(),&view,64); memcpy(d.matrices.projection.data(),&projection,64);
         if(actorLighting) {
             D3DVIEWPORT9 viewport{}; if(FAILED(NativeStateView().GetViewport(&viewport))) return false;
@@ -303,6 +302,13 @@ void SubmitStaticMapObject(CGraphicThingInstance& thing, StaticMapObjectPass pas
             auto& material=palette.GetMaterialRef(group->mtrlIndex);
             if(material.GetType()!=CGrannyMaterial::TYPE_DIFFUSE_PNT || material.IsSpecularEnabled() ||
                !material.GetImagePointer(0) || material.GetImagePointer(1)) { Report(thing,"excluded: material outside diffuse contract"); return; }
+            const auto binding=material.GetTextureBinding(0);
+            if (binding.source) {
+                const auto format=binding.source->desc.format;
+                if (format==TerrainTextureFormat::Unknown || format==TerrainTextureFormat::Alpha8) {
+                    Report(thing,"excluded: source texture format outside static map subset"); return;
+                }
+            } else {
             D3DSURFACE_DESC description{};
             auto* texture=material.GetD3DTexture(0);
             if(!texture || FAILED(texture->GetLevelDesc(0,&description))) { Report(thing,"excluded: missing diffuse texture"); return; }
@@ -310,6 +316,7 @@ void SubmitStaticMapObject(CGraphicThingInstance& thing, StaticMapObjectPass pas
             case D3DFMT_DXT1: case D3DFMT_DXT3: case D3DFMT_DXT5:
             case D3DFMT_A8R8G8B8: case D3DFMT_X8R8G8B8: case D3DFMT_A8B8G8R8: case D3DFMT_A1R5G5B5: break;
             default: Report(thing,"excluded: legacy texture format outside static map subset"); return;
+            }
             }
         }
     }

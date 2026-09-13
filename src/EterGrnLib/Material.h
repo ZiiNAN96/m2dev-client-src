@@ -59,6 +59,7 @@ class CGrannyMaterial : public CReferenceObject
 		const CGraphicTexture * GetOpacityTexture() const;
 
 		LPDIRECT3DTEXTURE9		GetD3DTexture(int iStage) const;
+        TextureBinding GetTextureBinding(int stage) const;
 
 		// MR-12: Fix specular isolation issue
 		float					GetSpecularPower() const;

@@ -28,7 +28,6 @@ void Submit(const void* pdt,uint32_t count,Primitive primitive,CGraphicImage* im
     EffectDraw draw; std::string error;
     if(!CaptureNativeMaterial(draw,error,bool(secondary))) { Failure("UI material: "+error); return; }
     draw.secondaryTexture=std::move(secondary);
-    auto* device=STATEMANAGER.GetDevice();
     D3DVIEWPORT9 viewport{}; RECT clip{}; DWORD scissor=0;
     if(FAILED(NativeStateView().GetViewport(&viewport)) || FAILED(NativeStateView().GetScissorRect(&clip)) ||
        FAILED(NativeStateView().GetRenderState(D3DRS_SCISSORTESTENABLE,&scissor))) { Failure("UI viewport/scissor snapshot"); return; }
@@ -39,10 +38,9 @@ void Submit(const void* pdt,uint32_t count,Primitive primitive,CGraphicImage* im
     draw.viewport={viewport.X,viewport.Y,viewport.Width,viewport.Height};
     draw.scissor=scissor!=0; draw.clip={clip.left,clip.top,clip.right,clip.bottom};
     if(draw.scissor && (clip.right<=clip.left || clip.bottom<=clip.top)) return;
-    IDirect3DBaseTexture9* bound=nullptr;
-    if(FAILED(NativeStateView().GetTexture(0,&bound))) { Failure("UI texture snapshot"); return; }
-    const bool matches=!image || bound==image->GetTexturePointer()->GetD3DTexture();
-    draw.textured=bound!=nullptr; if(bound) bound->Release();
+    const auto bound=NativeStateView().GetTextureBinding(0);
+    const bool matches=!image || bound==image->GetTexturePointer()->GetTextureBinding();
+    draw.textured=bool(bound);
     if(!matches || (draw.textured && !image && !supplied)) { Failure("UI texture owner mismatch"); return; }
     TerrainTexturePtr texture=std::move(supplied);
     if(draw.textured) {

@@ -6,6 +6,9 @@
 
 namespace Renderer
 {
+// ZiiNAN: Device-independent metadata supplied by the active Diligent device.
+struct GraphicsCapabilities { uint32_t maxTextureDimension=0; uint64_t localMemory=0; };
+inline GraphicsCapabilities graphicsCapabilities;
 class ITerrainPresentation
 {
 public:

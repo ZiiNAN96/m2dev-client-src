@@ -3,7 +3,8 @@
 #include "Renderer/DiligentActorRenderer.h"
 #include <limits>
 
-static void ActorLifetimeChecks(LegacyProbe& screen, Renderer::DiligentD3D11Backend& backend)
+template<class CameraProbe>
+static void ActorLifetimeChecks(CameraProbe& screen, Renderer::DiligentD3D11Backend& backend)
 {
     using namespace Renderer;
     DiligentActorRenderer actors(backend);

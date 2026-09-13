@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "EterLib/NativeResourceAudit.h"
 #include "BlockTexture.h"
 #include "GrpBase.h"
 #include "GrpDib.h"
@@ -92,7 +93,7 @@ void CBlockTexture::Render(int ix, int iy)
 	{
 		CGraphicBase::SetDefaultIndexBuffer(CGraphicBase::DEFAULT_IB_FILL_RECT);
 
-		STATEMANAGER.SetTexture(0, m_lpd3dTexture);
+		STATEMANAGER.SetTexture(0, m_source ? TextureBinding(m_source) : TextureBinding(m_lpd3dTexture));
 		STATEMANAGER.SetTexture(1, NULL);
 		STATEMANAGER.SetFVF(D3DFVF_XYZ|D3DFVF_TEX1|D3DFVF_DIFFUSE);
 
@@ -103,7 +104,8 @@ void CBlockTexture::Render(int ix, int iy)
 		STATEMANAGER.DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 4, 0, 2);
 		// ZiiNAN: Original notice-banner DIB blocks, unchanged text rasterization.
 		if(Renderer::UIActive()) {
-			if(!m_uiTexture && !m_uiPixels.empty()) {
+			if(!m_uiTexture && m_source) m_uiTexture=Renderer::uiRenderer->UploadTexture(m_source->View());
+            if(!m_uiTexture && !m_uiPixels.empty()) {
 				Renderer::TerrainTextureData data{m_dwWidth,m_dwHeight,Renderer::TerrainTextureFormat::BGRA8,
 					{{m_uiPixels.data(),m_uiPixels.size()*4,size_t(m_dwWidth)*4}}};
 				m_uiTexture=Renderer::uiRenderer->UploadTexture(data);
@@ -144,6 +146,15 @@ void CBlockTexture::InvalidateRect(const RECT & c_rsrcRect)
 	pdwSrc = (DWORD *)m_pDIB->GetPointer();
 	pdwSrc += dstRect.left + dstRect.top*m_pDIB->GetWidth();
 
+    if (m_source) {
+        auto& page=m_source->mips[0];
+        for (int y=clipRect.top;y<clipRect.bottom;++y) {
+            memcpy(page.pixels.data()+size_t(y)*page.rowStride+size_t(clipRect.left)*4,
+                pdwSrc,size_t(clipRect.right-clipRect.left)*4);
+            pdwSrc+=m_pDIB->GetWidth();
+        }
+        ++m_source->revision; m_uiTexture.reset(); return;
+    }
 	D3DLOCKED_RECT lockedRect;
 	if (FAILED(m_lpd3dTexture->LockRect(0, &lockedRect, &clipRect, 0)))
 	{
@@ -176,7 +187,10 @@ void CBlockTexture::InvalidateRect(const RECT & c_rsrcRect)
 
 bool CBlockTexture::Create(CGraphicDib * pDIB, const RECT & c_rRect, DWORD dwWidth, DWORD dwHeight)
 {	
-	if (FAILED(ms_lpd3dDevice->CreateTexture(dwWidth, dwHeight, 0, D3DUSAGE_DYNAMIC, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &m_lpd3dTexture, nullptr)))
+	if (Renderer::UseNeutralResources()) {
+        m_source=Renderer::TextureResource::Dynamic(dwWidth,dwHeight,Renderer::TerrainTextureFormat::BGRA8);
+        if(!m_source) return false;
+    } else if (FAILED(M2_NATIVE_RESOURCE(Texture, ms_lpd3dDevice->CreateTexture(dwWidth, dwHeight, 0, D3DUSAGE_DYNAMIC, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &m_lpd3dTexture, nullptr))))
 	{
 		Tracef("Failed to create block texture %u, %u\n", dwWidth, dwHeight);
 		return false;

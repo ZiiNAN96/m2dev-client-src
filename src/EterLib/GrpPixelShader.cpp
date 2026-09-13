@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "EterLib/NativeResourceAudit.h"
 #include "GrpPixelShader.h"
 #include "GrpD3DXBuffer.h"
 #include "StateManager.h"
@@ -65,9 +66,9 @@ bool CPixelShader::CreateFromDiskFile(const char* c_szFileName)
     CDirect3DXBuffer shaderBuffer(lpd3dxShaderBuffer);
     CDirect3DXBuffer errorBuffer(lpd3dxErrorBuffer);
 
-    if (FAILED(ms_lpd3dDevice->CreatePixelShader(
+    if (FAILED(M2_NATIVE_RESOURCE(PixelShader, ms_lpd3dDevice->CreatePixelShader(
         (DWORD*)shaderBuffer.GetPointer(),
-        &m_handle)))
+        &m_handle))))
         return false;
 
     return true;

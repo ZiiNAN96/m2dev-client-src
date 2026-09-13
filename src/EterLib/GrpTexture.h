@@ -1,6 +1,7 @@
 #pragma once
 
 #include "GrpBase.h"
+#include "TextureBinding.h"
 
 class CGraphicTexture : public CGraphicBase
 {
@@ -12,6 +13,8 @@ class CGraphicTexture : public CGraphicBase
 
 		void SetTextureStage(int stage) const;
 		LPDIRECT3DTEXTURE9 GetD3DTexture() const;
+		TextureBinding GetTextureBinding() const { return m_source ? TextureBinding(m_source) : TextureBinding(m_lpd3dTexture); }
+		const std::shared_ptr<Renderer::TextureResource>& GetSource() const { return m_source; }
 
 		void DestroyDeviceObjects();
 		
@@ -29,4 +32,5 @@ class CGraphicTexture : public CGraphicBase
 		int m_height;
 
 		LPDIRECT3DTEXTURE9 m_lpd3dTexture;
+		std::shared_ptr<Renderer::TextureResource> m_source;
 };

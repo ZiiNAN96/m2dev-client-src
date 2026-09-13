@@ -296,17 +296,22 @@ void CPythonMiniMap::Render(float fScreenX, float fScreenY)
 
 	STATEMANAGER.SaveRenderState(D3DRS_TEXTUREFACTOR, 0xFF000000);
 
-	STATEMANAGER.SetTexture(1, m_MiniMapFilterGraphicImageInstance.GetTexturePointer()->GetD3DTexture());
-	STATEMANAGER.SetTransform(D3DTS_TEXTURE1, &m_matMiniMapCover);
+	STATEMANAGER.SetTexture(1, m_MiniMapFilterGraphicImageInstance.GetTexturePointer()->GetTextureBinding());
+	STATEMANAGER.SetTransform(Renderer::MatrixTexture1, &m_matMiniMapCover);
 
 	STATEMANAGER.SetFVF(D3DFVF_XYZ | D3DFVF_TEX1);
 	STATEMANAGER.SetStreamSource(0, m_VertexBuffer.GetD3DVertexBuffer(), 20);
 	STATEMANAGER.SetIndices(m_IndexBuffer.GetD3DIndexBuffer(), 0);
-	STATEMANAGER.SetTransform(D3DTS_WORLD, &m_matWorld);
+	STATEMANAGER.SetTransform(Renderer::MatrixWorld, &m_matWorld);
 
 	for (BYTE byTerrainNum = 0; byTerrainNum < AROUND_AREA_NUM; ++byTerrainNum)
 	{
-		LPDIRECT3DTEXTURE9 pMiniMapTexture = m_lpMiniMapTexture[byTerrainNum];
+		TextureBinding pMiniMapTexture(m_lpMiniMapTexture[byTerrainNum]);
+        if (Renderer::UseNeutralResources()) {
+            CTerrain* terrain=nullptr; rkBG.GetMapOutdoorRef().GetTerrainPointer(byTerrainNum,&terrain);
+            auto* image=terrain ? terrain->GetMiniMapImage() : nullptr;
+            pMiniMapTexture=image ? image->GetTexturePointer()->GetTextureBinding() : TextureBinding{};
+        }
 		STATEMANAGER.SetTexture(0, pMiniMapTexture);
 		if (pMiniMapTexture)
 		{
@@ -316,7 +321,7 @@ void CPythonMiniMap::Render(float fScreenX, float fScreenY)
 			if(Renderer::UIActive()) {
 				CTerrain* terrain=nullptr; rkBG.GetMapOutdoorRef().GetTerrainPointer(byTerrainNum,&terrain);
 				auto* image=terrain ? terrain->GetMiniMapImage() : nullptr;
-				if(!image || image->GetTexturePointer()->GetD3DTexture()!=pMiniMapTexture) Renderer::uiRenderer->ReportFailure();
+				if(!image || image->GetTexturePointer()->GetTextureBinding()!=pMiniMapTexture) Renderer::uiRenderer->ReportFailure();
 				else UIRenderBridge::Submit(m_uiMapVertices.data()+byTerrainNum*4,4,UIRenderBridge::Primitive::Strip,image,S_OK,{},
 					m_MiniMapFilterGraphicImageInstance.GetGraphicImagePointer()->GetUITexture(*Renderer::uiRenderer));
 			}
@@ -355,7 +360,7 @@ void CPythonMiniMap::Render(float fScreenX, float fScreenY)
 	STATEMANAGER.RestoreSamplerState(1, D3DSAMP_ADDRESSV);
 
 	SetDiffuseOperation();
-	STATEMANAGER.SetTransform(D3DTS_WORLD, &m_matIdentity);
+	STATEMANAGER.SetTransform(Renderer::MatrixWorld, &m_matIdentity);
 
 	STATEMANAGER.SaveRenderState(D3DRS_TEXTUREFACTOR, 0xFFFFFFFF);
 	STATEMANAGER.SaveTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TFACTOR);
@@ -967,7 +972,7 @@ void CPythonMiniMap::RenderAtlas(float fScreenX, float fScreenY)
 		m_fAtlasScreenY = fScreenY;
 	}
 
-	STATEMANAGER.SetTransform(D3DTS_WORLD, &m_matWorldAtlas);
+	STATEMANAGER.SetTransform(Renderer::MatrixWorld, &m_matWorldAtlas);
 	STATEMANAGER.SaveSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_POINT);
 	STATEMANAGER.SaveSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_POINT);
 	m_AtlasImageInstance.Render();
@@ -1039,7 +1044,7 @@ void CPythonMiniMap::RenderAtlas(float fScreenX, float fScreenY)
 
 	STATEMANAGER.RestoreSamplerState(0, D3DSAMP_MINFILTER);
 	STATEMANAGER.RestoreSamplerState(0, D3DSAMP_MAGFILTER);
-	STATEMANAGER.SetTransform(D3DTS_WORLD, &m_matIdentity);
+	STATEMANAGER.SetTransform(Renderer::MatrixWorld, &m_matIdentity);
 
 	{
 		TGuildAreaInfoVectorIterator itor = m_GuildAreaInfoVector.begin();

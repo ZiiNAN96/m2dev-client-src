@@ -1,7 +1,6 @@
 #include "EterLib/StdAfx.h"
 #include "EterLib/GrpDevice.h"
 #include "EterLib/GrpScreen.h"
-#include "EterLib/LegacyD3D9Backend.h"
 #include "RendererBootstrap.h"
 #ifdef M2_ENABLE_DILIGENT_D3D11
 #include "DiligentD3D11Backend.h"
@@ -47,7 +46,7 @@ LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wParam, LPARA
 int RunRendererBootstrap(void* instance, const StartupOptions& options)
 {
     std::ofstream log("renderer-bootstrap.log", std::ios::trunc);
-    log << "backend=" << (options.backend == BackendKind::LegacyD3D9 ? "legacy-d3d9" : "diligent-d3d11") << std::endl;
+    log << "backend=" << "diligent-d3d11" << std::endl;
 #ifndef M2_ENABLE_DILIGENT_D3D11
     if (options.backend == BackendKind::DiligentD3D11)
     {
@@ -74,15 +73,7 @@ int RunRendererBootstrap(void* instance, const StartupOptions& options)
         return 3;
     }
 
-    CGraphicDevice legacyDevice;
-    CScreen legacyScreen;
-    std::unique_ptr<IRenderBackend> backend;
-    if (options.backend == BackendKind::LegacyD3D9)
-        backend = std::make_unique<LegacyD3D9Backend>(legacyDevice, legacyScreen);
-#ifdef M2_ENABLE_DILIGENT_D3D11
-    else
-        backend = std::make_unique<DiligentD3D11Backend>();
-#endif
+    std::unique_ptr<IRenderBackend> backend = std::make_unique<DiligentD3D11Backend>();
     RECT client{};
     GetClientRect(window, &client);
     int result = 0;

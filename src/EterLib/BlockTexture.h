@@ -1,6 +1,7 @@
 #pragma once
 
 #include "GrpBase.h"
+#include "TextureBinding.h"
 #include "Renderer/TerrainTextureData.h"
 
 class CGraphicDib;
@@ -24,6 +25,7 @@ class CBlockTexture : public CGraphicBase
 		DWORD m_dwWidth;
 		DWORD m_dwHeight;
 		LPDIRECT3DTEXTURE9 m_lpd3dTexture;
+        std::shared_ptr<Renderer::TextureResource> m_source;
 		Renderer::TerrainTexturePtr m_uiTexture;
 		std::vector<uint32_t> m_uiPixels;
 };

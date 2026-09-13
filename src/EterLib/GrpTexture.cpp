@@ -17,6 +17,7 @@ void CGraphicTexture::Destroy()
 
 void CGraphicTexture::Initialize()
 {
+	m_source.reset();
 	m_lpd3dTexture = NULL;
 	m_width = 0;
 	m_height = 0;
@@ -30,8 +31,8 @@ bool CGraphicTexture::IsEmpty() const
 
 void CGraphicTexture::SetTextureStage(int stage) const
 {
-	assert(ms_lpd3dDevice != NULL);
-	STATEMANAGER.SetTexture(stage, m_lpd3dTexture);	
+	assert(Renderer::UseNeutralResources());
+	STATEMANAGER.SetTexture(stage, GetTextureBinding());
 }
 
 LPDIRECT3DTEXTURE9 CGraphicTexture::GetD3DTexture() const

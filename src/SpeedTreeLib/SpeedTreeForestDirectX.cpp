@@ -62,6 +62,7 @@ CSpeedTreeForestDirectX::~CSpeedTreeForestDirectX()
 //	CSpeedTreeForestDirectX::InitVertexShaders
 bool CSpeedTreeForestDirectX::InitVertexShaders(void)
 {
+    if (Renderer::UseNeutralResources()) return true;
 	// load the vertex shaders
 	if (!m_dwBranchVertexShader)
 		m_dwBranchVertexShader = LoadBranchShader(m_pDx);
@@ -335,8 +336,8 @@ void CSpeedTreeForestDirectX::Render(unsigned long ulRenderBitVector)
 	STATEMANAGER.SetRenderState(D3DRS_COLORVERTEX, dwColorVertexState);
 	STATEMANAGER.SetRenderState(D3DRS_FOGVERTEXMODE, dwFogVertexMode);
 
-	// ¼¿ÇÁ¼¨µµ¿ì·Î ¾²´Â TextureStage 1ÀÇ COLOROP¿Í ALPHAOP¸¦ ²¨Áà¾ß ´ÙÀ½ ·»´õ¸µ ÇÒ ³ğµéÀÌ
-	// Á¦´ë·Î ³ª¿Â´Ù. (¾È±×·¯¸é °Ë°Ô ³ª¿Ã °¡´É¼ºÀÌ..)
+	// ì…€í”„ì„€ë„ìš°ë¡œ ì“°ëŠ” TextureStage 1ì˜ COLOROPì™€ ALPHAOPë¥¼ êº¼ì¤˜ì•¼ ë‹¤ìŒ ë Œë”ë§ í•  ë†ˆë“¤ì´
+	// ì œëŒ€ë¡œ ë‚˜ì˜¨ë‹¤. (ì•ˆê·¸ëŸ¬ë©´ ê²€ê²Œ ë‚˜ì˜¬ ê°€ëŠ¥ì„±ì´..)
 	if (!(ulRenderBitVector & Forest_RenderToShadow))
 	{
 		STATEMANAGER.SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_DISABLE);

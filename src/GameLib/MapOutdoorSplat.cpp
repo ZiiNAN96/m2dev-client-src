@@ -58,9 +58,9 @@ void CMapOutdoor::SubmitTerrainSplat(long patchnum, CTerrain* terrain, uint32_t 
     if(!params.vertexUV)
     {
         D3DXMATRIX transform;
-        STATEMANAGER.GetTransform(D3DTS_TEXTURE0,&transform);
+        STATEMANAGER.GetTransform(Renderer::MatrixTexture0,&transform);
         memcpy(params.colorTransform.data(),&transform,sizeof(transform));
-        STATEMANAGER.GetTransform(D3DTS_TEXTURE1,&transform);
+        STATEMANAGER.GetTransform(Renderer::MatrixTexture1,&transform);
         memcpy(params.alphaTransform.data(),&transform,sizeof(transform));
     }
     switch(StageState(0,D3DTSS_COLOROP))

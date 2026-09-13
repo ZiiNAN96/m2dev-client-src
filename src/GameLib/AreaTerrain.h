@@ -1,4 +1,5 @@
 #pragma once
+#include "EterLib/TextureBinding.h"
 
 class CMapOutdoor;
 
@@ -88,6 +89,7 @@ class CTerrain : public CTerrainImpl, public CGraphicBase
 		void						DeallocateMarkedSplats();
 		TTerrainSplatPatch &		GetMarkedSplatPatch() { return m_MarkedSplatPatch; }
 		Renderer::TerrainTexturePtr GetMarkedTexture() const { return m_markedDiligentTexture; }
+        TextureBinding GetMarkedBinding() const { return m_markedSource ? TextureBinding(m_markedSource) : TextureBinding(m_lpMarkedTexture); }
 
 		// Coordinate
 		void			GetCoordinate(WORD * usCoordX, WORD * usCoordY)
@@ -150,6 +152,7 @@ class CTerrain : public CTerrainImpl, public CGraphicBase
 		TTerrainSplatPatch		m_MarkedSplatPatch;
 		LPDIRECT3DTEXTURE9		m_lpMarkedTexture;
 		Renderer::TerrainTexturePtr m_markedDiligentTexture;
+        std::shared_ptr<Renderer::TextureResource> m_markedSource;
 
 	public:
 		CTerrainPatch *	GetTerrainPatchPtr(BYTE byPatchNumX, BYTE byPatchNumY);

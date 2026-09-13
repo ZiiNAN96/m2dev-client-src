@@ -560,8 +560,8 @@ void CGraphicTextInstance::Render(RECT * pClipRect)
 			break;
 	}
 
-	static std::unordered_map<LPDIRECT3DTEXTURE9, std::vector<SVertex>> s_outlineBatches;
-	static std::unordered_map<LPDIRECT3DTEXTURE9, std::vector<SVertex>> s_mainBatches;
+	static std::unordered_map<TextureBinding, std::vector<SVertex>, TextureBindingHash> s_outlineBatches;
+	static std::unordered_map<TextureBinding, std::vector<SVertex>, TextureBindingHash> s_mainBatches;
 	s_outlineBatches.clear();
 	s_mainBatches.clear();
 
@@ -654,7 +654,7 @@ void CGraphicTextInstance::Render(RECT * pClipRect)
 				fFontEy = fFontSy + fFontHeight;
 
 				pFontTexture->SelectTexture(pCurCharInfo->index);
-				std::vector<SVertex>& vtxBatch = s_outlineBatches[pFontTexture->GetD3DTexture()];
+				std::vector<SVertex>& vtxBatch = s_outlineBatches[pFontTexture->GetTextureBinding()];
 
 				akVertex[0].u=pCurCharInfo->left;
 				akVertex[0].v=pCurCharInfo->top;
@@ -762,7 +762,7 @@ void CGraphicTextInstance::Render(RECT * pClipRect)
 			fFontEy = fFontSy + fFontHeight;
 
 			pFontTexture->SelectTexture(pCurCharInfo->index);
-			std::vector<SVertex>& vtxBatch = s_mainBatches[pFontTexture->GetD3DTexture()];
+			std::vector<SVertex>& vtxBatch = s_mainBatches[pFontTexture->GetTextureBinding()];
 
 			akVertex[0].x=fFontSx;
 			akVertex[0].y=fFontSy;
@@ -905,7 +905,7 @@ void CGraphicTextInstance::Render(RECT * pClipRect)
 
 	// LCD subpixel two-pass rendering: correct per-channel alpha blending
 	// ZiiNAN: Diligent text rendering integration; capture each original LCD pass after its native draw.
-	auto DrawBatchLCD = [pFontTexture](const std::unordered_map<LPDIRECT3DTEXTURE9, std::vector<SVertex>>& batches, bool skipPass2) {
+	auto DrawBatchLCD = [pFontTexture](const std::unordered_map<TextureBinding, std::vector<SVertex>, TextureBindingHash>& batches, bool skipPass2) {
 		for (const auto& [pTexture, vtxBatch] : batches) {
 			if (vtxBatch.empty())
 				continue;
@@ -946,6 +946,7 @@ void CGraphicTextInstance::Render(RECT * pClipRect)
 
 	// Draw main text batches (always both passes)
 	DrawBatchLCD(s_mainBatches, false);
+    s_outlineBatches.clear(); s_mainBatches.clear(); // Release page owners at the end of this draw.
 
 	if (m_isCursor)
 	{

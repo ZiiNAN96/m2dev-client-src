@@ -15,7 +15,7 @@ using namespace Renderer;
 WorldResources* owner=nullptr;
 WorldPart part=WorldPart::Water;
 uint64_t serial=~uint64_t(0);
-std::unordered_map<void*,std::string> textureNames;
+std::unordered_map<const void*,std::string> textureNames;
 std::set<std::string> reported;
 std::ofstream diagnostics;
 bool Active() { return owner && worldRenderer && worldSurfaceFrame; }
@@ -36,7 +36,7 @@ WorldRenderScope::WorldRenderScope(Renderer::WorldResources& resources,Renderer:
 WorldRenderScope::~WorldRenderScope() { owner=previous; part=previousPart; }
 void WorldRenderBridge::Texture(CGraphicImage* image)
 {
-    if(Active() && image) textureNames[image->GetTexturePointer()->GetD3DTexture()]=image->GetFileName();
+    if(Active() && image) textureNames[image->GetTexturePointer()->GetTextureBinding().Identity()]=image->GetFileName();
 }
 void WorldRenderBridge::Release(Renderer::WorldResources& resources)
 {
@@ -57,14 +57,13 @@ void WorldRenderBridge::Submit(const Renderer::EffectVertex* vertices,uint32_t c
     if(!CaptureNativeMaterial(draw,error) || !EffectDrawValid(draw,count)) {
         Report("unsupported material "+error+" color="+std::to_string(draw.colorOp)+" coords="+std::to_string(draw.textureCoordinates),true); return;
     }
-    IDirect3DBaseTexture9* bound=nullptr;
-    NativeStateView().GetTexture(0,&bound);
-    draw.textured=bound!=nullptr;
+    const auto bound=NativeStateView().GetTextureBinding(0);
+    draw.textured=bool(bound);
     TerrainTexturePtr texture;
     // Gradient sky uses only diffuse; its native, potentially stale image is immaterial.
     const bool gradient=part==WorldPart::Sky && draw.colorOp==3 && draw.colorArg2==0 && draw.alphaOp==1;
     if(bound) {
-        auto found=textureNames.find(bound); bound->Release();
+        auto found=textureNames.find(bound.Identity());
         if(!gradient) {
             if(found==textureNames.end()) { Report("unresolved native texture",true); return; }
             auto& stored=owner->textures[found->second];

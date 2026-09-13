@@ -7,7 +7,6 @@
 
 #include "resource.h"
 #include "PythonApplication.h"
-#include "EterLib/LegacyD3D9Backend.h"
 #include "PythonCharacterManager.h"
 #include "Renderer/ActorRenderData.h"
 #include "Renderer/TreeRenderData.h"
@@ -466,36 +465,21 @@ bool CPythonApplication::Process()
 		if (m_isMinimizedWnd) [[unlikely]] {
 			canRender = false;
 		}
-		else [[likely]] {
-			if (m_pyGraphic.IsLostDevice()) [[unlikely]] {
-				CPythonBackground& rkBG = CPythonBackground::Instance();
-				rkBG.ReleaseCharacterShadowTexture();
-
-				if (m_pyGraphic.RestoreDevice())					
-					rkBG.CreateCharacterShadowTexture();
-				else
-					canRender = false;				
-			}
-		}
 
 		if (canRender) [[likely]]
 		{
 			// RestoreLostDevice
 			CCullingManager::Instance().Update();
-			if (m_renderBackend && m_renderBackend->BeginFrame()) [[likely]] {
-
-				m_renderBackend->Clear({});
-
-#ifdef _DEBUG
-				m_renderBackend->Clear({true, Renderer::ClearColor{0.3f, 0.3f, 0.3f, 1.0f}});
-#endif
+			if (m_terrainPresentation) [[likely]] {
+                m_pyGraphic.Begin();
 
 				/////////////////////
 				// Interface
 				if (m_terrainPresentation && !m_terrainPresentation->BeginFrame())
 				{
 					TraceError("Diligent terrain BeginFrame failed");
-					m_renderBackend->EndFrame();
+                    m_rendererRuntimeFailed = true;
+					m_pyGraphic.End();
 					PostQuitMessage(1);
 					return false;
 				}
@@ -505,13 +489,13 @@ bool CPythonApplication::Process()
 				OnMouseRender();
 				/////////////////////
 
-				m_renderBackend->EndFrame();
+				m_pyGraphic.End();
 
 				//DWORD t1 = ELTimer_GetMSec();
-				m_renderBackend->Present();
 				if (m_terrainPresentation && !m_terrainPresentation->Present())
 				{
 					TraceError("Diligent terrain rendering failed (resource, camera or legacy state mismatch)");
+                    m_rendererRuntimeFailed = true;
 					PostQuitMessage(1);
 					return false;
 				}
@@ -608,95 +592,20 @@ void CPythonApplication::SetMouseHandler(PyObject* poMouseHandler)
 
 int CPythonApplication::CheckDeviceState()
 {
-	CGraphicDevice::EDeviceState e_deviceState = m_grpDevice.GetDeviceState();
-
-	switch (e_deviceState)
-	{
-		// µð¹ÙÀÌ½º°¡ ¾øÀ¸¸é ÇÁ·Î±×·¥ÀÌ Á¾·á µÇ¾î¾ß ÇÑ´Ù.
-	case CGraphicDevice::DEVICESTATE_NULL:
-		return DEVICE_STATE_FALSE;
-
-		// DEVICESTATE_BROKENÀÏ ¶§´Â ´ÙÀ½ ·çÇÁ¿¡¼­ º¹±¸ µÉ ¼ö ÀÖµµ·Ï ¸®ÅÏ ÇÑ´Ù.
-		// ±×³É ÁøÇàÇÒ °æ¿ì DrawPrimitive °°Àº °ÍÀ» ÇÏ¸é ÇÁ·Î±×·¥ÀÌ ÅÍÁø´Ù.
-	case CGraphicDevice::DEVICESTATE_BROKEN:
-		return DEVICE_STATE_SKIP;
-
-	case CGraphicDevice::DEVICESTATE_NEEDS_RESET:
-		if (!m_grpDevice.Reset())
-			return DEVICE_STATE_SKIP;
-
-		break;
-	}
-
-	return DEVICE_STATE_OK;
+    return m_terrainPresentation ? DEVICE_STATE_OK : DEVICE_STATE_FALSE;
 }
 
 bool CPythonApplication::CreateDevice(int width, int height, int Windowed, int bit, int frequency)
 {
-	int iRet;
-
-	// Unported game resources and login still require the existing compatibility device.
-	if (m_renderBackend)
-		return false;
-	auto backend = std::make_unique<Renderer::LegacyD3D9Backend>(m_grpDevice, m_pyGraphic);
-	backend->Initialize({GetWindowHandle(), static_cast<uint32_t>(width), static_cast<uint32_t>(height),
-	                     Windowed != 0, bit, frequency});
-	iRet = backend->GetCreateResult();
-	m_renderBackend = std::move(backend);
-
-	switch (iRet)
-	{
-		case CGraphicDevice::CREATE_OK:
-			return true;
-
-		case CGraphicDevice::CREATE_REFRESHRATE:
-			return true;
-
-		case CGraphicDevice::CREATE_ENUM:
-		case CGraphicDevice::CREATE_DETECT:
-			SET_EXCEPTION(CREATE_NO_APPROPRIATE_DEVICE);
-			TraceError("CreateDevice: Enum & Detect failed");
-			return false;
-
-		case CGraphicDevice::CREATE_NO_DIRECTX:
-			SET_EXCEPTION(CREATE_NO_DIRECTX);
-			TraceError("CreateDevice: DirectX 8.1 or greater required to run game");
-			return false;
-
-		case CGraphicDevice::CREATE_DEVICE:
-			SET_EXCEPTION(CREATE_DEVICE);
-			TraceError("CreateDevice: GraphicDevice create failed");
-			return false;
-
-		case CGraphicDevice::CREATE_FORMAT:
-			SET_EXCEPTION(CREATE_FORMAT);
-			TraceError("CreateDevice: Change the screen format");
-			return false;
-
-		case CGraphicDevice::CREATE_GET_DEVICE_CAPS:
-			PyErr_SetString(PyExc_RuntimeError, "GetDevCaps failed");
-			TraceError("CreateDevice: GetDevCaps failed");
-			return false;
-
-		case CGraphicDevice::CREATE_GET_DEVICE_CAPS2:
-			PyErr_SetString(PyExc_RuntimeError, "GetDevCaps2 failed");
-			TraceError("CreateDevice: GetDevCaps2 failed");
-			return false;
-
-		default:
-			if (iRet & CGraphicDevice::CREATE_OK)
-			{
-				if (iRet & CGraphicDevice::CREATE_NO_TNL)
-				{
-					CGrannyLODController::SetMinLODMode(true);
-				}
-				return true;
-			}
-
-			SET_EXCEPTION(UNKNOWN_ERROR);
-			TraceError("CreateDevice: Unknown Error!");
-			return false;
-	}
+    // ZiiNAN: Legacy D3D9 renderer removed from production path.
+    if (m_terrainPresentation) return false;
+    m_terrainPresentation=Renderer::CreateTerrainPresentation(GetWindowHandle(),width,height);
+    if(!m_terrainPresentation) return FailRendererStartup("Diligent D3D11 initialization failed. No fallback.");
+    if(m_grpDevice.Create(GetWindowHandle(),width,height,Windowed!=0,bit,frequency)!=CGraphicDevice::CREATE_OK) {
+        m_terrainPresentation.reset();
+        return FailRendererStartup("CPU graphics context initialization failed. No fallback.");
+    }
+    return true;
 }
 
 void CPythonApplication::SetUserMovingMainWindow(bool flag)
@@ -848,7 +757,7 @@ bool CPythonApplication::Create(PyObject * poSelf, const char * c_szName, int wi
 	NANOBEGIN
 		Windowed = CPythonSystem::Instance().IsWindowed() ? 1 : 0;
         if(m_startupBackend == Renderer::BackendKind::DiligentD3D11 && !Windowed)
-            return FailRendererStartup("Diligent D3D11 requires windowed mode (WINDOWED 1). No automatic fallback; use --renderer=legacy-d3d9 for Legacy fullscreen.");
+            return FailRendererStartup("Diligent D3D11 requires windowed mode (WINDOWED 1). Legacy fullscreen is no longer supported. No fallback.");
 
 	bool bAnotherWindow = false;
 
@@ -948,20 +857,6 @@ bool CPythonApplication::Create(PyObject * poSelf, const char * c_szName, int wi
             m_rendererStartupFailed = true;
             return false;
         }
-
-		if (m_startupBackend == Renderer::BackendKind::DiligentD3D11)
-		{
-			if (!Windowed || m_isWindowFullScreenEnable)
-			{
-                return FailRendererStartup("Diligent D3D11 requires windowed mode. No automatic fallback; use --renderer=legacy-d3d9 for Legacy fullscreen.");
-			}
-			m_terrainPresentation = Renderer::CreateTerrainPresentation(GetWindowHandle(), m_pySystem.GetWidth(), m_pySystem.GetHeight());
-			if (!m_terrainPresentation)
-			{
-                return FailRendererStartup("Diligent D3D11 initialization failed. No automatic fallback; restart with --renderer=legacy-d3d9 to use Legacy.");
-			}
-            STATEMANAGER.EnableDiligentRendering(); // ZiiNAN: No native draw/state execution after startup selection.
-		}
 
 		GrannyCreateSharedDeformBuffer();
 
@@ -1200,11 +1095,7 @@ void CPythonApplication::Destroy()
 	CGraphicImageInstance::DestroySystem();
 
 	m_terrainPresentation.reset();
-	if (m_renderBackend)
-	{
-		m_renderBackend->Shutdown();
-		m_renderBackend.reset();
-	}
+    m_grpDevice.Destroy();
 
 	//CSpeedTreeForestDirectX::Instance().Clear();
 

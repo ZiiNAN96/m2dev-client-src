@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "Renderer/TerrainPresentation.h"
 #include "EterLib/NativeStateView.h"
 #include "EterBase/Utils.h"
 #include "EterBase/Timer.h"
@@ -107,36 +108,23 @@ bool CGraphicBase::IsHighTextureMemory()
 }
 
 bool CGraphicBase::IsFastTNL()
-{ 
-	if (ms_dwD3DBehavior & D3DCREATE_HARDWARE_VERTEXPROCESSING ||
-		ms_dwD3DBehavior & D3DCREATE_MIXED_VERTEXPROCESSING)
-	{
-		if (ms_d3dCaps.VertexShaderVersion>D3DVS_VERSION(1,0))
-			return true;
-	}
-	return false;
+{
+    return true; // Production rendering uses Diligent GPU transforms.
 }
 
 bool CGraphicBase::IsTLVertexClipping()
 {
-	if (ms_d3dCaps.PrimitiveMiscCaps & D3DPMISCCAPS_CLIPTLVERTS)
-		return true;
-
-	return false;
+    return true;
 }
 
 void CGraphicBase::GetBackBufferSize(UINT* puWidth, UINT* puHeight)
 {
-	*puWidth=ms_d3dPresentParameter.BackBufferWidth;
-	*puHeight=ms_d3dPresentParameter.BackBufferHeight;
+    *puWidth=ms_iWidth; *puHeight=ms_iHeight;
 }
 
 void CGraphicBase::SetDefaultIndexBuffer(UINT eDefIB)
 {
-	if (eDefIB>=DEFAULT_IB_NUM)
-		return;
-
-	STATEMANAGER.SetIndices(ms_alpd3dDefIB[eDefIB], 0);
+    // CPU primitive submission supplies indices directly.
 }
 
 bool CGraphicBase::SetPDTStream(SPDTVertex* pVertices, UINT uVtxCount)
@@ -146,55 +134,12 @@ bool CGraphicBase::SetPDTStream(SPDTVertex* pVertices, UINT uVtxCount)
 
 bool CGraphicBase::SetPDTStream(SPDTVertexRaw* pSrcVertices, UINT uVtxCount)
 {
-	if (!uVtxCount)
-		return false;
-
-	static DWORD s_dwVBPos=0;
-
-	if (s_dwVBPos>=PDT_VERTEXBUFFER_NUM)
-		s_dwVBPos=0;
-
-	IDirect3DVertexBuffer9* plpd3dFillRectVB=ms_alpd3dPDTVB[s_dwVBPos];
-	++s_dwVBPos;
-
-	assert(PDT_VERTEX_NUM>=uVtxCount);
-	if (uVtxCount >= PDT_VERTEX_NUM)
-		return false;
-
-	TPDTVertex* pDstVertices;
-	if (FAILED(
-		plpd3dFillRectVB->Lock(0, sizeof(TPDTVertex)*uVtxCount, (void**)&pDstVertices, D3DLOCK_DISCARD)
-	)) 
-	{
-		STATEMANAGER.SetStreamSource(0, NULL, 0);
-		return false;
-	}
-	
-	
-	memcpy(pDstVertices, pSrcVertices, sizeof(TPDTVertex)*uVtxCount);
-
-	plpd3dFillRectVB->Unlock();
-
-	STATEMANAGER.SetStreamSource(0, plpd3dFillRectVB, sizeof(TPDTVertex));	
-
-	return true;
+    return pSrcVertices && uVtxCount && uVtxCount < PDT_VERTEX_NUM;
 }
 
 DWORD CGraphicBase::GetAvailableTextureMemory()
 {
-	assert(ms_lpd3dDevice!=NULL && "CGraphicBase::GetAvailableTextureMemory - D3DDevice is EMPTY");
-
-	static DWORD s_dwNextUpdateTime=0;
-	static DWORD s_dwTexMemSize=0;//ms_lpd3dDevice->GetAvailableTextureMem();
-
-	DWORD dwCurTime=ELTimer_GetMSec();
-	if (s_dwNextUpdateTime<dwCurTime)
-	{
-		s_dwNextUpdateTime=dwCurTime+5000;
-		s_dwTexMemSize=ms_lpd3dDevice->GetAvailableTextureMem();
-	}
-
-	return s_dwTexMemSize;
+    return 0; // D3D11 has no equivalent free-texture-memory query; unknown, not a fabricated budget.
 }
 
 const D3DXMATRIX& CGraphicBase::GetViewMatrix()
@@ -232,7 +177,7 @@ void CGraphicBase::SetSimpleCamera(float x, float y, float z, float pitch, float
 	UpdateViewMatrix();
 
 	// This is levites's virtual(?) code which you should not trust.
-	NativeStateView().GetTransform(D3DTS_WORLD, &ms_matWorld);
+	NativeStateView().GetTransform(Renderer::MatrixWorld, &ms_matWorld);
 	D3DXMatrixMultiply(&ms_matWorldView, &ms_matWorld, &ms_matView);
 }
 
@@ -249,7 +194,7 @@ void CGraphicBase::SetAroundCamera(float distance, float pitch, float roll, floa
 	UpdateViewMatrix();
 
 	// This is levites's virtual(?) code which you should not trust.
-	NativeStateView().GetTransform(D3DTS_WORLD, &ms_matWorld);
+	NativeStateView().GetTransform(Renderer::MatrixWorld, &ms_matWorld);
 	D3DXMatrixMultiply(&ms_matWorldView, &ms_matWorld, &ms_matView);
 }
 
@@ -279,7 +224,7 @@ void CGraphicBase::SetPositionCamera(float fx, float fy, float fz, float distanc
 	UpdateViewMatrix();
 
 	// This is levites's virtual(?) code which you should not trust.
-	STATEMANAGER.GetTransform(D3DTS_WORLD, &ms_matWorld);
+	STATEMANAGER.GetTransform(Renderer::MatrixWorld, &ms_matWorld);
 	D3DXMatrixMultiply(&ms_matWorldView, &ms_matWorld, &ms_matView);
 }
 
@@ -320,7 +265,7 @@ void CGraphicBase::SetPerspective(float fov, float aspect, float nearz, float fa
 
 void CGraphicBase::UpdateProjMatrix()
 {
-	STATEMANAGER.SetTransform(D3DTS_PROJECTION, &ms_matProj);
+	STATEMANAGER.SetTransform(Renderer::MatrixProjection, &ms_matProj);
 }
 
 void CGraphicBase::UpdateViewMatrix()
@@ -330,7 +275,7 @@ void CGraphicBase::UpdateViewMatrix()
 		return;
 
 	ms_matView = pkCamera->GetViewMatrix();
-	STATEMANAGER.SetTransform(D3DTS_VIEW, &ms_matView);
+	STATEMANAGER.SetTransform(Renderer::MatrixView, &ms_matView);
 
 	D3DXMatrixInverse(&ms_matInverseView, NULL, &ms_matView);
 	ms_matInverseViewYAxis._11 = ms_matInverseView._11;

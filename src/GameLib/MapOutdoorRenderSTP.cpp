@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "EterLib/NativeResourceAudit.h"
 #include "MapOutdoor.h"
 #include "TerrainPatch.h"
 #include "TerrainQuadtree.h"
@@ -334,7 +335,10 @@ void CMapOutdoor::__SoftwareTransformPatch_RenderPatchNone(SoftwareTransformPatc
 	}
 	
 
-	IDirect3DVertexBuffer9* pkVB=m_kSTPD.m_pkVBNone[m_kSTPD.m_dwNonePos++];
+	if (Renderer::UseNeutralResources()) {
+        SubmitTerrainGeometry(patchnum); ms_faceCount+=wPrimitiveCount; return;
+    }
+    IDirect3DVertexBuffer9* pkVB=m_kSTPD.m_pkVBNone[m_kSTPD.m_dwNonePos++];
 	m_kSTPD.m_dwNonePos%=SoftwareTransformPatch_SData::NONE_VB_NUM;
 	if (!pkVB)
 		return;
@@ -466,8 +470,8 @@ void CMapOutdoor::__SoftwareTransformPatch_BuildPipeline(SoftwareTransformPatch_
 	STATEMANAGER.GetLight(0, &rkTPRS.m_kLight);
 	STATEMANAGER.GetMaterial(&rkTPRS.m_kMtrl);
 
-	D3DXMATRIX m4View;STATEMANAGER.GetTransform(D3DTS_VIEW, &m4View);
-	D3DXMATRIX m4Proj;STATEMANAGER.GetTransform(D3DTS_PROJECTION, &m4Proj);
+	D3DXMATRIX m4View;STATEMANAGER.GetTransform(Renderer::MatrixView, &m4View);
+	D3DXMATRIX m4Proj;STATEMANAGER.GetTransform(Renderer::MatrixProjection, &m4Proj);
 	
 	D3DXMatrixMultiply(&rkTPRS.m_m4Frustum, &m4View, &m4Proj);
 
@@ -620,6 +624,7 @@ bool CMapOutdoor::__SoftwareTransformPatch_SetTransform(SoftwareTransformPatch_S
 
 bool CMapOutdoor::__SoftwareTransformPatch_SetSplatStream(SoftwareTransformPatch_STLVertex* akSrcVertex)
 {
+    if (Renderer::UseNeutralResources()) return true;
 	IDirect3DVertexBuffer9* pkVB=m_kSTPD.m_pkVBSplat[m_kSTPD.m_dwSplatPos++];
 	m_kSTPD.m_dwSplatPos%=SoftwareTransformPatch_SData::SPLAT_VB_NUM;
 	if (!pkVB)
@@ -642,6 +647,7 @@ bool CMapOutdoor::__SoftwareTransformPatch_SetSplatStream(SoftwareTransformPatch
 
 bool CMapOutdoor::__SoftwareTransformPatch_SetShadowStream(SoftwareTransformPatch_STLVertex* akSrcVertex)
 {
+    if (Renderer::UseNeutralResources()) return true;
 	IDirect3DVertexBuffer9* pkVB=m_kSTPD.m_pkVBSplat[m_kSTPD.m_dwSplatPos++];
 	m_kSTPD.m_dwSplatPos%=SoftwareTransformPatch_SData::SPLAT_VB_NUM;
 	if (!pkVB)
@@ -690,19 +696,20 @@ void CMapOutdoor::__SoftwareTransformPatch_Initialize()
 
 bool CMapOutdoor::__SoftwareTransformPatch_Create()
 {
+    if (Renderer::UseNeutralResources()) return true;
 	{
 		for (UINT uIndex=0; uIndex!=SoftwareTransformPatch_SData::SPLAT_VB_NUM; ++uIndex)
 		{
 			assert(NULL==m_kSTPD.m_pkVBSplat[uIndex]);
 			if (FAILED(
-				ms_lpd3dDevice->CreateVertexBuffer(
+				M2_NATIVE_RESOURCE(VertexBuffer, ms_lpd3dDevice->CreateVertexBuffer(
 					sizeof(SoftwareTransformPatch_SSplatVertex)*CTerrainPatch::TERRAIN_VERTEX_COUNT,
 					D3DUSAGE_DYNAMIC|D3DUSAGE_WRITEONLY,
 					D3DFVF_XYZRHW|D3DFVF_DIFFUSE|D3DFVF_SPECULAR|D3DFVF_TEX2,
 					D3DPOOL_DEFAULT,
 					&m_kSTPD.m_pkVBSplat[uIndex],
 					nullptr
-				)
+				))
 			)) return false;
 		}
 	}
@@ -712,14 +719,14 @@ bool CMapOutdoor::__SoftwareTransformPatch_Create()
 		{
 			assert(NULL==m_kSTPD.m_pkVBNone[uIndex]);
 			if (FAILED(
-				ms_lpd3dDevice->CreateVertexBuffer(
+				M2_NATIVE_RESOURCE(VertexBuffer, ms_lpd3dDevice->CreateVertexBuffer(
 					sizeof(SoftwareTransformPatch_STVertex)*CTerrainPatch::TERRAIN_VERTEX_COUNT,
 					D3DUSAGE_DYNAMIC|D3DUSAGE_WRITEONLY,
 					D3DFVF_XYZRHW,
 					D3DPOOL_DEFAULT,
 					&m_kSTPD.m_pkVBNone[uIndex],
 					nullptr
-				)
+				))
 			)) return false;
 		}
 	}

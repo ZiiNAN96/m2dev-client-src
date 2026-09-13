@@ -6,8 +6,7 @@
 
 bool CaptureNativeMaterial(Renderer::EffectDraw& d,std::string& error,bool allowSecondary)
 {
-    auto* device=STATEMANAGER.GetDevice(); bool ok=device!=nullptr;
-    if(!ok) return false;
+    bool ok=true;
     const auto rs=[&](D3DRENDERSTATETYPE t) { DWORD v=0; ok=SUCCEEDED(NativeStateView().GetRenderState(t,&v)) && ok; return v; };
     const auto ts=[&](D3DTEXTURESTAGESTATETYPE t) { DWORD v=0; ok=SUCCEEDED(NativeStateView().GetTextureStageState(0,t,&v)) && ok; return v; };
     const auto ss=[&](D3DSAMPLERSTATETYPE t) { DWORD v=0; ok=SUCCEEDED(NativeStateView().GetSamplerState(0,t,&v)) && ok; return v; };
@@ -23,8 +22,8 @@ bool CaptureNativeMaterial(Renderer::EffectDraw& d,std::string& error,bool allow
     d.sampler.min=ss(D3DSAMP_MINFILTER); d.sampler.mag=ss(D3DSAMP_MAGFILTER); d.sampler.mip=ss(D3DSAMP_MIPFILTER);
     d.sampler.anisotropy=std::clamp(ss(D3DSAMP_MAXANISOTROPY),DWORD(1),DWORD(16));
     d.sampler.maxMip=ss(D3DSAMP_MAXMIPLEVEL); d.sampler.lodBias=asFloat(ss(D3DSAMP_MIPMAPLODBIAS)); d.sampler.border=ss(D3DSAMP_BORDERCOLOR);
-    for(auto entry:{std::pair<D3DTRANSFORMSTATETYPE,std::array<float,16>*>(D3DTS_WORLD,&d.matrices.world),
-         {D3DTS_VIEW,&d.matrices.view},{D3DTS_PROJECTION,&d.matrices.projection},{D3DTS_TEXTURE0,&d.textureTransform}}) {
+    for(auto entry:{std::pair<Renderer::MatrixSlot,std::array<float,16>*>(Renderer::MatrixWorld,&d.matrices.world),
+         {Renderer::MatrixView,&d.matrices.view},{Renderer::MatrixProjection,&d.matrices.projection},{Renderer::MatrixTexture0,&d.textureTransform}}) {
         D3DXMATRIX matrix; ok=SUCCEEDED(NativeStateView().GetTransform(entry.first,&matrix)) && ok; memcpy(entry.second->data(),&matrix,64);
     }
     if(rs(D3DRS_FOGENABLE)) {
@@ -37,9 +36,9 @@ bool CaptureNativeMaterial(Renderer::EffectDraw& d,std::string& error,bool allow
     IDirect3DVertexShader9* vs=nullptr; IDirect3DPixelShader9* ps=nullptr;
     NativeStateView().GetVertexShader(&vs); NativeStateView().GetPixelShader(&ps);
     const bool shaders=vs || ps; if(vs) vs->Release(); if(ps) ps->Release();
-    IDirect3DBaseTexture9* second=nullptr; NativeStateView().GetTexture(1,&second);
+    const auto second=NativeStateView().GetTextureBinding(1);
     DWORD secondOp=0; NativeStateView().GetTextureStageState(1,D3DTSS_COLOROP,&secondOp);
-    const bool secondUsed=second && secondOp!=D3DTOP_DISABLE; if(second) second->Release();
+    const bool secondUsed=second && secondOp!=D3DTOP_DISABLE;
     if(allowSecondary && secondUsed) {
         const auto ts1=[&](D3DTEXTURESTAGESTATETYPE t) { DWORD v=0; ok=SUCCEEDED(NativeStateView().GetTextureStageState(1,t,&v)) && ok; return v; };
         const auto ss1=[&](D3DSAMPLERSTATETYPE t) { DWORD v=0; ok=SUCCEEDED(NativeStateView().GetSamplerState(1,t,&v)) && ok; return v; };
@@ -50,14 +49,9 @@ bool CaptureNativeMaterial(Renderer::EffectDraw& d,std::string& error,bool allow
         s.min=ss1(D3DSAMP_MINFILTER); s.mag=ss1(D3DSAMP_MAGFILTER); s.mip=ss1(D3DSAMP_MIPFILTER);
         s.anisotropy=std::clamp(ss1(D3DSAMP_MAXANISOTROPY),DWORD(1),DWORD(16));
         s.maxMip=ss1(D3DSAMP_MAXMIPLEVEL); s.lodBias=asFloat(ss1(D3DSAMP_MIPMAPLODBIAS)); s.border=ss1(D3DSAMP_BORDERCOLOR);
-        D3DXMATRIX matrix; ok=SUCCEEDED(NativeStateView().GetTransform(D3DTS_TEXTURE1,&matrix)) && ok; memcpy(d.secondaryTransform.data(),&matrix,64);
+        D3DXMATRIX matrix; ok=SUCCEEDED(NativeStateView().GetTransform(Renderer::MatrixTexture1,&matrix)) && ok; memcpy(d.secondaryTransform.data(),&matrix,64);
     }
-    IDirect3DSurface9* target=nullptr;
-    if(STATEMANAGER.IsDiligentRendering()) d.opaqueTargetAlpha=true;
-    else if(SUCCEEDED(device->GetRenderTarget(0,&target)) && target) {
-        D3DSURFACE_DESC desc{}; target->GetDesc(&desc); target->Release();
-        d.opaqueTargetAlpha=desc.Format==D3DFMT_X8R8G8B8 || desc.Format==D3DFMT_R5G6B5;
-    }
+    d.opaqueTargetAlpha=true;
     // ZiiNAN: Diligent text rendering integration; LCD passes preserve target alpha.
     d.colorWriteMask=rs(D3DRS_COLORWRITEENABLE)&15u;
     const bool valid=ok && !shaders && (!secondUsed || allowSecondary) && !rs(D3DRS_SEPARATEALPHABLENDENABLE) && !rs(D3DRS_STENCILENABLE) &&
@@ -71,11 +65,10 @@ bool CaptureNativeMaterial(Renderer::EffectDraw& d,std::string& error,bool allow
 // ZiiNAN: Water's no-normal FVF still receives native ambient/emissive lighting at far NULL-texture draws.
 bool ResolveNativeWaterDiffuse(const Renderer::EffectVertex* input,uint32_t count,std::vector<Renderer::EffectVertex>& output)
 {
-    auto* device=STATEMANAGER.GetDevice(); if(!device) return false;
     DWORD lighting=0; if(FAILED(NativeStateView().GetRenderState(D3DRS_LIGHTING,&lighting))) return false;
     if(!lighting) return true;
     D3DMATERIAL9 material{}; D3DXMATRIX world;
-    if(FAILED(NativeStateView().GetMaterial(&material)) || FAILED(NativeStateView().GetTransform(D3DTS_WORLD,&world))) return false;
+    if(FAILED(NativeStateView().GetMaterial(&material)) || FAILED(NativeStateView().GetTransform(Renderer::MatrixWorld,&world))) return false;
     DWORD ambient=0,colorVertex=0,ambientSource=0,emissiveSource=0,diffuseSource=0;
     for(auto entry:{std::pair{D3DRS_AMBIENT,&ambient},{D3DRS_COLORVERTEX,&colorVertex},
         {D3DRS_AMBIENTMATERIALSOURCE,&ambientSource},{D3DRS_EMISSIVEMATERIALSOURCE,&emissiveSource},{D3DRS_DIFFUSEMATERIALSOURCE,&diffuseSource}})

@@ -2,7 +2,6 @@
 #include "EterLib/GrpDevice.h"
 #include "EterLib/GrpScreen.h"
 #include "EterLib/Camera.h"
-#include "EterLib/LegacyD3D9Backend.h"
 #ifdef M2_ENABLE_DILIGENT_D3D11
 #include <d3d11.h>
 #include "Renderer/DiligentD3D11BackendInternal.h"
@@ -45,32 +44,7 @@ bool PixelsMatch(const void* data, size_t pitch, uint32_t width, uint32_t height
            PixelMatches(bytes + (height - 1) * pitch + (width - 1) * 4, color, bgra);
 }
 
-class LegacyProbe : public CGraphicBase
-{
-public:
-    static bool Released() { return ms_lpd3dDevice == nullptr && ms_lpd3d == nullptr; }
-    static void Readback(uint32_t width, uint32_t height, const Renderer::ClearColor& color)
-    {
-        using Microsoft::WRL::ComPtr;
-        Check(ms_lpd3dDevice != nullptr, "No legacy device");
-        ComPtr<IDirect3DSurface9> target;
-        Check(SUCCEEDED(ms_lpd3dDevice->GetRenderTarget(0, &target)), "GetRenderTarget failed");
-        D3DSURFACE_DESC desc{};
-        target->GetDesc(&desc);
-        Check(desc.Width == width && desc.Height == height, "Legacy back buffer extent mismatch");
-        Check(desc.Format == D3DFMT_X8R8G8B8 || desc.Format == D3DFMT_A8R8G8B8, "Unexpected legacy pixel format");
-        ComPtr<IDirect3DSurface9> staging;
-        Check(SUCCEEDED(ms_lpd3dDevice->CreateOffscreenPlainSurface(width, height, desc.Format,
-            D3DPOOL_SYSTEMMEM, &staging, nullptr)), "Legacy staging allocation failed");
-        Check(SUCCEEDED(ms_lpd3dDevice->GetRenderTargetData(target.Get(), staging.Get())), "Legacy readback failed");
-        D3DLOCKED_RECT mapped{};
-        Check(SUCCEEDED(staging->LockRect(&mapped, nullptr, D3DLOCK_READONLY)), "Legacy mapping failed");
-        const bool matches = PixelsMatch(mapped.pBits, mapped.Pitch, width, height, color, true);
-        staging->UnlockRect();
-        Check(matches, "Legacy clear pixels differ");
-        Check(SUCCEEDED(ms_lpd3dDevice->TestCooperativeLevel()), "Legacy device lost");
-    }
-};
+
 }
 
 #ifdef M2_ENABLE_DILIGENT_D3D11
@@ -119,7 +93,7 @@ public:
 int main(int argc, char** argv)
 {
     using namespace Renderer;
-    const bool diligent = argc > 1 && std::string_view(argv[1]) == "diligent-d3d11";
+    const bool diligent = true;
     const HINSTANCE instance = GetModuleHandleW(nullptr);
     const wchar_t* className = L"Metin2RendererGpuTest";
     WNDCLASSW windowClass{};
@@ -132,29 +106,11 @@ int main(int argc, char** argv)
         0, 0, 640, 480, nullptr, nullptr, instance, nullptr);
     if (!window)
         return 2;
-    CGraphicDevice device;
-    CScreen screen;
-    std::unique_ptr<IRenderBackend> backend;
-    std::function<void(uint32_t, uint32_t, const ClearColor&)> readback;
-    std::function<bool()> released;
-#ifdef M2_ENABLE_DILIGENT_D3D11
-    if (diligent)
-    {
-        auto implementation = std::make_unique<DiligentD3D11Backend>();
-        auto* concrete = implementation.get();
-        readback = [concrete](uint32_t w, uint32_t h, const ClearColor& color) { BackendTestAccess::Readback(*concrete, w, h, color); };
-        released = [concrete] { return BackendTestAccess::Released(*concrete); };
-        backend = std::move(implementation);
-    }
-    else
-#endif
-    {
-        if (diligent)
-            return 2;
-        backend = std::make_unique<LegacyD3D9Backend>(device, screen);
-        readback = LegacyProbe::Readback;
-        released = LegacyProbe::Released;
-    }
+    auto implementation=std::make_unique<DiligentD3D11Backend>();
+    auto* concrete=implementation.get();
+    std::unique_ptr<IRenderBackend> backend=std::move(implementation);
+    const auto readback=[concrete](uint32_t w,uint32_t h,const ClearColor& color) { BackendTestAccess::Readback(*concrete,w,h,color); };
+    const auto released=[concrete] { return BackendTestAccess::Released(*concrete); };
     int result = 0;
     try
     {

@@ -194,12 +194,12 @@ void CLensFlare::DrawBeforeFlare()
 
 	D3DXMATRIX matProj;
 	D3DXMatrixOrthoOffCenterRH(&matProj, 0.0f, 1.0f, 1.0f, 0.0f, -1.0f, 1.0f);
-	STATEMANAGER.SaveTransform(D3DTS_PROJECTION, &matProj);
-	STATEMANAGER.SaveTransform(D3DTS_VIEW, &ms_matIdentity);
+	STATEMANAGER.SaveTransform(Renderer::MatrixProjection, &matProj);
+	STATEMANAGER.SaveTransform(Renderer::MatrixView, &ms_matIdentity);
 
 	D3DXMATRIX matWorld;
 	D3DXMatrixTranslation(&matWorld, m_afFlarePos[0], m_afFlarePos[1], 0.0f);
-	STATEMANAGER.SetTransform(D3DTS_WORLD, &matWorld);
+	STATEMANAGER.SetTransform(Renderer::MatrixWorld, &matWorld);
 
 	STATEMANAGER.SaveRenderState(D3DRS_LIGHTING, FALSE);
 	STATEMANAGER.SaveRenderState(D3DRS_ZENABLE, FALSE);					// glDisable(GL_DEPTH_TEST);
@@ -256,7 +256,7 @@ void CLensFlare::DrawBeforeFlare()
 	vertices[3].u = 1.0f;
 	vertices[3].v = 1.0f;
 
-	STATEMANAGER.SetTexture(0, m_SunFlareImageInstance.GetTexturePointer()->GetD3DTexture());
+	STATEMANAGER.SetTexture(0, m_SunFlareImageInstance.GetTexturePointer()->GetTextureBinding());
 	STATEMANAGER.SetTexture(1, NULL);
 	STATEMANAGER.SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
 	STATEMANAGER.SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
@@ -278,8 +278,8 @@ void CLensFlare::DrawBeforeFlare()
 	STATEMANAGER.RestoreRenderState(D3DRS_SRCBLEND);
 	STATEMANAGER.RestoreRenderState(D3DRS_DESTBLEND);
 
-	STATEMANAGER.RestoreTransform(D3DTS_VIEW);
-	STATEMANAGER.RestoreTransform(D3DTS_PROJECTION);
+	STATEMANAGER.RestoreTransform(Renderer::MatrixView);
+	STATEMANAGER.RestoreTransform(Renderer::MatrixProjection);
 }
 
 
@@ -331,10 +331,10 @@ void CLensFlare::DrawFlare()
 
 		D3DXMATRIX matProj;
 		D3DXMatrixOrthoOffCenterRH(&matProj, 0.0f, ms_Viewport.Width, ms_Viewport.Height, 0.0f, -1.0f, 1.0f);
-		STATEMANAGER.SaveTransform(D3DTS_PROJECTION, &matProj);
-		STATEMANAGER.SaveTransform(D3DTS_VIEW, &ms_matIdentity);
+		STATEMANAGER.SaveTransform(Renderer::MatrixProjection, &matProj);
+		STATEMANAGER.SaveTransform(Renderer::MatrixView, &ms_matIdentity);
 
-		STATEMANAGER.SetTransform(D3DTS_WORLD, &ms_matIdentity);
+		STATEMANAGER.SetTransform(Renderer::MatrixWorld, &ms_matIdentity);
 		//glMatrixMode(GL_MODELVIEW);
 		//glLoadIdentity();
 
@@ -354,8 +354,8 @@ void CLensFlare::DrawFlare()
 		STATEMANAGER.RestoreRenderState(D3DRS_ALPHABLENDENABLE); // glEnable(GL_BLEND);
 		STATEMANAGER.RestoreRenderState(D3DRS_ALPHATESTENABLE); // glDisable(GL_ALPHA_TEST);
 
-		STATEMANAGER.RestoreTransform(D3DTS_PROJECTION);
-		STATEMANAGER.RestoreTransform(D3DTS_VIEW);
+		STATEMANAGER.RestoreTransform(Renderer::MatrixProjection);
+		STATEMANAGER.RestoreTransform(Renderer::MatrixView);
 		//glDisable(GL_TEXTURE_2D);
         //glPopAttrib();
 	}
@@ -573,7 +573,7 @@ void CFlare::Draw(float fBrightScale, int nWidth, int nHeight, int nX, int nY)
 						   m_vFlares[i]->m_pColor[2] * fBrightScale,
 						   m_vFlares[i]->m_pColor[3] * fBrightScale);
 
-		STATEMANAGER.SetTexture(0, m_vFlares[i]->m_imageInstance.GetTexturePointer()->GetD3DTexture());
+		STATEMANAGER.SetTexture(0, m_vFlares[i]->m_imageInstance.GetTexturePointer()->GetTextureBinding());
 
 		TVertex vertices[4];
 		

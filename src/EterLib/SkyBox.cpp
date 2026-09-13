@@ -831,7 +831,7 @@ void CSkyBox::Render()
 
  	STATEMANAGER.SetFVF(D3DFVF_XYZ|D3DFVF_DIFFUSE|D3DFVF_TEX1);
 
-	STATEMANAGER.SetTransform(D3DTS_WORLD, &m_matWorld);
+	STATEMANAGER.SetTransform(Renderer::MatrixWorld, &m_matWorld);
 
 	//Render Face
 	if( m_ucRenderMode == CSkyObject::SKY_RENDER_MODE_TEXTURE )
@@ -846,7 +846,7 @@ void CSkyBox::Render()
 			if (!pFaceImageInstance)
 				break;
 
-			STATEMANAGER.SetTexture( 0, pFaceImageInstance->GetTextureReference().GetD3DTexture() );
+			STATEMANAGER.SetTexture( 0, pFaceImageInstance->GetTextureReference().GetTextureBinding() );
 			WorldRenderBridge::Texture(pFaceImageInstance->GetGraphicImagePointer());
 
 			m_Faces[i].Render();
@@ -912,7 +912,7 @@ void CSkyBox::RenderCloud()
 	
 	m_dwlastTime = dwCurTime;
 	
-	STATEMANAGER.SaveTransform(D3DTS_TEXTURE0, &m_matTextureCloud);
+	STATEMANAGER.SaveTransform(Renderer::MatrixTexture0, &m_matTextureCloud);
 
 	STATEMANAGER.SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATEINVALPHA_ADDCOLOR);
 	STATEMANAGER.SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
@@ -922,14 +922,14 @@ void CSkyBox::RenderCloud()
 	
 	D3DXMATRIX matProjCloud;
 	D3DXMatrixPerspectiveFovRH(&matProjCloud, D3DX_PI * 0.25f, 1.33333f, 50.0f, 999999.0f);
-	STATEMANAGER.SetTransform(D3DTS_WORLD, &m_matWorldCloud);
-	STATEMANAGER.SaveTransform(D3DTS_PROJECTION, &matProjCloud);
-	STATEMANAGER.SetTexture(0, pCloudGraphicImageInstance->GetTexturePointer()->GetD3DTexture());
+	STATEMANAGER.SetTransform(Renderer::MatrixWorld, &m_matWorldCloud);
+	STATEMANAGER.SaveTransform(Renderer::MatrixProjection, &matProjCloud);
+	STATEMANAGER.SetTexture(0, pCloudGraphicImageInstance->GetTexturePointer()->GetTextureBinding());
 	WorldRenderBridge::Texture(pCloudGraphicImageInstance->GetGraphicImagePointer());
 	m_FaceCloud.Render();
-	STATEMANAGER.RestoreTransform(D3DTS_PROJECTION);
+	STATEMANAGER.RestoreTransform(Renderer::MatrixProjection);
 	
-	STATEMANAGER.RestoreTransform(D3DTS_TEXTURE0);
+	STATEMANAGER.RestoreTransform(Renderer::MatrixTexture0);
 	STATEMANAGER.RestoreTextureStageState(0, D3DTSS_TEXTURETRANSFORMFLAGS);
 
 	STATEMANAGER.RestoreRenderState(D3DRS_LIGHTING);

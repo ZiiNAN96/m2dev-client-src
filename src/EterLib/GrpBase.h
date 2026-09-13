@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Ray.h"
+#include "../Renderer/MatrixState.h"
 #include <vector>
 
 void PixelPositionToD3DXVECTOR3(const D3DXVECTOR3& c_rkPPosSrc, D3DXVECTOR3* pv3Dst);

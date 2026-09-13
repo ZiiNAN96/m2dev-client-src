@@ -26,7 +26,7 @@ class CParticleSystemInstance : public CEffectElementBaseInstance
 			DWORD dwFrameIndex;
 			for(dwFrameIndex=0; dwFrameIndex<m_kVct_pkImgInst.size(); dwFrameIndex++)
 			{
-				STATEMANAGER.SetTexture(0, m_kVct_pkImgInst[dwFrameIndex]->GetTextureReference().GetD3DTexture());
+				STATEMANAGER.SetTexture(0, m_kVct_pkImgInst[dwFrameIndex]->GetTextureReference().GetTextureBinding());
                 EffectRenderBridge::Texture(m_kVct_pkImgInst[dwFrameIndex]->GetGraphicImagePointer());
 				TParticleInstanceList::iterator itor = m_ParticleInstanceListVector[dwFrameIndex].begin();
 				for (; itor != m_ParticleInstanceListVector[dwFrameIndex].end(); ++itor)

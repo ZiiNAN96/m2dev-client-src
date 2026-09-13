@@ -141,7 +141,7 @@ void CEffectMeshInstance::OnRender()
 		m_matWorld._42 = Position.y;
 		m_matWorld._43 = Position.z;
 		m_matWorld = m_matWorld * *mc_pmatLocal;
-		STATEMANAGER.SetTransform(D3DTS_WORLD, &m_matWorld);
+		STATEMANAGER.SetTransform(Renderer::MatrixWorld, &m_matWorld);
 
 		BYTE byType;
 		D3DXCOLOR Color(1.0f, 1.0f, 1.0f, 1.0f);
@@ -165,7 +165,7 @@ void CEffectMeshInstance::OnRender()
 		if (dwcurTextureFrame < m_TextureInstanceVector[i].TextureInstanceVector.size())
 		{
 			CGraphicImageInstance * pImageInstance = m_TextureInstanceVector[i].TextureInstanceVector[dwcurTextureFrame];
-			STATEMANAGER.SetTexture(0, pImageInstance->GetTexturePointer()->GetD3DTexture());
+			STATEMANAGER.SetTexture(0, pImageInstance->GetTexturePointer()->GetTextureBinding());
             EffectRenderBridge::Texture(pImageInstance->GetGraphicImagePointer());
 		}
 

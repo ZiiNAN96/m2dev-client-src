@@ -43,10 +43,9 @@ class CDungeonModelInstance : public CGrannyModelInstance
 		bool CaptureDiligentSource()
 		{
 			if(!Renderer::worldRenderer) return true;
-			// ZiiNAN: Copy the actual native PNT2 buffer once; no Granny format or loader changes.
+			// ZiiNAN: Backend-neutral graphics resource ownership
 			if(!m_pModel || m_pModel->GetDeformVertexCount()) return false;
-			D3DVERTEXBUFFER_DESC desc{}; auto* buffer=m_pModel->GetPNTD3DVertexBuffer();
-			if(!buffer || FAILED(buffer->GetDesc(&desc)) || desc.Size<size_t(m_pModel->GetRigidVertexCount())*40) return false;
+			if(m_pModel->GetRigidVertexBytes()<size_t(m_pModel->GetRigidVertexCount())*40) return false;
 			void* vertices=nullptr; void* indices=nullptr;
 			if(!m_pModel->LockVertices(&indices,&vertices)) return false;
 			m_vertices.resize(m_pModel->GetRigidVertexCount()); m_indices.resize(m_pModel->GetIdxCount());
@@ -61,7 +60,7 @@ class CDungeonModelInstance : public CGrannyModelInstance
 
 			STATEMANAGER.SetVertexDeclaration(ms_pnt2VS);
 			LPDIRECT3DVERTEXBUFFER9 lpd3dRigidPNTVtxBuf = m_pModel->GetPNTD3DVertexBuffer();
-			if (lpd3dRigidPNTVtxBuf)
+			if (lpd3dRigidPNTVtxBuf || (Renderer::UseNeutralResources() && m_pModel->GetRigidVertexCount()>0))
 			{
 				STATEMANAGER.SetStreamSource(0, lpd3dRigidPNTVtxBuf, sizeof(TPNT2Vertex));
 				Renderer::SpecialMeshScope special({this,Submit});
@@ -84,7 +83,7 @@ class CDungeonModelInstance : public CGrannyModelInstance
 
 			STATEMANAGER.SetVertexDeclaration(ms_pnt2VS);
 			LPDIRECT3DVERTEXBUFFER9 lpd3dRigidPNTVtxBuf = m_pModel->GetPNTD3DVertexBuffer();
-			if (lpd3dRigidPNTVtxBuf)
+			if (lpd3dRigidPNTVtxBuf || (Renderer::UseNeutralResources() && m_pModel->GetRigidVertexCount()>0))
 			{
 				STATEMANAGER.SetStreamSource(0, lpd3dRigidPNTVtxBuf, sizeof(TPNT2Vertex));
 				RenderMeshNodeListWithoutTexture(CGrannyMesh::TYPE_RIGID, CGrannyMaterial::TYPE_BLEND_PNT);
