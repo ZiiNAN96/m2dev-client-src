@@ -1,5 +1,7 @@
 # Milestone 2: Diligent-Terrain-Geometrie
 
+> Historischer Milestone-Stand. Aktuell seit [M12](renderer-milestone12.md): Diligent D3D11 ist im ON-Build der Default; Legacy wird explizit mit `--renderer=legacy-d3d9` gewählt. OFF-Builds bleiben Legacy-only. Frühere Testergebnisse und Auswahlbeschreibungen unten gelten für ihren damaligen Stand.
+
 Historischer Abschlussstand. Die nachfolgende einzelne Terrain-Textur ist separat
 in [Milestone 3A](renderer-milestone3a.md) dokumentiert; die untenstehenden
 M2-Ergebnisse beziehen sich weiterhin auf den damaligen einfarbigen Renderer.

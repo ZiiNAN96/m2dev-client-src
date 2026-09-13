@@ -1,6 +1,8 @@
 <!-- ZiiNAN: Bounded 5B implementation and measured acceptance, no later migration. -->
 # Milestone 5B – Rüstungsmaterialien und gemeinsamer NPC-/Mob-Pfad
 
+> Historischer Milestone-Stand. Aktuell seit [M12](renderer-milestone12.md): Diligent D3D11 ist im ON-Build der Default; Legacy wird explizit mit `--renderer=legacy-d3d9` gewählt. OFF-Builds bleiben Legacy-only. Frühere Testergebnisse und Auswahlbeschreibungen unten gelten für ihren damaligen Stand.
+
 Stand 12.09.2026. Basis `757930e` (5A). **5B-Kernumfang implementiert und für die unten genannten Rüstungen, NPCs und Mobs getestet.** Release ON/OFF, Renderer-Tests, vollständige Suite und normale Ingame-Sichtprüfungen bestanden. Keine uneingeschränkte Freigabe sämtlicher NPC-Zustände: zwei im ersten normalen Lauf protokollierte Material-State-Ablehnungen bleiben als nicht reproduzierte Randfälle offen (Punkt 28). Keine weitere Migration begonnen.
 
 Die [Analyse vor Änderungen](C:/Users/ZiiNAN/Documents/GitHub/m2dev-client-src/docs/renderer-milestone5b-analysis.md) beantwortet separat alle 22 Actor- und 13 Shape-Fragen anhand der Source und Originalassets. Keine Server-/Assetänderungen; Legacy D3D9Ex bleibt Standard. Genau ein Actor-Renderer für die drei Kategorien.

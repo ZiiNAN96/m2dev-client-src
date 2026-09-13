@@ -1,6 +1,8 @@
 <!-- ZiiNAN: Evidence-backed 5A implementation and acceptance boundaries. -->
 # Milestone 5A – animierter Granny-Grundkörper
 
+> Historischer Milestone-Stand. Aktuell seit [M12](renderer-milestone12.md): Diligent D3D11 ist im ON-Build der Default; Legacy wird explizit mit `--renderer=legacy-d3d9` gewählt. OFF-Builds bleiben Legacy-only. Frühere Testergebnisse und Auswahlbeschreibungen unten gelten für ihren damaligen Stand.
+
 Stand: 12.09.2026. Basis `7f038ef`. **Milestone 5A für den ausgewählten animierten Krieger-Grundkörper abgeschlossen.** Isolierter Diligent-Test, normale Diligent-Ingame-Abnahme, normale Legacy-Regression und der abschließende Mount-/Map-Gegenlauf sind bestanden. Die unten genannten Grenzen bleiben ausdrücklich bestehen. Keine automatische Fortsetzung mit 5B. Legacy D3D9Ex bleibt Default, Diligent ist nur mit `--renderer=diligent-d3d11` aktiv.
 
 Die [Analyse vor den Änderungen](C:/Users/ZiiNAN/Documents/GitHub/m2dev-client-src/docs/renderer-milestone5a-analysis.md) enthält alle 29 angeforderten Source-Befunde und die minimale Architekturentscheidung. Die folgenden 26 Punkte unterscheiden automatisierte Nachweise, manuelle Rückmeldung und offene Prüfungen.

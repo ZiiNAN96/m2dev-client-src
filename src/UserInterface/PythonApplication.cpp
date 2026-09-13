@@ -750,6 +750,15 @@ void CPythonApplication::Loop()
 	}
 }
 
+// ZiiNAN: Preserve renderer startup failure even if the original Python script catches it.
+bool CPythonApplication::FailRendererStartup(const char* message)
+{
+    m_rendererStartupFailed = true;
+    TraceError("Renderer startup: %s", message);
+    PyErr_SetString(PyExc_RuntimeError, message);
+    return false;
+}
+
 bool LoadLocaleData(const char* localePath)
 {
 	CPythonNonPlayer&	rkNPCMgr	= CPythonNonPlayer::Instance();
@@ -838,6 +847,8 @@ bool CPythonApplication::Create(PyObject * poSelf, const char * c_szName, int wi
 
 	NANOBEGIN
 		Windowed = CPythonSystem::Instance().IsWindowed() ? 1 : 0;
+        if(m_startupBackend == Renderer::BackendKind::DiligentD3D11 && !Windowed)
+            return FailRendererStartup("Diligent D3D11 requires windowed mode (WINDOWED 1). No automatic fallback; use --renderer=legacy-d3d9 for Legacy fullscreen.");
 
 	bool bAnotherWindow = false;
 
@@ -933,20 +944,21 @@ bool CPythonApplication::Create(PyObject * poSelf, const char * c_szName, int wi
 
 		// Device
 		if (!CreateDevice(m_pySystem.GetWidth(), m_pySystem.GetHeight(), Windowed, m_pySystem.GetBPP(), m_pySystem.GetFrequency()))
-			return false;
+        {
+            m_rendererStartupFailed = true;
+            return false;
+        }
 
 		if (m_startupBackend == Renderer::BackendKind::DiligentD3D11)
 		{
 			if (!Windowed || m_isWindowFullScreenEnable)
 			{
-				PyErr_SetString(PyExc_RuntimeError, "Diligent terrain milestone requires windowed mode");
-				return false;
+                return FailRendererStartup("Diligent D3D11 requires windowed mode. No automatic fallback; use --renderer=legacy-d3d9 for Legacy fullscreen.");
 			}
 			m_terrainPresentation = Renderer::CreateTerrainPresentation(GetWindowHandle(), m_pySystem.GetWidth(), m_pySystem.GetHeight());
 			if (!m_terrainPresentation)
 			{
-				PyErr_SetString(PyExc_RuntimeError, "Diligent terrain initialization failed");
-				return false;
+                return FailRendererStartup("Diligent D3D11 initialization failed. No automatic fallback; restart with --renderer=legacy-d3d9 to use Legacy.");
 			}
             STATEMANAGER.EnableDiligentRendering(); // ZiiNAN: No native draw/state execution after startup selection.
 		}

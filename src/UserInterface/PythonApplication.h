@@ -128,8 +128,9 @@ class CPythonApplication : public CMSApplication, public CInputKeyboard, public 
 		};
 
 	public:
-		explicit CPythonApplication(Renderer::BackendKind backend = Renderer::BackendKind::LegacyD3D9);
+		explicit CPythonApplication(Renderer::BackendKind backend);
 		virtual ~CPythonApplication();
+        bool HasRendererStartupFailed() const { return m_rendererStartupFailed; }
 
 	public:
 		void ShowWebPage(const char* c_szURL, const RECT& c_rcWebPage);
@@ -356,6 +357,8 @@ class CPythonApplication : public CMSApplication, public CInputKeyboard, public 
 		CGraphicDevice				m_grpDevice;
 		std::unique_ptr<Renderer::IRenderBackend> m_renderBackend;
 		const Renderer::BackendKind m_startupBackend;
+        bool m_rendererStartupFailed = false;
+        bool FailRendererStartup(const char* message);
 		std::unique_ptr<Renderer::ITerrainPresentation> m_terrainPresentation;
 		CNetworkDevice				m_netDevice;
 

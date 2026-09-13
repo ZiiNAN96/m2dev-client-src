@@ -4,8 +4,9 @@ param([Parameter(Mandatory=$true)][ValidateSet('legacy','diligent')][string]$Bac
       [int]$Seconds=1200)
 $ErrorActionPreference='Stop'
 $testRoot=(Resolve-Path -LiteralPath $TestRoot).Path
-$start=@{FilePath="$testRoot\$Backend-bin\Metin2_Release.exe";WorkingDirectory="$testRoot\$Backend-runtime";PassThru=$true}
+$start=@{FilePath="$testRoot\$Backend-bin\Metin2_Release.exe";WorkingDirectory="$testRoot\$Backend-runtime";PassThru=$true;WindowStyle='Normal'}
 if($Backend -eq 'diligent') { $start.ArgumentList='--renderer=diligent-d3d11' }
+if($Backend -eq 'legacy') { $start.ArgumentList='--renderer=legacy-d3d9' }
 $client=Start-Process @start
 Write-Output "$Backend PID=$($client.Id)"
 $samples=[System.Collections.Generic.List[object]]::new()

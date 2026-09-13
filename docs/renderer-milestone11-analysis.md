@@ -1,5 +1,7 @@
 # M11 – D3D9 rest-path audit and bounded integration plan
 
+> Historischer Milestone-Stand. Aktuell seit [M12](renderer-milestone12.md): Diligent D3D11 ist im ON-Build der Default; Legacy wird explizit mit `--renderer=legacy-d3d9` gewählt. OFF-Builds bleiben Legacy-only. Frühere Testergebnisse und Auswahlbeschreibungen unten gelten für ihren damaligen Stand.
+
 Baseline: `56a79e1`. Initial analysis/plan; implementation and acceptance evidence are recorded in `renderer-milestone11-validation.md`.
 Legacy remains the default. No device removal or backend hot-switching.
 

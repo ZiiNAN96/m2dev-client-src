@@ -1,5 +1,7 @@
 # Renderer milestone 1
 
+> Historischer Milestone-Stand. Aktuell seit [M12](renderer-milestone12.md): Diligent D3D11 ist im ON-Build der Default; Legacy wird explizit mit `--renderer=legacy-d3d9` gewählt. OFF-Builds bleiben Legacy-only. Frühere Testergebnisse und Auswahlbeschreibungen unten gelten für ihren damaligen Stand.
+
 Historical milestone-1 description. With milestone 2 applied, normal
 `--renderer=diligent-d3d11` starts the game and its experimental terrain presentation.
 The isolated clear/present bootstrap now requires `--renderer-smoke-test`.

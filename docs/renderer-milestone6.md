@@ -1,5 +1,7 @@
 # Milestone 6 — bestehendes SpeedTree in Diligent D3D11
 
+> Historischer Milestone-Stand. Aktuell seit [M12](renderer-milestone12.md): Diligent D3D11 ist im ON-Build der Default; Legacy wird explizit mit `--renderer=legacy-d3d9` gewählt. OFF-Builds bleiben Legacy-only. Frühere Testergebnisse und Auswahlbeschreibungen unten gelten für ihren damaligen Stand.
+
 Stand: 12.09.2026. **M6 für den geprüften normalen SpeedTree-Baumpfad abgeschlossen und freigegeben.** Release ON/OFF, vollständige Suite, Renderer ON/OFF und beide Ingame-Prüfungen bestanden. Abschließender ON-Build wiederhergestellt und erneut geprüft; Legacy bleibt weiterhin Startstandard. Die unten beschriebenen historischen LOD-/SDK-Grenzen bleiben ausdrücklich bestehen.
 
 Ausgangspunkt: `288f4da` (M5D), sauberer Source-Checkout. Die [Analyse vor Produktionsänderungen](renderer-milestone6-analysis.md) enthält die 35 Architekturfragen, Komponentenmatrix und minimale Eingriffsliste. Kein anderer Renderer-Milestone wurde begonnen. Legacy D3D9Ex bleibt Startstandard; Diligent bleibt `--renderer=diligent-d3d11`.

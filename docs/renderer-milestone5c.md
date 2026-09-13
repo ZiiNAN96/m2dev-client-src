@@ -1,5 +1,7 @@
 # Milestone 5C: bestehende Actor-Attachments
 
+> Historischer Milestone-Stand. Aktuell seit [M12](renderer-milestone12.md): Diligent D3D11 ist im ON-Build der Default; Legacy wird explizit mit `--renderer=legacy-d3d9` gewählt. OFF-Builds bleiben Legacy-only. Frühere Testergebnisse und Auswahlbeschreibungen unten gelten für ihren damaligen Stand.
+
 ## Umfang und Entscheidung vor der Umsetzung
 
 Baseline: `8c4ee3a`, M5B einschließlich deterministischer Materialzustände. Legacy D3D9Ex bleibt Standard. Der Nutzer hat für Schilde ausdrücklich **Legacy-Verhalten** gewählt: Ausrüstung ohne sichtbares Schildmodell. Kein neues Schildsystem, keine neuen Netzwerkfelder oder Assets.

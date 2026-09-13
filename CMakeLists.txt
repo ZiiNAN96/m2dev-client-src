@@ -70,7 +70,7 @@ include_directories("vendor/libsodium/src/libsodium/include")
 include_directories("vendor/freetype-2.13.3/include")
 
 # Add subdirectories for libraries and executables
-option(M2_ENABLE_DILIGENT_D3D11 "Build the opt-in Diligent D3D11 clear/present backend" OFF)
+option(M2_ENABLE_DILIGENT_D3D11 "Build Diligent D3D11 as the default renderer (OFF: Legacy-only)" ON)
 option(M2_BUILD_RENDERER_TESTS "Build renderer lifecycle and GPU smoke tests" ON)
 enable_testing()
 add_subdirectory(src/Renderer)

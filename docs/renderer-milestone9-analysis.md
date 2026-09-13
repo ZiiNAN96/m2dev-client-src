@@ -1,5 +1,7 @@
 # M9 – UI-Audit vor der Implementierung
 
+> Historischer Milestone-Stand. Aktuell seit [M12](renderer-milestone12.md): Diligent D3D11 ist im ON-Build der Default; Legacy wird explizit mit `--renderer=legacy-d3d9` gewählt. OFF-Builds bleiben Legacy-only. Frühere Testergebnisse und Auswahlbeschreibungen unten gelten für ihren damaligen Stand.
+
 Basis: `618d75f` (M8), Source-Worktree sauber. D3D9Ex bleibt Default; keine Python-/Asset-/Layoutänderung. M8-Restpfade (Gildenprojektion, DungeonBlock, Actor-Kategorien) bleiben außerhalb M9.
 
 ## Aufrufkette und Integrationspunkte

@@ -5,7 +5,7 @@ add_library(M2RendererBootstrap STATIC RendererBootstrap.cpp TerrainPresentation
 target_link_libraries(M2RendererBootstrap PRIVATE M2RendererInterface)
 
 if(M2_ENABLE_DILIGENT_D3D11)
-    # Keep the existing default build independent of downloads and modern graphics APIs.
+    # Explicit OFF builds remain independent of Diligent downloads and modern graphics APIs.
     include(FetchContent)
     set(DILIGENT_NO_DIRECT3D11 OFF CACHE BOOL "" FORCE)
     foreach(api DIRECT3D12 OPENGL VULKAN METAL WEBGPU ARCHIVER)

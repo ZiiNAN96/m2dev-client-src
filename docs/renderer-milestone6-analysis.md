@@ -1,5 +1,7 @@
 # Milestone 6 — Analyse vor Produktionsänderungen
 
+> Historischer Milestone-Stand. Aktuell seit [M12](renderer-milestone12.md): Diligent D3D11 ist im ON-Build der Default; Legacy wird explizit mit `--renderer=legacy-d3d9` gewählt. OFF-Builds bleiben Legacy-only. Frühere Testergebnisse und Auswahlbeschreibungen unten gelten für ihren damaligen Stand.
+
 Baseline `288f4da` (5D), sauberer Source-Checkout. Ausschließlich vorhandene SpeedTree-Objekte in der bestehenden Diligent-Weltfläche. Legacy D3D9Ex bleibt Default. Keine Effekte, Wasser, UI, neue Vegetation, GPU-Optimierung oder Granny-/Skinningänderung.
 
 ## Runtime, Daten und Besitz (Auftrag 1–15)

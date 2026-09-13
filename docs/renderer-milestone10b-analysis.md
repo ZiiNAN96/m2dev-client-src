@@ -1,5 +1,7 @@
 # M10B – Analyse vor Implementierung
 
+> Historischer Milestone-Stand. Aktuell seit [M12](renderer-milestone12.md): Diligent D3D11 ist im ON-Build der Default; Legacy wird explizit mit `--renderer=legacy-d3d9` gewählt. OFF-Builds bleiben Legacy-only. Frühere Testergebnisse und Auswahlbeschreibungen unten gelten für ihren damaligen Stand.
+
 13.09.2026, Basis `abd048e` (M9/M10A), Worktree zu Beginn sauber.
 Nur bestehende weltgebundene Texte; kein Font-/Layout-/Shader-Redesign.
 

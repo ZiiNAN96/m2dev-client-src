@@ -1,5 +1,7 @@
 # Milestone 11 – Restpfad-Audit und Validierung
 
+> Historischer Milestone-Stand. Aktuell seit [M12](renderer-milestone12.md): Diligent D3D11 ist im ON-Build der Default; Legacy wird explizit mit `--renderer=legacy-d3d9` gewählt. OFF-Builds bleiben Legacy-only. Frühere Testergebnisse und Auswahlbeschreibungen unten gelten für ihren damaligen Stand.
+
 Stand: 13.09.2026. Ausgangsstand `56a79e1`. Nur M11; Legacy D3D9Ex bleibt Standard.
 **Ergebnis:** M11 für die dokumentierten Szenen erfolgreich geprüft, einschließlich korrigiertem
 Questdialog. Release ON/OFF und beide vollständigen Testsuiten bestanden. Keine uneingeschränkte

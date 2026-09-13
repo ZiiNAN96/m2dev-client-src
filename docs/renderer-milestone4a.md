@@ -1,5 +1,7 @@
 # Milestone 4A – erste statische Weltobjekte über Diligent D3D11
 
+> Historischer Milestone-Stand. Aktuell seit [M12](renderer-milestone12.md): Diligent D3D11 ist im ON-Build der Default; Legacy wird explizit mit `--renderer=legacy-d3d9` gewählt. OFF-Builds bleiben Legacy-only. Frühere Testergebnisse und Auswahlbeschreibungen unten gelten für ihren damaligen Stand.
+
 Stand: 11.09.2026. Ausgangspunkt: `d466965` (`feat(renderer): port terrain splatting to Diligent`).
 
 Der erste begrenzte Objektpfad ist implementiert und im echten A1/B1-Maptest sichtbar: nicht animierte, vollständig starre, opake PNT-Gebäude/Props mit einfacher Diffuse-Textur. Legacy D3D9Ex bleibt Standard; Diligent bleibt ausschließlich beim Start opt-in. Keine weitere Objektvariante und kein Milestone 4B wurden begonnen.

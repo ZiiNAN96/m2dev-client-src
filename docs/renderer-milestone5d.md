@@ -1,5 +1,7 @@
 # Milestone 5D — vorhandene Reittiere über Diligent
 
+> Historischer Milestone-Stand. Aktuell seit [M12](renderer-milestone12.md): Diligent D3D11 ist im ON-Build der Default; Legacy wird explizit mit `--renderer=legacy-d3d9` gewählt. OFF-Builds bleiben Legacy-only. Frühere Testergebnisse und Auswahlbeschreibungen unten gelten für ihren damaligen Stand.
+
 ## Analyse und Architektur vor Produktionsänderungen
 
 Baseline `f8c2245` (5C), sauberer Source-Checkout. Nur Mount/Reiter, keine Pets, Effekte, Schatten, Bäume, Wasser, UI oder neue Grafikfeatures. Legacy bleibt Default; keine neue Granny-/Skinning-/Materialengine.

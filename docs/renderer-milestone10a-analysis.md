@@ -1,5 +1,7 @@
 # Milestone 10A – Analyse vor Implementierung
 
+> Historischer Milestone-Stand. Aktuell seit [M12](renderer-milestone12.md): Diligent D3D11 ist im ON-Build der Default; Legacy wird explizit mit `--renderer=legacy-d3d9` gewählt. OFF-Builds bleiben Legacy-only. Frühere Testergebnisse und Auswahlbeschreibungen unten gelten für ihren damaligen Stand.
+
 Stand: 2026-09-12. M9 ist uncommitted vorhanden; seine technische Prüfung ist dokumentiert,
 die normale Diligent-Ingame-Abnahme war wegen fehlender Schrift blockiert.
 Nur GPU-Ausgabe von Basistext ergänzen, keine neue Font-/Layout-/Input-Engine.

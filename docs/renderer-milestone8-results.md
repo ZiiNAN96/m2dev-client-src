@@ -1,5 +1,7 @@
 # Milestone 8 – Wasser und begrenzte World-Sonderpfade
 
+> Historischer Milestone-Stand. Aktuell seit [M12](renderer-milestone12.md): Diligent D3D11 ist im ON-Build der Default; Legacy wird explizit mit `--renderer=legacy-d3d9` gewählt. OFF-Builds bleiben Legacy-only. Frühere Testergebnisse und Auswahlbeschreibungen unten gelten für ihren damaligen Stand.
+
 Stand: 12.09.2026. Implementiert sind Originalwasser, Sky/Clouds und starre diffuse Ground-Item-Modelle. D3D9Ex bleibt Default; Diligent ist weiterhin ausschließlich Start-Opt-in. **Normale Legacy- und Diligent-Ingame-Abnahme sowie Minimize/Restore sind vom Benutzer bestätigt; alle vier finalen isolierten/normalen Clients endeten mit Exit 0.** Keine vollständige Welt-/Assetfreigabe wegen der unten dokumentierten C-Restpfade. Kein M9 begonnen.
 
 Der Audit vor der Implementierung einschließlich aller 31 Wasserfragen steht in [renderer-milestone8-analysis.md](renderer-milestone8-analysis.md). Die unten stehende Restliste nennt ausdrücklich auch echte, nicht migrierte Weltpfade.

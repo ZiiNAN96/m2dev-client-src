@@ -1,6 +1,8 @@
 <!-- ZiiNAN: 5B source and original-asset analysis before production changes. -->
 # Milestone 5B – Analyse vor Codeänderungen
 
+> Historischer Milestone-Stand. Aktuell seit [M12](renderer-milestone12.md): Diligent D3D11 ist im ON-Build der Default; Legacy wird explizit mit `--renderer=legacy-d3d9` gewählt. OFF-Builds bleiben Legacy-only. Frühere Testergebnisse und Auswahlbeschreibungen unten gelten für ihren damaligen Stand.
+
 12.09.2026. Saubere Sourcebasis `757930e` (abgenommenes 5A). Source: `C:/Users/ZiiNAN/Documents/GitHub/m2dev-client-src/src`; Originalassets: `C:/Users/ZiiNAN/Documents/GitHub/m2dev-client/assets`. Nachfolgende Sourcepfade relativ zu dieser Sourcewurzel. Keine Änderungen an Originalassets oder Servern.
 
 ## 1. Actor-Abdeckung: 22 angeforderte Befunde

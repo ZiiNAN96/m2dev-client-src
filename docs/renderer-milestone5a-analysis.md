@@ -1,6 +1,8 @@
 <!-- ZiiNAN: Milestone 5A actor boundary analysis before production edits. -->
 # Milestone 5A – Analyse und minimale Integrationsgrenze
 
+> Historischer Milestone-Stand. Aktuell seit [M12](renderer-milestone12.md): Diligent D3D11 ist im ON-Build der Default; Legacy wird explizit mit `--renderer=legacy-d3d9` gewählt. OFF-Builds bleiben Legacy-only. Frühere Testergebnisse und Auswahlbeschreibungen unten gelten für ihren damaligen Stand.
+
 12.09.2026, Ausgangsbasis `7f038ef`, sauberer Source-Worktree. Kein Granny-Rewrite, keine neue Animation, kein GPU-Skinning. Legacy D3D9Ex bleibt Default. Die folgenden Befunde wurden vor den Produktionsänderungen aus dem bestehenden Source und den Originalassets erhoben.
 
 Sourcewurzel: `C:\Users\ZiiNAN\Documents\GitHub\m2dev-client-src\src`. Assetwurzel: `C:\Users\ZiiNAN\Documents\GitHub\m2dev-client\assets`. Pfade in den Tabellen sind relativ zu diesen ausdrücklich angegebenen Wurzeln.

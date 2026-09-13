@@ -1,5 +1,7 @@
 # Milestone 10B – weltgebundene Texte
 
+> Historischer Milestone-Stand. Aktuell seit [M12](renderer-milestone12.md): Diligent D3D11 ist im ON-Build der Default; Legacy wird explizit mit `--renderer=legacy-d3d9` gewählt. OFF-Builds bleiben Legacy-only. Frühere Testergebnisse und Auswahlbeschreibungen unten gelten für ihren damaligen Stand.
+
 Stand: 13.09.2026. Ausschließlich M10B; Legacy D3D9Ex bleibt Standard. Kein neuer Font, keine neue Projektion/Animation, kein D3D9-Removal. Die vor Implementierung erstellte [Analyse mit 30 Fragen und Kategorienmatrix](renderer-milestone10b-analysis.md) beschreibt die nativen Pfade.
 
 ## Umsetzung und Grenzen

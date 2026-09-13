@@ -21,6 +21,7 @@
 #include <format>
 #include <thread>
 #include <atomic>
+#include <fstream>
 
 #include <stdlib.h>
 #include <utf8.h>
@@ -227,7 +228,7 @@ bool RunMainScript(CPythonLauncher& pyLauncher, const char* lpCmdLine)
 	return true;
 }
 
-static bool Main(HINSTANCE hInstance, LPSTR lpCmdLine, Renderer::BackendKind backend)
+static int Main(HINSTANCE hInstance, LPSTR lpCmdLine, Renderer::BackendKind backend)
 {
 	DWORD dwRandSeed = (DWORD)time(NULL) ^ GetCurrentProcessId() ^ GetTickCount();
 	srandom(dwRandSeed);
@@ -235,7 +236,7 @@ static bool Main(HINSTANCE hInstance, LPSTR lpCmdLine, Renderer::BackendKind bac
 	SetLogLevel(1);
 
 	if (!Setup(lpCmdLine))
-		return false;
+		return 3;
 
 #ifdef _DEBUG
 	OpenConsoleWindow();
@@ -247,13 +248,13 @@ static bool Main(HINSTANCE hInstance, LPSTR lpCmdLine, Renderer::BackendKind bac
 	if (sodium_init() < 0)
 	{
 		LogBox("sodium_init() failed");
-		return false;
+		return 3;
 	}
 
 	if (!CFontManager::Instance().Initialize())
 	{
 		LogBox("FreeType initialization failed");
-		return false;
+		return 3;
 	}
 
 	static CLZO lzo;
@@ -262,7 +263,7 @@ static bool Main(HINSTANCE hInstance, LPSTR lpCmdLine, Renderer::BackendKind bac
 	if (!PackInitialize("pack"))
 	{
 		LogBox("Pack Initialization failed. Check log.txt file..");
-		return false;
+		return 3;
 	}
 
 	// Create game thread pool singleton before CPythonApplication
@@ -272,10 +273,9 @@ static bool Main(HINSTANCE hInstance, LPSTR lpCmdLine, Renderer::BackendKind bac
 	app->Initialize (hInstance);
 	CPythonLauncher pyLauncher;
 
-	if (pyLauncher.Create())
-	{
-		RunMainScript (pyLauncher, lpCmdLine);
-	}
+    const bool scriptSucceeded = pyLauncher.Create() && RunMainScript(pyLauncher, lpCmdLine);
+    // ZiiNAN: A caught renderer initialization failure must not become a successful process exit.
+    const int result = app->HasRendererStartupFailed() ? 4 : (scriptSucceeded ? 0 : 3);
 
 	app->Clear();
 	timeEndPeriod (1);
@@ -285,7 +285,7 @@ static bool Main(HINSTANCE hInstance, LPSTR lpCmdLine, Renderer::BackendKind bac
 	delete app;
 
 	CFontManager::Instance().Destroy();
-	return 0;
+	return result;
 }
 
 void __ErrorPythonLibraryIsNotExist()
@@ -295,7 +295,9 @@ void __ErrorPythonLibraryIsNotExist()
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-	Renderer::StartupOptions rendererOptions;
+    const bool diligentAvailable = Renderer::IsDiligentTerrainAvailable();
+	Renderer::StartupOptions rendererOptions(diligentAvailable);
+    std::ofstream rendererLog("renderer-startup.log", std::ios::trunc);
 	int rendererArgc = 0;
 	LPWSTR* rendererArgv = CommandLineToArgvW(GetCommandLineW(), &rendererArgc);
 	if (!rendererArgv)
@@ -305,29 +307,40 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	LocalFree(rendererArgv);
 	if (!rendererOptions.valid)
 	{
+        rendererLog << "ERROR: Invalid/conflicting renderer selection; no fallback. ExitCode=2" << std::endl;
 		MessageBoxW(nullptr, L"Use --renderer=legacy-d3d9 or --renderer=diligent-d3d11. Select only one backend.",
 		            L"Invalid renderer selection", MB_OK | MB_ICONERROR);
 		return 2;
 	}
-	if (rendererOptions.smokeTest)
-		return Renderer::RunRendererBootstrap(hInstance, rendererOptions);
-	if (rendererOptions.backend == Renderer::BackendKind::DiligentD3D11 && !Renderer::IsDiligentTerrainAvailable())
+    // ZiiNAN: Production renderer selection is logged once, before any game/device setup.
+    rendererLog << "Renderer: " << (rendererOptions.backend == Renderer::BackendKind::DiligentD3D11 ? "Diligent D3D11" : "Legacy D3D9Ex") << std::endl;
+    rendererLog << "Selection=" << (rendererOptions.selected ? "explicit" : "default")
+                << " DiligentCompiled=" << diligentAvailable << std::endl;
+	if (rendererOptions.backend == Renderer::BackendKind::DiligentD3D11 && !diligentAvailable)
 	{
+        rendererLog << "ERROR: Diligent D3D11 not compiled in; no fallback. ExitCode=2" << std::endl;
 		MessageBoxW(nullptr, L"This build does not include Diligent D3D11.", L"Renderer unavailable", MB_OK | MB_ICONERROR);
 		return 2;
 	}
+    if (rendererOptions.smokeTest)
+    {
+        const int result = Renderer::RunRendererBootstrap(hInstance, rendererOptions);
+        rendererLog << "ExitCode=" << result << std::endl;
+        return result;
+    }
 
 	LoadConfig("config/locale.cfg");
 
 	int nArgc = 0;
 	auto szArgv = CommandLineToArgv (lpCmdLine, &nArgc);
 
-	Main (hInstance, lpCmdLine, rendererOptions.backend);
+    const int result = Main(hInstance, lpCmdLine, rendererOptions.backend);
 	::CoUninitialize();
 
-Clean:
 	SAFE_FREE_GLOBAL (szArgv);
-	return 0;
+    if(result == 4) rendererLog << "ERROR: Renderer initialization failed; no fallback." << std::endl;
+    rendererLog << "ExitCode=" << result << std::endl;
+	return result;
 }
 
 static void GrannyError(granny_log_message_type Type, granny_log_message_origin Origin, char const* File, granny_int32x Line, char const* Message, void* UserData)

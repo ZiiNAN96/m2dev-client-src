@@ -5,6 +5,7 @@ $testRoot=(Resolve-Path -LiteralPath $TestRoot).Path
 if(Test-Path -LiteralPath "$testRoot/$Backend-exit.txt") { throw 'Use a fresh test folder.' }
 $start=@{FilePath="$testRoot/$Backend-bin/Metin2_Release.exe";WorkingDirectory="$testRoot/$Backend-runtime";PassThru=$true;WindowStyle='Normal'}
 if($Backend -eq 'diligent') { $start.ArgumentList='--renderer=diligent-d3d11' }
+if($Backend -eq 'legacy') { $start.ArgumentList='--renderer=legacy-d3d9' }
 $process=Start-Process @start
 Write-Output "Started $Backend PID=$($process.Id)"
 $watch=[System.Diagnostics.Stopwatch]::StartNew()

@@ -1,5 +1,7 @@
 # Milestone 7 – Analyse vor Implementierung
 
+> Historischer Milestone-Stand. Aktuell seit [M12](renderer-milestone12.md): Diligent D3D11 ist im ON-Build der Default; Legacy wird explizit mit `--renderer=legacy-d3d9` gewählt. OFF-Builds bleiben Legacy-only. Frühere Testergebnisse und Auswahlbeschreibungen unten gelten für ihren damaligen Stand.
+
 Stand: 12.09.2026, Source-Basis `6ca598a`. Keine Simulation, Granny-, Terrain-, Actor- oder UI-Migration. Legacy bleibt Standard. Die folgenden Aussagen stammen aus dem vorhandenen Source und den lokalen Originalassets.
 
 ## Komponentenmatrix

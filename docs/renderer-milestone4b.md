@@ -1,5 +1,7 @@
 # Milestone 4B – statische Granny-Weltobjekte und Legacy-Materialparität
 
+> Historischer Milestone-Stand. Aktuell seit [M12](renderer-milestone12.md): Diligent D3D11 ist im ON-Build der Default; Legacy wird explizit mit `--renderer=legacy-d3d9` gewählt. OFF-Builds bleiben Legacy-only. Frühere Testergebnisse und Auswahlbeschreibungen unten gelten für ihren damaligen Stand.
+
 Stand: 12.09.2026. Ausgangsbasis: `95eda15`. Implementierung, repräsentative Ingame-/Map-Abnahme und finale vollständige Testsuite erfolgreich abgeschlossen. Die ausdrücklich verbleibenden Abdeckungs- und Kompositionsgrenzen stehen in den Abschnitten 2, 8, 18 und 19.
 
 Legacy D3D9Ex bleibt der Standard. Diligent D3D11 bleibt ausschließlich mit `--renderer=diligent-d3d11` aktiv. Keine Fortsetzung mit Charakteren, SpeedTree oder Animationen.

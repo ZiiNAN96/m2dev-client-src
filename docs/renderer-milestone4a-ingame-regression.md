@@ -1,5 +1,7 @@
 # Milestone 4A – finale Ingame-Regression, 12.09.2026
 
+> Historischer Milestone-Stand. Aktuell seit [M12](renderer-milestone12.md): Diligent D3D11 ist im ON-Build der Default; Legacy wird explizit mit `--renderer=legacy-d3d9` gewählt. OFF-Builds bleiben Legacy-only. Frühere Testergebnisse und Auswahlbeschreibungen unten gelten für ihren damaligen Stand.
+
 Status: Nachprüfung des gefundenen 4A-Regressionsfehlers abgeschlossen, Build und 9/9 Tests bestanden. Keine vollständige Ingame-Abnahme behauptet: die unten genannten Lücken bleiben offen. Keine Migration über 4A hinaus.
 
 ## Auftrag und Abgrenzung

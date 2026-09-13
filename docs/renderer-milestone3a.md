@@ -1,5 +1,7 @@
 # Milestone 3A: eine echte Terrain-Textur
 
+> Historischer Milestone-Stand. Aktuell seit [M12](renderer-milestone12.md): Diligent D3D11 ist im ON-Build der Default; Legacy wird explizit mit `--renderer=legacy-d3d9` gewählt. OFF-Builds bleiben Legacy-only. Frühere Testergebnisse und Auswahlbeschreibungen unten gelten für ihren damaligen Stand.
+
 Stand: 11.09.2026. Basis: `8f11bcb` (abgeschlossene M1/M2).
 Source: `C:\Users\ZiiNAN\Documents\GitHub\m2dev-client-src`.
 Die [Vorab-Analyse](renderer-milestone3a-analysis.md) beantwortet die 18 Legacy-Fragen.

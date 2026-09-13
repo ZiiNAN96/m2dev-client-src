@@ -1,5 +1,7 @@
 # Milestone 4B – Analyse vor Produktionsänderungen
 
+> Historischer Milestone-Stand. Aktuell seit [M12](renderer-milestone12.md): Diligent D3D11 ist im ON-Build der Default; Legacy wird explizit mit `--renderer=legacy-d3d9` gewählt. OFF-Builds bleiben Legacy-only. Frühere Testergebnisse und Auswahlbeschreibungen unten gelten für ihren damaligen Stand.
+
 Stand: 12.09.2026, Source-Baseline `95eda15`. Zunächst ausschließlich lesende Analyse und eigene Hilfen unter `build/milestone4b`; keine Assets geändert. Zwischenzeitlich fremde Resource-Editor-Dateien `src/UserInterface/UserInterface.aps`/`RCa39752` beobachtet; nicht anfassen.
 
 ## 1. Belegter Bestand und 4A-Abdeckung

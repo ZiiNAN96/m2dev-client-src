@@ -4,6 +4,21 @@
 
 This repository contains the source code necessary to compile the game client executable.
 
+## Renderer selection (M12)
+
+Fresh builds enable Diligent D3D11 by default. Start `Metin2_Release.exe` without a
+renderer argument for Diligent, or use `--renderer=diligent-d3d11` explicitly.
+The preserved Legacy fallback is `--renderer=legacy-d3d9`; there is no automatic
+fallback after initialization failure. The chosen renderer is recorded once in
+`renderer-startup.log` in the runtime working directory.
+
+Use `-DM2_ENABLE_DILIGENT_D3D11=OFF` for a Legacy-only build; only that build defaults
+to Legacy. Existing CMake caches retain their setting, so explicitly pass `ON` when
+upgrading a previously OFF build. The pinned Diligent dependency requires network access
+on its first configure (or a prepopulated FetchContent source).
+Diligent currently requires `WINDOWED 1`; dynamic shadows remain disabled and native
+D3D9 asset/buffer dependencies are still required. See [M12 behavior and validation](docs/renderer-milestone12.md).
+
 ## How to build (short version)
 
 > cmake -S . -B build
