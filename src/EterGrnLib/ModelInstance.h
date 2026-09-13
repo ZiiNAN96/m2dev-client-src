@@ -71,6 +71,10 @@ class CGrannyModelInstance : public CGraphicCollisionObject
 		CGrannyModel* GetModel();
         // ZiiNAN: Completed native deformation and renderer handles belong to this instance.
         Renderer::ActorInstanceData& GetActorRenderData() { return m_actorRenderData; }
+        // ZiiNAN: GPU skinning static mesh data
+        const std::vector<std::shared_ptr<const Renderer::BoneRemap>>& GetSkinningRemaps() const { return m_skinningRemaps; }
+        std::shared_ptr<const Renderer::BonePalette> GetSkinningPalette() const;
+        Renderer::SkinDataStatus GetSkinningStatus() const { return m_skinningStatus; }
         CGrannyMaterialPalette& GetStaticObjectMaterialPalette() { return m_kMtrlPal; }
         const Math::Matrix* GetStaticObjectWorldMatrix(int mesh) const
         {
@@ -152,6 +156,8 @@ class CGrannyModelInstance : public CGraphicCollisionObject
 
 		// Update & Render
 		void	UpdateWorldPose();
+        void __PrepareSkinningBindings();
+        void __CaptureSkinningPose();
 		void	UpdateWorldMatrices(const Math::Matrix * c_pWorldMatrix);
 		void	DeformPNTVertices(void * pvDest);
 
@@ -187,6 +193,11 @@ class CGrannyModelInstance : public CGraphicCollisionObject
 
 		CGrannyMaterialPalette			m_kMtrlPal;
         Renderer::ActorInstanceData m_actorRenderData; // ZiiNAN: No animation ownership.
+        std::vector<std::shared_ptr<const Renderer::BoneRemap>> m_skinningRemaps;
+        std::shared_ptr<const Renderer::SkeletonLayout> m_skinningBindingDestination;
+        std::shared_ptr<Renderer::BonePalette> m_skinningPalette;
+        Renderer::SkinDataStatus m_skinningStatus=Renderer::SkinDataStatus::Empty;
+        bool m_skinningIssueReported=false;
 
 		// WORK
 		granny_world_pose*					m_pgrnWorldPoseReal;	// 실제 메모리는 여기에 할당

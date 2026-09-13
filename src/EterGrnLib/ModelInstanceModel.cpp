@@ -4,6 +4,12 @@
 
 void CGrannyModelInstance::Clear()
 {
+    // ZiiNAN: GPU skinning static mesh data
+    m_skinningRemaps.clear();
+    m_skinningBindingDestination.reset();
+    m_skinningPalette.reset();
+    m_skinningStatus=Renderer::SkinDataStatus::Empty;
+    m_skinningIssueReported=false;
     // ZiiNAN: Release actor bindings before pooled instance/model reuse.
     if(Renderer::actorRenderer && m_actorRenderData.geometry) Renderer::actorRenderer->ReleaseBindings();
     m_actorRenderData={};
@@ -103,6 +109,8 @@ bool CGrannyModelInstance::__CreateMeshBindingVector(CGrannyModelInstance* pkDst
 	granny_int32 iMeshBinding;
 	for (iMeshBinding = 0; iMeshBinding != pgrnModel->MeshBindingCount; ++iMeshBinding)
 		m_vct_pgrnMeshBinding.push_back(GrannyNewMeshBinding(pgrnModel->MeshBindings[iMeshBinding].Mesh, pgrnModel->Skeleton, pgrnDstSkeleton));
+
+    __PrepareSkinningBindings();
 
 	return true;
 }

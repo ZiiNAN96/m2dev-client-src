@@ -6,6 +6,7 @@
 #include "Mesh.h"
 #include "Renderer/StaticObjectRenderData.h"
 #include "Renderer/ActorRenderData.h" // ZiiNAN: Optional actor index snapshot.
+#include "Renderer/SkinningData.h"
 
 class CGrannyModel : public CReferenceObject
 {
@@ -53,6 +54,7 @@ class CGrannyModel : public CReferenceObject
         // ZiiNAN: Capture before Granny frees its deformable index section.
         void CaptureActorSource(bool attachment = false);
         const std::shared_ptr<const Renderer::ActorModelSource>& GetActorSource() const { return m_actorSource; }
+        const std::shared_ptr<const Renderer::SkinningModelData>& GetSkinningData() const { return m_skinningData; }
 
 	protected:
 		bool LoadMeshs();		
@@ -91,6 +93,7 @@ class CGrannyModel : public CReferenceObject
 		bool					m_bHaveBlendThing;
         std::shared_ptr<const Renderer::StaticObjectSource> m_staticObjectSource;
         std::shared_ptr<const Renderer::ActorModelSource> m_actorSource; // ZiiNAN: No bones or animation copies.
+        std::shared_ptr<const Renderer::SkinningModelData> m_skinningData;
 	public:
 		bool					HaveBlendThing() { return m_bHaveBlendThing; }
 	

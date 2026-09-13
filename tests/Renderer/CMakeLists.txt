@@ -74,5 +74,17 @@ target_link_libraries(RendererSmokeTest PRIVATE ${client_libraries})
 
 
 # ZiiNAN: Enforce the single-backend production boundary independently of GPU tests.
+set(M2_SKINNING_ASSET_ROOT "${CMAKE_SOURCE_DIR}/../m2dev-client/assets" CACHE PATH "Real original GR2 fixtures for B2 validation")
+add_executable(RendererSkinningDataTest SkinningDataTest.cpp
+    ${CMAKE_SOURCE_DIR}/src/EterGrnLib/SkinningDataAdapter.cpp
+    ${CMAKE_SOURCE_DIR}/src/EterGrnLib/Deform.cpp)
+target_link_libraries(RendererSkinningDataTest PRIVATE M2RendererInterface Granny winmm)
+add_test(NAME Renderer.SkinningData COMMAND RendererSkinningDataTest "${M2_SKINNING_ASSET_ROOT}")
+set_tests_properties(Renderer.SkinningData PROPERTIES LABELS "skinning;real-assets" TIMEOUT 120)
+add_executable(RendererSkinningInstanceTest SkinningInstanceTest.cpp)
+target_link_libraries(RendererSkinningInstanceTest PRIVATE ${client_libraries} M2RendererDiligent)
+add_test(NAME Renderer.SkinningInstance COMMAND RendererSkinningInstanceTest "${M2_SKINNING_ASSET_ROOT}")
+set_tests_properties(Renderer.SkinningInstance PROPERTIES LABELS "skinning;real-assets" TIMEOUT 60)
+
 add_test(NAME Renderer.NoLegacyArchitecture COMMAND ${CMAKE_COMMAND}
     -DSOURCE_ROOT=${CMAKE_SOURCE_DIR} -P ${CMAKE_CURRENT_SOURCE_DIR}/NoLegacyArchitecture.cmake)

@@ -174,6 +174,8 @@ void CGrannyModelInstance::UpdateWorldPose()
 	const float * pAttachBoneMatrix = (mc_pParentInstance) ? mc_pParentInstance->GetBoneMatrixPointer(m_iParentBoneIndex) : NULL;
 
 	GrannySampleModelAnimationsAccelerated(m_pgrnModelInstance, pgrnSkeleton->BoneCount, pAttachBoneMatrix, pgrnLocalPose, __GetWorldPosePtr());
+    // ZiiNAN: GPU skinning static mesh data
+    __CaptureSkinningPose();
 	/*
 	GrannySampleModelAnimations(m_pgrnModelInstance, 0, pgrnSkeleton->BoneCount, pgrnLocalPose);
 	GrannyBuildWorldPose(pgrnSkeleton, 0, pgrnSkeleton->BoneCount, pgrnLocalPose, pAttachBoneMatrix, m_pgrnWorldPose);
@@ -184,6 +186,7 @@ void CGrannyModelInstance::UpdateWorldPose()
 
 void CGrannyModelInstance::UpdateWorldMatrices(const Math::Matrix* c_pWorldMatrix)
 {
+    __PrepareSkinningBindings();
 	// NO_MESH_BUG_FIX
 	if (!m_meshMatrices)
 		return;

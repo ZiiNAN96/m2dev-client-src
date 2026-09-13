@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "Model.h"
 #include "Mesh.h"
+#include "SkinningDataAdapter.h"
 
 const CGrannyMaterialPalette& CGrannyModel::GetMaterialPalette() const
 {
@@ -284,6 +285,16 @@ bool CGrannyModel::CreateFromGrannyModelPointer(granny_model* pgrnModel)
 	if (!LoadIndices())
 		return false;
 
+    // ZiiNAN: GPU skinning static mesh data
+    m_skinningData=SkinningDataAdapter::Extract(*pgrnModel);
+    for(size_t mesh=0;mesh<m_skinningData->status.size();++mesh) {
+        const auto status=m_skinningData->status[mesh];
+        if(status!=Renderer::SkinDataStatus::Ready && status!=Renderer::SkinDataStatus::Rigid &&
+           status!=Renderer::SkinDataStatus::Empty && Renderer::skinSidecarFailures.fetch_add(1)<16)
+            TraceError("Skinning data preparation: model=%s mesh=%zu status=%s; CPU path unchanged",
+                pgrnModel->Name?pgrnModel->Name:"",mesh,Renderer::SkinDataStatusName(status));
+    }
+
 	AddReference();
 
 	return true;
@@ -374,6 +385,7 @@ bool CGrannyModel::__LoadVertices()
 
 void CGrannyModel::Initialize()
 {
+    m_skinningData.reset();
     m_staticObjectSource.reset();
     m_actorSource.reset(); // ZiiNAN: Model-owned immutable actor indices.
 	memset(m_meshNodeLists, 0, sizeof(m_meshNodeLists));
