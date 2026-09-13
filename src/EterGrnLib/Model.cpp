@@ -2,6 +2,7 @@
 #include "Model.h"
 #include "Mesh.h"
 #include "SkinningDataAdapter.h"
+#include "Renderer/SkinningBenchmark.h"
 
 const CGrannyMaterialPalette& CGrannyModel::GetMaterialPalette() const
 {
@@ -36,6 +37,8 @@ bool CGrannyModel::CanDeformPNTVertices() const
 
 void CGrannyModel::DeformPNTVertices(void * dstBaseVertices, Math::Matrix * boneMatrices, const std::vector<granny_mesh_binding*>& c_rvct_pgrnMeshBinding) const
 {
+    // ZiiNAN: GPU skinning production path — counts every native CPU deformation, including non-actor callers.
+    ++Renderer::skinningCpuCalls;Renderer::skinningCpuVertices+=GetDeformVertexCount();
 	int meshCount = GetMeshCount();
 
 	for (int iMesh = 0; iMesh < meshCount; ++iMesh)

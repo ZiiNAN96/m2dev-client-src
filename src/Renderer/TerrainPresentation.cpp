@@ -7,6 +7,7 @@
 #include "DiligentWorldRenderer.h" // ZiiNAN: Diligent water and special world rendering.
 #include "DiligentUIRenderer.h" // ZiiNAN: UI shares the existing world surface, never a new widget system.
 #include "DiligentTextRenderer.h"
+#include "SkinningBenchmark.h"
 #include <windows.h>
 #include <fstream>
 
@@ -180,6 +181,10 @@ public:
             auto sink=std::move(m_screenshot); m_screenshot={};
             const bool saved=m_backend.CaptureRGB(rgb,width,height) && sink(rgb,width,height);
             m_diagnostics<<"screenshot saved="<<saved<<" size="<<width<<'x'<<height<<std::endl;
+        }
+        if(skinningBenchmarkEnabled) {
+            auto& s=skinningBenchmarkCurrent;s.vertexBytes=m_actors->BytesUploaded();s.uploads=m_actors->Uploads();
+            s.draws=m_actors->DrawCount();s.visible=m_actors->VisibleActors();
         }
         m_backend.EndFrame();
         uiFrame=uiMode=false;

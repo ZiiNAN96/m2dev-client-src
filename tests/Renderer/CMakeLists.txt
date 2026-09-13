@@ -120,3 +120,10 @@ target_include_directories(RendererSkinningFallbackParityTest PRIVATE ${diligent
 target_link_libraries(RendererSkinningFallbackParityTest PRIVATE ${client_libraries} M2RendererDiligent Diligent-GraphicsEngineD3D11Interface)
 add_test(NAME Renderer.SkinningFallbackParity COMMAND RendererSkinningFallbackParityTest "${M2_SKINNING_ASSET_ROOT}")
 set_tests_properties(Renderer.SkinningFallbackParity PROPERTIES LABELS "gpu;skinning;real-assets;b5x" TIMEOUT 120 RUN_SERIAL TRUE)
+
+# ZiiNAN: GPU skinning production path — correctness smoke, full timing run is explicit.
+add_executable(RendererSkinningBenchmarkTest SkinningBenchmarkTest.cpp)
+target_include_directories(RendererSkinningBenchmarkTest PRIVATE ${diligent_includes})
+target_link_libraries(RendererSkinningBenchmarkTest PRIVATE ${client_libraries} M2RendererDiligent Diligent-GraphicsEngineD3D11Interface)
+add_test(NAME Renderer.SkinningBenchmark COMMAND RendererSkinningBenchmarkTest "${M2_SKINNING_ASSET_ROOT}" "${CMAKE_BINARY_DIR}/phase-b6x/smoke-$<CONFIG>.csv" --quick)
+set_tests_properties(Renderer.SkinningBenchmark PROPERTIES LABELS "gpu;skinning;real-assets;b6x" TIMEOUT 120 RUN_SERIAL TRUE)

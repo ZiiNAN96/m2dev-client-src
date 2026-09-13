@@ -294,7 +294,7 @@ int main(int argc,char** argv)
         Check(argc==2 || argc==3,"Real asset root required");const std::string root=argv[1];
         const bool actorsOnly=argc==3 && std::string(argv[2])=="--actors-only";
         Check(argc==2 || actorsOnly || std::string(argv[2])=="--lod-only","Known diagnostic subset required");
-        Check(startupSkinningMode==PrototypeSkinningMode::CPU,"Production default still CPU");
+        Check(startupSkinningMode==PrototypeSkinningMode::GPU,"B6 production default; CPU reference still selected per comparison scope");
         CPackManager packs;CResourceManager resources;Diligent::GetEngineFactoryD3D11()->SetMessageCallback(Message);
         window=CreateWindowW(L"STATIC",L"B4-X coverage parity",WS_OVERLAPPEDWINDOW,0,0,512,512,nullptr,nullptr,GetModuleHandleW(nullptr),nullptr);
         DiligentD3D11Backend backend;Check(window && backend.Initialize({window,512,512}),"Diligent backend");

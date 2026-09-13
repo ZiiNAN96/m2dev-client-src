@@ -3,8 +3,9 @@ import app, background, builtins, chr, chrmgr, grp, item, player
 import math, playersettingmodule, systemSetting, time, ui, wndMgr
 
 width, height = systemSetting.GetWidth(), systemSetting.GetHeight()
+production = getattr(builtins, "ziinan_b6x_stability", False)
 wndMgr.SetScreenSize(width, height)
-app.Create("Metin2 GPU skinning B5-X stability test", width, height, 1)
+app.Create("Metin2 GPU default B6-X test" if production else "Metin2 GPU skinning B5-X stability test", width, height, 1)
 app.SetCameraMaxDistance(40000.0)
 app.SetSightRange(24000)
 app.SetArmorSpecularEnable(True)
@@ -36,7 +37,7 @@ SCENES = [("a1", 44000, 27200, 0), ("b1", 70400, 53600, 20104),
           ("guild_01", 27000, 26000, 20219), ("a1", 44000, 27200, 0)]
 OTHERS = [(9003, 1), (9002, 1), (20016, 1), (20001, 1), (101, 0), (102, 0), (301, 0), (691, 0)]
 SCENES = SCENES * 2
-PHASE_SECONDS = 80  # Twelve phases: sixteen-minute stability session, no performance scoring.
+PHASE_SECONDS = 125 if production else 80  # 25/16 minute stability session, not a benchmark.
 log = builtins.old_open("gpu-skinning-stability-test.log", "w")
 
 
@@ -137,7 +138,7 @@ class World(ui.Window):
             px, py = x + ((index % 10) - 4.5) * 220, y + ((index // 10) - 4.5) * 220
             chr.SetPixelPosition(int(px), int(py), int(background.GetHeight(px, py)))
         chr.Update()
-        self.label.SetText("B5-X | %s | mount %d | shape/hair %d | CPU default / GPU opt-in" % (name, mount, step))
+        self.label.SetText(("B6-X GPU default" if production else "B5-X CPU/GPU comparison") + " | %s | mount %d | shape/hair %d" % (name, mount, step))
 
     def OnRender(self):
         x, y, z = self.position

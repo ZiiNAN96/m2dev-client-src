@@ -15,6 +15,19 @@ namespace Renderer
 class BackendTestAccess
 {
 public:
+    // ZiiNAN: GPU skinning production path — test-only uncapped measurement access.
+    static void PresentUnthrottled(DiligentD3D11Backend& backend)
+    { backend.m_impl->swapChain->Present(0); }
+    static void Describe(DiligentD3D11Backend& backend)
+    { std::cout<<"Adapter="<<backend.m_impl->device->GetAdapterInfo().Description<<" vsync=0\n"; }
+    static Diligent::RefCntAutoPtr<Diligent::IQuery> CreateTiming(DiligentD3D11Backend& backend)
+    {
+        Diligent::RefCntAutoPtr<Diligent::IQuery> query;
+        Diligent::QueryDesc desc;desc.Name="B6-X timed frame";desc.Type=Diligent::QUERY_TYPE_DURATION;
+        backend.m_impl->device->CreateQuery(desc,&query);Check(bool(query),"Required duration query");return query;
+    }
+    static void StartTiming(DiligentD3D11Backend& backend,Diligent::IQuery* query)
+    { backend.m_impl->context->BeginQuery(query); }
     // ZiiNAN: GPU skinning parity validation
     static void ValidateUploadedPalette(DiligentD3D11Backend& backend, const BonePalette& palette)
     {

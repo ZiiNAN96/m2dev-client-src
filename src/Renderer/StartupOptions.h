@@ -15,16 +15,16 @@ struct StartupOptions
     bool selected = false;
     bool smokeTest = false;
     bool valid = true;
-    PrototypeSkinningMode skinning=PrototypeSkinningMode::CPU;
+    PrototypeSkinningMode skinning=defaultStartupSkinningMode;
     bool skinningSelected=false;
 
     void ParseArgument(std::wstring_view argument)
     {
-        // ZiiNAN: Diligent GPU skinning prototype
+        // ZiiNAN: GPU skinning production path — old CLI spelling is an explicit compatibility alias.
         if(argument.starts_with(L"--skinning=")) {
             const auto value=argument.substr(11);
-            if(value!=L"cpu" && value!=L"gpu-prototype") { valid=false; return; }
-            const auto requested=value==L"cpu" ? PrototypeSkinningMode::CPU : PrototypeSkinningMode::GPUPrototype;
+            if(value!=L"cpu" && value!=L"gpu" && value!=L"gpu-prototype") { valid=false; return; }
+            const auto requested=value==L"cpu" ? PrototypeSkinningMode::CPU : PrototypeSkinningMode::GPU;
             if(skinningSelected && requested!=skinning) valid=false;
             skinning=requested; skinningSelected=true; return;
         }

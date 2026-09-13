@@ -9,6 +9,7 @@
 #include "PythonApplication.h"
 #include "PythonCharacterManager.h"
 #include "Renderer/ActorRenderData.h"
+#include "Renderer/SkinningBenchmark.h"
 #include "Renderer/TreeRenderData.h"
 #include "Renderer/WorldRenderData.h"
 #include "Renderer/UIRenderData.h"
@@ -173,6 +174,7 @@ void CPythonApplication::Exit()
 
 void CPythonApplication::RenderGame()
 {
+    const auto benchmarkStart=Renderer::skinningBenchmarkEnabled ? Renderer::PrototypeClock::now() : Renderer::PrototypeClock::time_point{};
     // ZiiNAN: Indoor worlds do not require a terrain submission in the previous frame.
     if(Renderer::uiFrame && Renderer::worldRenderer) {
         Renderer::actorWorldFrame=Renderer::treeWorldFrame=true;
@@ -185,7 +187,9 @@ void CPythonApplication::RenderGame()
 
 	CCullingManager::Instance().Process();
 
+    const auto deformStart=Renderer::skinningBenchmarkEnabled ? Renderer::PrototypeClock::now() : Renderer::PrototypeClock::time_point{};
 	m_kChrMgr.Deform();
+    if(Renderer::skinningBenchmarkEnabled) Renderer::skinningBenchmarkCurrent.deformUs+=Renderer::PrototypeMicroseconds(deformStart);
 
 	m_pyBackground.RenderCharacterShadowToTexture();
 
@@ -208,7 +212,9 @@ void CPythonApplication::RenderGame()
 	m_pyBackground.Render();
 
 	m_pyBackground.SetCharacterDirLight();
+    const auto actorRenderStart=Renderer::skinningBenchmarkEnabled ? Renderer::PrototypeClock::now() : Renderer::PrototypeClock::time_point{};
 	m_kChrMgr.Render();
+    if(Renderer::skinningBenchmarkEnabled) Renderer::skinningBenchmarkCurrent.renderUs+=Renderer::PrototypeMicroseconds(actorRenderStart);
 
 	m_pyBackground.SetBackgroundDirLight();
 	m_pyBackground.RenderWater();
@@ -226,6 +232,7 @@ void CPythonApplication::RenderGame()
 	m_pyBackground.EndEnvironment();
 
 	m_pyBackground.RenderAfterLensFlare();
+    if(Renderer::skinningBenchmarkEnabled) Renderer::skinningBenchmarkCurrent.worldUs+=Renderer::PrototypeMicroseconds(benchmarkStart);
 }
 
 void CPythonApplication::UpdateGame()
@@ -272,6 +279,8 @@ void CPythonApplication::UpdateGame()
 
 bool CPythonApplication::Process()
 {
+    // ZiiNAN: GPU skinning production path — no timers or capture in ordinary sessions.
+    Renderer::SkinningBenchmarkProcessScope benchmarkProcess;
 	ELTimer_SetFrameMSec();
 
 	// 	m_Profiler.Clear();
@@ -551,6 +560,7 @@ bool CPythonApplication::Process()
 		}
 	}
 
+    benchmarkProcess.BeforeFrameLimit();
 	int rest = s_uiNextFrameTime - ELTimer_GetMSec();
 
 	if (rest > 0 && !bCurrentLateUpdate )

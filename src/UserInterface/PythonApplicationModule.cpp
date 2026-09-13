@@ -4,11 +4,28 @@
 #include "EterLib/Camera.h"
 #include "PackLib/PackManager.h"
 #include "EterBase/tea.h"
+#include "Renderer/SkinningBenchmark.h"
 
 #include <stb_image.h>
 #include <utf8.h>
 
 extern Math::Color g_fSpecularColor;
+// ZiiNAN: GPU skinning production path — private benchmark fixture opts in explicitly.
+static PyObject* appStartSkinningBenchmark(PyObject*,PyObject*)
+{
+    if(Renderer::skinningBenchmarkEnabled) return Py_BuildException("Benchmark already started");
+    Renderer::skinningBenchmarkEnabled=true;
+    CTimer::Instance().UseCustomTime();
+    CPythonApplication::Instance().SetFrameSkip(false);
+    return Py_BuildNone();
+}
+static PyObject* appSkinningBenchmarkStage(PyObject*,PyObject* args)
+{
+    int stage,sample;
+    if(!Renderer::skinningBenchmarkEnabled || !PyTuple_GetInteger(args,0,&stage) || !PyTuple_GetInteger(args,1,&sample)) return Py_BuildException();
+    Renderer::skinningBenchmarkCurrent.stage=stage;Renderer::skinningBenchmarkCurrent.sample=sample;
+    return Py_BuildNone();
+}
 extern BOOL bVisibleNotice = true;
 extern BOOL bTestServerFlag = FALSE;
 extern int TWOHANDED_WEWAPON_ATT_SPEED_DECREASE_VALUE = 0;
@@ -1193,6 +1210,8 @@ void initapp()
 		{ "GetInfo",					appGetInfo,						METH_VARARGS },
 		{ "UpdateGame",					appUpdateGame,					METH_VARARGS },
 		{ "RenderGame",					appRenderGame,					METH_VARARGS },
+        { "StartSkinningBenchmark",appStartSkinningBenchmark,METH_NOARGS },
+        { "SkinningBenchmarkStage",appSkinningBenchmarkStage,METH_VARARGS },
 		{ "Loop",						appLoop,						METH_VARARGS },
 		{ "Create",						appCreate,						METH_VARARGS },
 		{ "Process",					appProcess,						METH_VARARGS },

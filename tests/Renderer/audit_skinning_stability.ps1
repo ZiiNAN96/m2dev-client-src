@@ -32,6 +32,9 @@ $diagnostics=[ordered]@{
     guildMarkMessages=Count-Matches 'invalid idx 0'
 }
 $skins=[ordered]@{gpuFrames=Get-AuditValue 'GPUFrames';cpuReferenceFrames=Get-AuditValue 'CPUReferenceFrames';cpuVertexBytes=Get-AuditValue 'CPUVertexBytes'}
+foreach($key in @('AllCPUDeformationCalls','AllCPUDeformationVertices','GPUFallbacks')) {
+    $skins[$key]=if($audit -match "\b$key=([0-9]+)") { [long]$Matches[1] } else { $null }
+}
 $worlds=[System.Collections.Generic.List[string]]::new()
 foreach($line in $actors) {
     if($line -match '^submitted: (GPU-skinned actor part|CPU-skinned main body) race=0 .*?vid=(\d+) part=0 ') {
@@ -50,7 +53,8 @@ if(Test-Path -LiteralPath $fixtureLog) {
     if(!($fixture -match '^completed phases=12$')) { throw 'Stability world sequence incomplete' }
 }
 $result=[ordered]@{
-    run=$run;exit=$exitText.Trim();gpuOptIn=$startup.Contains('Skinning=gpu-prototype');phases=$phases.Count
+    run=$run;exit=$exitText.Trim();gpuActive=$startup -match '(?m)^Skinning=gpu(?:-prototype)?\r?$';phases=$phases.Count
+    skinningSelection=if($startup -match 'SkinningSelection=(\w+)') { $Matches[1] } else { 'historical-not-recorded' }
     playerVidTransitions=$worlds.ToArray();diagnostics=$diagnostics;skinning=$skins;shutdownOwners=$owners
     peaks=[ordered]@{actors=Get-Peak 'actors_visible';npcs=Get-Peak 'npcs_visible';mobs=Get-Peak 'mobs_visible';mounts=Get-Peak 'mounts_visible';geometry=Get-Peak 'actor_geometry';attachments=Get-Peak 'attachment_geometry'}
     processSamples=[ordered]@{count=$samples.Count;privateMBFirst=$memory[0];privateMBLast=$memory[-1];privateMBMax=($memory|Measure-Object -Maximum).Maximum;handlesFirst=$handles[0];handlesLast=$handles[-1];handlesMax=($handles|Measure-Object -Maximum).Maximum}
@@ -61,5 +65,14 @@ if(@($owners.Values|Where-Object { $_ -ne 0 }).Count) { throw 'Leaked monitored 
 foreach($key in @('fallbackDiagnostics','hairBindingErrors','invalidRemaps','staleBindings','paletteErrors','skinPreparationFailures','actorErrors')) {
     if($diagnostics[$key]) { throw "Unexpected skinning diagnostic: $key" }
 }
-if($result.gpuOptIn -and (!$skins.gpuFrames -or $skins.cpuReferenceFrames -or $skins.cpuVertexBytes)) { throw 'Unexpected GPU inactivity or CPU fallback' }
-if(!$result.gpuOptIn -and $skins.gpuFrames) { throw 'CPU test unexpectedly used GPU skinning' }
+if($result.gpuActive -and (!$skins.gpuFrames -or $skins.cpuReferenceFrames -or $skins.cpuVertexBytes)) { throw 'Unexpected GPU inactivity or CPU fallback' }
+if(!$result.gpuActive -and $skins.gpuFrames) { throw 'CPU test unexpectedly used GPU skinning' }
+# ZiiNAN: GPU skinning production path; check new counters when present, retain historical audits.
+if($result.gpuActive -and ($skins.AllCPUDeformationCalls -or $skins.AllCPUDeformationVertices -or $skins.GPUFallbacks)) { throw 'Unexpected native CPU deformation or fallback in GPU run' }
+$shutdownLines=@($frames | Where-Object { $_ -match '^shutdown ' })
+if(!$shutdownLines.Count) { throw 'Missing renderer shutdown evidence' }
+foreach($line in $shutdownLines) {
+    foreach($match in [regex]::Matches($line,'\b[a-z_]+=([0-9]+)')) {
+        if([long]$match.Groups[1].Value -ne 0) { throw "Nonzero renderer shutdown owner: $line" }
+    }
+}

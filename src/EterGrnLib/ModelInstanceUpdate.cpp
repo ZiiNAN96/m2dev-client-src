@@ -3,6 +3,7 @@
 #include "ModelInstance.h"
 #include "Model.h"
 #include "Renderer/WorldRenderData.h"
+#include "Renderer/SkinningBenchmark.h"
 
 
 void CGrannyModelInstance::Update(DWORD dwAniFPS)
@@ -90,6 +91,7 @@ void CGrannyModelInstance::Deform(const Math::Matrix * c_pWorldMatrix)
             Renderer::prototypePrepareUs+=Renderer::PrototypeMicroseconds(start);
             return;
         }
+        ++Renderer::skinningFallbacks;
         if(m_actorRenderData.reports.insert("GPU prototype CPU fallback").second)
             TraceError("GPU skinning CPU fallback: model=%s part=%u status=%s palette=%s remaps=%zu; original CPU deformation",
                 m_pModel->GetGrannyModelPointer()->Name,static_cast<unsigned>(part),Renderer::SkinDataStatusName(m_skinningStatus),

@@ -183,7 +183,7 @@ int main(int argc,char** argv)
         evidence=argv[2];std::filesystem::create_directories(evidence);
         pixelLog.open(evidence/"pixels.csv");Check(bool(pixelLog),"Pixel evidence log");
         pixelLog<<"case,meanAbsoluteChannelDifference,maxChannelDifference,changedChannels,channelsAbove2,totalChannels\n";
-        Check(startupSkinningMode==PrototypeSkinningMode::CPU,"CPU production default unchanged");
+        Check(startupSkinningMode==PrototypeSkinningMode::GPU,"B6 production default; explicit CPU reference retained");
         CPackManager packs;CResourceManager resources;Diligent::GetEngineFactoryD3D11()->SetMessageCallback(Message);
         window=CreateWindowW(L"STATIC",L"B5-X isolated parity",WS_OVERLAPPEDWINDOW,0,0,512,512,nullptr,nullptr,GetModuleHandleW(nullptr),nullptr);
         DiligentD3D11Backend backend;Check(window && backend.Initialize({window,512,512}),"B5 backend");

@@ -201,7 +201,7 @@ static void InvalidDataTests()
     matrix[0]=std::numeric_limits<float>::infinity();
     Check(CaptureBonePalette(palette,skeleton,{&matrix,1})==SkinDataStatus::InvalidMatrix && !palette.ready,"Invalid matrix invalidates old ready palette");
     Check(SkinningDataAdapter::CapturePose(palette,skeleton,nullptr)==SkinDataStatus::MissingData,"Missing pose");
-    Check(productionSkinningMode==SkinningMode::CPU,"CPU is hard active");
+    Check(productionSkinningMode==SkinningMode::GPU,"B6 GPU production policy; direct native CPU numeric reference remains available");
 }
 
 static void AdapterDiagnostics(const Asset& original)

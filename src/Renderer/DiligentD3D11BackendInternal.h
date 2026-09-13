@@ -6,6 +6,8 @@
 #include "Graphics/GraphicsEngine/interface/RenderDevice.h"
 #include "Graphics/GraphicsEngine/interface/DeviceContext.h"
 #include "Graphics/GraphicsEngine/interface/SwapChain.h"
+#include "Graphics/GraphicsEngine/interface/Query.h"
+#include "SkinningBenchmark.h"
 
 struct Renderer::DiligentD3D11Backend::Impl
 {
@@ -15,4 +17,18 @@ struct Renderer::DiligentD3D11Backend::Impl
     Renderer::ClearColor color{0.08f, 0.16f, 0.28f, 1.0f};
     bool suspended = false;
     bool inFrame = false;
+    struct TimingSlot { Diligent::RefCntAutoPtr<Diligent::IQuery> query; uint64_t frame=0; };
+    std::array<TimingSlot,64> benchmarkQueries;
+    TimingSlot* activeTiming=nullptr;
+    void CollectTimings() {
+        for(auto& slot:benchmarkQueries) if(slot.frame) {
+            Diligent::QueryDataDuration data;
+            if(slot.query->GetData(&data,sizeof(data),true)) {
+                if(data.Frequency && Renderer::skinningBenchmarkGpuTimes.size()<Renderer::skinningBenchmarkLimit)
+                    Renderer::skinningBenchmarkGpuTimes[slot.frame]=double(data.Duration)*1e6/double(data.Frequency);
+                else ++Renderer::skinningBenchmarkDropped;
+                slot.frame=0;
+            }
+        }
+    }
 };

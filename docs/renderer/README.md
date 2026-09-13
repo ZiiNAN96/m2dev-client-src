@@ -48,6 +48,13 @@ components. Their Windows SDK d3dtypes/d3dcaps declarations are not D3D9 SDK hea
 
 Default: run `Metin2_Release.exe` in the existing runtime directory.
 Explicit equivalent: `--renderer=d3d11`.
+Skinning defaults to GPU after B6-X. `--skinning=gpu` selects it explicitly;
+`--skinning=cpu` retains the native CPU reference/fallback path. The old
+`--skinning=gpu-prototype` spelling is a compatibility alias only. Conflicting or
+unknown skinning options fail startup; there is no runtime skinning hot switch.
+An unsupported individual asset may use the checked native CPU path, recorded by
+`GPUFallbacks` and a bounded diagnostic. See the [B6-X report](phase-b6x-gpu-skinning-production.md)
+for measured performance and final acceptance status.
 The old `--renderer=diligent-d3d11` spelling is accepted solely as an alias for the
 same API. No Legacy value is accepted; unsupported values produce an error and exit 2.
 There is no hot switch and no automatic fallback.

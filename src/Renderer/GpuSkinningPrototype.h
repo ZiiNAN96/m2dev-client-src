@@ -12,8 +12,11 @@ inline constexpr size_t gpuPrototypeBufferBones = 256;
 static_assert(gpuPrototypeBoneLimit <= gpuPrototypeBufferBones);
 static_assert(gpuPrototypeBufferBones * sizeof(SkinningMatrix) == 16384);
 
-enum class PrototypeSkinningMode { CPU, GPUPrototype };
-inline PrototypeSkinningMode startupSkinningMode = PrototypeSkinningMode::CPU;
+// ZiiNAN: GPU skinning production path — retain the old enum spelling for existing tests/integration.
+enum class PrototypeSkinningMode { CPU, GPU, GPUPrototype=GPU };
+inline constexpr PrototypeSkinningMode defaultStartupSkinningMode =
+    productionSkinningMode==SkinningMode::GPU ? PrototypeSkinningMode::GPU : PrototypeSkinningMode::CPU;
+inline PrototypeSkinningMode startupSkinningMode = defaultStartupSkinningMode;
 inline bool IsReferenceSkinningAsset(std::string_view path)
 {
     constexpr std::string_view expected="d:/ymir work/pc/warrior/warrior_novice.gr2";

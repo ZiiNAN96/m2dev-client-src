@@ -7,6 +7,7 @@
 #include "resource.h"
 #include "Version.h"
 #include "Renderer/RendererBootstrap.h"
+#include "Renderer/SkinningBenchmark.h"
 #include <shellapi.h>
 
 #ifdef _DEBUG
@@ -311,13 +312,14 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	if (!rendererOptions.valid)
 	{
         rendererLog << "ERROR: Invalid/conflicting renderer selection; no fallback. ExitCode=2" << std::endl;
-		MessageBoxW(nullptr, L"Unsupported or conflicting renderer/skinning selection. Use --renderer=d3d11 and --skinning=cpu or --skinning=gpu-prototype, or omit these arguments.",
+		MessageBoxW(nullptr, L"Unsupported or conflicting renderer/skinning selection. Use --renderer=d3d11 and --skinning=gpu (default) or --skinning=cpu.",
 		            L"Invalid renderer selection", MB_OK | MB_ICONERROR);
 		return 2;
 	}
-    // ZiiNAN: Diligent GPU skinning prototype
+    // ZiiNAN: GPU skinning production path
     Renderer::startupSkinningMode=rendererOptions.skinning;
-    rendererLog << "Skinning=" << (rendererOptions.skinning==Renderer::PrototypeSkinningMode::CPU ? "cpu" : "gpu-prototype") << std::endl;
+    rendererLog << "Skinning=" << (rendererOptions.skinning==Renderer::PrototypeSkinningMode::CPU ? "cpu" : "gpu") << std::endl;
+    rendererLog << "SkinningSelection=" << (rendererOptions.skinningSelected ? "explicit" : "default") << std::endl;
     // ZiiNAN: Production renderer selection is logged once, before any game/device setup.
     rendererLog << "Renderer: " << "Diligent D3D11" << std::endl;
     rendererLog << "Selection=" << (rendererOptions.selected ? "explicit" : "default")
@@ -338,6 +340,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     const int result = Main(hInstance, lpCmdLine, rendererOptions.backend);
     std::ofstream resourceLog("source-resource-audit.log",std::ios::trunc);
     Renderer::WriteSourceResourceAudit(resourceLog);
+    // ZiiNAN: GPU skinning production path — summary only; per-frame CSV is opt-in.
+    Renderer::WriteSkinningBenchmark();
+    resourceLog << "AllCPUDeformationCalls=" << Renderer::skinningCpuCalls << " AllCPUDeformationVertices=" << Renderer::skinningCpuVertices
+        << " GPUFallbacks=" << Renderer::skinningFallbacks << '\n';
     resourceLog << "PrototypeGeometry=" << Renderer::livePrototypeGeometry << " PrototypePalettes=" << Renderer::livePrototypePalettes
         << " GPUFrames=" << Renderer::prototypeFrames << " BoneBufferWrittenBytes=" << Renderer::prototypeBoneBytes
         << " PrepareUs=" << Renderer::prototypePrepareUs << " CPUReferenceFrames=" << Renderer::prototypeCpuFrames

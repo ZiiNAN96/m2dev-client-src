@@ -8,7 +8,7 @@ int main(int argc,char** argv)
     HWND window=nullptr;
     try {
         Check(argc==2,"Original asset root required");
-        Check(startupSkinningMode==PrototypeSkinningMode::CPU,"CPU default unchanged");
+        Check(startupSkinningMode==PrototypeSkinningMode::GPU,"B6 production default; forced CPU fallback retained");
         CPackManager packs;CResourceManager resources;Diligent::GetEngineFactoryD3D11()->SetMessageCallback(Message);
         window=CreateWindowW(L"STATIC",L"B5-X fallback parity",WS_OVERLAPPEDWINDOW,0,0,512,512,nullptr,nullptr,GetModuleHandleW(nullptr),nullptr);
         DiligentD3D11Backend backend;Check(window && backend.Initialize({window,512,512}),"Fallback test backend");

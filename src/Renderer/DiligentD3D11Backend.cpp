@@ -53,6 +53,17 @@ bool DiligentD3D11Backend::BeginFrame()
         return false;
     m_impl->context->SetRenderTargets(1, &target, depth, Diligent::RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
     m_impl->inFrame = true;
+    // ZiiNAN: GPU skinning production path — asynchronous timestamps only in explicit benchmarks.
+    if(skinningBenchmarkEnabled) {
+        auto& s=*m_impl;
+        auto& slot=s.benchmarkQueries[skinningBenchmarkCurrent.serial%s.benchmarkQueries.size()];
+        if(!slot.query) {
+            Diligent::QueryDesc desc;desc.Name="B6-X complete world frame";desc.Type=Diligent::QUERY_TYPE_DURATION;
+            s.device->CreateQuery(desc,&slot.query);
+        }
+        if(slot.query && !slot.frame) { slot.frame=skinningBenchmarkCurrent.serial;s.activeTiming=&slot;s.context->BeginQuery(slot.query); }
+        else ++skinningBenchmarkDropped;
+    }
     return true;
 }
 
@@ -71,6 +82,9 @@ void DiligentD3D11Backend::Clear(const ClearInfo& info)
 
 void DiligentD3D11Backend::EndFrame()
 {
+    if(m_impl && m_impl->activeTiming) {
+        m_impl->context->EndQuery(m_impl->activeTiming->query);m_impl->activeTiming=nullptr;
+    }
     if (m_impl)
         m_impl->inFrame = false;
 }
@@ -109,7 +123,14 @@ bool DiligentD3D11Backend::CaptureRGB(std::vector<uint8_t>& pixels,uint32_t& wid
 void DiligentD3D11Backend::Present()
 {
     if (m_impl && !m_impl->suspended && !m_impl->inFrame)
+    {
+        const auto start=skinningBenchmarkEnabled ? PrototypeClock::now() : PrototypeClock::time_point{};
         m_impl->swapChain->Present(1);
+        if(skinningBenchmarkEnabled) {
+            skinningBenchmarkCurrent.presentUs+=PrototypeMicroseconds(start);
+            m_impl->CollectTimings();
+        }
+    }
 }
 
 bool DiligentD3D11Backend::Resize(uint32_t width, uint32_t height)
@@ -141,6 +162,8 @@ void DiligentD3D11Backend::Shutdown()
     m_impl->context->SetRenderTargets(0, nullptr, nullptr, Diligent::RESOURCE_STATE_TRANSITION_MODE_NONE);
     m_impl->context->Flush();
     m_impl->context->WaitForIdle();
+    if(skinningBenchmarkEnabled) m_impl->CollectTimings();
+    for(auto& slot:m_impl->benchmarkQueries) { slot.query.Release();slot.frame=0; }
     m_impl->swapChain.Release();
     m_impl->context.Release();
     m_impl->device.Release();

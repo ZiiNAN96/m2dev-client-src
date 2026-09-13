@@ -15,7 +15,8 @@ namespace Renderer
 {
 // ZiiNAN: GPU skinning static mesh data
 enum class SkinningMode { CPU, GPU };
-inline constexpr SkinningMode productionSkinningMode = SkinningMode::CPU;
+// ZiiNAN: GPU skinning production path
+inline constexpr SkinningMode productionSkinningMode = SkinningMode::GPU;
 inline constexpr size_t preparedBoneLimit = 256; // Preparation limit, not an asset/runtime limit.
 inline std::atomic_size_t liveSkinMeshes{}, liveBoneRemaps{}, liveBonePalettes{};
 inline std::atomic_uint64_t nextSkeletonIdentity{1}, skinPaletteUpdates{}, skinSidecarFailures{};
