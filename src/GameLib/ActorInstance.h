@@ -247,6 +247,8 @@ class CActorInstance : public IActorInstance, public IFlyTargetableObject
 		void SetVirtualID(DWORD dwVID);
 
 		void SetShape(DWORD eShape, float fSpecular=0.0f);
+        // ZiiNAN: Diligent GPU skinning prototype
+        bool IsPrototypeBaseBody() const { return m_eShape==0 && !m_pkHorse; }
 		void ChangeMaterial(const char * c_szFileName);
 
 	public:

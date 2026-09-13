@@ -311,10 +311,13 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	if (!rendererOptions.valid)
 	{
         rendererLog << "ERROR: Invalid/conflicting renderer selection; no fallback. ExitCode=2" << std::endl;
-		MessageBoxW(nullptr, L"Unsupported renderer. Use --renderer=d3d11 or omit the renderer argument.",
+		MessageBoxW(nullptr, L"Unsupported or conflicting renderer/skinning selection. Use --renderer=d3d11 and --skinning=cpu or --skinning=gpu-prototype, or omit these arguments.",
 		            L"Invalid renderer selection", MB_OK | MB_ICONERROR);
 		return 2;
 	}
+    // ZiiNAN: Diligent GPU skinning prototype
+    Renderer::startupSkinningMode=rendererOptions.skinning;
+    rendererLog << "Skinning=" << (rendererOptions.skinning==Renderer::PrototypeSkinningMode::CPU ? "cpu" : "gpu-prototype") << std::endl;
     // ZiiNAN: Production renderer selection is logged once, before any game/device setup.
     rendererLog << "Renderer: " << "Diligent D3D11" << std::endl;
     rendererLog << "Selection=" << (rendererOptions.selected ? "explicit" : "default")
@@ -335,6 +338,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     const int result = Main(hInstance, lpCmdLine, rendererOptions.backend);
     std::ofstream resourceLog("source-resource-audit.log",std::ios::trunc);
     Renderer::WriteSourceResourceAudit(resourceLog);
+    resourceLog << "PrototypeGeometry=" << Renderer::livePrototypeGeometry << " PrototypePalettes=" << Renderer::livePrototypePalettes
+        << " GPUFrames=" << Renderer::prototypeFrames << " BoneBufferWrittenBytes=" << Renderer::prototypeBoneBytes
+        << " PrepareUs=" << Renderer::prototypePrepareUs << " CPUReferenceFrames=" << Renderer::prototypeCpuFrames
+        << " CPUSkinUs=" << Renderer::prototypeCpuSkinUs << " CPUVertexBytes=" << Renderer::prototypeCpuBytes << '\n';
 	::CoUninitialize();
 
 	SAFE_FREE_GLOBAL (szArgv);

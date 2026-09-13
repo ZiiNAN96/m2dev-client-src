@@ -88,3 +88,10 @@ set_tests_properties(Renderer.SkinningInstance PROPERTIES LABELS "skinning;real-
 
 add_test(NAME Renderer.NoLegacyArchitecture COMMAND ${CMAKE_COMMAND}
     -DSOURCE_ROOT=${CMAKE_SOURCE_DIR} -P ${CMAKE_CURRENT_SOURCE_DIR}/NoLegacyArchitecture.cmake)
+
+# ZiiNAN: Diligent GPU skinning prototype
+add_executable(RendererSkinningPrototypeTest SkinningPrototypeTest.cpp)
+target_include_directories(RendererSkinningPrototypeTest PRIVATE ${diligent_includes})
+target_link_libraries(RendererSkinningPrototypeTest PRIVATE ${client_libraries} M2RendererDiligent Diligent-GraphicsEngineD3D11Interface)
+add_test(NAME Renderer.SkinningPrototype COMMAND RendererSkinningPrototypeTest "${M2_SKINNING_ASSET_ROOT}" "${CMAKE_BINARY_DIR}/phase-b3/parity-$<CONFIG>")
+set_tests_properties(Renderer.SkinningPrototype PROPERTIES LABELS "gpu;skinning;real-assets" TIMEOUT 120)

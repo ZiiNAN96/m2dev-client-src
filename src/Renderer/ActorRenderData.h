@@ -1,6 +1,7 @@
 #pragma once
 // ZiiNAN: Completed CPU-skinned PNT data only; Granny owns all animation and bones.
 #include "StaticObjectRenderData.h"
+#include "GpuSkinningPrototype.h"
 #include <unordered_map>
 #include <unordered_set>
 #include <string>
@@ -30,6 +31,7 @@ enum class ActorPart : uint32_t { Body=0, Weapon=1, WeaponLeft=3, Hair=4, Unsupp
 struct ActorInstanceSet
 {
     std::array<const void*,5> instances{};
+    const void* prototypeBody=nullptr;
     ActorPart Find(const void* instance) const
     {
         if(instance) for(auto part:{ActorPart::Body,ActorPart::Weapon,ActorPart::WeaponLeft,ActorPart::Hair})
@@ -42,6 +44,7 @@ struct ActorInstanceData
     std::vector<StaticObjectVertex> vertices;
     uint64_t revision = 0, uploadedRevision = 0, capturedFrame = 0;
     bool ready = false;
+    bool gpuPrototype = false;
     StaticObjectGeometryPtr geometry;
     std::unordered_map<std::string,TerrainTexturePtr> textures;
     std::unordered_set<std::string> reports;
@@ -49,6 +52,9 @@ struct ActorInstanceData
 class IActorRenderer : public ITextureUploader
 {
 public:
+    // ZiiNAN: Diligent GPU skinning prototype
+    virtual bool PreparePrototype(StaticObjectGeometryPtr&, const SkinningModelData&,
+        const std::vector<std::shared_ptr<const BoneRemap>>&, const BonePalette&) { return false; }
     virtual StaticObjectGeometryPtr CreateGeometry(const ActorModelSource&, ActorPart part = ActorPart::Body, ActorCategory category = ActorCategory::Player) = 0;
     virtual bool UpdateVertices(const StaticObjectGeometryPtr&, const std::vector<StaticObjectVertex>&, uint32_t deformedCount = 0, ActorCategory category = ActorCategory::Player) = 0;
     virtual void Draw(const void* actor, const StaticObjectGeometryPtr&, const TerrainTexturePtr&, const StaticObjectDraw&, ActorCategory category = ActorCategory::Player, ActorPart part = ActorPart::Body) = 0;

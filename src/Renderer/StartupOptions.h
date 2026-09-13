@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string_view>
+#include "GpuSkinningPrototype.h"
 
 namespace Renderer
 {
@@ -14,9 +15,19 @@ struct StartupOptions
     bool selected = false;
     bool smokeTest = false;
     bool valid = true;
+    PrototypeSkinningMode skinning=PrototypeSkinningMode::CPU;
+    bool skinningSelected=false;
 
     void ParseArgument(std::wstring_view argument)
     {
+        // ZiiNAN: Diligent GPU skinning prototype
+        if(argument.starts_with(L"--skinning=")) {
+            const auto value=argument.substr(11);
+            if(value!=L"cpu" && value!=L"gpu-prototype") { valid=false; return; }
+            const auto requested=value==L"cpu" ? PrototypeSkinningMode::CPU : PrototypeSkinningMode::GPUPrototype;
+            if(skinningSelected && requested!=skinning) valid=false;
+            skinning=requested; skinningSelected=true; return;
+        }
         if (argument == L"--renderer-smoke-test")
             smokeTest = true;
         constexpr std::wstring_view prefix = L"--renderer=";

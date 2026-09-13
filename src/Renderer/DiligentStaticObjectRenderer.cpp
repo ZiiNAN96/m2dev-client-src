@@ -1,4 +1,5 @@
 #include "DiligentStaticObjectRenderer.h"
+#include "GpuSkinningShader.h"
 #include "DiligentD3D11BackendInternal.h"
 #include "Graphics/GraphicsEngine/interface/Buffer.h"
 #include "Graphics/GraphicsEngine/interface/PipelineState.h"
@@ -20,11 +21,17 @@ struct Counters { uint32_t geometry=0, textures=0; };
 struct Geometry final : StaticObjectGeometry
 {
     RefCntAutoPtr<IBuffer> vertices, indices;
+    RefCntAutoPtr<IBuffer> bones;
+    std::vector<std::shared_ptr<const BoneRemap>> remaps;
+    std::shared_ptr<const SkeletonLayout> skeleton;
     std::vector<uint16_t> validationIndices;
     uint32_t vertexCount=0;
     bool dynamic=false; // ZiiNAN: Only actor VBs use discard updates.
     std::shared_ptr<Counters> counters;
-    ~Geometry() override { if(counters) --counters->geometry; }
+    ~Geometry() override {
+        if(bones) { --livePrototypeGeometry; --livePrototypePalettes; }
+        if(counters) --counters->geometry;
+    }
 };
 struct Texture final : TerrainTexture
 {
@@ -134,7 +141,7 @@ struct DiligentStaticObjectRenderer::Impl
 {
     DiligentD3D11Backend& backend;
     RefCntAutoPtr<IBuffer> constants;
-    RefCntAutoPtr<IPipelineState> pipelines[12];
+    RefCntAutoPtr<IPipelineState> pipelines[24];
     std::shared_ptr<Counters> counters=std::make_shared<Counters>();
     uint32_t draws=0;
     bool failed=false;
@@ -147,7 +154,7 @@ bool DiligentStaticObjectRenderer::Failed() const { return m_impl->failed; }
 uint32_t DiligentStaticObjectRenderer::DrawCount() const { return m_impl->draws; }
 uint32_t DiligentStaticObjectRenderer::LiveGeometryCount() const { return m_impl->counters->geometry; }
 uint32_t DiligentStaticObjectRenderer::LiveTextureCount() const { return m_impl->counters->textures; }
-bool DiligentStaticObjectRenderer::Initialize()
+bool DiligentStaticObjectRenderer::Initialize(bool gpuPrototype)
 {
     auto& s=*m_impl;
     if(!s.backend.m_impl) return false;
@@ -166,16 +173,33 @@ bool DiligentStaticObjectRenderer::Initialize()
         shader.Desc.Name="Static diffuse PS"; shader.Desc.ShaderType=SHADER_TYPE_PIXEL; shader.EntryPoint="PS";
         device->CreateShader(shader,&ps);
         if(!vs || !ps) return false;
+        // ZiiNAN: Diligent GPU skinning prototype
+        RefCntAutoPtr<IShader> skinVS;
+        const std::string skinSource=std::string(shaderSource)+gpuSkinningShader+R"(
+Output SkinningVS(float3 position:ATTRIB0, float3 normal:ATTRIB1, float2 uv:ATTRIB2,
+                  uint4 weights:ATTRIB3, uint4 indices:ATTRIB4) {
+ float3 p,n; SkinVertex(position,normal,weights,indices,p,n); return VS(p,n,uv);
+})";
+        if(gpuPrototype) {
+            shader.Source=skinSource.c_str(); shader.Desc.Name="B3 original PWNT skinning VS";
+            shader.Desc.ShaderType=SHADER_TYPE_VERTEX; shader.EntryPoint="SkinningVS";
+            device->CreateShader(shader,&skinVS);
+            if(!skinVS) return false;
+        }
         LayoutElement layout[]={{0,0,3,VT_FLOAT32,False,0,32},{1,0,3,VT_FLOAT32,False,12,32},{2,0,2,VT_FLOAT32,False,24,32}};
+        LayoutElement skinLayout[]={{0,0,3,VT_FLOAT32,False,0,40},{1,0,3,VT_FLOAT32,False,20,40},
+            {2,0,2,VT_FLOAT32,False,32,40},{3,0,4,VT_UINT8,False,12,40},{4,0,4,VT_UINT8,False,16,40}};
         ShaderResourceVariableDesc variables[]={{SHADER_TYPE_PIXEL,"DiffuseTexture",SHADER_RESOURCE_VARIABLE_TYPE_MUTABLE},
             {SHADER_TYPE_PIXEL,"ObjectSampler",SHADER_RESOURCE_VARIABLE_TYPE_MUTABLE},
             {SHADER_TYPE_PIXEL,"CameraAlphaTexture",SHADER_RESOURCE_VARIABLE_TYPE_MUTABLE},
-            {SHADER_TYPE_PIXEL,"CameraAlphaSampler",SHADER_RESOURCE_VARIABLE_TYPE_MUTABLE}};
-        for(unsigned variant=0;variant<12;++variant) {
+            {SHADER_TYPE_PIXEL,"CameraAlphaSampler",SHADER_RESOURCE_VARIABLE_TYPE_MUTABLE},
+            {SHADER_TYPE_VERTEX,"SkinningPalette",SHADER_RESOURCE_VARIABLE_TYPE_MUTABLE}};
+        for(unsigned variant=0;variant<(gpuPrototype ? 24u : 12u);++variant) {
+            const bool skin=variant>=12;
             const auto cull=variant%3;
             GraphicsPipelineStateCreateInfo info;
             info.PSODesc.Name="Static object opaque diffuse"; info.PSODesc.PipelineType=PIPELINE_TYPE_GRAPHICS;
-            info.PSODesc.ResourceLayout.Variables=variables; info.PSODesc.ResourceLayout.NumVariables=4;
+            info.PSODesc.ResourceLayout.Variables=variables; info.PSODesc.ResourceLayout.NumVariables=skin ? 5 : 4;
             auto& g=info.GraphicsPipeline;
             const auto& swap=s.backend.m_impl->swapChain->GetDesc();
             g.NumRenderTargets=1; g.RTVFormats[0]=swap.ColorBufferFormat; g.DSVFormat=swap.DepthBufferFormat;
@@ -183,14 +207,14 @@ bool DiligentStaticObjectRenderer::Initialize()
             g.RasterizerDesc.CullMode=cull==0 ? CULL_MODE_NONE : CULL_MODE_BACK;
             g.RasterizerDesc.FrontCounterClockwise=cull==1;
             g.RasterizerDesc.DepthClipEnable=True;
-            g.DepthStencilDesc.DepthEnable=True; g.DepthStencilDesc.DepthWriteEnable=variant<6;
+            g.DepthStencilDesc.DepthEnable=True; g.DepthStencilDesc.DepthWriteEnable=variant%12<6;
             g.DepthStencilDesc.DepthFunc=COMPARISON_FUNC_LESS_EQUAL;
             auto& blend=g.BlendDesc.RenderTargets[0];
             blend.BlendEnable=(variant/3)%2!=0;
             blend.SrcBlend=blend.SrcBlendAlpha=BLEND_FACTOR_SRC_ALPHA;
             blend.DestBlend=blend.DestBlendAlpha=BLEND_FACTOR_INV_SRC_ALPHA;
-            g.InputLayout.LayoutElements=layout; g.InputLayout.NumElements=3;
-            info.pVS=vs; info.pPS=ps;
+            g.InputLayout.LayoutElements=skin ? skinLayout : layout; g.InputLayout.NumElements=skin ? 5 : 3;
+            info.pVS=skin ? skinVS : vs; info.pPS=ps;
             auto& pipeline=s.pipelines[variant];
             device->CreateGraphicsPipelineState(info,&pipeline);
             if(!pipeline) return false;
@@ -202,6 +226,48 @@ bool DiligentStaticObjectRenderer::Initialize()
 }
 StaticObjectGeometryPtr DiligentStaticObjectRenderer::UploadGeometry(const StaticObjectSource& data)
 { return CreateGeometry(data,false); }
+// ZiiNAN: Diligent GPU skinning prototype
+bool DiligentStaticObjectRenderer::PreparePrototype(StaticObjectGeometryPtr& geometry,
+    const SkinningModelData& data, const std::vector<std::shared_ptr<const BoneRemap>>& remaps,
+    const BonePalette& palette)
+{
+    auto& s=*m_impl;
+    if(!s.backend.m_impl || !s.backend.m_impl->inFrame || !s.pipelines[12] ||
+       !IsReferenceSkinningModel(data) || !ValidPrototypePalette(palette) || palette.skeleton!=data.skeleton) return false;
+    auto mesh=std::dynamic_pointer_cast<Geometry>(geometry);
+    if(mesh && (!mesh->bones || mesh->remaps!=remaps || mesh->skeleton!=palette.skeleton || mesh->counters!=s.counters)) mesh.reset();
+    try {
+        if(!mesh) {
+            std::vector<SkinningVertex> vertices; std::vector<uint16_t> indices;
+            if(!BuildPrototypeVertices(data,remaps,palette,vertices,indices)) return false;
+            mesh=std::make_shared<Geometry>();
+            BufferDesc desc; desc.Name="B3 immutable original PWNT"; desc.Size=vertices.size()*sizeof(SkinningVertex);
+            desc.Usage=USAGE_IMMUTABLE; desc.BindFlags=BIND_VERTEX_BUFFER;
+            BufferData initial{vertices.data(),desc.Size};
+            auto* device=s.backend.m_impl->device.RawPtr();
+            device->CreateBuffer(desc,&initial,&mesh->vertices);
+            desc.Name="B3 original mesh-local indices"; desc.Size=indices.size()*sizeof(uint16_t); desc.BindFlags=BIND_INDEX_BUFFER;
+            initial={indices.data(),desc.Size}; device->CreateBuffer(desc,&initial,&mesh->indices);
+            if(!mesh->vertices || !mesh->indices) return false;
+            desc.Name="B3 current composite palette"; desc.Size=gpuPrototypeBufferBones*sizeof(SkinningMatrix);
+            desc.Usage=USAGE_DYNAMIC; desc.BindFlags=BIND_UNIFORM_BUFFER; desc.CPUAccessFlags=CPU_ACCESS_WRITE;
+            device->CreateBuffer(desc,nullptr,&mesh->bones);
+            if(!mesh->bones) return false;
+            ++livePrototypeGeometry; ++livePrototypePalettes;
+            mesh->vertexCount=static_cast<uint32_t>(vertices.size()); mesh->validationIndices=std::move(indices);
+            mesh->remaps=remaps; mesh->skeleton=palette.skeleton; mesh->counters=s.counters; ++s.counters->geometry;
+        }
+        {
+            MapHelper<SkinningMatrix> mapped(s.backend.m_impl->context,mesh->bones,MAP_WRITE,MAP_FLAG_DISCARD);
+            if(!mapped) return false;
+            memset(mapped,0,gpuPrototypeBufferBones*sizeof(SkinningMatrix));
+            memcpy(mapped,palette.matrices.data(),palette.matrices.size()*sizeof(SkinningMatrix));
+        }
+        prototypeBoneBytes+=gpuPrototypeBufferBones*sizeof(SkinningMatrix);
+        geometry=mesh;
+        return true;
+    } catch(...) { return false; }
+}
 // ZiiNAN: Reuse index validation/materials while keeping the static path unchanged.
 StaticObjectGeometryPtr DiligentStaticObjectRenderer::UploadDynamicGeometry(const StaticObjectSource& data)
 { return CreateGeometry(data,true); }
@@ -299,7 +365,8 @@ void DiligentStaticObjectRenderer::Draw(const StaticObjectGeometryPtr& geometry,
     auto cameraImage=draw.sphereMap ? std::dynamic_pointer_cast<Texture>(draw.sphereMap) :
         (draw.cameraAlpha ? std::dynamic_pointer_cast<Texture>(draw.cameraAlpha) : image);
     const auto cull=static_cast<uint32_t>(draw.cull);
-    const auto variant=cull+(draw.blend ? 3 : 0)+(draw.depthWrite ? 0 : 6);
+    const auto materialVariant=cull+(draw.blend ? 3 : 0)+(draw.depthWrite ? 0 : 6);
+    const auto variant=materialVariant+(mesh && mesh->bones ? 12 : 0);
     if(!s.backend.m_impl || !s.backend.m_impl->inFrame || !mesh || !image || !cameraImage ||
        mesh->counters!=s.counters || image->counters!=s.counters || cameraImage->counters!=s.counters ||
        cull>=3 || !s.pipelines[variant] || draw.alphaReference>255 || static_cast<uint32_t>(draw.alphaTest)>2 ||
@@ -352,7 +419,9 @@ void DiligentStaticObjectRenderer::Draw(const StaticObjectGeometryPtr& geometry,
             image->cameraAnisotropic=draw.cameraAlphaAnisotropic; image->cameraMaxAnisotropy=draw.cameraAlphaMaxAnisotropy;
             for(auto& binding:image->bindings) binding.Release();
         }
-        auto& binding=image->bindings[variant];
+        // ZiiNAN: Diligent GPU skinning prototype
+        RefCntAutoPtr<IShaderResourceBinding> skinBinding;
+        auto& binding=mesh->bones ? skinBinding : image->bindings[materialVariant];
         if(!binding) {
             s.pipelines[variant]->CreateShaderResourceBinding(&binding,true);
             if(!binding) { s.failed=true; return; }
@@ -360,6 +429,7 @@ void DiligentStaticObjectRenderer::Draw(const StaticObjectGeometryPtr& geometry,
             binding->GetVariableByName(SHADER_TYPE_PIXEL,"ObjectSampler")->Set(image->sampler);
             binding->GetVariableByName(SHADER_TYPE_PIXEL,"CameraAlphaTexture")->Set(cameraImage->texture->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE));
             binding->GetVariableByName(SHADER_TYPE_PIXEL,"CameraAlphaSampler")->Set(image->cameraSampler);
+            if(mesh->bones) binding->GetVariableByName(SHADER_TYPE_VERTEX,"SkinningPalette")->Set(mesh->bones);
         }
         {
             MapHelper<Constants> mapped(b.context,s.constants,MAP_WRITE,MAP_FLAG_DISCARD);

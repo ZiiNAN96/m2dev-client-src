@@ -73,6 +73,27 @@ void CGrannyModelInstance::Deform(const Math::Matrix * c_pWorldMatrix)
 	UpdateWorldPose();
 	UpdateWorldMatrices(c_pWorldMatrix);
 
+    // ZiiNAN: Diligent GPU skinning prototype
+    const bool reference=captureActor && Renderer::actorDeformTargets.prototypeBody==this;
+    if(reference && Renderer::startupSkinningMode==Renderer::PrototypeSkinningMode::GPUPrototype) {
+        const auto start=Renderer::PrototypeClock::now();
+        const auto palette=GetSkinningPalette();
+        if(Renderer::actorRenderer && palette && m_pModel->GetSkinningData() &&
+           Renderer::actorRenderer->PreparePrototype(m_actorRenderData.geometry,*m_pModel->GetSkinningData(),m_skinningRemaps,*palette)) {
+            m_actorRenderData.gpuPrototype=true; m_actorRenderData.ready=true;
+            m_actorRenderData.capturedFrame=Renderer::actorFrameSerial;
+            ++Renderer::prototypeFrames;
+            Renderer::prototypePrepareUs+=Renderer::PrototypeMicroseconds(start);
+            return;
+        }
+        if(m_actorRenderData.reports.insert("GPU prototype CPU fallback").second)
+            TraceError("GPU prototype: unsupported/failed preparation, using original CPU deformation");
+    }
+    if(m_actorRenderData.gpuPrototype) {
+        m_actorRenderData.geometry.reset(); m_actorRenderData.uploadedRevision=0;
+        m_actorRenderData.gpuPrototype=false;
+    }
+
     // ZiiNAN: Diligent actor attachment rendering
     if(captureActor && m_pModel->GetActorSource()->IsRigid()) {
         m_actorRenderData.capturedFrame=Renderer::actorFrameSerial;
@@ -86,7 +107,13 @@ void CGrannyModelInstance::Deform(const Math::Matrix * c_pWorldMatrix)
 		TPNTVertex* pntVertices;
 		if (rkDeformableVertexBuffer.LockRange(m_pModel->GetDeformVertexCount(), (void **)&pntVertices))
 		{
+            const auto skinStart=reference ? Renderer::PrototypeClock::now() : Renderer::PrototypeClock::time_point{};
 			DeformPNTVertices(pntVertices);
+            if(reference) {
+                Renderer::prototypeCpuSkinUs+=Renderer::PrototypeMicroseconds(skinStart);
+                ++Renderer::prototypeCpuFrames;
+                Renderer::prototypeCpuBytes+=uint64_t(m_pModel->GetDeformVertexCount())*sizeof(TPNTVertex);
+            }
             // ZiiNAN: Copy finished CPU-skinned PNT before the existing Unlock; no second skinning pass.
             if(captureActor) {
                 static_assert(sizeof(Renderer::StaticObjectVertex)==sizeof(TPNTVertex));

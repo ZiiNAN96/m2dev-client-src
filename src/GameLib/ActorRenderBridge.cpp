@@ -89,7 +89,7 @@ void Submit(void* context, const void* nativeInstance, ActorPart part, const Act
     }
     const auto& source=model->GetActorSource();
     if(!source) { Report(actor,*instance,"excluded: model outside captured actor PNT contract"); return; }
-    if(!data.ready || data.capturedFrame!=actorFrameSerial || (!source->IsRigid() && data.vertices.size()!=source->vertexCount)) {
+    if(!data.ready || data.capturedFrame!=actorFrameSerial || (!data.gpuPrototype && !source->IsRigid() && data.vertices.size()!=source->vertexCount)) {
         Report(actor,*instance,"excluded: no current CPU-deformed pose"); return;
     }
     StaticObjectDraw draw;
@@ -128,14 +128,14 @@ void Submit(void* context, const void* nativeInstance, ActorPart part, const Act
     draw.vertexCount=native.vertexCount; draw.firstIndex=native.firstIndex; draw.indexCount=native.indexCount;
     if(!data.geometry) data.geometry=actorRenderer->CreateGeometry(*source,part,category);
     if(!data.geometry) { Report(actor,*instance,"ERROR: actor geometry upload"); return; }
-    if(!source->IsRigid() && data.uploadedRevision!=data.revision) {
+    if(!data.gpuPrototype && !source->IsRigid() && data.uploadedRevision!=data.revision) {
         if(!actorRenderer->UpdateVertices(data.geometry,data.vertices,source->deformVertexCount,category)) {
             Report(actor,*instance,"ERROR: actor vertex upload"); return;
         }
         data.uploadedRevision=data.revision;
     }
     actorRenderer->Draw(&actor,data.geometry,texture,draw,category,part);
-    Report(actor,*instance,part==ActorPart::Body ? "submitted: CPU-skinned main body" :
+    Report(actor,*instance,data.gpuPrototype ? "submitted: GPU prototype reference body" : part==ActorPart::Body ? "submitted: CPU-skinned main body" :
         source->IsRigid() ? "submitted: rigid attachment" : "submitted: CPU-skinned attachment");
     Report(actor,*instance,"material group="+std::to_string(native.material)+" stage="+std::to_string(uint32_t(draw.actorStage))+
         " alpha_test="+std::to_string(uint32_t(draw.alphaTest))+" blend="+std::to_string(draw.blend)+
@@ -156,6 +156,16 @@ Renderer::ActorInstanceSet GetAnimatedActorParts(CActorInstance& actor)
         const auto index=uint32_t(part);
         if(index<actor.GetLODControllerCount()) result.instances[index]=actor.GetLODControllerPointer(index)->GetModelInstance();
     }
+    // ZiiNAN: Diligent GPU skinning prototype
+    auto* body=static_cast<CGrannyModelInstance*>(const_cast<void*>(result.instances[0]));
+    auto* thing=actor.GetBaseThingPtr();
+    const std::string_view file=thing ? thing->GetFileName() : "";
+    if(RenderCategory(actor)==ActorCategory::Player && actor.GetRace()==0 && actor.IsPrototypeBaseBody() &&
+       IsReferenceSkinningAsset(file) && body && body->GetModel() &&
+       body->GetModel()->GetSkinningData() && IsReferenceSkinningModel(*body->GetModel()->GetSkinningData()))
+        result.prototypeBody=body;
+    if(!result.prototypeBody && body && startupSkinningMode==PrototypeSkinningMode::GPUPrototype)
+        Report(actor,*body,"CPU prototype fallback: outside reference race/shape/asset/LOD or mounted");
     return result;
 }
 Renderer::ActorDrawTarget MakeAnimatedActorTarget(CActorInstance& actor)

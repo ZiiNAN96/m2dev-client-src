@@ -1,6 +1,7 @@
 #pragma once
 #include "StaticObjectRenderData.h"
 #include "DiligentD3D11Backend.h"
+#include "GpuSkinningPrototype.h"
 
 namespace Renderer
 {
@@ -9,7 +10,9 @@ class DiligentStaticObjectRenderer final : public IStaticObjectRenderer
 public:
     explicit DiligentStaticObjectRenderer(DiligentD3D11Backend&);
     ~DiligentStaticObjectRenderer() override;
-    bool Initialize();
+    bool Initialize(bool gpuPrototype = false);
+    bool PreparePrototype(StaticObjectGeometryPtr&, const SkinningModelData&,
+        const std::vector<std::shared_ptr<const BoneRemap>>&, const BonePalette&);
     void ResetFrame();
     bool Failed() const;
     uint32_t DrawCount() const;

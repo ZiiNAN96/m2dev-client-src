@@ -3,6 +3,15 @@
 int main()
 {
     using namespace Renderer;
+    if(StartupOptions{}.skinning!=PrototypeSkinningMode::CPU) return 10;
+    if(!IsReferenceSkinningAsset("D:\\ymir work\\pc\\warrior\\warrior_novice.gr2") ||
+        IsReferenceSkinningAsset("d:/ymir work/pc/warrior/warrior_4-1.gr2")) return 14;
+    StartupOptions gpu; gpu.ParseArgument(L"--skinning=gpu-prototype");
+    if(!gpu.valid || gpu.skinning!=PrototypeSkinningMode::GPUPrototype) return 11;
+    gpu.ParseArgument(L"--skinning=cpu"); if(gpu.valid) return 12;
+    for(auto value:{L"--skinning=",L"--skinning=gpu",L"--skinning=GPU-prototype"}) {
+        StartupOptions bad; bad.ParseArgument(value); if(bad.valid) return 13;
+    }
     StartupOptions defaults;
     defaults.ParseArgument(L"--existing-client-option");
     if(!defaults.valid || defaults.selected || defaults.backend!=BackendKind::DiligentD3D11) return 1;
