@@ -84,7 +84,7 @@ public:
 	CLensFlare();
 	virtual ~CLensFlare();
 	
-	void			Compute(const D3DXVECTOR3 & c_rv3LightDirection); // Renderer::MatrixView로 부터 카메라 방향을 얻어오므로, 카메라 설정 뒤에 해야 함.
+	void			Compute(const Math::Vector3 & c_rv3LightDirection); // Renderer::MatrixView로 부터 카메라 방향을 얻어오므로, 카메라 설정 뒤에 해야 함.
 
 	void			DrawBeforeFlare();
 	void			DrawAfterFlare();
@@ -104,7 +104,7 @@ public:
 	void            ReadControlPixels();
 	void            AdjustBrightness();
 	
-	void			CharacterizeFlare(bool bEnabled, bool bShowMainFlare, float fMaxBrightness, const D3DXCOLOR & c_rColor);
+	void			CharacterizeFlare(bool bEnabled, bool bShowMainFlare, float fMaxBrightness, const Math::Color & c_rColor);
 	
 protected:
 	float			Interpolate(float fStart, float fEnd, float fPercent);

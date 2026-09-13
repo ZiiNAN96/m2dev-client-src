@@ -58,7 +58,7 @@ void CGraphicFontTexture::Destroy()
 	delete[] m_pAtlasBuffer;
 	m_pAtlasBuffer = nullptr;
 
-	m_lpd3dTexture = NULL;
+
     m_source.reset();
 	CGraphicTexture::Destroy();
 	stl_wipe(m_pFontTextureVector);
@@ -113,7 +113,7 @@ bool CGraphicFontTexture::CreateDeviceObjects()
 
 void CGraphicFontTexture::DestroyDeviceObjects()
 {
-	m_lpd3dTexture = NULL;
+
     m_source.reset();
 	stl_wipe(m_pFontTextureVector);
 	m_textTextures.clear();
@@ -189,7 +189,7 @@ bool CGraphicFontTexture::AppendTexture()
 {
 	CGraphicImageTexture* pNewTexture = new CGraphicImageTexture;
 
-	if (!pNewTexture->Create(m_atlasWidth, m_atlasHeight, D3DFMT_A8R8G8B8))
+	if (!pNewTexture->Create(m_atlasWidth, m_atlasHeight, Renderer::TerrainTextureFormat::BGRA8))
 	{
 		delete pNewTexture;
 		return false;
@@ -442,6 +442,6 @@ bool CGraphicFontTexture::CheckTextureIndex(DWORD dwTexture)
 void CGraphicFontTexture::SelectTexture(DWORD dwTexture)
 {
 	assert(CheckTextureIndex(dwTexture));
-	m_lpd3dTexture = m_pFontTextureVector[dwTexture]->GetD3DTexture();
+
     m_source = m_pFontTextureVector[dwTexture]->GetSource();
 }

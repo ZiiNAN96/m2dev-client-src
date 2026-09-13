@@ -2,9 +2,7 @@
 #include "EterLib/GrpDevice.h"
 #include "EterLib/GrpScreen.h"
 #include "RendererBootstrap.h"
-#ifdef M2_ENABLE_DILIGENT_D3D11
 #include "DiligentD3D11Backend.h"
-#endif
 #include <fstream>
 #include <memory>
 
@@ -47,14 +45,6 @@ int RunRendererBootstrap(void* instance, const StartupOptions& options)
 {
     std::ofstream log("renderer-bootstrap.log", std::ios::trunc);
     log << "backend=" << "diligent-d3d11" << std::endl;
-#ifndef M2_ENABLE_DILIGENT_D3D11
-    if (options.backend == BackendKind::DiligentD3D11)
-    {
-        log << "ERROR: build with -DM2_ENABLE_DILIGENT_D3D11=ON" << std::endl;
-        MessageBoxW(nullptr, L"Diligent D3D11 is not included in this build. Enable M2_ENABLE_DILIGENT_D3D11 in CMake.", L"Renderer startup", MB_OK | MB_ICONERROR);
-        return 2;
-    }
-#endif
     const auto module = static_cast<HINSTANCE>(instance);
     const wchar_t* className = L"Metin2RendererBootstrap";
     WNDCLASSW windowClass{};

@@ -33,7 +33,7 @@ class CGrannyModel : public CReferenceObject
 		int GetVertexCount() const;
 
 		bool CanDeformPNTVertices() const;
-		void DeformPNTVertices(void* dstBaseVertices, D3DXMATRIX* boneMatrices, const std::vector<granny_mesh_binding*>& c_rvct_pgrnMeshBinding) const;
+		void DeformPNTVertices(void* dstBaseVertices, Math::Matrix* boneMatrices, const std::vector<granny_mesh_binding*>& c_rvct_pgrnMeshBinding) const;
 
 		int GetIdxCount();
 		int GetMeshCount() const;
@@ -41,8 +41,6 @@ class CGrannyModel : public CReferenceObject
 		granny_model * GetGrannyModelPointer();
 		const CGrannyMesh* GetMeshPointer(int iMesh) const;
 
-		LPDIRECT3DVERTEXBUFFER9 GetPNTD3DVertexBuffer() const;
-		LPDIRECT3DINDEXBUFFER9 GetD3DIndexBuffer() const;
 
 		const CGrannyModel::TMeshNode*  GetMeshNodeList(CGrannyMesh::EType eMeshType, CGrannyMaterial::EType eMtrlType) const;
 
@@ -101,7 +99,7 @@ class CGrannyModel : public CReferenceObject
 	protected:
 		bool __LoadVertices();
 	protected:
-		DWORD m_dwFvF;
+		DWORD m_vertexLayout;
 	// New members to support PNT2 type models
 	//////////////////////////////////////////////////////////////////////////
 

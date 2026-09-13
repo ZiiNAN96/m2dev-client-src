@@ -100,7 +100,7 @@ class CGrannyLODController : public CGraphicBase
 		
 		struct FDeform
 		{
-			const D3DXMATRIX * mc_pWorldMatrix;
+			const Math::Matrix * mc_pWorldMatrix;
 			
 			void operator() (CGrannyLODController * pController)
 			{
@@ -110,7 +110,7 @@ class CGrannyLODController : public CGraphicBase
 		};
 		struct FDeformNoSkin
 		{
-			const D3DXMATRIX * mc_pWorldMatrix;
+			const Math::Matrix * mc_pWorldMatrix;
 			
 			void operator() (CGrannyLODController * pController)
 			{
@@ -120,7 +120,7 @@ class CGrannyLODController : public CGraphicBase
 		};
 		struct FDeformAll
 		{
-			const D3DXMATRIX * mc_pWorldMatrix;
+			const Math::Matrix * mc_pWorldMatrix;
 			
 			void operator() (CGrannyLODController * pController)
 			{
@@ -149,10 +149,10 @@ class CGrannyLODController : public CGraphicBase
 
 		struct FBoundBox
 		{
-			D3DXVECTOR3* m_vtMin;
-			D3DXVECTOR3* m_vtMax;
+			Math::Vector3* m_vtMin;
+			Math::Vector3* m_vtMax;
 
-			FBoundBox(D3DXVECTOR3 * vtMin, D3DXVECTOR3 * vtMax)
+			FBoundBox(Math::Vector3 * vtMin, Math::Vector3 * vtMax)
 			{
 				m_vtMin = vtMin;
 				m_vtMax = vtMax;
@@ -248,17 +248,17 @@ class CGrannyLODController : public CGraphicBase
 		void	UpdateLODLevel(float fDistanceFromCenter, float fDistanceFromCamera);
 		void	UpdateTime(float fElapsedTime);
 		
-		void	UpdateSkeleton(const D3DXMATRIX * c_pWorldMatrix, float fElapsedTime);
-		void	Deform(const D3DXMATRIX * c_pWorldMatrix);
-		void	DeformNoSkin(const D3DXMATRIX * c_pWorldMatrix);
-		void	DeformAll(const D3DXMATRIX * c_pWorldMatrix);
+		void	UpdateSkeleton(const Math::Matrix * c_pWorldMatrix, float fElapsedTime);
+		void	Deform(const Math::Matrix * c_pWorldMatrix);
+		void	DeformNoSkin(const Math::Matrix * c_pWorldMatrix);
+		void	DeformAll(const Math::Matrix * c_pWorldMatrix);
 		
 		void	RenderToShadowMap();
 		void	RenderShadow();
 		void	ReloadTexture();
 
-		void	GetBoundBox(D3DXVECTOR3 * vtMin, D3DXVECTOR3 * vtMax);
-		bool	Intersect(const D3DXMATRIX * c_pMatrix, float * u, float * v, float * t);
+		void	GetBoundBox(Math::Vector3 * vtMin, Math::Vector3 * vtMax);
+		bool	Intersect(const Math::Matrix * c_pMatrix, float * u, float * v, float * t);
 
 		void	SetLocalTime(float fLocalTime);
 		void	ResetLocalTime();

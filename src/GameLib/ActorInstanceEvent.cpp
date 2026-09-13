@@ -39,9 +39,9 @@ void CActorInstance::__OnMoving()
 
 	if (distance>1000.0f)
 	{
-		D3DXVec3Normalize(&kPPosDir, &kPPosDir);
-		D3DXVec3Scale(&kPPosDir, &kPPosDir, 1000.0f);
-		D3DXVec3Add(&kState.kPPosSelf, &kPPosDir, &c_rkPPosCur);
+		Math::Vec3Normalize(&kPPosDir, &kPPosDir);
+		Math::Vec3Scale(&kPPosDir, &kPPosDir, 1000.0f);
+		Math::Vec3Add(&kState.kPPosSelf, &kPPosDir, &c_rkPPosCur);
 	}
 	else
 	{

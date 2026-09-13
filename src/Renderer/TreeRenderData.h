@@ -10,7 +10,7 @@ enum class TreePart : uint32_t { Branch, Frond, Leaf, Billboard };
 struct TreeVertex
 {
     std::array<float,3> position{};
-    uint32_t color=0xffffffff; // Native D3DCOLOR (BGRA bytes).
+    uint32_t color=0xffffffff; // Native uint32_t (BGRA bytes).
     std::array<float,2> uv{}, shadowUv{}, leaf{}; // Native constant-register index / LOD scalar.
 };
 static_assert(sizeof(TreeVertex)==40);

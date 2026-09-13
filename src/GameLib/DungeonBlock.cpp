@@ -1,8 +1,8 @@
 #include "StdAfx.h"
 #include "DungeonBlock.h"
 
-#include "EterLib/StateManager.h"
-#include "EterLib/NativeMaterialSnapshot.h"
+#include "EterLib/DrawState.h"
+#include "EterLib/MaterialStateSnapshot.h"
 #include "EterLib/StaticObjectTextureLoader.h"
 #include "Renderer/WorldRenderData.h"
 
@@ -17,7 +17,7 @@ class CDungeonModelInstance : public CGrannyModelInstance
 			auto* renderer=Renderer::worldRenderer;
 			if(!renderer || !Renderer::worldSurfaceFrame) return;
 			Renderer::EffectDraw draw; draw.strip=false; std::string error;
-			if(!CaptureNativeMaterial(draw,error,true) || group.material>=self.m_kMtrlPal.GetMaterialCount() ||
+			if(!CaptureMaterialState(draw,error,true) || group.material>=self.m_kMtrlPal.GetMaterialCount() ||
 				group.firstIndex>self.m_indices.size() || group.indexCount>self.m_indices.size()-group.firstIndex) { renderer->ReportFailure(); return; }
 			auto& material=self.m_kMtrlPal.GetMaterialRef(group.material);
 			auto load=[&](CGraphicImage* image) -> Renderer::TerrainTexturePtr {
@@ -58,11 +58,8 @@ class CDungeonModelInstance : public CGrannyModelInstance
 			if (IsEmpty())
 				return;
 
-			STATEMANAGER.SetVertexDeclaration(ms_pnt2VS);
-			LPDIRECT3DVERTEXBUFFER9 lpd3dRigidPNTVtxBuf = m_pModel->GetPNTD3DVertexBuffer();
-			if (lpd3dRigidPNTVtxBuf || (Renderer::UseNeutralResources() && m_pModel->GetRigidVertexCount()>0))
+			if (m_pModel->GetRigidVertexCount()>0)
 			{
-				STATEMANAGER.SetStreamSource(0, lpd3dRigidPNTVtxBuf, sizeof(TPNT2Vertex));
 				Renderer::SpecialMeshScope special({this,Submit});
 				RenderMeshNodeListWithTwoTexture(CGrannyMesh::TYPE_RIGID, CGrannyMaterial::TYPE_BLEND_PNT);
 			}
@@ -73,28 +70,25 @@ class CDungeonModelInstance : public CGrannyModelInstance
 			if (IsEmpty())
 				return;
 
-			STATEMANAGER.SetRenderState(D3DRS_TEXTUREFACTOR, 0xffffffff);
-			STATEMANAGER.SaveTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TFACTOR);
-			STATEMANAGER.SaveTextureStageState(0, D3DTSS_COLOROP,   D3DTOP_SELECTARG1);
-			STATEMANAGER.SaveTextureStageState(0, D3DTSS_ALPHAOP,   D3DTOP_DISABLE);
-			STATEMANAGER.SaveRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
-			STATEMANAGER.SaveRenderState(D3DRS_SRCBLEND, D3DBLEND_ZERO);
-			STATEMANAGER.SaveRenderState(D3DRS_DESTBLEND, D3DBLEND_SRCCOLOR);
+			DRAWSTATE.SetRenderState(Renderer::StateTextureFactor, 0xffffffff);
+			DRAWSTATE.SaveTextureStageState(0, Renderer::StageColorArg1, Renderer::ArgTFactor);
+			DRAWSTATE.SaveTextureStageState(0, Renderer::StageColorOp,   Renderer::TextureOpSelectArg1);
+			DRAWSTATE.SaveTextureStageState(0, Renderer::StageAlphaOp,   Renderer::TextureOpDisable);
+			DRAWSTATE.SaveRenderState(Renderer::StateAlphaBlendEnable, TRUE);
+			DRAWSTATE.SaveRenderState(Renderer::StateSrcBlend, Renderer::BlendZero);
+			DRAWSTATE.SaveRenderState(Renderer::StateDestBlend, Renderer::BlendSrcColor);
 
-			STATEMANAGER.SetVertexDeclaration(ms_pnt2VS);
-			LPDIRECT3DVERTEXBUFFER9 lpd3dRigidPNTVtxBuf = m_pModel->GetPNTD3DVertexBuffer();
-			if (lpd3dRigidPNTVtxBuf || (Renderer::UseNeutralResources() && m_pModel->GetRigidVertexCount()>0))
+			if (m_pModel->GetRigidVertexCount()>0)
 			{
-				STATEMANAGER.SetStreamSource(0, lpd3dRigidPNTVtxBuf, sizeof(TPNT2Vertex));
 				RenderMeshNodeListWithoutTexture(CGrannyMesh::TYPE_RIGID, CGrannyMaterial::TYPE_BLEND_PNT);
 			}
 
-			STATEMANAGER.RestoreTextureStageState(0, D3DTSS_COLORARG1);
-			STATEMANAGER.RestoreTextureStageState(0, D3DTSS_COLOROP);
-			STATEMANAGER.RestoreTextureStageState(0, D3DTSS_ALPHAOP);
-			STATEMANAGER.RestoreRenderState(D3DRS_ALPHABLENDENABLE);
-			STATEMANAGER.RestoreRenderState(D3DRS_SRCBLEND);
-			STATEMANAGER.RestoreRenderState(D3DRS_DESTBLEND);
+			DRAWSTATE.RestoreTextureStageState(0, Renderer::StageColorArg1);
+			DRAWSTATE.RestoreTextureStageState(0, Renderer::StageColorOp);
+			DRAWSTATE.RestoreTextureStageState(0, Renderer::StageAlphaOp);
+			DRAWSTATE.RestoreRenderState(Renderer::StateAlphaBlendEnable);
+			DRAWSTATE.RestoreRenderState(Renderer::StateSrcBlend);
+			DRAWSTATE.RestoreRenderState(Renderer::StateDestBlend);
 		}
 };
 
@@ -102,7 +96,7 @@ class CDungeonModelInstance : public CGrannyModelInstance
 struct FUpdate
 {
 	float fElapsedTime;
-	D3DXMATRIX * pmatWorld;
+	Math::Matrix * pmatWorld;
 	void operator() (CGrannyModelInstance * pInstance)
 	{
 		pInstance->Update(CGrannyModelInstance::ANIFPS_MIN);
@@ -152,10 +146,10 @@ void CDungeonBlock::OnRenderShadow()
 
 struct FBoundBox
 {
-	D3DXVECTOR3 * m_pv3Min;
-	D3DXVECTOR3 * m_pv3Max;
+	Math::Vector3 * m_pv3Min;
+	Math::Vector3 * m_pv3Max;
 
-	FBoundBox(D3DXVECTOR3 * pv3Min, D3DXVECTOR3 * pv3Max)
+	FBoundBox(Math::Vector3 * pv3Min, Math::Vector3 * pv3Max)
 	{
 		m_pv3Min = pv3Min;
 		m_pv3Max = pv3Max;
@@ -166,11 +160,11 @@ struct FBoundBox
 	}
 };
 
-bool CDungeonBlock::GetBoundingSphere(D3DXVECTOR3 & v3Center, float & fRadius)
+bool CDungeonBlock::GetBoundingSphere(Math::Vector3 & v3Center, float & fRadius)
 {
 	v3Center = m_v3Center;
 	fRadius = m_fRadius;
-	D3DXVec3TransformCoord(&v3Center, &v3Center, &GetTransform());
+	Math::Vec3TransformCoord(&v3Center, &v3Center, &GetTransform());
 	return true;
 }
 
@@ -199,12 +193,12 @@ bool CDungeonBlock::OnGetObjectHeight(float fX, float fY, float * pfHeight)
 
 void CDungeonBlock::BuildBoundingSphere()
 {
-	D3DXVECTOR3 v3Min, v3Max;
+	Math::Vector3 v3Min, v3Max;
 	for_each(m_ModelInstanceContainer.begin(), m_ModelInstanceContainer.end(), FBoundBox(&v3Min, &v3Max));
 
 	m_v3Center = (v3Min+v3Max) * 0.5f;
 	const auto vv = (v3Max - v3Min);
-	m_fRadius = D3DXVec3Length(&vv)*0.5f + 150.0f; // extra length for attached objects
+	m_fRadius = Math::Vec3Length(&vv)*0.5f + 150.0f; // extra length for attached objects
 }
 
 bool CDungeonBlock::Intersect(float * pfu, float * pfv, float * pft)
@@ -220,7 +214,7 @@ bool CDungeonBlock::Intersect(float * pfu, float * pfv, float * pft)
 	return false;
 }
 
-void CDungeonBlock::GetBoundBox(D3DXVECTOR3 * pv3Min, D3DXVECTOR3 * pv3Max)
+void CDungeonBlock::GetBoundBox(Math::Vector3 * pv3Min, Math::Vector3 * pv3Max)
 {
 	pv3Min->x = +10000000.0f;
 	pv3Min->y = +10000000.0f;
@@ -234,8 +228,8 @@ void CDungeonBlock::GetBoundBox(D3DXVECTOR3 * pv3Min, D3DXVECTOR3 * pv3Max)
 	{
 		CDungeonModelInstance * pInstance = *itor;
 
-		D3DXVECTOR3 v3Min;
-		D3DXVECTOR3 v3Max;
+		Math::Vector3 v3Min;
+		Math::Vector3 v3Max;
 		pInstance->GetBoundBox(&v3Min, &v3Max);
 
 		pv3Min->x = std::min(v3Min.x, pv3Min->x);
@@ -274,9 +268,7 @@ bool CDungeonBlock::Load(const char * c_szFileName)
 		m_kDeformableVertexBuffer.Destroy();
 		m_kDeformableVertexBuffer.Create(
 			dwVertexCount,
-			D3DFVF_XYZ|D3DFVF_NORMAL|D3DFVF_TEX1,
-			D3DUSAGE_DYNAMIC,
-			D3DPOOL_DEFAULT);	
+			Renderer::VertexPosition|Renderer::VertexNormal|Renderer::VertexTex1);
 		m_ModelInstanceContainer.push_back(pModelInstance);
 	}
 
@@ -285,7 +277,7 @@ bool CDungeonBlock::Load(const char * c_szFileName)
 
 void CDungeonBlock::__Initialize()
 {
-	m_v3Center = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+	m_v3Center = Math::Vector3(0.0f, 0.0f, 0.0f);
 	m_fRadius = 0.0f;
 
 	m_pThing = NULL;

@@ -179,10 +179,9 @@ bool CTextureSet::SetTexture(unsigned long ulIndex,
 	tex.Begin = usBegin;
 	tex.End = usEnd;
 	tex.ImageInstance.SetImagePointer(static_cast<CGraphicImage *>(pResource));
-	tex.pd3dTexture = tex.ImageInstance.GetTexturePointer()->GetD3DTexture();
 	
 	
-	D3DXMatrixScaling(&tex.m_matTransform, fTerrainTexCoordBase * tex.UScale, -fTerrainTexCoordBase * tex.VScale, 0.0f);
+	Math::MatrixScaling(&tex.m_matTransform, fTerrainTexCoordBase * tex.UScale, -fTerrainTexCoordBase * tex.VScale, 0.0f);
 	tex.m_matTransform._41 = tex.UOffset;
 	tex.m_matTransform._42 = -tex.VOffset;
 	return true;
@@ -195,9 +194,8 @@ void CTextureSet::Reload(float fTerrainTexCoordBase)
 		TTerrainTexture & tex = m_Textures[dwIndex];
 
 		tex.ImageInstance.ReloadImagePointer((CGraphicImage *) CResourceManager::Instance().GetResourcePointer(tex.stFilename.c_str()));
-		tex.pd3dTexture = tex.ImageInstance.GetTexturePointer()->GetD3DTexture();
 
-		D3DXMatrixScaling(&tex.m_matTransform, fTerrainTexCoordBase * tex.UScale, -fTerrainTexCoordBase * tex.VScale, 0.0f);
+		Math::MatrixScaling(&tex.m_matTransform, fTerrainTexCoordBase * tex.UScale, -fTerrainTexCoordBase * tex.VScale, 0.0f);
 		tex.m_matTransform._41 = tex.UOffset;
 		tex.m_matTransform._42 = -tex.VOffset;
 	}

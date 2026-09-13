@@ -28,27 +28,26 @@ public:
 	void RenderLine3d(float sx, float sy, float sz, float ex, float ey, float ez);
 	void RenderBox3d(float sx, float sy, float sz, float ex, float ey, float ez);
 	void RenderBar3d(float sx, float sy, float sz, float ex, float ey, float ez);
-	void RenderBar3d(const D3DXVECTOR3 * c_pv3Positions);
+	void RenderBar3d(const Math::Vector3 * c_pv3Positions);
 	void RenderGradationBar3d(float sx, float sy, float sz, float ex, float ey, float ez, DWORD dwStartColor, DWORD dwEndColor);
 
 	void RenderLineCube(float sx, float sy, float sz, float ex, float ey, float ez);
 	void RenderCube(float sx, float sy, float sz, float ex, float ey, float ez);
-	void RenderCube(float sx, float sy, float sz, float ex, float ey, float ez, D3DXMATRIX matRotation);
+	void RenderCube(float sx, float sy, float sz, float ex, float ey, float ez, Math::Matrix matRotation);
 	void RenderTextureBox(float sx, float sy, float ex, float ey, float z=0.0f, float su=0.0f, float sv=0.0f, float eu=1.0f, float ev=1.0f);
-	void RenderBillboard(D3DXVECTOR3 * Position, D3DXCOLOR & Color);
 
 	void DrawMinorGrid(float xMin, float yMin, float xMax, float yMax, float xminorStep, float yminorStep, float zPos=0);
 	void DrawGrid(float xMin, float yMin, float xMax, float yMax, float xmajorStep, float ymajorStep, float xminorStep, float yminorStep, float zPos=0);
 
-	void RenderD3DXMesh(LPD3DXMESH lpMesh, const D3DXMATRIX * c_pmatWorld, float fx, float fy, float fz, float fRadius, D3DFILLMODE d3dFillMode);
-	void RenderSphere(const D3DXMATRIX * c_pmatWorld, float fx, float fy, float fz, float fRadius, D3DFILLMODE d3dFillMode = D3DFILL_SOLID);
-	void RenderCylinder(const D3DXMATRIX * c_pmatWorld, float fx, float fy, float fz, float fRadius, float fLength, D3DFILLMODE d3dFillMode = D3DFILL_SOLID);
+
+
+
 
 	void SetColorOperation();
 	void SetDiffuseOperation();
 	void SetBlendOperation();
-	void SetOneColorOperation(D3DXCOLOR & rColor);
-	void SetAddColorOperation(D3DXCOLOR & rColor);
+	void SetOneColorOperation(Math::Color & rColor);
+	void SetAddColorOperation(Math::Color & rColor);
 	void SetDiffuseColor(DWORD diffuseColor);
 	void SetDiffuseColor(float r, float g, float b, float a=1.0f);
 	void SetClearColor(float r, float g, float b, float a=1.0f);

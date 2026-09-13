@@ -43,7 +43,7 @@ class CGrannyMesh
 
 		void					SetPNT2Mesh();
 
-		void					DeformPNTVertices(void* dstBaseVertices, D3DXMATRIX* boneMatrices, granny_mesh_binding* pgrnMeshBinding) const;
+		void					DeformPNTVertices(void* dstBaseVertices, Math::Matrix* boneMatrices, granny_mesh_binding* pgrnMeshBinding) const;
 		bool					CanDeformPNTVertices() const;
 		bool					IsTwoSide() const;
 

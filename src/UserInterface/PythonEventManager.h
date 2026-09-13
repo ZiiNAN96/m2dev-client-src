@@ -108,7 +108,7 @@ class CPythonEventManager : public CSingleton<CPythonEventManager>
 
 			int iCurrentLetter;
 
-			D3DXCOLOR CurrentColor;
+			Math::Color CurrentColor;
 			std::string strCurrentLine;
 
 			CGraphicTextInstance * pCurrentTextLine;
@@ -129,7 +129,7 @@ class CPythonEventManager : public CSingleton<CPythonEventManager>
 
 			int iAdjustLine;
 
-			D3DXCOLOR DiffuseColor;
+			Math::Color DiffuseColor;
 			long lWaitingTime;
 			int iRestrictedCharacterCount;
 

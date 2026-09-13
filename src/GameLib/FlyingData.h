@@ -54,7 +54,7 @@ public:
 	bool LoadScriptFile(const char* c_szFilename);
 	bool SaveScriptFile(const char* c_szFilename);
 
-	const D3DXVECTOR3 & GetAcceleration() { return m_v3Accel; }
+	const Math::Vector3 & GetAcceleration() { return m_v3Accel; }
 
 	void SetBombEffect(const char* szEffectName);
 
@@ -79,7 +79,7 @@ protected:
 	float m_fConeAngle;
 	float m_fRollAngle;
 
-	D3DXVECTOR3 m_v3AngVel;
+	Math::Vector3 m_v3AngVel;
 
 	float m_fGravity;
 
@@ -97,7 +97,7 @@ protected:
 	float m_fCollisionSphereRadius;
 
 	float m_fRange;
-	D3DXVECTOR3 m_v3Accel;
+	Math::Vector3 m_v3Accel;
 
 	std::vector<TFlyingAttachData> m_AttachDataVector;
 

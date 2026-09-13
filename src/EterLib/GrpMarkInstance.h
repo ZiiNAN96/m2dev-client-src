@@ -55,8 +55,8 @@ class CGraphicMarkInstance
 		void SetImagePointer(CGraphicImage * pImage);
 
 	protected:
-		D3DXCOLOR m_DiffuseColor;
-		D3DXVECTOR2 m_v2Position;
+		Math::Color m_DiffuseColor;
+		Math::Vector2 m_v2Position;
 
 		UINT m_uIndex;
 	

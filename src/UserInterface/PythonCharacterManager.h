@@ -28,7 +28,7 @@ class CPythonCharacterManager : public CSingleton<CPythonCharacterManager>, publ
 
 		bool OLD_GetPickedInstanceVID(DWORD* pdwPickedActorID);
 		CInstanceBase* OLD_GetPickedInstancePtr();
-		D3DXVECTOR2& OLD_GetPickedInstPosReference();
+		Math::Vector2& OLD_GetPickedInstPosReference();
 
 		CInstanceBase* FindClickableInstancePtr();
 
@@ -115,7 +115,7 @@ class CPythonCharacterManager : public CSingleton<CPythonCharacterManager>, publ
 		CInstanceBase *						m_pkInstMain;
 		CInstanceBase *						m_pkInstPick;
 		CInstanceBase *						m_pkInstBind;
-		D3DXVECTOR2							m_v2PickedInstProjPos;
+		Math::Vector2							m_v2PickedInstProjPos;
 
 		TCharacterInstanceMap				m_kAliveInstMap;
 		TCharacterInstanceList				m_kDeadInstList;

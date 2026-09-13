@@ -13,14 +13,14 @@ float CCamera::CAMERA_MAX_DISTANCE = 2500.0f;
 void CCamera::ProcessTerrainCollision()
 {
 	CPythonBackground & rPythonBackground = CPythonBackground::Instance();
-	D3DXVECTOR3 v3CollisionPoint;
+	Math::Vector3 v3CollisionPoint;
 
 	if (rPythonBackground.GetPickingPointWithRayOnlyTerrain(m_kTargetToCameraBottomRay, &v3CollisionPoint))
 	{
 		SetCameraState(CAMERA_STATE_CANTGODOWN);
-		D3DXVECTOR3 v3CheckVector = m_v3Eye - 2.0f * m_fTerrainCollisionRadius * m_v3Up;
+		Math::Vector3 v3CheckVector = m_v3Eye - 2.0f * m_fTerrainCollisionRadius * m_v3Up;
 		v3CheckVector.z = rPythonBackground.GetHeight(floorf(v3CheckVector.x), floorf(v3CheckVector.y));
-		D3DXVECTOR3 v3NewEye = v3CheckVector + 2.0f * m_fTerrainCollisionRadius * m_v3Up;
+		Math::Vector3 v3NewEye = v3CheckVector + 2.0f * m_fTerrainCollisionRadius * m_v3Up;
 		if (v3NewEye.z > m_v3Eye.z)
 		{
 			//printf("ToCameraBottom(%f, %f, %f) TCR %f, UP(%f, %f, %f), new %f > old %f", 
@@ -32,7 +32,7 @@ void CCamera::ProcessTerrainCollision()
 		}
 		/*
 		SetCameraState(CAMERA_STATE_NORMAL);
-		D3DXVECTOR3 v3NewEye = v3CollisionPoint;
+		Math::Vector3 v3NewEye = v3CollisionPoint;
 		SetEye(v3NewEye);
 		*/
 	}
@@ -43,9 +43,9 @@ void CCamera::ProcessTerrainCollision()
 	{
 		SetCameraState(CAMERA_STATE_CANTGODOWN);
 		auto d3dd = (m_v3Eye - v3CollisionPoint);
-		if (D3DXVec3Length(&d3dd) < 2.0f * m_fTerrainCollisionRadius)
+		if (Math::Vec3Length(&d3dd) < 2.0f * m_fTerrainCollisionRadius)
 		{
-			D3DXVECTOR3 v3NewEye = v3CollisionPoint + 2.0f * m_fTerrainCollisionRadius * m_v3Up;
+			Math::Vector3 v3NewEye = v3CollisionPoint + 2.0f * m_fTerrainCollisionRadius * m_v3Up;
 			//printf("CameraBottomToTerrain new %f > old %f", v3NewEye.z, m_v3Eye.z);
 			SetEye(v3NewEye);
 		}
@@ -57,10 +57,10 @@ void CCamera::ProcessTerrainCollision()
 struct CameraCollisionChecker
 {
 	bool m_isBlocked;
-	std::vector<D3DXVECTOR3>* m_pkVct_v3Position;
+	std::vector<Math::Vector3>* m_pkVct_v3Position;
 	CDynamicSphereInstance * m_pdsi;
 
-	CameraCollisionChecker(CDynamicSphereInstance * pdsi, std::vector<D3DXVECTOR3>* pkVct_v3Position) : m_pdsi(pdsi), m_pkVct_v3Position(pkVct_v3Position), m_isBlocked(false) 
+	CameraCollisionChecker(CDynamicSphereInstance * pdsi, std::vector<Math::Vector3>* pkVct_v3Position) : m_pdsi(pdsi), m_pkVct_v3Position(pkVct_v3Position), m_isBlocked(false)
 	{
 	}
 	void operator () (CGraphicObjectInstance* pOpponent)
@@ -78,7 +78,7 @@ void CCamera::ProcessBuildingCollision()
 	float fMoveAmountSmall = 2.0f;
 	float fMoveAmountLarge = 4.0f;
 
-	D3DXVECTOR3 v3CheckVector;
+	Math::Vector3 v3CheckVector;
 
 	CDynamicSphereInstance s;
 	s.fRadius = m_fObjectCollisionRadius;
@@ -95,7 +95,7 @@ void CCamera::ProcessBuildingCollision()
 		v3CheckVector = m_v3Eye - m_fObjectCollisionRadius * m_v3View;
 		s.v3Position = v3CheckVector;
 
-		std::vector<D3DXVECTOR3> kVct_kPosition;
+		std::vector<Math::Vector3> kVct_kPosition;
 		CameraCollisionChecker kCameraCollisionChecker(&s, &kVct_kPosition);
 		rkCullingMgr.ForInRange(aVector3d, m_fObjectCollisionRadius, &kCameraCollisionChecker);
 		bool bCollide = kCameraCollisionChecker.m_isBlocked;
@@ -118,8 +118,8 @@ void CCamera::ProcessBuildingCollision()
 			else
 			{
 				auto d3dd = (kVct_kPosition[0] - m_v3Eye);
-				D3DXVec3Cross(&v3CheckVector, &d3dd, &m_v3View);
-				float fDot = D3DXVec3Dot(&v3CheckVector, &m_v3Up);
+				Math::Vec3Cross(&v3CheckVector, &d3dd, &m_v3View);
+				float fDot = Math::Vec3Dot(&v3CheckVector, &m_v3Up);
 				if (fDot < 0)
 				{
 	//				m_v3AngularVelocity.x = fMIN(-fMoveAmountSmall, m_v3AngularVelocity.x);
@@ -144,7 +144,7 @@ void CCamera::ProcessBuildingCollision()
 		v3CheckVector = m_v3Eye + 2.0f * m_fObjectCollisionRadius * m_v3Up;
 		s.v3Position = v3CheckVector;
 
-		std::vector<D3DXVECTOR3> kVct_kPosition;
+		std::vector<Math::Vector3> kVct_kPosition;
 		CameraCollisionChecker kCameraCollisionChecker(&s, &kVct_kPosition);
 		rkCullingMgr.ForInRange(aVector3d, m_fObjectCollisionRadius, &kCameraCollisionChecker);
 		bool bCollide = kCameraCollisionChecker.m_isBlocked;
@@ -161,7 +161,7 @@ void CCamera::ProcessBuildingCollision()
 		v3CheckVector = m_v3Eye + 3.0f * m_fObjectCollisionRadius * m_v3Cross;
 		s.v3Position = v3CheckVector;
 
-		std::vector<D3DXVECTOR3> kVct_kPosition;
+		std::vector<Math::Vector3> kVct_kPosition;
 		CameraCollisionChecker kCameraCollisionChecker(&s, &kVct_kPosition);
 		rkCullingMgr.ForInRange(aVector3d, m_fObjectCollisionRadius, &kCameraCollisionChecker);
 		bool bCollide = kCameraCollisionChecker.m_isBlocked;
@@ -181,7 +181,7 @@ void CCamera::ProcessBuildingCollision()
 		v3CheckVector = m_v3Eye - 3.0f * m_fObjectCollisionRadius * m_v3Cross;
 		s.v3Position = v3CheckVector;
 
-		std::vector<D3DXVECTOR3> kVct_kPosition;
+		std::vector<Math::Vector3> kVct_kPosition;
 		CameraCollisionChecker kCameraCollisionChecker(&s, &kVct_kPosition);
 		rkCullingMgr.ForInRange(aVector3d, m_fObjectCollisionRadius, &kCameraCollisionChecker);
 		bool bCollide = kCameraCollisionChecker.m_isBlocked;
@@ -201,7 +201,7 @@ void CCamera::ProcessBuildingCollision()
 		v3CheckVector = m_v3Eye - 2.0f * m_fTerrainCollisionRadius * m_v3Up;
 		s.v3Position = v3CheckVector;
 
-		std::vector<D3DXVECTOR3> kVct_kPosition;
+		std::vector<Math::Vector3> kVct_kPosition;
 		CameraCollisionChecker kCameraCollisionChecker(&s, &kVct_kPosition);
 		rkCullingMgr.ForInRange(aVector3d, m_fObjectCollisionRadius, &kCameraCollisionChecker);
 		bool bCollide = kCameraCollisionChecker.m_isBlocked;
@@ -221,7 +221,7 @@ void CCamera::ProcessBuildingCollision()
 		v3CheckVector = m_v3Eye + 4.0f * m_fObjectCollisionRadius * m_v3View;
 		s.v3Position = v3CheckVector;
 
-		std::vector<D3DXVECTOR3> kVct_kPosition;
+		std::vector<Math::Vector3> kVct_kPosition;
 		CameraCollisionChecker kCameraCollisionChecker(&s, &kVct_kPosition);
 		rkCullingMgr.ForInRange(aVector3d, m_fObjectCollisionRadius, &kCameraCollisionChecker);
 		bool bCollide = kCameraCollisionChecker.m_isBlocked;
@@ -242,8 +242,8 @@ void CCamera::ProcessBuildingCollision()
 			else
 			{
 				auto d3dd = (kVct_kPosition[0] - m_v3Eye);
-				D3DXVec3Cross(&v3CheckVector, &d3dd, &m_v3View);
-				float fDot = D3DXVec3Dot(&v3CheckVector, &m_v3Up);
+				Math::Vec3Cross(&v3CheckVector, &d3dd, &m_v3View);
+				float fDot = Math::Vec3Dot(&v3CheckVector, &m_v3Up);
 				if (fDot < 0)
 				{
 	// 				m_v3AngularVelocity.x = fMIN(-fMoveAmountSmall, m_v3AngularVelocity.x);

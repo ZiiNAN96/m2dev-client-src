@@ -99,7 +99,7 @@ Output VS(float3 position:ATTRIB0, float3 normal:ATTRIB1, float2 uv:ATTRIB2) {
  o.cameraUV=mul(eye,CameraAlphaTransform).xy;
  // ZiiNAN: Native camera-space reflection vector, transformed at the vertex stage.
  if(Modes.w==3) o.cameraUV=mul(float4(reflect(normalize(eye.xyz),n),1),CameraAlphaTransform).xy;
- // D3D9 fixed-function diffuse output is an 8-bit color before interpolation.
+ // Original fixed-function diffuse output is an 8-bit color before interpolation.
  o.diffuse=floor(o.diffuse*255+0.5)/255;
  float d=Modes.y!=0 ? length(eye.xyz) : abs(eye.z);
  o.fog=1;

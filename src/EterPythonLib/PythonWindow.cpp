@@ -4,7 +4,7 @@
 #include "PythonSlotWindow.h"
 #include "PythonWindowManager.h"
 
-#include "EterLib/StateManager.h"
+#include "EterLib/DrawState.h"
 #include "UserInterface/Locale.h"
 #include "Renderer/UIRenderData.h"
 
@@ -23,17 +23,17 @@ namespace UI
 		ScopedScissorRect(const RECT& rect, bool enable)
 			: __Rect(rect), __Enable(enable)
 		{
-			__OldState = STATEMANAGER.GetRenderState(D3DRS_SCISSORTESTENABLE);
-			STATEMANAGER.GetScissorRect(&__OldRect);
+			__OldState = DRAWSTATE.GetRenderState(Renderer::StateScissorTestEnable);
+			DRAWSTATE.GetScissorRect(&__OldRect);
 
-			STATEMANAGER.SetRenderState(D3DRS_SCISSORTESTENABLE, enable);
-			STATEMANAGER.SetScissorRect(rect);
+			DRAWSTATE.SetRenderState(Renderer::StateScissorTestEnable, enable);
+			DRAWSTATE.SetScissorRect(rect);
 		}
 
 		~ScopedScissorRect()
 		{
-			STATEMANAGER.SetRenderState(D3DRS_SCISSORTESTENABLE, __OldState);
-			STATEMANAGER.SetScissorRect(__OldRect);
+			DRAWSTATE.SetRenderState(Renderer::StateScissorTestEnable, __OldState);
+			DRAWSTATE.SetScissorRect(__OldRect);
 		}
 	};
 
@@ -1005,9 +1005,9 @@ namespace UI
 
 	CBar3D::CBar3D(PyObject * ppyObject) : CWindow(ppyObject)
 	{
-		m_dwLeftColor = D3DXCOLOR(0.2f, 0.2f, 0.2f, 1.0f);
-		m_dwRightColor = D3DXCOLOR(0.7f, 0.7f, 0.7f, 1.0f);
-		m_dwCenterColor = D3DXCOLOR(0.0f, 0.0f, 0.0f, 1.0f);
+		m_dwLeftColor = Math::Color(0.2f, 0.2f, 0.2f, 1.0f);
+		m_dwRightColor = Math::Color(0.7f, 0.7f, 0.7f, 1.0f);
+		m_dwCenterColor = Math::Color(0.0f, 0.0f, 0.0f, 1.0f);
 	}
 	CBar3D::~CBar3D()
 	{

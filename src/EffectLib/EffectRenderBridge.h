@@ -21,6 +21,5 @@ public:
     static void Texture(CGraphicImage*);
     static void Part(Renderer::EffectPart);
     static void VisibleParticle();
-    static HRESULT DrawPrimitiveUP(D3DPRIMITIVETYPE,UINT,const void*,UINT);
-    static HRESULT SubmitNativeDraw(D3DPRIMITIVETYPE,UINT,const void*,UINT,HRESULT);
+    static void Submit(Renderer::PrimitiveTopology,UINT,const void*,UINT);
 };

@@ -1,6 +1,7 @@
 #pragma once
 
-#include <d3dx9.h>
+#include "Renderer/DrawStateTypes.h"
+#include "Math/Math.h"
 
 #include "EterLib/TextFileLoader.h"
 
@@ -24,7 +25,7 @@ class CLightData : public CEffectElementBase
 		{
 			return m_iLoopCount;
 		}
-		void InitializeLight(D3DLIGHT9& light);
+		void InitializeLight(Renderer::LightValues& light);
 
 	protected:
 		void OnClear();
@@ -37,8 +38,8 @@ class CLightData : public CEffectElementBase
 		float m_fDuration;
 		TTimeEventTableFloat m_TimeEventTableRange;
 		
-		D3DXCOLOR m_cAmbient;
-		D3DXCOLOR m_cDiffuse;
+		Math::Color m_cAmbient;
+		Math::Color m_cDiffuse;
 
 		BOOL m_bLoopFlag;
 		int m_iLoopCount;

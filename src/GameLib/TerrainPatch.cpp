@@ -67,7 +67,7 @@ void CTerrainPatch::BuildWaterVertexBuffer(SWaterVertex* akSrcVertex, UINT uWate
 {
 	CGraphicVertexBuffer& rkVB=m_WaterVertexBuffer;
 
-	if (!rkVB.Create(uWaterVertexCount, D3DFVF_XYZ | D3DFVF_DIFFUSE, D3DUSAGE_DYNAMIC, D3DPOOL_DEFAULT)) 
+	if (!rkVB.Create(uWaterVertexCount, Renderer::VertexPosition | Renderer::VertexColor))
 		return;
 	
 	SWaterVertex* akDstWaterVertex;
@@ -125,7 +125,7 @@ void CTerrainPatch::__BuildHardwareTerrainVertexBuffer(HardwareTransformPatch_SS
 {
 	
 	CGraphicVertexBuffer& rkVB=m_kHT.m_kVB;
-	if (!rkVB.Create(TERRAIN_VERTEX_COUNT, D3DFVF_XYZ | D3DFVF_NORMAL, D3DUSAGE_DYNAMIC, D3DPOOL_DEFAULT)) 
+	if (!rkVB.Create(TERRAIN_VERTEX_COUNT, Renderer::VertexPosition | Renderer::VertexNormal))
 		return;
 	
 	HardwareTransformPatch_SSourceVertex* akDstVertex;
@@ -138,7 +138,7 @@ void CTerrainPatch::__BuildHardwareTerrainVertexBuffer(HardwareTransformPatch_SS
 	}
 }
 
-void CTerrainPatch::SoftwareTransformPatch_UpdateTerrainLighting(DWORD dwVersion, const D3DLIGHT9& c_rkLight, const D3DMATERIAL9& c_rkMtrl)
+void CTerrainPatch::SoftwareTransformPatch_UpdateTerrainLighting(DWORD dwVersion, const Renderer::LightValues& c_rkLight, const Renderer::MaterialValues& c_rkMtrl)
 {
 	if (m_dwVersion==dwVersion)
 		return;
@@ -149,7 +149,7 @@ void CTerrainPatch::SoftwareTransformPatch_UpdateTerrainLighting(DWORD dwVersion
 	if (!akSrcVertex)
 		return;
 	
-	D3DXVECTOR3 kLightDir=c_rkLight.Direction;	
+	Math::Vector3 kLightDir=c_rkLight.Direction;
 
 
 	DWORD dwDot;	
@@ -171,7 +171,7 @@ void CTerrainPatch::SoftwareTransformPatch_UpdateTerrainLighting(DWORD dwVersion
 
 	for (UINT uIndex=0; uIndex!=CTerrainPatch::TERRAIN_VERTEX_COUNT; ++uIndex)
 	{
-		float fDot=D3DXVec3Dot(&akSrcVertex[uIndex].kNormal, &kLightDir);
+		float fDot=Math::Vec3Dot(&akSrcVertex[uIndex].kNormal, &kLightDir);
 
 		const float N=0xffffff;
 		const int S=24;
@@ -203,12 +203,12 @@ CTerrainPatchProxy::~CTerrainPatchProxy()
 	Clear();
 }
 
-void CTerrainPatchProxy::SetCenterPosition(const D3DXVECTOR3& c_rv3Center)
+void CTerrainPatchProxy::SetCenterPosition(const Math::Vector3& c_rv3Center)
 {
 	m_v3Center=c_rv3Center;
 }
 
-bool CTerrainPatchProxy::IsIn(const D3DXVECTOR3& c_rv3Target, float fRadius)
+bool CTerrainPatchProxy::IsIn(const Math::Vector3& c_rv3Target, float fRadius)
 {
 	float dx=m_v3Center.x-c_rv3Target.x;
 	float dy=m_v3Center.y-c_rv3Target.y;
@@ -221,7 +221,7 @@ bool CTerrainPatchProxy::IsIn(const D3DXVECTOR3& c_rv3Target, float fRadius)
 	return false;
 }
 
-void CTerrainPatchProxy::SoftwareTransformPatch_UpdateTerrainLighting(DWORD dwVersion, const D3DLIGHT9& c_rkLight, const D3DMATERIAL9& c_rkMtrl)
+void CTerrainPatchProxy::SoftwareTransformPatch_UpdateTerrainLighting(DWORD dwVersion, const Renderer::LightValues& c_rkLight, const Renderer::MaterialValues& c_rkMtrl)
 {
 	if (m_pTerrainPatch)
 		m_pTerrainPatch->SoftwareTransformPatch_UpdateTerrainLighting(dwVersion, c_rkLight, c_rkMtrl);	

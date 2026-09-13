@@ -6,8 +6,8 @@ void CGrannyModelInstance::MakeBoundBox(TBoundBox* pBoundBox,
 										 const float* mat, 
 										 const float* OBBMin, 
 										 const float* OBBMax, 
-										 D3DXVECTOR3* vtMin, 
-										 D3DXVECTOR3* vtMax)
+										 Math::Vector3* vtMin,
+										 Math::Vector3* vtMax)
 {
 	pBoundBox->sx = OBBMin[0] * mat[0] + OBBMin[1] * mat[4] + OBBMin[2] * mat[8] + mat[12];
 	pBoundBox->sy = OBBMin[0] * mat[1] + OBBMin[1] * mat[5] + OBBMin[2] * mat[9] + mat[13];
@@ -32,7 +32,7 @@ void CGrannyModelInstance::MakeBoundBox(TBoundBox* pBoundBox,
 	vtMax->z = std::max(vtMax->z, pBoundBox->ez);
 }
 
-bool CGrannyModelInstance::Intersect(const D3DXMATRIX * c_pMatrix,
+bool CGrannyModelInstance::Intersect(const Math::Matrix * c_pMatrix,
 									 float * /*pu*/, float * /*pv*/, float * pt)
 {
 	if (!m_pgrnModelInstance)
@@ -43,7 +43,7 @@ bool CGrannyModelInstance::Intersect(const D3DXMATRIX * c_pMatrix,
 	*pt = 100000000.0f;
 
 	float max = 10000000.0f;
-	D3DXVECTOR3 vtMin, vtMax;
+	Math::Vector3 vtMin, vtMax;
 	vtMin.x = vtMin.y = vtMin.z = max;
 	vtMax.x = vtMax.y = vtMax.z = -max;
 
@@ -94,7 +94,7 @@ bool CGrannyModelInstance::Intersect(const D3DXMATRIX * c_pMatrix,
 
 #include "EterBase/Timer.h"
 
-void CGrannyModelInstance::GetBoundBox(D3DXVECTOR3* vtMin, D3DXVECTOR3* vtMax)
+void CGrannyModelInstance::GetBoundBox(Math::Vector3* vtMin, Math::Vector3* vtMax)
 {
 	if (!m_pgrnModelInstance)
 		return;
@@ -124,7 +124,7 @@ void CGrannyModelInstance::GetBoundBox(D3DXVECTOR3* vtMin, D3DXVECTOR3* vtMax)
 	}
 }
 
-bool CGrannyModelInstance::GetMeshMatrixPointer(int iMesh, const D3DXMATRIX ** c_ppMatrix) const
+bool CGrannyModelInstance::GetMeshMatrixPointer(int iMesh, const Math::Matrix ** c_ppMatrix) const
 {
 	if (!m_pgrnModelInstance)
 		return false;
@@ -136,7 +136,7 @@ bool CGrannyModelInstance::GetMeshMatrixPointer(int iMesh, const D3DXMATRIX ** c
 
 	// WORK
 	//const CGrannyMesh * pMesh = m_pModel->GetMeshPointer(iMesh);
-	*c_ppMatrix = (D3DXMATRIX *)GrannyGetWorldPose4x4(__GetWorldPosePtr(), __GetMeshBoneIndices(iMesh)[0]);
+	*c_ppMatrix = (Math::Matrix *)GrannyGetWorldPose4x4(__GetWorldPosePtr(), __GetMeshBoneIndices(iMesh)[0]);
 	// END_OF_WORK
 
 	return true;

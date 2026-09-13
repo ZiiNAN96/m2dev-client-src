@@ -22,7 +22,7 @@ void CPythonChat::SetChatColor(UINT eType, UINT r, UINT g, UINT b)
 		return;
 
 	DWORD dwColor=(0xff000000)|(r<<16)|(g<<8)|(b);
-	m_akD3DXClrChat[eType]=D3DXCOLOR(dwColor);	
+	m_chatColors[eType]=Math::Color(dwColor);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -59,13 +59,13 @@ void CPythonChat::SChatLine::SetColorAll(DWORD dwColor)
 		aColor[i] = dwColor;
 }
 
-D3DXCOLOR & CPythonChat::SChatLine::GetColorRef(DWORD dwID)
+Math::Color & CPythonChat::SChatLine::GetColorRef(DWORD dwID)
 {
 	assert(dwID < CHAT_LINE_COLOR_ARRAY_MAX_NUM);
 
 	if (dwID >= CHAT_LINE_COLOR_ARRAY_MAX_NUM)
 	{
-		static D3DXCOLOR color(1.0f, 0.0f, 0.0f, 1.0f);
+		static Math::Color color(1.0f, 0.0f, 0.0f, 1.0f);
 		return color;
 	}
 
@@ -110,7 +110,7 @@ void CPythonChat::UpdateViewMode(DWORD dwID)
 	{
 		TChatLine * pChatLine = (*itor);
 
-		D3DXCOLOR & rColor = pChatLine->GetColorRef(dwID);
+		Math::Color & rColor = pChatLine->GetColorRef(dwID);
 
 		float fElapsedTime = (fcurTime - pChatLine->fAppendedTime);
 		if (fElapsedTime >= c_fStartDisappearingTime || iLineIndex >= c_iMaxLineCount)
@@ -170,7 +170,7 @@ void CPythonChat::UpdateEditMode(DWORD dwID)
 	{
 		TChatLine * pChatLine = (*itor);
 
-		D3DXCOLOR & rColor = pChatLine->GetColorRef(dwID);
+		Math::Color & rColor = pChatLine->GetColorRef(dwID);
 
 		if (iLineIndex < c_iAlphaLine)
 		{
@@ -580,10 +580,10 @@ DWORD CPythonChat::GetChatColor(int iType)
 {
 	if (iType<CHAT_TYPE_MAX_NUM)
 	{
-		return m_akD3DXClrChat[iType];
+		return m_chatColors[iType];
 	}
 
-	return D3DXCOLOR(0.0f, 0.0f, 1.0f, 1.0f);
+	return Math::Color(0.0f, 0.0f, 1.0f, 1.0f);
 }
 
 void CPythonChat::IgnoreCharacter(const char * c_szName)
@@ -711,15 +711,15 @@ void CPythonChat::Destroy()
 
 void CPythonChat::__Initialize()
 {
-	m_akD3DXClrChat[CHAT_TYPE_TALKING]		= D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
-	m_akD3DXClrChat[CHAT_TYPE_INFO]			= D3DXCOLOR(1.0f, 0.785f, 0.785f, 1.0f);
-	m_akD3DXClrChat[CHAT_TYPE_NOTICE]		= D3DXCOLOR(1.0f, 0.902f, 0.730f, 1.0f);
-	m_akD3DXClrChat[CHAT_TYPE_PARTY]		= D3DXCOLOR(0.542f, 1.0f, 0.949f, 1.0f);
-	m_akD3DXClrChat[CHAT_TYPE_GUILD]		= D3DXCOLOR(0.906f, 0.847f, 1.0f, 1.0f);
-	m_akD3DXClrChat[CHAT_TYPE_COMMAND]		= D3DXCOLOR(0.658f, 1.0f, 0.835f, 1.0f);
-	m_akD3DXClrChat[CHAT_TYPE_SHOUT]		= D3DXCOLOR(0.658f, 1.0f, 0.835f, 1.0f);
-	m_akD3DXClrChat[CHAT_TYPE_WHISPER]		= D3DXCOLOR(0xff4AE14A);
-	m_akD3DXClrChat[CHAT_TYPE_BIG_NOTICE]	= D3DXCOLOR(1.0f, 0.902f, 0.730f, 1.0f);
+	m_chatColors[CHAT_TYPE_TALKING]		= Math::Color(1.0f, 1.0f, 1.0f, 1.0f);
+	m_chatColors[CHAT_TYPE_INFO]			= Math::Color(1.0f, 0.785f, 0.785f, 1.0f);
+	m_chatColors[CHAT_TYPE_NOTICE]		= Math::Color(1.0f, 0.902f, 0.730f, 1.0f);
+	m_chatColors[CHAT_TYPE_PARTY]		= Math::Color(0.542f, 1.0f, 0.949f, 1.0f);
+	m_chatColors[CHAT_TYPE_GUILD]		= Math::Color(0.906f, 0.847f, 1.0f, 1.0f);
+	m_chatColors[CHAT_TYPE_COMMAND]		= Math::Color(0.658f, 1.0f, 0.835f, 1.0f);
+	m_chatColors[CHAT_TYPE_SHOUT]		= Math::Color(0.658f, 1.0f, 0.835f, 1.0f);
+	m_chatColors[CHAT_TYPE_WHISPER]		= Math::Color(0xff4AE14A);
+	m_chatColors[CHAT_TYPE_BIG_NOTICE]	= Math::Color(1.0f, 0.902f, 0.730f, 1.0f);
 }
 
 CPythonChat::CPythonChat()
@@ -824,10 +824,10 @@ void CWhisper::AppendChat(int iType, const char * c_szChat)
 	switch(iType)
 	{
 		case CPythonChat::WHISPER_TYPE_SYSTEM:
-			pChatLine->Instance.SetColor(D3DXCOLOR(1.0f, 0.785f, 0.785f, 1.0f));
+			pChatLine->Instance.SetColor(Math::Color(1.0f, 0.785f, 0.785f, 1.0f));
 			break;
 		case CPythonChat::WHISPER_TYPE_GM:
-			pChatLine->Instance.SetColor(D3DXCOLOR(1.0f, 0.632f, 0.0f, 1.0f));
+			pChatLine->Instance.SetColor(Math::Color(1.0f, 0.632f, 0.0f, 1.0f));
 			break;
 		case CPythonChat::WHISPER_TYPE_CHAT:
 		default:

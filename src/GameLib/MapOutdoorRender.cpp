@@ -7,8 +7,8 @@
 #include "TerrainQuadtree.h"
 
 #include "EterLib/Camera.h"
-#include "EterLib/StateManager.h"
-#include "EterLib/NativeMaterialSnapshot.h"
+#include "EterLib/DrawState.h"
+#include "EterLib/MaterialStateSnapshot.h"
 #include "EterLib/StaticObjectTextureLoader.h"
 
 
@@ -37,7 +37,7 @@ void CMapOutdoor::RenderTerrain()
 	auto vv = ms_matView * ms_matProj;
 	BuildViewFrustum(vv);
 
-	D3DXVECTOR3 v3Eye = pCamera->GetEye();
+	Math::Vector3 v3Eye = pCamera->GetEye();
 	m_fXforDistanceCaculation = -v3Eye.x;
 	m_fYforDistanceCaculation = -v3Eye.y;
 	
@@ -53,24 +53,24 @@ void CMapOutdoor::RenderTerrain()
 
 	if (Renderer::terrainRenderer)
 	{
-		D3DXMATRIX world, view, projection;
+		Math::Matrix world, view, projection;
 		if (CTerrainPatch::SOFTWARE_TRANSFORM_PATCH_ENABLE)
-			D3DXMatrixIdentity(&world); // STP applies View*Projection to world-space positions.
+			Math::MatrixIdentity(&world); // STP applies View*Projection to world-space positions.
 		else
 		{
 			world = m_matWorldForCommonUse;
 			world._41 = world._42 = 0.0f; // Same world set by HTP before its patch loop.
 		}
-		STATEMANAGER.GetTransform(Renderer::MatrixView, &view);
-		STATEMANAGER.GetTransform(Renderer::MatrixProjection, &projection);
+		DRAWSTATE.GetTransform(Renderer::MatrixView, &view);
+		DRAWSTATE.GetTransform(Renderer::MatrixProjection, &projection);
 		Renderer::TerrainMatrices matrices;
 		memcpy(matrices.world.data(), &world, sizeof(world));
 		memcpy(matrices.view.data(), &view, sizeof(view));
 		memcpy(matrices.projection.data(), &projection, sizeof(projection));
-		const bool statesMatch = STATEMANAGER.GetRenderState(D3DRS_CULLMODE) == D3DCULL_CW &&
-			STATEMANAGER.GetRenderState(D3DRS_ZENABLE) == TRUE &&
-			STATEMANAGER.GetRenderState(D3DRS_ZWRITEENABLE) == TRUE &&
-			STATEMANAGER.GetRenderState(D3DRS_ZFUNC) == D3DCMP_LESSEQUAL;
+		const bool statesMatch = DRAWSTATE.GetRenderState(Renderer::StateCullMode) == Renderer::CullCw &&
+			DRAWSTATE.GetRenderState(Renderer::StateZEnable) == TRUE &&
+			DRAWSTATE.GetRenderState(Renderer::StateZWriteEnable) == TRUE &&
+			DRAWSTATE.GetRenderState(Renderer::StateZFunc) == Renderer::CompareLessEqual;
 		Renderer::terrainRenderer->BeginTerrain(matrices, statesMatch);
 	}
 
@@ -103,7 +103,7 @@ void CMapOutdoor::__RenderTerrain_RecurseRenderQuadTree(CTerrainQuadtreeNode *No
 	
 	if (Node->Size == 1)
 	{
-		D3DXVECTOR3 v3Center = Node->center;
+		Math::Vector3 v3Center = Node->center;
 		float fDistance = fMAX(fabs(v3Center.x + m_fXforDistanceCaculation), fabs(-v3Center.y + m_fYforDistanceCaculation));
 		__RenderTerrain_AppendPatch(v3Center, fDistance, Node->PatchNum);
 	}
@@ -120,11 +120,11 @@ void CMapOutdoor::__RenderTerrain_RecurseRenderQuadTree(CTerrainQuadtreeNode *No
 	}
 }
 
-int	CMapOutdoor::__RenderTerrain_RecurseRenderQuadTree_CheckBoundingCircle(const D3DXVECTOR3 & c_v3Center, const float & c_fRadius)
+int	CMapOutdoor::__RenderTerrain_RecurseRenderQuadTree_CheckBoundingCircle(const Math::Vector3 & c_v3Center, const float & c_fRadius)
 {
 	const int count = 6;
 
-	D3DXVECTOR3 center = c_v3Center;
+	Math::Vector3 center = c_v3Center;
 	center.y = -center.y;
 
 	int i;
@@ -132,7 +132,7 @@ int	CMapOutdoor::__RenderTerrain_RecurseRenderQuadTree_CheckBoundingCircle(const
 	float distance[count];
 	for(i = 0; i < count; ++i)
 	{
-		distance[i] = D3DXPlaneDotCoord(&m_plane[i], &center);
+		distance[i] = Math::PlaneDotCoord(&m_plane[i], &center);
 		if (distance[i] <= -c_fRadius) 
 			return VIEW_NONE;
 	}
@@ -146,7 +146,7 @@ int	CMapOutdoor::__RenderTerrain_RecurseRenderQuadTree_CheckBoundingCircle(const
 	return VIEW_ALL;
 }
 
-void CMapOutdoor::__RenderTerrain_AppendPatch(const D3DXVECTOR3& c_rv3Center, float fDistance, long lPatchNum)
+void CMapOutdoor::__RenderTerrain_AppendPatch(const Math::Vector3& c_rv3Center, float fDistance, long lPatchNum)
 {
 	assert(NULL!=m_pTerrainPatchProxyList && "CMapOutdoor::__RenderTerrain_AppendPatch");
 	if (!m_pTerrainPatchProxyList[lPatchNum].isUsed())
@@ -156,10 +156,10 @@ void CMapOutdoor::__RenderTerrain_AppendPatch(const D3DXVECTOR3& c_rv3Center, fl
 	m_PatchVector.push_back(std::make_pair(fDistance, lPatchNum));
 }
 
-void CMapOutdoor::ApplyLight(DWORD dwVersion, const D3DLIGHT9& c_rkLight)
+void CMapOutdoor::ApplyLight(DWORD dwVersion, const Renderer::LightValues& c_rkLight)
 {
-	m_kSTPD.m_dwLightVersion=dwVersion;
-	STATEMANAGER.SetLight(0, &c_rkLight);
+	m_terrainLightVersion=dwVersion;
+	DRAWSTATE.SetLight(0, &c_rkLight);
 }
 
 // 2004. 2. 17. myevan. 모든 부분을 보이게 초기화 한다
@@ -265,7 +265,7 @@ void CMapOutdoor::RenderCloud()
 void CMapOutdoor::RenderTree()
 {
 	if (IsVisiblePart(PART_TREE))
-		CSpeedTreeForestDirectX::Instance().Render();
+		CSpeedTreeForestRenderer::Instance().Render();
 }
 
 void CMapOutdoor::SetInverseViewAndDynamicShaodwMatrices()
@@ -277,14 +277,14 @@ void CMapOutdoor::SetInverseViewAndDynamicShaodwMatrices()
 
 	m_matViewInverse = pCamera->GetInverseViewMatrix();
 	
-	D3DXVECTOR3 v3Target = pCamera->GetTarget();
+	Math::Vector3 v3Target = pCamera->GetTarget();
 
-	D3DXVECTOR3 v3LightEye(v3Target.x - 1.732f * 1250.0f,
+	Math::Vector3 v3LightEye(v3Target.x - 1.732f * 1250.0f,
 						   v3Target.y - 1250.0f,
 						   v3Target.z + 2.0f * 1.732f * 1250.0f);
 
-	const auto vv = D3DXVECTOR3(0.0f, 0.0f, 1.0f);
-	D3DXMatrixLookAtRH(&m_matLightView, &v3LightEye, &v3Target, &vv);
+	const auto vv = Math::Vector3(0.0f, 0.0f, 1.0f);
+	Math::MatrixLookAtRH(&m_matLightView, &v3LightEye, &v3Target, &vv);
 	m_matDynamicShadow = m_matViewInverse * m_matLightView * m_matDynamicShadowScale;
 }
 
@@ -358,12 +358,12 @@ struct FRenderPCBlocker
 		{
 			if (pThingInstance->HaveBlendThing())
 			{
-				STATEMANAGER.SetTextureStageState(1, D3DTSS_ALPHAOP,   D3DTOP_DISABLE);
+				DRAWSTATE.SetTextureStageState(1, Renderer::StageAlphaOp,   Renderer::TextureOpDisable);
                 if(!DrawSpecialMapObject(*pThingInstance,true)) pThingInstance->BlendRender();
 				return;
 			}
 		}
-		STATEMANAGER.SetTextureStageState(1, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1);
+		DRAWSTATE.SetTextureStageState(1, Renderer::StageAlphaOp, Renderer::TextureOpSelectArg1);
 
         if(pThingInstance && DrawSpecialMapObject(*pThingInstance,false,cameraAlpha)) return;
 		pInstance->RenderPCBlocker();
@@ -392,13 +392,13 @@ struct CMapOutdoor_LessThingInstancePtrRenderOrder
 	{
 		//TODO : Camera위치기반으로 소팅
 		CCamera * pCurrentCamera = CCameraManager::Instance().GetCurrentCamera();
-		const D3DXVECTOR3 & c_rv3CameraPos = pCurrentCamera->GetEye();
-		const D3DXVECTOR3 & c_v3LeftPos  = pkLeft->GetPosition();
-		const D3DXVECTOR3 & c_v3RightPos = pkRight->GetPosition();
-		const auto vv = D3DXVECTOR3(c_rv3CameraPos - c_v3RightPos);
-		const auto vv2 = D3DXVECTOR3(c_rv3CameraPos - c_v3LeftPos);
+		const Math::Vector3 & c_rv3CameraPos = pCurrentCamera->GetEye();
+		const Math::Vector3 & c_v3LeftPos  = pkLeft->GetPosition();
+		const Math::Vector3 & c_v3RightPos = pkRight->GetPosition();
+		const auto vv = Math::Vector3(c_rv3CameraPos - c_v3RightPos);
+		const auto vv2 = Math::Vector3(c_rv3CameraPos - c_v3LeftPos);
 		
-		return D3DXVec3LengthSq(&vv2) < D3DXVec3LengthSq(&vv);
+		return Math::Vec3LengthSq(&vv2) < Math::Vec3LengthSq(&vv);
 	}
 };
 
@@ -446,42 +446,42 @@ void CMapOutdoor::RenderArea(bool bRenderAmbience)
 	if (m_bDrawShadow && m_bDrawChrShadow)
 	{
 		if (mc_pEnvironmentData != NULL)
-			STATEMANAGER.SetRenderState(D3DRS_FOGCOLOR, 0xFFFFFFFF);
+			DRAWSTATE.SetRenderState(Renderer::StateFogColor, 0xFFFFFFFF);
 
-		STATEMANAGER.SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
-		STATEMANAGER.SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
-		STATEMANAGER.SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
-		STATEMANAGER.SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_DISABLE);
-		STATEMANAGER.SaveTextureStageState(1, D3DTSS_TEXCOORDINDEX, D3DTSS_TCI_CAMERASPACEPOSITION);
-		STATEMANAGER.SaveTextureStageState(1, D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_COUNT2);
+		DRAWSTATE.SetTextureStageState(0, Renderer::StageColorArg1, Renderer::ArgTexture);
+		DRAWSTATE.SetTextureStageState(0, Renderer::StageColorArg2, Renderer::ArgDiffuse);
+		DRAWSTATE.SetTextureStageState(0, Renderer::StageColorOp, Renderer::TextureOpModulate);
+		DRAWSTATE.SetTextureStageState(0, Renderer::StageAlphaOp, Renderer::TextureOpDisable);
+		DRAWSTATE.SaveTextureStageState(1, Renderer::StageTexCoordIndex, Renderer::StageTciCameraSpacePosition);
+		DRAWSTATE.SaveTextureStageState(1, Renderer::StageTextureTransformFlags, Renderer::TexTransformCount2);
 
 		// Transform
-		STATEMANAGER.SaveTransform(Renderer::MatrixTexture1, &m_matDynamicShadow);
-		STATEMANAGER.SetTexture(1, m_lpCharacterShadowMapTexture);
+		DRAWSTATE.SaveTransform(Renderer::MatrixTexture1, &m_matDynamicShadow);
+		DRAWSTATE.SetTexture(1, nullptr);
 
-		STATEMANAGER.SetTextureStageState(1, D3DTSS_COLORARG1, D3DTA_TEXTURE);
-		STATEMANAGER.SetTextureStageState(1, D3DTSS_COLORARG2, D3DTA_CURRENT);
-		STATEMANAGER.SetTextureStageState(1, D3DTSS_COLOROP,   D3DTOP_MODULATE);
-		STATEMANAGER.SetTextureStageState(1, D3DTSS_ALPHAOP,   D3DTOP_DISABLE);
-		STATEMANAGER.SaveSamplerState(1, D3DSAMP_ADDRESSU, D3DTADDRESS_BORDER);
-		STATEMANAGER.SaveSamplerState(1, D3DSAMP_ADDRESSV, D3DTADDRESS_BORDER);
-		STATEMANAGER.SaveSamplerState(1, D3DSAMP_BORDERCOLOR, 0xFFFFFFFF);
+		DRAWSTATE.SetTextureStageState(1, Renderer::StageColorArg1, Renderer::ArgTexture);
+		DRAWSTATE.SetTextureStageState(1, Renderer::StageColorArg2, Renderer::ArgCurrent);
+		DRAWSTATE.SetTextureStageState(1, Renderer::StageColorOp,   Renderer::TextureOpModulate);
+		DRAWSTATE.SetTextureStageState(1, Renderer::StageAlphaOp,   Renderer::TextureOpDisable);
+		DRAWSTATE.SaveSamplerState(1, Renderer::SamplerAddressU, Renderer::AddressBorder);
+		DRAWSTATE.SaveSamplerState(1, Renderer::SamplerAddressV, Renderer::AddressBorder);
+		DRAWSTATE.SaveSamplerState(1, Renderer::SamplerBorderColor, 0xFFFFFFFF);
 
 		std::for_each(m_ShadowReceiverVector.begin(), m_ShadowReceiverVector.end(), FAreaRenderShadow());
 
-		STATEMANAGER.RestoreTextureStageState(1, D3DTSS_TEXCOORDINDEX);
-		STATEMANAGER.RestoreTextureStageState(1, D3DTSS_TEXTURETRANSFORMFLAGS);
-		STATEMANAGER.RestoreSamplerState(1, D3DSAMP_ADDRESSU);
-		STATEMANAGER.RestoreSamplerState(1, D3DSAMP_ADDRESSV);
-		STATEMANAGER.RestoreSamplerState(1, D3DSAMP_BORDERCOLOR);
+		DRAWSTATE.RestoreTextureStageState(1, Renderer::StageTexCoordIndex);
+		DRAWSTATE.RestoreTextureStageState(1, Renderer::StageTextureTransformFlags);
+		DRAWSTATE.RestoreSamplerState(1, Renderer::SamplerAddressU);
+		DRAWSTATE.RestoreSamplerState(1, Renderer::SamplerAddressV);
+		DRAWSTATE.RestoreSamplerState(1, Renderer::SamplerBorderColor);
 
-		STATEMANAGER.RestoreTransform(Renderer::MatrixTexture1);
+		DRAWSTATE.RestoreTransform(Renderer::MatrixTexture1);
 
 		if (mc_pEnvironmentData != NULL)
-			STATEMANAGER.SetRenderState(D3DRS_FOGCOLOR, mc_pEnvironmentData->FogColor);
+			DRAWSTATE.SetRenderState(Renderer::StateFogColor, mc_pEnvironmentData->FogColor);
 	}
 
-	STATEMANAGER.SaveRenderState(D3DRS_ZWRITEENABLE, TRUE);
+	DRAWSTATE.SaveRenderState(Renderer::StateZWriteEnable, TRUE);
 
 	bool m_isDisableSortRendering=false;
 
@@ -545,7 +545,7 @@ void CMapOutdoor::RenderArea(bool bRenderAmbience)
 		std::for_each(s_kVct_pkOpaqueThingInstSort.begin(), s_kVct_pkOpaqueThingInstSort.end(), CMapOutdoor_FOpaqueThingInstanceRender());
 	}
 
-	STATEMANAGER.RestoreRenderState(D3DRS_ZWRITEENABLE);
+	DRAWSTATE.RestoreRenderState(Renderer::StateZWriteEnable);
 
 	// Shadow Receiver
 	if (m_bDrawShadow && m_bDrawChrShadow)
@@ -576,57 +576,51 @@ void CMapOutdoor::RenderBlendArea()
 	{
 
 		
-		//STATEMANAGER.SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
-		//STATEMANAGER.SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
-		//STATEMANAGER.SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
-		//STATEMANAGER.SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_DISABLE);
-		//STATEMANAGER.SaveTextureStageState(1, D3DTSS_TEXCOORDINDEX, D3DTSS_TCI_CAMERASPACEPOSITION);
-		//STATEMANAGER.SaveTextureStageState(1, D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_COUNT2);
+		//DRAWSTATE.SetTextureStageState(0, Renderer::StageColorArg1, Renderer::ArgTexture);
+		//DRAWSTATE.SetTextureStageState(0, Renderer::StageColorArg2, Renderer::ArgDiffuse);
+		//DRAWSTATE.SetTextureStageState(0, Renderer::StageColorOp, Renderer::TextureOpModulate);
+		//DRAWSTATE.SetTextureStageState(0, Renderer::StageAlphaOp, Renderer::TextureOpDisable);
+		//DRAWSTATE.SaveTextureStageState(1, Renderer::StageTexCoordIndex, Renderer::StageTciCameraSpacePosition);
+		//DRAWSTATE.SaveTextureStageState(1, Renderer::StageTextureTransformFlags, Renderer::TexTransformCount2);
 
 		//// Transform
-		//STATEMANAGER.SaveTransform(Renderer::MatrixTexture1, &m_matDynamicShadow);
-		//STATEMANAGER.SetTexture(1, m_lpCharacterShadowMapTexture);
+		//DRAWSTATE.SaveTransform(Renderer::MatrixTexture1, &m_matDynamicShadow);
+		//DRAWSTATE.SetTexture(1, nullptr);
 
-		//STATEMANAGER.SetTextureStageState(1, D3DTSS_COLORARG1, D3DTA_TEXTURE);
-		//STATEMANAGER.SetTextureStageState(1, D3DTSS_COLORARG2, D3DTA_CURRENT);
-		//STATEMANAGER.SetTextureStageState(1, D3DTSS_COLOROP,   D3DTOP_MODULATE);
-		//STATEMANAGER.SetTextureStageState(1, D3DTSS_ALPHAOP,   D3DTOP_DISABLE);
-		//STATEMANAGER.SaveTextureStageState(1, D3DTSS_ADDRESSU, D3DTADDRESS_BORDER);
-		//STATEMANAGER.SaveTextureStageState(1, D3DTSS_ADDRESSV, D3DTADDRESS_BORDER);
-		//STATEMANAGER.SaveTextureStageState(1, D3DTSS_BORDERCOLOR, 0xFFFFFFFF);
+		//DRAWSTATE.SetTextureStageState(1, Renderer::StageColorArg1, Renderer::ArgTexture);
+		//DRAWSTATE.SetTextureStageState(1, Renderer::StageColorArg2, Renderer::ArgCurrent);
+		//DRAWSTATE.SetTextureStageState(1, Renderer::StageColorOp,   Renderer::TextureOpModulate);
+		//DRAWSTATE.SetTextureStageState(1, Renderer::StageAlphaOp,   Renderer::TextureOpDisable);
 
 		////std::for_each(m_ShadowReceiverVector.begin(), m_ShadowReceiverVector.end(), FAreaRenderShadow());
 
-		//STATEMANAGER.RestoreTextureStageState(1, D3DTSS_TEXCOORDINDEX);
-		//STATEMANAGER.RestoreTextureStageState(1, D3DTSS_TEXTURETRANSFORMFLAGS);
-		//STATEMANAGER.RestoreTextureStageState(1, D3DTSS_ADDRESSU);
-		//STATEMANAGER.RestoreTextureStageState(1, D3DTSS_ADDRESSV);
-		//STATEMANAGER.RestoreTextureStageState(1, D3DTSS_BORDERCOLOR);
+		//DRAWSTATE.RestoreTextureStageState(1, Renderer::StageTexCoordIndex);
+		//DRAWSTATE.RestoreTextureStageState(1, Renderer::StageTextureTransformFlags);
 
-		//STATEMANAGER.RestoreTransform(Renderer::MatrixTexture1);
+		//DRAWSTATE.RestoreTransform(Renderer::MatrixTexture1);
 
 
 		std::sort(s_kVct_pkBlendThingInstSort.begin(), s_kVct_pkBlendThingInstSort.end(), CMapOutdoor_LessThingInstancePtrRenderOrder());
 
-		STATEMANAGER.SaveRenderState(D3DRS_ZWRITEENABLE, TRUE);
-		STATEMANAGER.SaveRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
-		STATEMANAGER.SaveRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
-		STATEMANAGER.SaveRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
-		STATEMANAGER.SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
-		STATEMANAGER.SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1);
-		STATEMANAGER.SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
-		STATEMANAGER.SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
-		STATEMANAGER.SetTextureStageState(1, D3DTSS_COLORARG1, D3DTA_TEXTURE);
-		STATEMANAGER.SetTextureStageState(1, D3DTSS_COLORARG2, D3DTA_CURRENT);
-		STATEMANAGER.SetTextureStageState(1, D3DTSS_COLOROP,   D3DTOP_SELECTARG1);
-		STATEMANAGER.SetTextureStageState(1, D3DTSS_ALPHAOP,   D3DTOP_DISABLE);
+		DRAWSTATE.SaveRenderState(Renderer::StateZWriteEnable, TRUE);
+		DRAWSTATE.SaveRenderState(Renderer::StateAlphaBlendEnable, TRUE);
+		DRAWSTATE.SaveRenderState(Renderer::StateSrcBlend, Renderer::BlendSrcAlpha);
+		DRAWSTATE.SaveRenderState(Renderer::StateDestBlend, Renderer::BlendInvSrcAlpha);
+		DRAWSTATE.SetTextureStageState(0, Renderer::StageAlphaArg1, Renderer::ArgTexture);
+		DRAWSTATE.SetTextureStageState(0, Renderer::StageAlphaOp, Renderer::TextureOpSelectArg1);
+		DRAWSTATE.SetTextureStageState(0, Renderer::StageColorArg1, Renderer::ArgTexture);
+		DRAWSTATE.SetTextureStageState(0, Renderer::StageColorArg2, Renderer::ArgDiffuse);
+		DRAWSTATE.SetTextureStageState(1, Renderer::StageColorArg1, Renderer::ArgTexture);
+		DRAWSTATE.SetTextureStageState(1, Renderer::StageColorArg2, Renderer::ArgCurrent);
+		DRAWSTATE.SetTextureStageState(1, Renderer::StageColorOp,   Renderer::TextureOpSelectArg1);
+		DRAWSTATE.SetTextureStageState(1, Renderer::StageAlphaOp,   Renderer::TextureOpDisable);
 
 		std::for_each(s_kVct_pkBlendThingInstSort.begin(), s_kVct_pkBlendThingInstSort.end(), CMapOutdoor_FBlendThingInstanceRender());
 
-		STATEMANAGER.RestoreRenderState(D3DRS_ALPHABLENDENABLE);
-		STATEMANAGER.RestoreRenderState(D3DRS_SRCBLEND);
-		STATEMANAGER.RestoreRenderState(D3DRS_DESTBLEND);
-		STATEMANAGER.RestoreRenderState(D3DRS_ZWRITEENABLE);
+		DRAWSTATE.RestoreRenderState(Renderer::StateAlphaBlendEnable);
+		DRAWSTATE.RestoreRenderState(Renderer::StateSrcBlend);
+		DRAWSTATE.RestoreRenderState(Renderer::StateDestBlend);
+		DRAWSTATE.RestoreRenderState(Renderer::StateZWriteEnable);
 	}
 }
 void CMapOutdoor::RenderDungeon()
@@ -645,66 +639,65 @@ void CMapOutdoor::RenderPCBlocker()
 	// PCBlocker
 	if (m_PCBlockerVector.size() != 0)
 	{
-		STATEMANAGER.SetTexture(0, NULL);
-		STATEMANAGER.SetTextureStageState(0, D3DTSS_COLORARG1,	D3DTA_TEXTURE);
-		STATEMANAGER.SetTextureStageState(0, D3DTSS_COLORARG2,	D3DTA_CURRENT);
-		STATEMANAGER.SetTextureStageState(0, D3DTSS_COLOROP,	D3DTOP_MODULATE);
-		STATEMANAGER.SetTextureStageState(0, D3DTSS_ALPHAARG1,	D3DTA_TEXTURE);
-		STATEMANAGER.SetTextureStageState(0, D3DTSS_ALPHAOP,	D3DTOP_SELECTARG1);
-		STATEMANAGER.SetTextureStageState(1, D3DTSS_COLOROP,	D3DTOP_SELECTARG1);
-		STATEMANAGER.SetTextureStageState(1, D3DTSS_ALPHAOP,	D3DTOP_DISABLE);
+		DRAWSTATE.SetTexture(0, NULL);
+		DRAWSTATE.SetTextureStageState(0, Renderer::StageColorArg1,	Renderer::ArgTexture);
+		DRAWSTATE.SetTextureStageState(0, Renderer::StageColorArg2,	Renderer::ArgCurrent);
+		DRAWSTATE.SetTextureStageState(0, Renderer::StageColorOp,	Renderer::TextureOpModulate);
+		DRAWSTATE.SetTextureStageState(0, Renderer::StageAlphaArg1,	Renderer::ArgTexture);
+		DRAWSTATE.SetTextureStageState(0, Renderer::StageAlphaOp,	Renderer::TextureOpSelectArg1);
+		DRAWSTATE.SetTextureStageState(1, Renderer::StageColorOp,	Renderer::TextureOpSelectArg1);
+		DRAWSTATE.SetTextureStageState(1, Renderer::StageAlphaOp,	Renderer::TextureOpDisable);
 
-		STATEMANAGER.SaveRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
-		STATEMANAGER.SaveTextureStageState(1, D3DTSS_TEXCOORDINDEX, D3DTSS_TCI_CAMERASPACEPOSITION);
-		STATEMANAGER.SaveTextureStageState(1, D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_COUNT2);
-		STATEMANAGER.SetTextureStageState(1, D3DTSS_COLORARG1, D3DTA_CURRENT);
-		STATEMANAGER.SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
-		STATEMANAGER.SetTextureStageState(1, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
-		STATEMANAGER.SetTextureStageState(1, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1);
-		STATEMANAGER.SaveSamplerState(1, D3DSAMP_ADDRESSU,	D3DTADDRESS_CLAMP);
-		STATEMANAGER.SaveSamplerState(1, D3DSAMP_ADDRESSV,	D3DTADDRESS_CLAMP);
+		DRAWSTATE.SaveRenderState(Renderer::StateAlphaBlendEnable, TRUE);
+		DRAWSTATE.SaveTextureStageState(1, Renderer::StageTexCoordIndex, Renderer::StageTciCameraSpacePosition);
+		DRAWSTATE.SaveTextureStageState(1, Renderer::StageTextureTransformFlags, Renderer::TexTransformCount2);
+		DRAWSTATE.SetTextureStageState(1, Renderer::StageColorArg1, Renderer::ArgCurrent);
+		DRAWSTATE.SetTextureStageState(1, Renderer::StageColorOp, Renderer::TextureOpSelectArg1);
+		DRAWSTATE.SetTextureStageState(1, Renderer::StageAlphaArg1, Renderer::ArgTexture);
+		DRAWSTATE.SetTextureStageState(1, Renderer::StageAlphaOp, Renderer::TextureOpSelectArg1);
+		DRAWSTATE.SaveSamplerState(1, Renderer::SamplerAddressU,	Renderer::AddressClamp);
+		DRAWSTATE.SaveSamplerState(1, Renderer::SamplerAddressV,	Renderer::AddressClamp);
 
-		STATEMANAGER.SaveTransform(Renderer::MatrixTexture1, &m_matBuildingTransparent);
-		STATEMANAGER.SetTexture(1, m_BuildingTransparentImageInstance.GetTexturePointer()->GetTextureBinding());
+		DRAWSTATE.SaveTransform(Renderer::MatrixTexture1, &m_matBuildingTransparent);
+		DRAWSTATE.SetTexture(1, m_BuildingTransparentImageInstance.GetTexturePointer()->GetTextureBinding());
 
 		std::for_each(m_PCBlockerVector.begin(), m_PCBlockerVector.end(), FRenderPCBlocker{m_BuildingTransparentImageInstance.GetGraphicImagePointer()});
 
-		STATEMANAGER.SetTexture(1, NULL);
-		STATEMANAGER.RestoreTransform(Renderer::MatrixTexture1);
+		DRAWSTATE.SetTexture(1, NULL);
+		DRAWSTATE.RestoreTransform(Renderer::MatrixTexture1);
 
-		STATEMANAGER.RestoreTextureStageState(1, D3DTSS_TEXCOORDINDEX);
-		STATEMANAGER.RestoreTextureStageState(1, D3DTSS_TEXTURETRANSFORMFLAGS);
-		STATEMANAGER.SetTextureStageState(1, D3DTSS_COLORARG1, D3DTA_TEXTURE);
-		STATEMANAGER.SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_DISABLE);
-		STATEMANAGER.SetTextureStageState(1, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
-		STATEMANAGER.SetTextureStageState(1, D3DTSS_ALPHAOP, D3DTOP_DISABLE);
-		STATEMANAGER.RestoreSamplerState(1, D3DSAMP_ADDRESSU);
-		STATEMANAGER.RestoreSamplerState(1, D3DSAMP_ADDRESSV);
-		STATEMANAGER.RestoreRenderState(D3DRS_ALPHABLENDENABLE);
+		DRAWSTATE.RestoreTextureStageState(1, Renderer::StageTexCoordIndex);
+		DRAWSTATE.RestoreTextureStageState(1, Renderer::StageTextureTransformFlags);
+		DRAWSTATE.SetTextureStageState(1, Renderer::StageColorArg1, Renderer::ArgTexture);
+		DRAWSTATE.SetTextureStageState(1, Renderer::StageColorOp, Renderer::TextureOpDisable);
+		DRAWSTATE.SetTextureStageState(1, Renderer::StageAlphaArg1, Renderer::ArgTexture);
+		DRAWSTATE.SetTextureStageState(1, Renderer::StageAlphaOp, Renderer::TextureOpDisable);
+		DRAWSTATE.RestoreSamplerState(1, Renderer::SamplerAddressU);
+		DRAWSTATE.RestoreSamplerState(1, Renderer::SamplerAddressV);
+		DRAWSTATE.RestoreRenderState(Renderer::StateAlphaBlendEnable);
 	}
 }
 
-void CMapOutdoor::SelectIndexBuffer(BYTE byLODLevel, WORD * pwPrimitiveCount, D3DPRIMITIVETYPE * pePrimitiveType)
+void CMapOutdoor::SelectIndexBuffer(BYTE byLODLevel, WORD * pwPrimitiveCount, Renderer::PrimitiveTopology * pePrimitiveType)
 {
 	m_terrainGeometryLOD = byLODLevel;
 	if (0 == byLODLevel)
 	{
 		*pwPrimitiveCount = m_wNumIndices[byLODLevel] - 2;
-		*pePrimitiveType = D3DPT_TRIANGLESTRIP;
+		*pePrimitiveType = Renderer::TopologyTriangleStrip;
 	}
 	else
 	{
 		*pwPrimitiveCount =  m_wNumIndices[byLODLevel]/3;
-		*pePrimitiveType = D3DPT_TRIANGLELIST;
+		*pePrimitiveType = Renderer::TopologyTriangleList;
 	}
-	STATEMANAGER.SetIndices(m_IndexBuffer[byLODLevel].GetD3DIndexBuffer(), 0);
 }
 
 void CMapOutdoor::SubmitTerrainGeometry(long patchnum)
 {
 	if (Renderer::terrainRenderer)
 	{
-		const D3DXCOLOR color(STATEMANAGER.GetRenderState(D3DRS_TEXTUREFACTOR));
+		const Math::Color color(DRAWSTATE.GetRenderState(Renderer::StateTextureFactor));
 		Renderer::terrainRenderer->DrawTerrainSolid(m_pTerrainPatchProxyList[patchnum].GetTerrainGeometry(),
 			m_terrainIndices[m_terrainGeometryLOD], m_wNumIndices[m_terrainGeometryLOD], m_terrainGeometryLOD == 0,
 			{color.r,color.g,color.b,color.a});
@@ -791,29 +784,28 @@ struct FPatchNumMatch
 	}
 };
 
-void CMapOutdoor::NEW_DrawWireFrame(CTerrainPatchProxy * pTerrainPatchProxy, WORD wPrimitiveCount, D3DPRIMITIVETYPE ePrimitiveType)
+void CMapOutdoor::NEW_DrawWireFrame(CTerrainPatchProxy * pTerrainPatchProxy, WORD wPrimitiveCount, Renderer::PrimitiveTopology ePrimitiveType)
 {
-	DWORD dwFillMode = STATEMANAGER.GetRenderState(D3DRS_FILLMODE);
-	STATEMANAGER.SetRenderState(D3DRS_FILLMODE, D3DFILL_WIREFRAME);
+	DWORD dwFillMode = DRAWSTATE.GetRenderState(Renderer::StateFillMode);
+	DRAWSTATE.SetRenderState(Renderer::StateFillMode, Renderer::FillWireframe);
 	
-	DWORD dwFogEnable = STATEMANAGER.GetRenderState(D3DRS_FOGENABLE);
-	STATEMANAGER.SetRenderState(D3DRS_FOGENABLE, FALSE);
+	DWORD dwFogEnable = DRAWSTATE.GetRenderState(Renderer::StateFogEnable);
+	DRAWSTATE.SetRenderState(Renderer::StateFogEnable, FALSE);
 	
-	STATEMANAGER.SetTexture(0, NULL);
-	STATEMANAGER.SetTexture(1, NULL);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_DISABLE);
+	DRAWSTATE.SetTexture(0, NULL);
+	DRAWSTATE.SetTexture(1, NULL);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageColorOp, Renderer::TextureOpDisable);
 	
-	STATEMANAGER.DrawIndexedPrimitive(ePrimitiveType, 0, m_iPatchTerrainVertexCount, 0, wPrimitiveCount);
 	
-	STATEMANAGER.SetRenderState(D3DRS_FILLMODE, dwFillMode);
-	STATEMANAGER.SetRenderState(D3DRS_FOGENABLE, dwFogEnable);
+	DRAWSTATE.SetRenderState(Renderer::StateFillMode, dwFillMode);
+	DRAWSTATE.SetRenderState(Renderer::StateFogEnable, dwFogEnable);
 	
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_CURRENT);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_COLOROP,   D3DTOP_MODULATE);	
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageColorArg1, Renderer::ArgTexture);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageColorArg2, Renderer::ArgCurrent);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageColorOp,   Renderer::TextureOpModulate);
 }
 
-void CMapOutdoor::DrawWireFrame(long patchnum, WORD wPrimitiveCount, D3DPRIMITIVETYPE ePrimitiveType)
+void CMapOutdoor::DrawWireFrame(long patchnum, WORD wPrimitiveCount, Renderer::PrimitiveTopology ePrimitiveType)
 {
 	assert(NULL!=m_pTerrainPatchProxyList && "CMapOutdoor::DrawWireFrame");
 
@@ -829,24 +821,23 @@ void CMapOutdoor::DrawWireFrame(long patchnum, WORD wPrimitiveCount, D3DPRIMITIV
 	if (0xFF == ucTerrainNum)
 		return;
 
-	DWORD dwFillMode = STATEMANAGER.GetRenderState(D3DRS_FILLMODE);
-	STATEMANAGER.SetRenderState(D3DRS_FILLMODE, D3DFILL_WIREFRAME);
+	DWORD dwFillMode = DRAWSTATE.GetRenderState(Renderer::StateFillMode);
+	DRAWSTATE.SetRenderState(Renderer::StateFillMode, Renderer::FillWireframe);
 
-	DWORD dwFogEnable = STATEMANAGER.GetRenderState(D3DRS_FOGENABLE);
-	STATEMANAGER.SetRenderState(D3DRS_FOGENABLE, FALSE);
+	DWORD dwFogEnable = DRAWSTATE.GetRenderState(Renderer::StateFogEnable);
+	DRAWSTATE.SetRenderState(Renderer::StateFogEnable, FALSE);
 	
-	STATEMANAGER.SetTexture(0, NULL);
-	STATEMANAGER.SetTexture(1, NULL);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_DISABLE);
+	DRAWSTATE.SetTexture(0, NULL);
+	DRAWSTATE.SetTexture(1, NULL);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageColorOp, Renderer::TextureOpDisable);
 
-	STATEMANAGER.DrawIndexedPrimitive(ePrimitiveType, 0, m_iPatchTerrainVertexCount, 0, wPrimitiveCount);
 
-	STATEMANAGER.SetRenderState(D3DRS_FILLMODE, dwFillMode);
-	STATEMANAGER.SetRenderState(D3DRS_FOGENABLE, dwFogEnable);
+	DRAWSTATE.SetRenderState(Renderer::StateFillMode, dwFillMode);
+	DRAWSTATE.SetRenderState(Renderer::StateFogEnable, dwFogEnable);
 
- 	STATEMANAGER.SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_CURRENT);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_COLOROP,   D3DTOP_MODULATE);	
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageColorArg1, Renderer::ArgTexture);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageColorArg2, Renderer::ArgCurrent);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageColorOp,   Renderer::TextureOpModulate);
 }
 
 // Attr
@@ -857,69 +848,69 @@ void CMapOutdoor::RenderMarkedArea()
 
 	m_matWorldForCommonUse._41 = 0.0f;
 	m_matWorldForCommonUse._42 = 0.0f;
-	STATEMANAGER.SetTransform(Renderer::MatrixWorld, &m_matWorldForCommonUse);
+	DRAWSTATE.SetTransform(Renderer::MatrixWorld, &m_matWorldForCommonUse);
 
 	WORD wPrimitiveCount;
-	D3DPRIMITIVETYPE eType;
+	Renderer::PrimitiveTopology eType;
 	SelectIndexBuffer(0, &wPrimitiveCount, &eType);
 
-	D3DXMATRIX matTexTransform, matTexTransformTemp;
+	Math::Matrix matTexTransform, matTexTransformTemp;
 
-	D3DXMatrixScaling(&matTexTransform, m_fTerrainTexCoordBase * 32.0f, -m_fTerrainTexCoordBase * 32.0f, 0.0f);
-	D3DXMatrixMultiply(&matTexTransform, &m_matViewInverse, &matTexTransform);
-	STATEMANAGER.SaveTransform(Renderer::MatrixTexture0, &matTexTransform);
-	STATEMANAGER.SaveTransform(Renderer::MatrixTexture1, &matTexTransform);
+	Math::MatrixScaling(&matTexTransform, m_fTerrainTexCoordBase * 32.0f, -m_fTerrainTexCoordBase * 32.0f, 0.0f);
+	Math::MatrixMultiply(&matTexTransform, &m_matViewInverse, &matTexTransform);
+	DRAWSTATE.SaveTransform(Renderer::MatrixTexture0, &matTexTransform);
+	DRAWSTATE.SaveTransform(Renderer::MatrixTexture1, &matTexTransform);
 
-	STATEMANAGER.SaveRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
-	STATEMANAGER.SaveRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
-	STATEMANAGER.SaveRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+	DRAWSTATE.SaveRenderState(Renderer::StateAlphaBlendEnable, TRUE);
+	DRAWSTATE.SaveRenderState(Renderer::StateSrcBlend, Renderer::BlendSrcAlpha);
+	DRAWSTATE.SaveRenderState(Renderer::StateDestBlend, Renderer::BlendInvSrcAlpha);
 
 	static long lStartTime = timeGetTime();
 	float fTime = float((timeGetTime() - lStartTime)%3000) / 3000.0f;
 	float fAlpha = fabs(fTime - 0.5f) / 2.0f + 0.1f;
-	STATEMANAGER.SetRenderState(D3DRS_TEXTUREFACTOR, D3DXCOLOR(1.0f, 1.0f, 1.0f, fAlpha));
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_TFACTOR);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG2);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_TFACTOR);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG2);
-	STATEMANAGER.SaveTextureStageState(0, D3DTSS_TEXCOORDINDEX, D3DTSS_TCI_CAMERASPACEPOSITION);
-	STATEMANAGER.SaveTextureStageState(0, D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_COUNT2);
+	DRAWSTATE.SetRenderState(Renderer::StateTextureFactor, Math::Color(1.0f, 1.0f, 1.0f, fAlpha));
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageColorArg1, Renderer::ArgTexture);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageColorArg2, Renderer::ArgTFactor);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageColorOp, Renderer::TextureOpSelectArg2);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageAlphaArg1, Renderer::ArgTexture);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageAlphaArg2, Renderer::ArgTFactor);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageAlphaOp, Renderer::TextureOpSelectArg2);
+	DRAWSTATE.SaveTextureStageState(0, Renderer::StageTexCoordIndex, Renderer::StageTciCameraSpacePosition);
+	DRAWSTATE.SaveTextureStageState(0, Renderer::StageTextureTransformFlags, Renderer::TexTransformCount2);
 
-	STATEMANAGER.SetTextureStageState(1, D3DTSS_COLORARG1, D3DTA_CURRENT);
-	STATEMANAGER.SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
-	STATEMANAGER.SetTextureStageState(1, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
-	STATEMANAGER.SetTextureStageState(1, D3DTSS_ALPHAARG2, D3DTA_CURRENT);
-	STATEMANAGER.SetTextureStageState(1, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
-	STATEMANAGER.SaveTextureStageState(1, D3DTSS_TEXCOORDINDEX, D3DTSS_TCI_CAMERASPACEPOSITION);
-	STATEMANAGER.SaveTextureStageState(1, D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_COUNT2);
-	STATEMANAGER.SaveSamplerState(1, D3DSAMP_MINFILTER, D3DTEXF_POINT);
-	STATEMANAGER.SaveSamplerState(1, D3DSAMP_MAGFILTER, D3DTEXF_POINT);
-	STATEMANAGER.SaveSamplerState(1, D3DSAMP_MIPFILTER, D3DTEXF_POINT);
-	STATEMANAGER.SaveSamplerState(1, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
-	STATEMANAGER.SaveSamplerState(1, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
+	DRAWSTATE.SetTextureStageState(1, Renderer::StageColorArg1, Renderer::ArgCurrent);
+	DRAWSTATE.SetTextureStageState(1, Renderer::StageColorOp, Renderer::TextureOpSelectArg1);
+	DRAWSTATE.SetTextureStageState(1, Renderer::StageAlphaArg1, Renderer::ArgTexture);
+	DRAWSTATE.SetTextureStageState(1, Renderer::StageAlphaArg2, Renderer::ArgCurrent);
+	DRAWSTATE.SetTextureStageState(1, Renderer::StageAlphaOp, Renderer::TextureOpModulate);
+	DRAWSTATE.SaveTextureStageState(1, Renderer::StageTexCoordIndex, Renderer::StageTciCameraSpacePosition);
+	DRAWSTATE.SaveTextureStageState(1, Renderer::StageTextureTransformFlags, Renderer::TexTransformCount2);
+	DRAWSTATE.SaveSamplerState(1, Renderer::SamplerMinFilter, Renderer::FilterPoint);
+	DRAWSTATE.SaveSamplerState(1, Renderer::SamplerMagFilter, Renderer::FilterPoint);
+	DRAWSTATE.SaveSamplerState(1, Renderer::SamplerMipFilter, Renderer::FilterPoint);
+	DRAWSTATE.SaveSamplerState(1, Renderer::SamplerAddressU, Renderer::AddressClamp);
+	DRAWSTATE.SaveSamplerState(1, Renderer::SamplerAddressV, Renderer::AddressClamp);
 
-	STATEMANAGER.SetTexture(0, m_attrImageInstance.GetTexturePointer()->GetTextureBinding());
+	DRAWSTATE.SetTexture(0, m_attrImageInstance.GetTexturePointer()->GetTextureBinding());
 
 	RecurseRenderAttr(m_pRootNode);
 
-	STATEMANAGER.RestoreTextureStageState(0, D3DTSS_TEXCOORDINDEX);
-	STATEMANAGER.RestoreTextureStageState(0, D3DTSS_TEXTURETRANSFORMFLAGS);
-	STATEMANAGER.RestoreTextureStageState(1, D3DTSS_TEXCOORDINDEX);
-	STATEMANAGER.RestoreTextureStageState(1, D3DTSS_TEXTURETRANSFORMFLAGS);
-	STATEMANAGER.RestoreSamplerState(1, D3DSAMP_MINFILTER);
-	STATEMANAGER.RestoreSamplerState(1, D3DSAMP_MAGFILTER);
-	STATEMANAGER.RestoreSamplerState(1, D3DSAMP_MIPFILTER);
-	STATEMANAGER.RestoreSamplerState(1, D3DSAMP_ADDRESSU);
-	STATEMANAGER.RestoreSamplerState(1, D3DSAMP_ADDRESSV);
+	DRAWSTATE.RestoreTextureStageState(0, Renderer::StageTexCoordIndex);
+	DRAWSTATE.RestoreTextureStageState(0, Renderer::StageTextureTransformFlags);
+	DRAWSTATE.RestoreTextureStageState(1, Renderer::StageTexCoordIndex);
+	DRAWSTATE.RestoreTextureStageState(1, Renderer::StageTextureTransformFlags);
+	DRAWSTATE.RestoreSamplerState(1, Renderer::SamplerMinFilter);
+	DRAWSTATE.RestoreSamplerState(1, Renderer::SamplerMagFilter);
+	DRAWSTATE.RestoreSamplerState(1, Renderer::SamplerMipFilter);
+	DRAWSTATE.RestoreSamplerState(1, Renderer::SamplerAddressU);
+	DRAWSTATE.RestoreSamplerState(1, Renderer::SamplerAddressV);
 
-	STATEMANAGER.RestoreTransform(Renderer::MatrixTexture0);
-	STATEMANAGER.RestoreTransform(Renderer::MatrixTexture1);
+	DRAWSTATE.RestoreTransform(Renderer::MatrixTexture0);
+	DRAWSTATE.RestoreTransform(Renderer::MatrixTexture1);
 
-	STATEMANAGER.RestoreRenderState(D3DRS_ALPHABLENDENABLE);
-	STATEMANAGER.RestoreRenderState(D3DRS_SRCBLEND);
-	STATEMANAGER.RestoreRenderState(D3DRS_DESTBLEND);
+	DRAWSTATE.RestoreRenderState(Renderer::StateAlphaBlendEnable);
+	DRAWSTATE.RestoreRenderState(Renderer::StateSrcBlend);
+	DRAWSTATE.RestoreRenderState(Renderer::StateDestBlend);
 }
 
 void CMapOutdoor::RecurseRenderAttr(CTerrainQuadtreeNode *Node, bool bCullEnable)
@@ -977,23 +968,20 @@ void CMapOutdoor::DrawPatchAttr(long patchnum)
 	m_matWorldForCommonUse._41 = -(float) (wCoordX * CTerrainImpl::XSIZE * CTerrainImpl::CELLSCALE);
 	m_matWorldForCommonUse._42 = (float) (wCoordY * CTerrainImpl::YSIZE * CTerrainImpl::CELLSCALE);
 
-	D3DXMATRIX matTexTransform, matTexTransformTemp;
-	D3DXMatrixMultiply(&matTexTransform, &m_matViewInverse, &m_matWorldForCommonUse);
-	D3DXMatrixMultiply(&matTexTransform, &matTexTransform, &m_matStaticShadow);
-	STATEMANAGER.SetTransform(Renderer::MatrixTexture1, &matTexTransform);
+	Math::Matrix matTexTransform, matTexTransformTemp;
+	Math::MatrixMultiply(&matTexTransform, &m_matViewInverse, &m_matWorldForCommonUse);
+	Math::MatrixMultiply(&matTexTransform, &matTexTransform, &m_matStaticShadow);
+	DRAWSTATE.SetTransform(Renderer::MatrixTexture1, &matTexTransform);
 
 	TTerrainSplatPatch & rAttrSplatPatch = pTerrain->GetMarkedSplatPatch();
-	STATEMANAGER.SetTexture(1, pTerrain->GetMarkedBinding());
+	DRAWSTATE.SetTexture(1, pTerrain->GetMarkedBinding());
 
-	STATEMANAGER.SetFVF(D3DFVF_XYZ | D3DFVF_NORMAL);
-	STATEMANAGER.SetStreamSource(0, pTerrainPatchProxy->HardwareTransformPatch_GetVertexBufferPtr()->GetD3DVertexBuffer(), m_iPatchTerrainVertexSize);
 
-	STATEMANAGER.DrawIndexedPrimitive(D3DPT_TRIANGLESTRIP, 0, m_iPatchTerrainVertexCount, 0, m_wNumIndices[0] - 2);
 	// ZiiNAN: Existing guild-area geometry and generated alpha projection, in native order.
 	if(Renderer::worldRenderer && Renderer::worldSurfaceFrame) {
 		auto* renderer=Renderer::worldRenderer; const auto* source=pTerrainPatchProxy->GetProjectionVertices();
 		Renderer::EffectDraw draw; std::string error;
-		if(!source || !CaptureNativeMaterial(draw,error,true)) { renderer->ReportFailure(); return; }
+		if(!source || !CaptureMaterialState(draw,error,true)) { renderer->ReportFailure(); return; }
 		draw.secondaryTexture=pTerrain->GetMarkedTexture();
 		if(!m_projectionTexture) m_projectionTexture=LoadStaticObjectTextureFile(m_attrImageInstance.GetGraphicImagePointer()->GetFileName(),*renderer);
 		if(!draw.secondaryTexture || !m_projectionTexture) { renderer->ReportFailure(); return; }

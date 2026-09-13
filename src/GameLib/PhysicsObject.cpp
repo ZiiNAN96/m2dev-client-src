@@ -15,7 +15,7 @@ void CPhysicsObject::Update(float fElapsedTime)
 		m_yPushingPosition.Interpolate(fElapsedTime);
 }
 
-void CPhysicsObject::Accumulate(D3DXVECTOR3 * pv3Position)
+void CPhysicsObject::Accumulate(Math::Vector3 * pv3Position)
 {
 	// If object is moving, give minor power to object.
 	float fForce = 0.0f;
@@ -50,7 +50,7 @@ void CPhysicsObject::Accumulate(D3DXVECTOR3 * pv3Position)
 	pv3Position->z += m_v3Velocity.z;
 }
 
-void CPhysicsObject::IncreaseExternalForce(const D3DXVECTOR3 & c_rvBasePosition, float fForce)
+void CPhysicsObject::IncreaseExternalForce(const Math::Vector3 & c_rvBasePosition, float fForce)
 {	
 	// Accumulate Acceleration by External Force
 	m_v3Acceleration = m_v3Direction * (fForce / m_fMass);
@@ -63,7 +63,7 @@ void CPhysicsObject::IncreaseExternalForce(const D3DXVECTOR3 & c_rvBasePosition,
 */
 	// NOTE : 최종 위치를 구해둔다. 근데 100보다 크다면? ;
 	const int LoopValue = 100;
-	D3DXVECTOR3 v3Movement(0.0f, 0.0f, 0.0f);
+	Math::Vector3 v3Movement(0.0f, 0.0f, 0.0f);
 
 	for(int i = 0; i < LoopValue; ++i)
 	{
@@ -83,7 +83,7 @@ void CPhysicsObject::IncreaseExternalForce(const D3DXVECTOR3 & c_rvBasePosition,
 				//	// 좀더 정밀하게 체크한다
 				//	if (pWorld->isPhysicalCollision(c_rvBasePosition + v3Movement * fRatio))
 				//	{
-				//		v3Movement = D3DXVECTOR3 (0.0f, 0.0f, 0.0f);
+				//		v3Movement = Math::Vector3 (0.0f, 0.0f, 0.0f);
 				//		break;
 				//	}
 				//}
@@ -123,7 +123,7 @@ void CPhysicsObject::GetLastPosition(TPixelPosition * pPosition)
 	pPosition->z = (m_v3LastPosition.z);
 }
 
-void CPhysicsObject::SetDirection(const D3DXVECTOR3 & c_rv3Direction)
+void CPhysicsObject::SetDirection(const Math::Vector3 & c_rv3Direction)
 {
 	m_v3Direction.x = c_rv3Direction.x;
 	m_v3Direction.y = c_rv3Direction.y;
@@ -143,7 +143,7 @@ float CPhysicsObject::GetYMovement()
 bool CPhysicsObject::isBlending()
 {
 	// NOTE : IncreaseExternalForce() 에 의해 밀리는 처리중인가?
-	if (0.0f != D3DXVec3Length(&m_v3Velocity))
+	if (0.0f != Math::Vec3Length(&m_v3Velocity))
 		return true;
 
 	// NOTE : SetLastPosition() 에 의해 밀리는 처리중인가?
@@ -158,10 +158,10 @@ void CPhysicsObject::Initialize()
 {
 	m_fMass = 1.0f;
 	m_fFriction = 0.3f;
-	m_v3Direction = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
-	m_v3Acceleration = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
-	m_v3Velocity = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
-	m_v3LastPosition = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+	m_v3Direction = Math::Vector3(0.0f, 0.0f, 0.0f);
+	m_v3Acceleration = Math::Vector3(0.0f, 0.0f, 0.0f);
+	m_v3Velocity = Math::Vector3(0.0f, 0.0f, 0.0f);
+	m_v3LastPosition = Math::Vector3(0.0f, 0.0f, 0.0f);
 
 	m_xPushingPosition.Initialize();
 	m_yPushingPosition.Initialize();

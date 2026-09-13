@@ -1,13 +1,13 @@
 #include "StdAfx.h"
 #include "GrpImageInstance.h"
-#include "StateManager.h"
+#include "DrawState.h"
 #include "UIRenderBridge.h"
 
 #include "EterBase/CRC32.h"
-//STATEMANAGER.SaveRenderState(D3DRS_SRCBLEND, D3DBLEND_INVDESTCOLOR);
-//STATEMANAGER.SaveRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE);
-//STATEMANAGER.RestoreRenderState(D3DRS_SRCBLEND);
-//STATEMANAGER.RestoreRenderState(D3DRS_DESTBLEND);
+//DRAWSTATE.SaveRenderState(Renderer::StateSrcBlend, Renderer::BlendInvDestColor);
+//DRAWSTATE.SaveRenderState(Renderer::StateDestBlend, Renderer::BlendOne);
+//DRAWSTATE.RestoreRenderState(Renderer::StateSrcBlend);
+//DRAWSTATE.RestoreRenderState(Renderer::StateDestBlend);
 
 CDynamicPool<CGraphicImageInstance>		CGraphicImageInstance::ms_kPool;
 
@@ -85,17 +85,13 @@ void CGraphicImageInstance::OnRender()
 	vertices[3].diffuse		= m_DiffuseColor;
 
 	// 2004.11.18.myevan.ctrl+alt+del 반복 사용시 튕기는 문제 
-	if (CGraphicBase::SetPDTStream(vertices, 4))
+	if (CGraphicBase::ValidatePDTVertices(vertices, 4))
 	{
-		CGraphicBase::SetDefaultIndexBuffer(CGraphicBase::DEFAULT_IB_FILL_RECT);
 
-		STATEMANAGER.SetTexture(0, pTexture->GetTextureBinding());
-		STATEMANAGER.SetTexture(1, NULL);
-		STATEMANAGER.SetFVF(D3DFVF_XYZ|D3DFVF_DIFFUSE|D3DFVF_TEX1);
-		const auto nativeDraw=STATEMANAGER.DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 4, 0, 2);
-		UIRenderBridge::IndexedQuad(vertices,pImage,nativeDraw); // ZiiNAN: Existing UI quad, no widget changes.
+		DRAWSTATE.SetTexture(0, pTexture->GetTextureBinding());
+		DRAWSTATE.SetTexture(1, NULL);
+		UIRenderBridge::IndexedQuad(vertices,pImage); // ZiiNAN: Existing UI quad, no widget changes.
 	}
-	//OLD: STATEMANAGER.DrawIndexedPrimitiveUP(D3DPT_TRIANGLELIST, 0, 4, 2, c_FillRectIndices, D3DFMT_INDEX16, vertices, sizeof(TPDTVertex));	
 	////////////////////////////////////////////////////////////	
 }
 

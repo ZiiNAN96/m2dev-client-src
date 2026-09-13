@@ -13,7 +13,6 @@ typedef struct
 {
 	long					Active;
 	long					NeedsUpdate;
-	LPDIRECT3DTEXTURE9		pd3dTexture;
 } TTerainSplat;
 
 typedef struct
@@ -60,7 +59,7 @@ typedef struct
 	long			DisableShadow;
 	long			ShadowMode;
 	long			OutsideVisible;
-	D3DXVECTOR3		SunLocation;
+	Math::Vector3		SunLocation;
 } TTerrainGlobals;
 
 /* Converts a floating point number to an integer by truncation, using

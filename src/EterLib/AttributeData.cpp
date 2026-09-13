@@ -92,8 +92,8 @@ bool CAttributeData::OnLoad(int /*iSize*/, const void * c_pvBuf)
 		c_pbBuf += sizeof(DWORD);
 		memcpy(rCollisionData.szName, c_pbBuf, 32);
 		c_pbBuf += 32;
-		memcpy(&rCollisionData.v3Position, c_pbBuf, sizeof(D3DXVECTOR3));
-		c_pbBuf += sizeof(D3DXVECTOR3);
+		memcpy(&rCollisionData.v3Position, c_pbBuf, sizeof(Math::Vector3));
+		c_pbBuf += sizeof(Math::Vector3);
 
 		switch(rCollisionData.dwType)
 		{
@@ -123,8 +123,8 @@ bool CAttributeData::OnLoad(int /*iSize*/, const void * c_pvBuf)
 				break;
 		}
 
-		memcpy(rCollisionData.quatRotation, c_pbBuf, sizeof(D3DXQUATERNION));
-		c_pbBuf += sizeof(D3DXQUATERNION);
+		memcpy(rCollisionData.quatRotation, c_pbBuf, sizeof(Math::Quaternion));
+		c_pbBuf += sizeof(Math::Quaternion);
 	}
 
 	for (DWORD j = 0; j < dwHeightDataCount; ++j)
@@ -139,8 +139,8 @@ bool CAttributeData::OnLoad(int /*iSize*/, const void * c_pvBuf)
 
 		rHeightData.v3VertexVector.clear();
 		rHeightData.v3VertexVector.resize(dwPrimitiveCount);
-		memcpy(&rHeightData.v3VertexVector[0], c_pbBuf, dwPrimitiveCount*sizeof(D3DXVECTOR3));
-		c_pbBuf += dwPrimitiveCount*sizeof(D3DXVECTOR3);
+		memcpy(&rHeightData.v3VertexVector[0], c_pbBuf, dwPrimitiveCount*sizeof(Math::Vector3));
+		c_pbBuf += dwPrimitiveCount*sizeof(Math::Vector3);
 
 		// Getting Maximize Radius
 		for (DWORD k = 0; k < rHeightData.v3VertexVector.size(); ++k)

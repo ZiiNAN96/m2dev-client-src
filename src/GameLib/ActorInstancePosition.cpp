@@ -9,7 +9,7 @@ const TPixelPosition& CActorInstance::NEW_GetLastPixelPositionRef()
 	return m_kPPosLast;
 }
 
-const D3DXVECTOR3& CActorInstance::GetPositionVectorRef()
+const Math::Vector3& CActorInstance::GetPositionVectorRef()
 {
 	m_v3Pos.x=m_x;
 	m_v3Pos.y=m_y;
@@ -17,7 +17,7 @@ const D3DXVECTOR3& CActorInstance::GetPositionVectorRef()
 	return m_v3Pos;
 }
 
-const D3DXVECTOR3&	CActorInstance::GetMovementVectorRef()
+const Math::Vector3&	CActorInstance::GetMovementVectorRef()
 {
 	if (m_pkHorse)
 		return m_pkHorse->GetMovementVectorRef();
@@ -32,7 +32,7 @@ void CActorInstance::NEW_SetAtkPixelPosition(const TPixelPosition& c_rkPPosAtk)
 
 void CActorInstance::SetCurPixelPosition(const TPixelPosition& c_rkPPosCur)
 {
-	D3DXVECTOR3 v3PosCur;
+	Math::Vector3 v3PosCur;
 	v3PosCur.x=+c_rkPPosCur.x;
 	v3PosCur.y=-c_rkPPosCur.y;
 	v3PosCur.z=+c_rkPPosCur.z;

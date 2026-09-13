@@ -38,9 +38,8 @@
 #include "SpeedTreeMaterial.h"
 #include <SpeedTreeRT.h>
 
-#include <d3d9.h>
-#include <d3d9types.h>
-#include <d3dx9.h>
+#include "Renderer/DrawStateTypes.h"
+#include "Math/Math.h"
 #include <vector>
 #include <memory>
 #include <cstdint>
@@ -83,7 +82,7 @@ protected:
 	virtual bool OnGetObjectHeight(float fX, float fY, float * pfHeight) { return false; }
 	// Bounding Sphere
 public:
-	virtual bool GetBoundingSphere(D3DXVECTOR3 & v3Center, float & fRadius);
+	virtual bool GetBoundingSphere(Math::Vector3 & v3Center, float & fRadius);
 	
 public:
 	static bool					ms_bSelfShadowOn;
@@ -105,7 +104,6 @@ public:
 	virtual	~CSpeedTreeWrapper();
 	
 	const float *				GetPosition();
-	static void					SetVertexShaders(LPDIRECT3DVERTEXDECLARATION9 pBranchVertexShader, LPDIRECT3DVERTEXDECLARATION9 pLeafVertexShader, LPDIRECT3DVERTEXSHADER9 pVertexShader);
 
 	// geometry 
 	bool                        LoadTree(const char * pszSptFile, const BYTE * c_pbBlock = NULL, unsigned int uiBlockSize = 0, unsigned int nSeed = 1, float fSize = -1.0f, float fSizeVariance = -1.0f);
@@ -118,7 +116,6 @@ public:
 	void						SetupBranchForTreeType(void) const;
 	void						SetupFrondForTreeType(void) const;
 	void						SetupLeafForTreeType(void) const;
-	void						EndLeafForTreeType(void);
 	
 #ifdef WRAPPER_USE_GPU_LEAF_PLACEMENT
 	void						UploadLeafTables(unsigned int uiLocation) const;
@@ -147,7 +144,6 @@ public:
 	void						Advance(void);
 	
 	// utility
-	LPDIRECT3DTEXTURE9			GetBranchTexture(void) const;
 	void						CleanUpMemory(void);
 	
 private:
@@ -174,23 +170,17 @@ private:
 	CSpeedTreeRT::SGeometry*		m_pGeometryCache;				// cache for pulling geometry from SpeedTree avoids lots of reallocation
 
 	// branch buffers
-	LPDIRECT3DVERTEXBUFFER9			m_pBranchVertexBuffer;			// branch vertex buffer
 	unsigned int					m_unBranchVertexCount;			// number of vertices in branches
-	LPDIRECT3DINDEXBUFFER9			m_pBranchIndexBuffer;			// branch index buffer
 	std::vector<uint32_t>			m_branchStripOffsets;			// strip start indices (LOD0 ordering)
 	std::vector<std::vector<uint16_t>> m_branchStripLengths;			// [lod][strip] index counts
 	
 	// frond buffers
-	LPDIRECT3DVERTEXBUFFER9			m_pFrondVertexBuffer;			// frond vertex buffer
 	unsigned int					m_unFrondVertexCount;			// number of vertices in frond
-	LPDIRECT3DINDEXBUFFER9			m_pFrondIndexBuffer;			// frond index buffer
 	std::vector<uint32_t>			m_frondStripOffsets;			// strip start indices (LOD0 ordering)
 	std::vector<std::vector<uint16_t>> m_frondStripLengths;			// [lod][strip] index counts
 	
 	// leaf buffers
 	unsigned short					m_usNumLeafLods;				// the number of leaf LODs
-	LPDIRECT3DVERTEXBUFFER9*		m_pLeafVertexBuffer;			// leaf vertex buffer
-	bool*							m_pLeavesUpdatedByCpu;			// stores which LOD's have been updated already per frame
 	
 	// tree properties
 	float							m_afPos[3];						// tree position
@@ -206,9 +196,6 @@ private:
 	CGraphicImageInstance			m_ShadowImageInstance;			// shadow texture object (used if shadows are enabled)
 	CGraphicImageInstance			m_CompositeImageInstance;
 
-	static LPDIRECT3DVERTEXDECLARATION9 ms_dwBranchVertexShader;
-	static LPDIRECT3DVERTEXDECLARATION9 ms_pLeafVertexShaderDecl;
-	static LPDIRECT3DVERTEXSHADER9 ms_pLeafVertexShader;
 };
 
 #pragma warning(pop)

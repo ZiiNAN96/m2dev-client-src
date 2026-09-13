@@ -47,11 +47,11 @@ class CPythonItem : public CSingleton<CPythonItem>
 		typedef struct SGroundItemInstance
 		{
 			DWORD					dwVirtualNumber;
-			D3DXVECTOR3				v3EndPosition;
+			Math::Vector3				v3EndPosition;
 
-			D3DXVECTOR3				v3RotationAxis;
-			D3DXQUATERNION			qEnd;
-			D3DXVECTOR3				v3Center;
+			Math::Vector3				v3RotationAxis;
+			Math::Quaternion			qEnd;
+			Math::Vector3				v3Center;
 			CGraphicThingInstance	ThingInstance;
 			DWORD					dwStartTime;
 			DWORD					dwEndTime;
@@ -65,7 +65,7 @@ class CPythonItem : public CSingleton<CPythonItem>
 			DWORD					dwEffectInstanceIndex;
 			std::string				stOwnership;
 
-			static void	__PlayDropSound(DWORD eItemType, const D3DXVECTOR3& c_rv3Pos);
+			static void	__PlayDropSound(DWORD eItemType, const Math::Vector3& c_rv3Pos);
 			static std::string		ms_astDropSoundFileName[DROPSOUND_NUM];
 
 			SGroundItemInstance() {}

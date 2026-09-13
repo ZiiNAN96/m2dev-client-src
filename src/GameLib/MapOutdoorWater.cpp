@@ -1,5 +1,5 @@
 #include "StdAfx.h"
-#include "EterLib/StateManager.h"
+#include "EterLib/DrawState.h"
 #include "EterLib/ResourceManager.h"
 #include "EterLib/WorldRenderBridge.h"
 
@@ -37,42 +37,41 @@ void CMapOutdoor::RenderWater()
 
 	//////////////////////////////////////////////////////////////////////////
 	// RenderState
-	D3DXMATRIX matTexTransformWater;
+	Math::Matrix matTexTransformWater;
 	
-	STATEMANAGER.SaveRenderState(D3DRS_ZWRITEENABLE, FALSE);
-	STATEMANAGER.SaveRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
-	STATEMANAGER.SaveRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
-	STATEMANAGER.SaveRenderState(D3DRS_DIFFUSEMATERIALSOURCE, D3DMCS_COLOR1);
-	STATEMANAGER.SaveRenderState(D3DRS_COLORVERTEX, TRUE);
+	DRAWSTATE.SaveRenderState(Renderer::StateZWriteEnable, FALSE);
+	DRAWSTATE.SaveRenderState(Renderer::StateAlphaBlendEnable, TRUE);
+	DRAWSTATE.SaveRenderState(Renderer::StateCullMode, Renderer::CullNone);
+	DRAWSTATE.SaveRenderState(Renderer::StateDiffuseMaterialSource, Renderer::MaterialColor1);
+	DRAWSTATE.SaveRenderState(Renderer::StateColorVertex, TRUE);
 
 	const auto waterFrame=(ELTimer_GetMSec()/70)%30;
-	STATEMANAGER.SetTexture(0, m_WaterInstances[waterFrame].GetTexturePointer()->GetTextureBinding());
+	DRAWSTATE.SetTexture(0, m_WaterInstances[waterFrame].GetTexturePointer()->GetTextureBinding());
 	WorldRenderBridge::Texture(m_WaterInstances[waterFrame].GetGraphicImagePointer());
 
-	D3DXMatrixScaling(&matTexTransformWater, m_fWaterTexCoordBase, -m_fWaterTexCoordBase, 0.0f);
-	D3DXMatrixMultiply(&matTexTransformWater, &m_matViewInverse, &matTexTransformWater);
+	Math::MatrixScaling(&matTexTransformWater, m_fWaterTexCoordBase, -m_fWaterTexCoordBase, 0.0f);
+	Math::MatrixMultiply(&matTexTransformWater, &m_matViewInverse, &matTexTransformWater);
 	
-	STATEMANAGER.SaveTransform(Renderer::MatrixTexture0, &matTexTransformWater);
-	STATEMANAGER.SetFVF(D3DFVF_XYZ|D3DFVF_DIFFUSE);
+	DRAWSTATE.SaveTransform(Renderer::MatrixTexture0, &matTexTransformWater);
 
-	STATEMANAGER.SaveTextureStageState(0, D3DTSS_TEXCOORDINDEX, D3DTSS_TCI_CAMERASPACEPOSITION);
-	STATEMANAGER.SaveTextureStageState(0, D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_COUNT2);
+	DRAWSTATE.SaveTextureStageState(0, Renderer::StageTexCoordIndex, Renderer::StageTciCameraSpacePosition);
+	DRAWSTATE.SaveTextureStageState(0, Renderer::StageTextureTransformFlags, Renderer::TexTransformCount2);
 
-	STATEMANAGER.SaveSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_ANISOTROPIC);
-	STATEMANAGER.SaveSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_ANISOTROPIC);
-	STATEMANAGER.SaveSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
-	STATEMANAGER.SaveSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP);
-	STATEMANAGER.SaveSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP);
+	DRAWSTATE.SaveSamplerState(0, Renderer::SamplerMinFilter, Renderer::FilterAnisotropic);
+	DRAWSTATE.SaveSamplerState(0, Renderer::SamplerMagFilter, Renderer::FilterAnisotropic);
+	DRAWSTATE.SaveSamplerState(0, Renderer::SamplerMipFilter, Renderer::FilterLinear);
+	DRAWSTATE.SaveSamplerState(0, Renderer::SamplerAddressU, Renderer::AddressWrap);
+	DRAWSTATE.SaveSamplerState(0, Renderer::SamplerAddressV, Renderer::AddressWrap);
 	
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_DIFFUSE);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageColorArg1, Renderer::ArgTexture);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageColorOp, Renderer::TextureOpSelectArg1);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageAlphaArg1, Renderer::ArgDiffuse);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageAlphaOp, Renderer::TextureOpSelectArg1);
 	
 
-	STATEMANAGER.SetTexture(1,NULL);
-	STATEMANAGER.SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_DISABLE);
-	STATEMANAGER.SetTextureStageState(1, D3DTSS_ALPHAOP, D3DTOP_DISABLE);
+	DRAWSTATE.SetTexture(1,NULL);
+	DRAWSTATE.SetTextureStageState(1, Renderer::StageColorOp, Renderer::TextureOpDisable);
+	DRAWSTATE.SetTextureStageState(1, Renderer::StageAlphaOp, Renderer::TextureOpDisable);
 
 	// RenderState
 	//////////////////////////////////////////////////////////////////////////
@@ -103,7 +102,7 @@ void CMapOutdoor::RenderWater()
 
 	m_matWorldForCommonUse._41 = 0.0f;
 	m_matWorldForCommonUse._42 = 0.0f;
-	STATEMANAGER.SetTransform(Renderer::MatrixWorld, &m_matWorldForCommonUse);
+	DRAWSTATE.SetTransform(Renderer::MatrixWorld, &m_matWorldForCommonUse);
 	
 	float fFogDistance = __GetFogDistance();
 
@@ -115,8 +114,8 @@ void CMapOutdoor::RenderWater()
 			DrawWater(i->second);
 	}
 
-	STATEMANAGER.SetTexture(0, NULL);
-	STATEMANAGER.SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
+	DRAWSTATE.SetTexture(0, NULL);
+	DRAWSTATE.SetRenderState(Renderer::StateAlphaBlendEnable, FALSE);
 
 	for(i = m_PatchVector.begin();i != m_PatchVector.end(); ++i)
 	{
@@ -129,20 +128,20 @@ void CMapOutdoor::RenderWater()
 
 	//////////////////////////////////////////////////////////////////////////
 	// RenderState
-	STATEMANAGER.RestoreTransform(Renderer::MatrixTexture0);
-	STATEMANAGER.RestoreSamplerState(0, D3DSAMP_MINFILTER);
-	STATEMANAGER.RestoreSamplerState(0, D3DSAMP_MAGFILTER);
-	STATEMANAGER.RestoreSamplerState(0, D3DSAMP_MIPFILTER);
-	STATEMANAGER.RestoreSamplerState(0, D3DSAMP_ADDRESSU);
-	STATEMANAGER.RestoreSamplerState(0, D3DSAMP_ADDRESSV);
-	STATEMANAGER.RestoreTextureStageState(0, D3DTSS_TEXCOORDINDEX);
-	STATEMANAGER.RestoreTextureStageState(0, D3DTSS_TEXTURETRANSFORMFLAGS);
+	DRAWSTATE.RestoreTransform(Renderer::MatrixTexture0);
+	DRAWSTATE.RestoreSamplerState(0, Renderer::SamplerMinFilter);
+	DRAWSTATE.RestoreSamplerState(0, Renderer::SamplerMagFilter);
+	DRAWSTATE.RestoreSamplerState(0, Renderer::SamplerMipFilter);
+	DRAWSTATE.RestoreSamplerState(0, Renderer::SamplerAddressU);
+	DRAWSTATE.RestoreSamplerState(0, Renderer::SamplerAddressV);
+	DRAWSTATE.RestoreTextureStageState(0, Renderer::StageTexCoordIndex);
+	DRAWSTATE.RestoreTextureStageState(0, Renderer::StageTextureTransformFlags);
 	
-	STATEMANAGER.RestoreRenderState(D3DRS_DIFFUSEMATERIALSOURCE);
-	STATEMANAGER.RestoreRenderState(D3DRS_COLORVERTEX);
-	STATEMANAGER.RestoreRenderState(D3DRS_ZWRITEENABLE);
-	STATEMANAGER.RestoreRenderState(D3DRS_ALPHABLENDENABLE);
-	STATEMANAGER.RestoreRenderState(D3DRS_CULLMODE);	
+	DRAWSTATE.RestoreRenderState(Renderer::StateDiffuseMaterialSource);
+	DRAWSTATE.RestoreRenderState(Renderer::StateColorVertex);
+	DRAWSTATE.RestoreRenderState(Renderer::StateZWriteEnable);
+	DRAWSTATE.RestoreRenderState(Renderer::StateAlphaBlendEnable);
+	DRAWSTATE.RestoreRenderState(Renderer::StateCullMode);
 }
 
 void CMapOutdoor::DrawWater(long patchnum)
@@ -170,12 +169,10 @@ void CMapOutdoor::DrawWater(long patchnum)
 	if (!uPriCount)
 		return;
 	
-	STATEMANAGER.SetStreamSource(0, pkVB->GetD3DVertexBuffer(), sizeof(SWaterVertex));
-	const HRESULT nativeDraw=STATEMANAGER.DrawPrimitive(D3DPT_TRIANGLELIST, 0, uPriCount);
 	if(Renderer::worldRenderer && Renderer::worldSurfaceFrame) {
 		auto geometry=rkTerrainPatchProxy.GetWaterGeometry();
 		if(geometry && geometry->vertices.size()==size_t(uPriCount)*3)
-			WorldRenderBridge::Submit(geometry->vertices.data(),UINT(geometry->vertices.size()),false,nativeDraw);
+			WorldRenderBridge::Submit(geometry->vertices.data(),UINT(geometry->vertices.size()),false);
 		else Renderer::worldRenderer->ReportFailure();
 	}
 

@@ -1,13 +1,13 @@
 #include "StdAfx.h"
 #include "GrpCollisionObject.h"
 
-bool CGraphicCollisionObject::IntersectBoundBox(const D3DXMATRIX* c_pmatWorld, const TBoundBox& c_rboundBox, float* pu, float* pv, float* pt)
+bool CGraphicCollisionObject::IntersectBoundBox(const Math::Matrix* c_pmatWorld, const TBoundBox& c_rboundBox, float* pu, float* pv, float* pt)
 {
 	return IntersectCube(c_pmatWorld, c_rboundBox.sx, c_rboundBox.sy, c_rboundBox.sz, c_rboundBox.ex, c_rboundBox.ey, c_rboundBox.ez, ms_vtPickRayOrig, ms_vtPickRayDir, pu, pv, pt);
 }
 
-bool CGraphicCollisionObject::IntersectCube(const D3DXMATRIX* c_pmatWorld, float sx, float sy, float sz, float ex, float ey, float ez,
-								   D3DXVECTOR3 & RayOriginal, D3DXVECTOR3 & RayDirection, float* pu, float* pv, float* pt)
+bool CGraphicCollisionObject::IntersectCube(const Math::Matrix* c_pmatWorld, float sx, float sy, float sz, float ex, float ey, float ez,
+								   Math::Vector3 & RayOriginal, Math::Vector3 & RayDirection, float* pu, float* pv, float* pt)
 {
 	TPosition posVertices[8];
 
@@ -46,10 +46,10 @@ bool CGraphicCollisionObject::IntersectCube(const D3DXMATRIX* c_pmatWorld, float
 
 const int c_iLimitVertexCount = 1024;
 
-bool CGraphicCollisionObject::IntersectIndexedMesh(const D3DXMATRIX* c_pmatWorld, const void* vertices, int step, int vtxCount, const void* indices, int idxCount,
-								   D3DXVECTOR3 & RayOriginal, D3DXVECTOR3 & RayDirection, float* pu, float* pv, float* pt)
+bool CGraphicCollisionObject::IntersectIndexedMesh(const Math::Matrix* c_pmatWorld, const void* vertices, int step, int vtxCount, const void* indices, int idxCount,
+								   Math::Vector3 & RayOriginal, Math::Vector3 & RayDirection, float* pu, float* pv, float* pt)
 {
-	static D3DXVECTOR3 s_v3PositionArray[c_iLimitVertexCount];
+	static Math::Vector3 s_v3PositionArray[c_iLimitVertexCount];
 	static DWORD s_dwPositionCount;
 
 	if (vtxCount > c_iLimitVertexCount)
@@ -66,7 +66,7 @@ bool CGraphicCollisionObject::IntersectIndexedMesh(const D3DXMATRIX* c_pmatWorld
 	{
 		float* pos = (float*)pcurVtx;
 
-		D3DXVec3TransformCoord(&s_v3PositionArray[s_dwPositionCount++], (D3DXVECTOR3*)pos, c_pmatWorld);
+		Math::Vec3TransformCoord(&s_v3PositionArray[s_dwPositionCount++], (Math::Vector3*)pos, c_pmatWorld);
 
 		pcurVtx += step;
 	}
@@ -91,21 +91,21 @@ bool CGraphicCollisionObject::IntersectIndexedMesh(const D3DXMATRIX* c_pmatWorld
 	return false;
 }
 
-bool CGraphicCollisionObject::IntersectMesh(const D3DXMATRIX * c_pmatWorld, const void * vertices, DWORD dwStep, DWORD dwvtxCount, D3DXVECTOR3 & RayOriginal, D3DXVECTOR3 & RayDirection, float* pu, float* pv, float* pt)
+bool CGraphicCollisionObject::IntersectMesh(const Math::Matrix * c_pmatWorld, const void * vertices, DWORD dwStep, DWORD dwvtxCount, Math::Vector3 & RayOriginal, Math::Vector3 & RayDirection, float* pu, float* pv, float* pt)
 {
 	char * pcurVtx = (char *) vertices;
 
-	D3DXVECTOR3 v3Vertex[3];
+	Math::Vector3 v3Vertex[3];
 
 	for (DWORD i = 0; i < dwvtxCount; i += 3)
 	{
-		D3DXVec3TransformCoord(&v3Vertex[0], (D3DXVECTOR3*)pcurVtx, c_pmatWorld);
+		Math::Vec3TransformCoord(&v3Vertex[0], (Math::Vector3*)pcurVtx, c_pmatWorld);
 		pcurVtx += dwStep;
 
-		D3DXVec3TransformCoord(&v3Vertex[1], (D3DXVECTOR3*)pcurVtx, c_pmatWorld);
+		Math::Vec3TransformCoord(&v3Vertex[1], (Math::Vector3*)pcurVtx, c_pmatWorld);
 		pcurVtx += dwStep;
 
-		D3DXVec3TransformCoord(&v3Vertex[2], (D3DXVECTOR3*)pcurVtx, c_pmatWorld);
+		Math::Vec3TransformCoord(&v3Vertex[2], (Math::Vector3*)pcurVtx, c_pmatWorld);
 		pcurVtx += dwStep;
 
 		if (IntersectTriangle(RayOriginal, RayDirection, 
@@ -119,22 +119,22 @@ bool CGraphicCollisionObject::IntersectMesh(const D3DXMATRIX * c_pmatWorld, cons
 	return false;
 }
 
-bool CGraphicCollisionObject::IntersectTriangle(const D3DXVECTOR3& c_orig,
-												const D3DXVECTOR3& c_dir,
-												const D3DXVECTOR3& c_v0,
-												const D3DXVECTOR3& c_v1,
-												const D3DXVECTOR3& c_v2,
+bool CGraphicCollisionObject::IntersectTriangle(const Math::Vector3& c_orig,
+												const Math::Vector3& c_dir,
+												const Math::Vector3& c_v0,
+												const Math::Vector3& c_v1,
+												const Math::Vector3& c_v2,
 												float * pu,
 												float * pv,
 												float * pt)
 {
-    D3DXVECTOR3 edge1 = c_v1 - c_v0;
-    D3DXVECTOR3 edge2 = c_v2 - c_v0;
-    D3DXVECTOR3 pvec;
-    D3DXVec3Cross(&pvec, &c_dir, &edge2);
+    Math::Vector3 edge1 = c_v1 - c_v0;
+    Math::Vector3 edge2 = c_v2 - c_v0;
+    Math::Vector3 pvec;
+    Math::Vec3Cross(&pvec, &c_dir, &edge2);
 
-    FLOAT det = D3DXVec3Dot(&edge1, &pvec);
-    D3DXVECTOR3 tvec;
+    FLOAT det = Math::Vec3Dot(&edge1, &pvec);
+    Math::Vector3 tvec;
 
     if (det > 0)
     {
@@ -150,24 +150,24 @@ bool CGraphicCollisionObject::IntersectTriangle(const D3DXVECTOR3& c_orig,
 		return false;
 
 	float u, v, t;
-    u = D3DXVec3Dot(&tvec, &pvec);
+    u = Math::Vec3Dot(&tvec, &pvec);
     if (u < 0.0f || u > det)
 		return false;
 
-    D3DXVECTOR3 qvec;
-    D3DXVec3Cross(&qvec, &tvec, &edge1);
+    Math::Vector3 qvec;
+    Math::Vec3Cross(&qvec, &tvec, &edge1);
 
-    v = D3DXVec3Dot(&c_dir, &qvec);
+    v = Math::Vec3Dot(&c_dir, &qvec);
     if (v < 0.0f || u + v > det)
 		return false;
 
-    t = D3DXVec3Dot(&edge2, &qvec);
+    t = Math::Vec3Dot(&edge2, &qvec);
     FLOAT fInvDet = 1.0f / det;
     t *= fInvDet;
     u *= fInvDet;
     v *= fInvDet;
 
-	D3DXVECTOR3 spot = edge1 * u + edge2 * v;
+	Math::Vector3 spot = edge1 * u + edge2 * v;
 	spot += c_v0;
 	
 	*pu = spot.x;
@@ -177,13 +177,13 @@ bool CGraphicCollisionObject::IntersectTriangle(const D3DXVECTOR3& c_orig,
 	return true;
 }
 
-bool CGraphicCollisionObject::IntersectSphere(const D3DXVECTOR3 & c_rv3Position, float fRadius, const D3DXVECTOR3 & c_rv3RayOriginal, const D3DXVECTOR3 & c_rv3RayDirection)
+bool CGraphicCollisionObject::IntersectSphere(const Math::Vector3 & c_rv3Position, float fRadius, const Math::Vector3 & c_rv3RayOriginal, const Math::Vector3 & c_rv3RayDirection)
 {
-	D3DXVECTOR3 v3RayOriginal = c_rv3RayOriginal - c_rv3Position;
+	Math::Vector3 v3RayOriginal = c_rv3RayOriginal - c_rv3Position;
 
-	float a = D3DXVec3Dot(&c_rv3RayDirection, &c_rv3RayDirection);
-	float b = 2 * D3DXVec3Dot(&v3RayOriginal, &c_rv3RayDirection);
-	float c = D3DXVec3Dot(&v3RayOriginal, &v3RayOriginal) - fRadius * fRadius;
+	float a = Math::Vec3Dot(&c_rv3RayDirection, &c_rv3RayDirection);
+	float b = 2 * Math::Vec3Dot(&v3RayOriginal, &c_rv3RayDirection);
+	float c = Math::Vec3Dot(&v3RayOriginal, &v3RayOriginal) - fRadius * fRadius;
 
 	float D = b * b - 4 * a * c;
 
@@ -193,9 +193,9 @@ bool CGraphicCollisionObject::IntersectSphere(const D3DXVECTOR3 & c_rv3Position,
 	return false;
 }
 
-bool CGraphicCollisionObject::IntersectCylinder(const D3DXVECTOR3 & c_rv3Position, float fRadius, float fHeight, const D3DXVECTOR3 & c_rv3RayOriginal, const D3DXVECTOR3 & c_rv3RayDirection)
+bool CGraphicCollisionObject::IntersectCylinder(const Math::Vector3 & c_rv3Position, float fRadius, float fHeight, const Math::Vector3 & c_rv3RayOriginal, const Math::Vector3 & c_rv3RayDirection)
 {
-	D3DXVECTOR3 v3RayOriginal = c_rv3RayOriginal - c_rv3Position;
+	Math::Vector3 v3RayOriginal = c_rv3RayOriginal - c_rv3Position;
 
 	float a = c_rv3RayDirection.x * c_rv3RayDirection.x + c_rv3RayDirection.y * c_rv3RayDirection.y;
 	float b = 2 * (v3RayOriginal.x * c_rv3RayDirection.x + v3RayOriginal.y * c_rv3RayDirection.y);
@@ -221,12 +221,12 @@ bool CGraphicCollisionObject::IntersectCylinder(const D3DXVECTOR3 & c_rv3Positio
 	return false;
 }
 
-bool CGraphicCollisionObject::IntersectSphere(const D3DXVECTOR3 & c_rv3Position, float fRadius)
+bool CGraphicCollisionObject::IntersectSphere(const Math::Vector3 & c_rv3Position, float fRadius)
 {
 	return CGraphicCollisionObject::IntersectSphere(c_rv3Position, fRadius, ms_vtPickRayOrig, ms_vtPickRayDir);
 }
 
-bool CGraphicCollisionObject::IntersectCylinder(const D3DXVECTOR3 & c_rv3Position, float fRadius, float fHeight)
+bool CGraphicCollisionObject::IntersectCylinder(const Math::Vector3 & c_rv3Position, float fRadius, float fHeight)
 {
 	return CGraphicCollisionObject::IntersectCylinder(c_rv3Position, fRadius, fHeight, ms_vtPickRayOrig, ms_vtPickRayDir);
 }

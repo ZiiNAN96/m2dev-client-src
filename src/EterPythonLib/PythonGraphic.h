@@ -18,7 +18,6 @@ class CPythonGraphic : public CScreen, public CSingleton<CPythonGraphic>
 		void PushState();
 		void PopState();
 
-		LPDIRECT3D9EX GetD3D();
 
 		float GetOrthoDepth();
 		void SetInterfaceRenderState();
@@ -49,8 +48,8 @@ class CPythonGraphic : public CScreen, public CSingleton<CPythonGraphic>
 	protected:
 		typedef struct SState
 		{
-			D3DXMATRIX matView;
-			D3DXMATRIX matProj;
+			Math::Matrix matView;
+			Math::Matrix matProj;
 		} TState;
 
 		DWORD		m_lightColor;
@@ -59,11 +58,11 @@ class CPythonGraphic : public CScreen, public CSingleton<CPythonGraphic>
 	protected:
 		std::stack<TState>						m_stateStack;
 
-		D3DXMATRIX								m_SaveWorldMatrix;
+		Math::Matrix								m_SaveWorldMatrix;
 
 		CCullingManager							m_CullingManager;
 
-		D3DVIEWPORT9							m_backupViewport;
+		Math::Viewport							m_backupViewport;
 
 		float									m_fOrthoDepth;
 };

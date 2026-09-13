@@ -9,9 +9,6 @@
 namespace Renderer
 {
 // ZiiNAN: Backend-neutral graphics resource ownership
-// Selected before application/device construction; never changed by resize or map load.
-inline constexpr bool neutralResources = true;
-inline constexpr bool UseNeutralResources() { return true; }
 inline std::atomic<size_t> liveSourceTextures{0}, liveSourceBuffers{0};
 
 struct TextureDesc

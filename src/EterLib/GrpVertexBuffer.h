@@ -10,7 +10,7 @@ class CGraphicVertexBuffer : public CGraphicBase
 		virtual ~CGraphicVertexBuffer();
 
 		void	Destroy();
-		virtual bool	Create(int vtxCount, DWORD fvf, DWORD usage, D3DPOOL d3dPool);
+		virtual bool	Create(int vtxCount, DWORD fvf);
 
 		bool	CreateDeviceObjects();
 		void	DestroyDeviceObjects();
@@ -25,13 +25,13 @@ class CGraphicVertexBuffer : public CGraphicBase
 		virtual bool	Lock(void** pretVertices);
 		bool	Unlock();
 
-		void	SetStream(int stride, int layer=0) const;
+
 			
 		int		GetVertexCount() const;
 		int		GetVertexStride() const;
-		DWORD	GetFlexibleVertexFormat() const;
+		DWORD	GetVertexLayout() const;
 
-		inline	LPDIRECT3DVERTEXBUFFER9 GetD3DVertexBuffer() const	{ return m_lpd3dVB; }
+
 		inline	DWORD GetBufferSize() const	{ return m_dwBufferSize; }
 
 		bool	IsEmpty() const;
@@ -41,12 +41,9 @@ class CGraphicVertexBuffer : public CGraphicBase
 
 	protected:
         mutable Renderer::CpuBuffer m_cpuBuffer;
-		LPDIRECT3DVERTEXBUFFER9 m_lpd3dVB;
+
 
 		DWORD					m_dwBufferSize;
-		DWORD					m_dwFVF;
-		DWORD					m_dwUsage;
-		D3DPOOL					m_d3dPool;
+		DWORD					m_vertexLayout;
 		int						m_vtxCount;
-		DWORD					m_dwLockFlag;
 };

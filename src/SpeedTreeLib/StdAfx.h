@@ -5,4 +5,4 @@
 //#include <crtdbg.h>
 
 //#include "Forest.h"
-#include "SpeedTreeForestDirectX.h"
+#include "SpeedTreeForestRenderer.h"

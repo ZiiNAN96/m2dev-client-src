@@ -21,6 +21,5 @@ public:
     virtual bool RequestScreenshot(ScreenshotSink sink) = 0;
 };
 inline ITerrainPresentation* activePresentation=nullptr;
-bool IsDiligentTerrainAvailable();
 std::unique_ptr<ITerrainPresentation> CreateTerrainPresentation(void* parent, uint32_t width, uint32_t height);
 }

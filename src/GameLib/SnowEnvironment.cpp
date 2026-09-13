@@ -1,8 +1,7 @@
 #include "StdAfx.h"
-#include "EterLib/NativeResourceAudit.h"
 #include "SnowEnvironment.h"
 
-#include "EterLib/StateManager.h"
+#include "EterLib/DrawState.h"
 #include "EterLib/Camera.h"
 #include "EterLib/ResourceManager.h"
 #include "SnowParticle.h"
@@ -23,7 +22,7 @@ void CSnowEnvironment::Disable()
 	m_bSnowEnable = FALSE;
 }
 
-void CSnowEnvironment::Update(const D3DXVECTOR3 & c_rv3Pos)
+void CSnowEnvironment::Update(const Math::Vector3 & c_rv3Pos)
 {
 	if (!m_bSnowEnable)
 	{
@@ -42,7 +41,7 @@ void CSnowEnvironment::Deform()
 			return;
 	}
 
-	const D3DXVECTOR3 & c_rv3Pos=m_v3Center;
+	const Math::Vector3 & c_rv3Pos=m_v3Center;
 	
 	static long s_lLastTime = CTimer::Instance().GetCurrentMillisecond();
 	long lcurTime = CTimer::Instance().GetCurrentMillisecond();
@@ -53,9 +52,9 @@ void CSnowEnvironment::Deform()
 	if (!pCamera)
 		return;
 
-	const D3DXVECTOR3 & c_rv3View = pCamera->GetView();
+	const Math::Vector3 & c_rv3View = pCamera->GetView();
 
-	D3DXVECTOR3 v3ChangedPos = c_rv3View * 3500.0f + c_rv3Pos;
+	Math::Vector3 v3ChangedPos = c_rv3View * 3500.0f + c_rv3Pos;
 	v3ChangedPos.z = c_rv3Pos.z;
 
 	std::vector<CSnowParticle*>::iterator itor = m_kVct_pkParticleSnow.begin();
@@ -87,16 +86,9 @@ void CSnowEnvironment::Deform()
 	}
 }
 
-void CSnowEnvironment::__BeginBlur()
-{
-    // ZiiNAN: Legacy D3D9 renderer removed from production path.
-    // The migrated snow particles never used the legacy blur targets.
-}
 
-void CSnowEnvironment::__ApplyBlur()
-{
 
-}
+
 
 void CSnowEnvironment::Render()
 {
@@ -108,21 +100,18 @@ void CSnowEnvironment::Render()
 			return;
 	}
 
-	__BeginBlur();
-
 	DWORD dwParticleCount = std::min((size_t)m_dwParticleMaxNum, m_kVct_pkParticleSnow.size());
 
 	CCamera * pCamera = CCameraManager::Instance().GetCurrentCamera();
 	if (!pCamera)
 		return;
 
-	const D3DXVECTOR3 & c_rv3Up = pCamera->GetUp();
-	const D3DXVECTOR3 & c_rv3Cross = pCamera->GetCross();
+	const Math::Vector3 & c_rv3Up = pCamera->GetUp();
+	const Math::Vector3 & c_rv3Cross = pCamera->GetCross();
 
 	std::vector<SParticleVertex> cpuVertices;
-    if (Renderer::UseNeutralResources()) cpuVertices.resize(size_t(dwParticleCount)*4);
+    cpuVertices.resize(size_t(dwParticleCount)*4);
     SParticleVertex * pv3Verticies=cpuVertices.data();
-	if (Renderer::UseNeutralResources() || SUCCEEDED(m_pVB->Lock(0, sizeof(SParticleVertex)*dwParticleCount*4, (void **) &pv3Verticies, D3DLOCK_DISCARD)))
 	{
 		int i = 0;
 		std::vector<CSnowParticle*>::iterator itor = m_kVct_pkParticleSnow.begin();
@@ -136,93 +125,47 @@ void CSnowEnvironment::Render()
 								pv3Verticies[i*4+3]);
 		}
 
-        if(Renderer::effectRenderer && Renderer::effectWorldFrame && !m_bBlurEnable) {
+        if(Renderer::effectRenderer && Renderer::effectWorldFrame) {
             // Preserve the native index order while the original CPU vertices are still locked.
             constexpr unsigned corners[]={0,2,1,2,3,1};
             effectVertices.reserve(size_t(dwParticleCount)*6);
             for(unsigned particle=0;particle<dwParticleCount;++particle)
                 for(auto corner:corners) effectVertices.push_back(pv3Verticies[particle*4+corner]);
         }
-		if (m_pVB) m_pVB->Unlock();
 	}
 
-	STATEMANAGER.SaveRenderState(D3DRS_ZWRITEENABLE, FALSE);
-	STATEMANAGER.SaveRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
-	STATEMANAGER.SaveRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
-	STATEMANAGER.SetRenderState(D3DRS_SRCBLEND,  D3DBLEND_SRCALPHA);
-	STATEMANAGER.SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1);
-	STATEMANAGER.SetTexture(1, NULL);
-	STATEMANAGER.SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_DISABLE);
-	STATEMANAGER.SetTextureStageState(1, D3DTSS_ALPHAOP, D3DTOP_DISABLE);
+	DRAWSTATE.SaveRenderState(Renderer::StateZWriteEnable, FALSE);
+	DRAWSTATE.SaveRenderState(Renderer::StateAlphaBlendEnable, TRUE);
+	DRAWSTATE.SaveRenderState(Renderer::StateCullMode, Renderer::CullNone);
+	DRAWSTATE.SetRenderState(Renderer::StateSrcBlend,  Renderer::BlendSrcAlpha);
+	DRAWSTATE.SetRenderState(Renderer::StateDestBlend, Renderer::BlendInvSrcAlpha);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageColorArg1, Renderer::ArgTexture);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageColorOp, Renderer::TextureOpSelectArg1);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageAlphaArg1, Renderer::ArgTexture);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageAlphaOp, Renderer::TextureOpSelectArg1);
+	DRAWSTATE.SetTexture(1, NULL);
+	DRAWSTATE.SetTextureStageState(1, Renderer::StageColorOp, Renderer::TextureOpDisable);
+	DRAWSTATE.SetTextureStageState(1, Renderer::StageAlphaOp, Renderer::TextureOpDisable);
 
 	m_pImageInstance->GetGraphicImagePointer()->GetTextureReference().SetTextureStage(0);
-	STATEMANAGER.SetIndices(m_pIB, 0);
-	STATEMANAGER.SetStreamSource(0, m_pVB, sizeof(SParticleVertex));
-	STATEMANAGER.SetFVF(D3DFVF_XYZ | D3DFVF_TEX1);
-    const HRESULT nativeDraw=STATEMANAGER.DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, dwParticleCount*4, 0, dwParticleCount*2);
     if(!effectVertices.empty()) {
         EffectRenderBridge::Texture(m_pImageInstance->GetGraphicImagePointer());
-        EffectRenderBridge::SubmitNativeDraw(D3DPT_TRIANGLELIST,dwParticleCount*2,effectVertices.data(),sizeof(SParticleVertex),nativeDraw);
+        EffectRenderBridge::Submit(Renderer::TopologyTriangleList,dwParticleCount*2,effectVertices.data(),sizeof(SParticleVertex));
     }
-	STATEMANAGER.RestoreRenderState(D3DRS_ALPHABLENDENABLE);
-	STATEMANAGER.RestoreRenderState(D3DRS_ZWRITEENABLE);
-	STATEMANAGER.RestoreRenderState(D3DRS_CULLMODE);
-
-	__ApplyBlur();
+	DRAWSTATE.RestoreRenderState(Renderer::StateAlphaBlendEnable);
+	DRAWSTATE.RestoreRenderState(Renderer::StateZWriteEnable);
+	DRAWSTATE.RestoreRenderState(Renderer::StateCullMode);
 }
 
-bool CSnowEnvironment::__CreateBlurTexture()
-{
-    return true;
-}
 
-bool CSnowEnvironment::__CreateGeometry()
-{
-    if (Renderer::UseNeutralResources()) return true;
-	if (FAILED(M2_NATIVE_RESOURCE(VertexBuffer, ms_lpd3dDevice->CreateVertexBuffer(sizeof(SParticleVertex) * m_dwParticleMaxNum * 4,
-		D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY,
-		D3DFVF_XYZ | D3DFVF_TEX1,
-		D3DPOOL_DEFAULT,
-		&m_pVB, nullptr))))
-		return false;
 
-	if (FAILED(M2_NATIVE_RESOURCE(IndexBuffer, ms_lpd3dDevice->CreateIndexBuffer(sizeof(WORD) * m_dwParticleMaxNum * 6,
-		D3DUSAGE_DYNAMIC,
-		D3DFMT_INDEX16,
-		D3DPOOL_DEFAULT,
-		&m_pIB, nullptr))))
-		return false;
 
-	WORD* dstIndices;
-	if (FAILED(m_pIB->Lock(0, sizeof(WORD) * m_dwParticleMaxNum * 6, (void**)&dstIndices, 0)))
-		return false;
-
-	const WORD c_awFillRectIndices[6] = { 0, 2, 1, 2, 3, 1, };
-	for (int i = 0; i < m_dwParticleMaxNum; ++i)
-	{
-		for (int j = 0; j < 6; ++j)
-		{
-			dstIndices[i*6 + j] = i*4 + c_awFillRectIndices[j];
-		}
-	}
-
-	m_pIB->Unlock();
-	return true;
-}
 
 bool CSnowEnvironment::Create()
 {
 	Destroy();
 
-	if (!__CreateBlurTexture())
-		return false;
 
-	if (!__CreateGeometry())
-		return false;
 
 	CGraphicImage * pImage = (CGraphicImage *)CResourceManager::Instance().GetResourcePointer("d:/ymir work/special/snow.dds");
 	m_pImageInstance = CGraphicImageInstance::New();
@@ -234,14 +177,6 @@ bool CSnowEnvironment::Create()
 void CSnowEnvironment::Destroy()
 {
     m_effectResources.textures.clear();
-	SAFE_RELEASE(m_lpSnowTexture);
-	SAFE_RELEASE(m_lpSnowRenderTargetSurface);
-	SAFE_RELEASE(m_lpSnowDepthSurface);
-	SAFE_RELEASE(m_lpAccumTexture);
-	SAFE_RELEASE(m_lpAccumRenderTargetSurface);
-	SAFE_RELEASE(m_lpAccumDepthSurface);
-	SAFE_RELEASE(m_pVB);
-	SAFE_RELEASE(m_pIB);
 
 	stl_wipe(m_kVct_pkParticleSnow);
 	CSnowParticle::DestroyPool();
@@ -258,14 +193,6 @@ void CSnowEnvironment::Destroy()
 void CSnowEnvironment::__Initialize()
 {
 	m_bSnowEnable = FALSE;
-	m_lpSnowTexture = NULL;
-	m_lpSnowRenderTargetSurface = NULL;
-	m_lpSnowDepthSurface = NULL;
-	m_lpAccumTexture = NULL;
-	m_lpAccumRenderTargetSurface = NULL;
-	m_lpAccumDepthSurface = NULL;
-	m_pVB = NULL;
-	m_pIB = NULL;
 	m_pImageInstance = NULL;
 
 	m_kVct_pkParticleSnow.reserve(m_dwParticleMaxNum);
@@ -273,7 +200,6 @@ void CSnowEnvironment::__Initialize()
 
 CSnowEnvironment::CSnowEnvironment()
 {
-	m_bBlurEnable = FALSE;
 	m_dwParticleMaxNum = 3000;
 	m_wBlurTextureSize = 512;
 

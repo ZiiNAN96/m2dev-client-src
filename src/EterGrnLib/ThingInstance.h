@@ -2,7 +2,7 @@
 
 #include "Eterbase/Stl.h"
 #include "Eterlib/GrpObjectInstance.h"
-#include "Eterlib/GrpShadowTexture.h"
+
 
 #include "LODController.h"
 		
@@ -38,7 +38,7 @@ class CGraphicThingInstance : public CGraphicObjectInstance
 		
 		bool		LessRenderOrder(CGraphicThingInstance* pkThingInst);
 
-		bool		Picking(const D3DXVECTOR3 & v, const D3DXVECTOR3 & dir, float & out_x, float & out_y);
+		bool		Picking(const Math::Vector3 & v, const Math::Vector3 & dir, float & out_x, float & out_y);
 
 		void		OnInitialize();
 
@@ -101,19 +101,19 @@ class CGraphicThingInstance : public CGraphicObjectInstance
 		bool		SetMotion(DWORD dwMotionKey, float blendTime = 0.0f, int loopCount = 0, float speedRatio=1.0f);
 		bool		ChangeMotion(DWORD dwMotionKey, int loopCount = 0, float speedRatio=1.0f);
 		bool		Intersect(float * pu, float * pv, float * pt);
-		void		GetBoundBox(D3DXVECTOR3 * vtMin, D3DXVECTOR3 * vtMax);
-		BOOL		GetBoundBox(DWORD dwModelInstanceIndex, D3DXVECTOR3 * vtMin, D3DXVECTOR3 * vtMax);
-		BOOL		GetBoneMatrix(DWORD dwModelInstanceIndex, DWORD dwBoneIndex, D3DXMATRIX ** ppMatrix);
-		BOOL		GetCompositeBoneMatrix(DWORD dwModelInstanceIndex, DWORD dwBoneIndex, D3DXMATRIX ** ppMatrix);
-		void		UpdateTransform(D3DXMATRIX * pMatrix, float fSecondsElapsed = 0.0f, int iModelInstanceIndex = 0);
-		void		ProjectShadow(const CGraphicShadowTexture & c_rShadowTexture);
+		void		GetBoundBox(Math::Vector3 * vtMin, Math::Vector3 * vtMax);
+		BOOL		GetBoundBox(DWORD dwModelInstanceIndex, Math::Vector3 * vtMin, Math::Vector3 * vtMax);
+		BOOL		GetBoneMatrix(DWORD dwModelInstanceIndex, DWORD dwBoneIndex, Math::Matrix ** ppMatrix);
+		BOOL		GetCompositeBoneMatrix(DWORD dwModelInstanceIndex, DWORD dwBoneIndex, Math::Matrix ** ppMatrix);
+		void		UpdateTransform(Math::Matrix * pMatrix, float fSecondsElapsed = 0.0f, int iModelInstanceIndex = 0);
+
 
 	public:
 		void			BuildBoundingSphere();
 		void			BuildBoundingAABB();
 		virtual void	CalculateBBox();
-		virtual bool	GetBoundingSphere(D3DXVECTOR3 & v3Center, float & fRadius);
-		virtual bool	GetBoundingAABB(D3DXVECTOR3 & v3Min, D3DXVECTOR3 & v3Max);
+		virtual bool	GetBoundingSphere(Math::Vector3 & v3Center, float & fRadius);
+		virtual bool	GetBoundingAABB(Math::Vector3 & v3Min, Math::Vector3 & v3Max);
 
 	protected:
 		void		OnClear();
@@ -133,8 +133,8 @@ class CGraphicThingInstance : public CGraphicObjectInstance
 		float									m_fSecondElapsed;
 		float									m_fAverageSecondElapsed;
 		float									m_fRadius;
-		D3DXVECTOR3								m_v3Center;
-		D3DXVECTOR3								m_v3Min, m_v3Max;
+		Math::Vector3								m_v3Center;
+		Math::Vector3								m_v3Min, m_v3Max;
 
 		std::vector<CGrannyLODController *>		m_LODControllerVector;
 		std::vector<TModelThingSet>				m_modelThingSetVector;

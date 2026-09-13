@@ -29,7 +29,7 @@ void CEffectElementBaseInstance::Render()
 	OnRender();
 }
 
-void CEffectElementBaseInstance::SetLocalMatrixPointer(const D3DXMATRIX * c_pMatrix)
+void CEffectElementBaseInstance::SetLocalMatrixPointer(const Math::Matrix * c_pMatrix)
 {
 	mc_pmatLocal = c_pMatrix;
 }

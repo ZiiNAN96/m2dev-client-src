@@ -43,7 +43,7 @@ void CGrannyMesh::NEW_LoadVertices(void * dstBaseVertices)
 	GrannyCopyMeshVertices(pgrnMesh, m_pgrnMeshType, dstVertices);
 }
 
-void CGrannyMesh::DeformPNTVertices(void* dstBaseVertices, D3DXMATRIX* boneMatrices, granny_mesh_binding* pgrnMeshBinding) const
+void CGrannyMesh::DeformPNTVertices(void* dstBaseVertices, Math::Matrix* boneMatrices, granny_mesh_binding* pgrnMeshBinding) const
 {
 	assert(dstBaseVertices != NULL);
 	assert(boneMatrices != NULL);

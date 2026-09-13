@@ -27,12 +27,12 @@ class CDungeonBlock : public CGraphicObjectInstance
 		bool Load(const char * c_szFileName);
 
 		bool Intersect(float * pfu, float * pfv, float * pft);
-		void GetBoundBox(D3DXVECTOR3 * pv3Min, D3DXVECTOR3 * pv3Max);
+		void GetBoundBox(Math::Vector3 * pv3Min, Math::Vector3 * pv3Max);
 
 		void Update();
 		void Render();
 
-		bool GetBoundingSphere(D3DXVECTOR3 & v3Center, float & fRadius);
+		bool GetBoundingSphere(Math::Vector3 & v3Center, float & fRadius);
 		void OnUpdateCollisionData(const CStaticCollisionDataVector * pscdVector);
 		void OnUpdateHeighInstance(CAttributeInstance * pAttributeInstance);
 		bool OnGetObjectHeight(float fX, float fY, float * pfHeight);
@@ -47,7 +47,7 @@ class CDungeonBlock : public CGraphicObjectInstance
 		void __Initialize();
 
 	protected:
-		D3DXVECTOR3 m_v3Center;
+		Math::Vector3 m_v3Center;
 		float m_fRadius;
 
 		CGraphicThing * m_pThing;

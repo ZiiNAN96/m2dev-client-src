@@ -55,7 +55,7 @@ float CSpeedGrassRT::m_afCameraOut[3] = { 0.0f, 1.0f, 0.0f };
 float CSpeedGrassRT::m_afCameraUp[3] = { 0.0f, 0.0f, 1.0f };
 float CSpeedGrassRT::m_afCameraRight[3] = { 1.0f, 0.0f, 0.0f };
 float CSpeedGrassRT::m_afCameraPos[3] = { 0.0f, 0.0f, 0.0f };
-float CSpeedGrassRT::m_fFieldOfView = D3DXToRadian(40.0f);
+float CSpeedGrassRT::m_fFieldOfView = Math::ToRadian(40.0f);
 float CSpeedGrassRT::m_fAspectRatio = 4.0f / 3.0f;
 
 // culling
@@ -170,8 +170,8 @@ bool CSpeedGrassRT::ParseBsfFile(const char* pFilename, unsigned int nNumBlades,
 //				cNormal.Normalize( );
 //				cNormal[2] = -cNormal[2];
 //				memcpy(sBlade.m_afNormal, cNormal, 3 * sizeof(float));
-				D3DXVECTOR3 v3Normal(sBlade.m_afNormal[0], sBlade.m_afNormal[1], sBlade.m_afNormal[2]);
-				D3DXVec3Normalize(&v3Normal, &v3Normal);
+				Math::Vector3 v3Normal(sBlade.m_afNormal[0], sBlade.m_afNormal[1], sBlade.m_afNormal[2]);
+				Math::Vec3Normalize(&v3Normal, &v3Normal);
 				v3Normal.z = -v3Normal.z;
 				sBlade.m_afNormal[0] = v3Normal.x;
 				sBlade.m_afNormal[1] = v3Normal.y;
@@ -403,7 +403,7 @@ void CSpeedGrassRT::SetCamera(const float* pPosition, const double* pModelviewMa
 void CSpeedGrassRT::SetPerspective(float fAspectRatio, float fFieldOfView)
 {
 	m_fAspectRatio = fAspectRatio;
-	m_fFieldOfView = D3DXToRadian(fAspectRatio * fFieldOfView);
+	m_fFieldOfView = Math::ToRadian(fAspectRatio * fFieldOfView);
 }
 
 
@@ -529,7 +529,7 @@ void CSpeedGrassRT::CreateRegions(const vector<SBlade>& vSceneBlades, float fCol
 //////////////////////////////////////////////////////////////////////////
 // CSpeedGrassRT::RotateAxisFromIdentity
 
-__forceinline void CSpeedGrassRT::RotateAxisFromIdentity(D3DXMATRIX * pMat, const float & c_fAngle, const D3DXVECTOR3 & c_rv3Axis)
+__forceinline void CSpeedGrassRT::RotateAxisFromIdentity(Math::Matrix * pMat, const float & c_fAngle, const Math::Vector3 & c_rv3Axis)
 {
     float s = VectorSinD(c_fAngle);
     float c = VectorCosD(c_fAngle);
@@ -562,11 +562,11 @@ void CSpeedGrassRT::ComputeFrustum(void)
 //	CVec3 cCameraRight(m_afCameraRight[0], m_afCameraRight[1], m_afCameraRight[2]);
 //	CVec3 cCameraPos(m_afCameraPos[0], m_afCameraPos[1], m_afCameraPos[2]);
 //	CVec3 cFarPoint = cCameraPos + cCameraIn * (m_fLodFarDistance + m_fLodTransitionLength);
-	D3DXVECTOR3 cCameraIn(-m_afCameraOut[0], -m_afCameraOut[1], -m_afCameraOut[2]);
-	D3DXVECTOR3 cCameraUp(m_afCameraUp[0], m_afCameraUp[1], m_afCameraUp[2]);
-	D3DXVECTOR3 cCameraRight(m_afCameraRight[0], m_afCameraRight[1], m_afCameraRight[2]);
-	D3DXVECTOR3 cCameraPos(m_afCameraPos[0], m_afCameraPos[1], m_afCameraPos[2]);
-	D3DXVECTOR3 cFarPoint = cCameraPos + cCameraIn * (m_fLodFarDistance + m_fLodTransitionLength);
+	Math::Vector3 cCameraIn(-m_afCameraOut[0], -m_afCameraOut[1], -m_afCameraOut[2]);
+	Math::Vector3 cCameraUp(m_afCameraUp[0], m_afCameraUp[1], m_afCameraUp[2]);
+	Math::Vector3 cCameraRight(m_afCameraRight[0], m_afCameraRight[1], m_afCameraRight[2]);
+	Math::Vector3 cCameraPos(m_afCameraPos[0], m_afCameraPos[1], m_afCameraPos[2]);
+	Math::Vector3 cFarPoint = cCameraPos + cCameraIn * (m_fLodFarDistance + m_fLodTransitionLength);
 
 	// far plane
 //	memcpy(m_afFrustumPlanes[0], cCameraIn, 3 * sizeof(float));
@@ -574,12 +574,12 @@ void CSpeedGrassRT::ComputeFrustum(void)
 	m_afFrustumPlanes[0][0] = cCameraIn.x;
 	m_afFrustumPlanes[0][1] = cCameraIn.y;
 	m_afFrustumPlanes[0][2] = cCameraIn.z;
-	m_afFrustumPlanes[0][3] = -D3DXVec3Dot(&cCameraIn, &cFarPoint); // operator^ is dot product
+	m_afFrustumPlanes[0][3] = -Math::Vec3Dot(&cCameraIn, &cFarPoint); // operator^ is dot product
 
 // 	CRotTransform cRotate(true);
-	D3DXMATRIX cRotate;
-	D3DXMatrixIdentity(&cRotate);
-	D3DXVECTOR3 cNormal;
+	Math::Matrix cRotate;
+	Math::MatrixIdentity(&cRotate);
+	Math::Vector3 cNormal;
 
 	// upper plane
 //	cRotate.RotateAxisFromIdentity(VecRad2Deg(0.5f * m_fFieldOfView * m_fAspectRatio + c_fHalfPi) , cCameraRight);
@@ -609,44 +609,44 @@ void CSpeedGrassRT::ComputeFrustum(void)
 //	memcpy(m_afFrustumPlanes[4], cNormal, 3 * sizeof(float));
 //	m_afFrustumPlanes[4][3] = -(cNormal ^ cCameraPos);
 
-	RotateAxisFromIdentity(&cRotate, D3DXToDegree(0.5f * m_fFieldOfView * m_fAspectRatio + c_fHalfPi), cCameraRight);
-	D3DXVec3TransformCoord(&cNormal, &cCameraIn, &cRotate);
-	D3DXVec3Normalize(&cNormal, &cNormal);
+	RotateAxisFromIdentity(&cRotate, Math::ToDegree(0.5f * m_fFieldOfView * m_fAspectRatio + c_fHalfPi), cCameraRight);
+	Math::Vec3TransformCoord(&cNormal, &cCameraIn, &cRotate);
+	Math::Vec3Normalize(&cNormal, &cNormal);
 	m_afFrustumPlanes[1][0] = cNormal.x;
 	m_afFrustumPlanes[1][1] = cNormal.y;
 	m_afFrustumPlanes[1][2] = cNormal.z;
-	m_afFrustumPlanes[1][3] = -D3DXVec3Dot(&cNormal, &cCameraPos); // operator^ is dot product
+	m_afFrustumPlanes[1][3] = -Math::Vec3Dot(&cNormal, &cCameraPos); // operator^ is dot product
 
-	RotateAxisFromIdentity(&cRotate, D3DXToDegree(0.5f * m_fFieldOfView + c_fHalfPi), cCameraUp);
-	D3DXVec3TransformCoord(&cNormal, &cCameraIn, &cRotate);
-	D3DXVec3Normalize(&cNormal, &cNormal);
+	RotateAxisFromIdentity(&cRotate, Math::ToDegree(0.5f * m_fFieldOfView + c_fHalfPi), cCameraUp);
+	Math::Vec3TransformCoord(&cNormal, &cCameraIn, &cRotate);
+	Math::Vec3Normalize(&cNormal, &cNormal);
 	m_afFrustumPlanes[2][0] = cNormal.x;
 	m_afFrustumPlanes[2][1] = cNormal.y;
 	m_afFrustumPlanes[2][2] = cNormal.z;
-	m_afFrustumPlanes[2][3] = -D3DXVec3Dot(&cNormal, &cCameraPos); // operator^ is dot product
+	m_afFrustumPlanes[2][3] = -Math::Vec3Dot(&cNormal, &cCameraPos); // operator^ is dot product
 
-	RotateAxisFromIdentity(&cRotate, -D3DXToDegree(0.5f * m_fFieldOfView * m_fAspectRatio + c_fHalfPi), cCameraRight);
-	D3DXVec3TransformCoord(&cNormal, &cCameraIn, &cRotate);
-	D3DXVec3Normalize(&cNormal, &cNormal);
+	RotateAxisFromIdentity(&cRotate, -Math::ToDegree(0.5f * m_fFieldOfView * m_fAspectRatio + c_fHalfPi), cCameraRight);
+	Math::Vec3TransformCoord(&cNormal, &cCameraIn, &cRotate);
+	Math::Vec3Normalize(&cNormal, &cNormal);
 	m_afFrustumPlanes[3][0] = cNormal.x;
 	m_afFrustumPlanes[3][1] = cNormal.y;
 	m_afFrustumPlanes[3][2] = cNormal.z;
-	m_afFrustumPlanes[3][3] = -D3DXVec3Dot(&cNormal, &cCameraPos); // operator^ is dot product
+	m_afFrustumPlanes[3][3] = -Math::Vec3Dot(&cNormal, &cCameraPos); // operator^ is dot product
 
-	RotateAxisFromIdentity(&cRotate, -D3DXToDegree(0.5f * m_fFieldOfView + c_fHalfPi), cCameraUp);
-	D3DXVec3TransformCoord(&cNormal, &cCameraIn, &cRotate);
-	D3DXVec3Normalize(&cNormal, &cNormal);
+	RotateAxisFromIdentity(&cRotate, -Math::ToDegree(0.5f * m_fFieldOfView + c_fHalfPi), cCameraUp);
+	Math::Vec3TransformCoord(&cNormal, &cCameraIn, &cRotate);
+	Math::Vec3Normalize(&cNormal, &cNormal);
 	m_afFrustumPlanes[4][0] = cNormal.x;
 	m_afFrustumPlanes[4][1] = cNormal.y;
 	m_afFrustumPlanes[4][2] = cNormal.z;
-	m_afFrustumPlanes[4][3] = -D3DXVec3Dot(&cNormal, &cCameraPos); // operator^ is dot product
+	m_afFrustumPlanes[4][3] = -Math::Vec3Dot(&cNormal, &cCameraPos); // operator^ is dot product
 
 	// frustum points
 	float fFrustumHeight = (m_fLodFarDistance + m_fLodTransitionLength) * tanf(0.5f * m_fFieldOfView);
 	float fFrustumWidth = (m_fLodFarDistance + m_fLodTransitionLength) * tanf(0.5f * m_fFieldOfView * m_fAspectRatio);
 
 //	CVec3 acFrustum[5];
-	D3DXVECTOR3 acFrustum[5];
+	Math::Vector3 acFrustum[5];
 	acFrustum[0] = cCameraPos;
 	acFrustum[1] = cFarPoint + cCameraRight * fFrustumWidth + cCameraUp * fFrustumHeight;
 	acFrustum[2] = cFarPoint - cCameraRight * fFrustumWidth + cCameraUp * fFrustumHeight;
@@ -671,7 +671,7 @@ void CSpeedGrassRT::ComputeFrustum(void)
 
 void CSpeedGrassRT::ComputeUnitBillboard(void)
 {
-//	float fAzimuth = D3DXToDegree(atan2(-m_afCameraOut[1], -m_afCameraOut[0]));
+//	float fAzimuth = Math::ToDegree(atan2(-m_afCameraOut[1], -m_afCameraOut[0]));
 	float fAzimuth = atan2(-m_afCameraOut[1], -m_afCameraOut[0]);
 
 //    CRotTransform cTrans;
@@ -692,23 +692,23 @@ void CSpeedGrassRT::ComputeUnitBillboard(void)
 //	memcpy(m_afUnitBillboard + 6, afNewCorner3.m_afData, 3 * sizeof(float));
 //	memcpy(m_afUnitBillboard + 9, afNewCorner4.m_afData, 3 * sizeof(float));
 
-	D3DXMATRIX cTrans;
-	D3DXMatrixRotationZ(&cTrans, fAzimuth);
+	Math::Matrix cTrans;
+	Math::MatrixRotationZ(&cTrans, fAzimuth);
 
-	static D3DXVECTOR3 afCorner1(0.0f, 0.5f, 1.0f);
-	static D3DXVECTOR3 afCorner2(0.0f, -0.5f, 1.0f);
-	static D3DXVECTOR3 afCorner3(0.0f, -0.5f, 0.0f);
-	static D3DXVECTOR3 afCorner4(0.0f, 0.5f, 0.0f);
+	static Math::Vector3 afCorner1(0.0f, 0.5f, 1.0f);
+	static Math::Vector3 afCorner2(0.0f, -0.5f, 1.0f);
+	static Math::Vector3 afCorner3(0.0f, -0.5f, 0.0f);
+	static Math::Vector3 afCorner4(0.0f, 0.5f, 0.0f);
 
-	D3DXVECTOR3 afNewCorner1;
-	D3DXVECTOR3 afNewCorner2;
-	D3DXVECTOR3 afNewCorner3;
-	D3DXVECTOR3 afNewCorner4;
+	Math::Vector3 afNewCorner1;
+	Math::Vector3 afNewCorner2;
+	Math::Vector3 afNewCorner3;
+	Math::Vector3 afNewCorner4;
 
-	D3DXVec3TransformCoord(&afNewCorner1, &afCorner1, &cTrans);
-	D3DXVec3TransformCoord(&afNewCorner2, &afCorner2, &cTrans);
-	D3DXVec3TransformCoord(&afNewCorner3, &afCorner3, &cTrans);
-	D3DXVec3TransformCoord(&afNewCorner4, &afCorner4, &cTrans);
+	Math::Vec3TransformCoord(&afNewCorner1, &afCorner1, &cTrans);
+	Math::Vec3TransformCoord(&afNewCorner2, &afCorner2, &cTrans);
+	Math::Vec3TransformCoord(&afNewCorner3, &afCorner3, &cTrans);
+	Math::Vec3TransformCoord(&afNewCorner4, &afCorner4, &cTrans);
 
 	m_afUnitBillboard[0] = afNewCorner1.x;
 	m_afUnitBillboard[1] = afNewCorner1.y;

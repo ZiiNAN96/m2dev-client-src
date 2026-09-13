@@ -1,6 +1,6 @@
 #include "StdAfx.h"
 #include "EterBase/Random.h"
-#include "Eterlib/StateManager.h"
+#include "Eterlib/DrawState.h"
 #include "EffectManager.h"
 
 void CEffectManager::GetInfo(std::string* pstInfo)
@@ -96,8 +96,8 @@ struct CEffectManager_FEffectInstanceRender
 
 void CEffectManager::Render()
 {
-	STATEMANAGER.SetTexture(0, NULL);
-	STATEMANAGER.SetTexture(1, NULL);
+	DRAWSTATE.SetTexture(0, NULL);
+	DRAWSTATE.SetTexture(1, NULL);
 	
 	if (m_isDisableSortRendering)
 	{	
@@ -180,20 +180,20 @@ BOOL CEffectManager::RegisterEffect2(const char * c_szFileName, DWORD* pdwRetCRC
 	return RegisterEffect(c_szFileName,false,isNeedCache);
 }
 
-int CEffectManager::CreateEffect(const char * c_szFileName, const D3DXVECTOR3 & c_rv3Position, const D3DXVECTOR3 & c_rv3Rotation)
+int CEffectManager::CreateEffect(const char * c_szFileName, const Math::Vector3 & c_rv3Position, const Math::Vector3 & c_rv3Rotation)
 {
 	DWORD dwID = GetCaseCRC32(c_szFileName, strlen(c_szFileName));
 	return CreateEffect(dwID, c_rv3Position, c_rv3Rotation);
 }
 
-int CEffectManager::CreateEffect(DWORD dwID, const D3DXVECTOR3 & c_rv3Position, const D3DXVECTOR3 & c_rv3Rotation)
+int CEffectManager::CreateEffect(DWORD dwID, const Math::Vector3 & c_rv3Position, const Math::Vector3 & c_rv3Rotation)
 {
 	int iInstanceIndex = GetEmptyIndex();
 
 	CreateEffectInstance(iInstanceIndex, dwID);
 	SelectEffectInstance(iInstanceIndex);
-	D3DXMATRIX mat;
-	D3DXMatrixRotationYawPitchRoll(&mat,D3DXToRadian(c_rv3Rotation.x),D3DXToRadian(c_rv3Rotation.y),D3DXToRadian(c_rv3Rotation.z));
+	Math::Matrix mat;
+	Math::MatrixRotationYawPitchRoll(&mat,Math::ToRadian(c_rv3Rotation.x),Math::ToRadian(c_rv3Rotation.y),Math::ToRadian(c_rv3Rotation.z));
 	mat._41 = c_rv3Position.x;
 	mat._42 = c_rv3Position.y;
 	mat._43 = c_rv3Position.z;
@@ -302,7 +302,7 @@ void CEffectManager::SetEffectTextures(DWORD dwID, std::vector<std::string> text
 	}
 }
 
-void CEffectManager::SetEffectInstancePosition(const D3DXVECTOR3 & c_rv3Position)
+void CEffectManager::SetEffectInstancePosition(const Math::Vector3 & c_rv3Position)
 {
 	if (!m_pSelectedEffectInstance)
 	{
@@ -313,7 +313,7 @@ void CEffectManager::SetEffectInstancePosition(const D3DXVECTOR3 & c_rv3Position
 	m_pSelectedEffectInstance->SetPosition(c_rv3Position);
 }
 
-void CEffectManager::SetEffectInstanceRotation(const D3DXVECTOR3 & c_rv3Rotation)
+void CEffectManager::SetEffectInstanceRotation(const Math::Vector3 & c_rv3Rotation)
 {
 	if (!m_pSelectedEffectInstance)
 	{
@@ -324,7 +324,7 @@ void CEffectManager::SetEffectInstanceRotation(const D3DXVECTOR3 & c_rv3Rotation
 	m_pSelectedEffectInstance->SetRotation(c_rv3Rotation.x,c_rv3Rotation.y,c_rv3Rotation.z);
 }
 
-void CEffectManager::SetEffectInstanceGlobalMatrix(const D3DXMATRIX & c_rmatGlobal)
+void CEffectManager::SetEffectInstanceGlobalMatrix(const Math::Matrix & c_rmatGlobal)
 {
 	if (!m_pSelectedEffectInstance)
 		return;

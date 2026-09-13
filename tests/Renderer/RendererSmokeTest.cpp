@@ -2,11 +2,9 @@
 #include "EterLib/GrpDevice.h"
 #include "EterLib/GrpScreen.h"
 #include "EterLib/Camera.h"
-#ifdef M2_ENABLE_DILIGENT_D3D11
 #include <d3d11.h>
 #include "Renderer/DiligentD3D11BackendInternal.h"
 #include "Graphics/GraphicsEngineD3D11/interface/RenderDeviceD3D11.h"
-#endif
 #include <wrl/client.h>
 #include <functional>
 #include <iostream>
@@ -47,7 +45,6 @@ bool PixelsMatch(const void* data, size_t pitch, uint32_t width, uint32_t height
 
 }
 
-#ifdef M2_ENABLE_DILIGENT_D3D11
 namespace Renderer
 {
 class BackendTestAccess
@@ -88,7 +85,6 @@ public:
     }
 };
 }
-#endif
 
 int main(int argc, char** argv)
 {
@@ -126,7 +122,6 @@ int main(int argc, char** argv)
             backend->Clear({true, color});
             backend->Clear({}); // Depth-only clear must preserve the color buffer.
             // ZiiNAN: Exercise the production screenshot readback, including resized extents.
-#ifdef M2_ENABLE_DILIGENT_D3D11
             if(diligent) {
                 std::vector<uint8_t> rgb; uint32_t rw=0,rh=0;
                 Check(static_cast<DiligentD3D11Backend*>(backend.get())->CaptureRGB(rgb,rw,rh),"screenshot readback");
@@ -134,7 +129,6 @@ int main(int argc, char** argv)
                 for(size_t i:{size_t(0),size_t(w)*(h/2)+w/2,size_t(w)*h-1})
                     for(unsigned c=0;c<3;++c) Check(std::abs(int(rgb[i*3+c])-int(color[c]*255))<=1,"screenshot RGB channels");
             }
-#endif
             backend->EndFrame();
             readback(w, h, color);
             backend->Present();

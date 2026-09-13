@@ -367,7 +367,7 @@ class CPythonApplication : public CMSApplication, public CInputKeyboard, public 
 
 
 		PyObject *					m_poMouseHandler;
-		D3DXVECTOR3					m_v3CenterPosition;
+		Math::Vector3					m_v3CenterPosition;
 
 		unsigned int				m_iFPS;
 		float						m_fAveRenderTime;

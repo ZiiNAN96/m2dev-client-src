@@ -33,9 +33,7 @@
 ///////////////////////////////////////////////////////////////////////  
 //	Include Files
 
-#include <d3d9.h>
-#include <d3d9types.h>
-#include <d3dx9.h>
+#include "Renderer/DrawStateTypes.h"
 
 ///////////////////////////////////////////////////////////////////////  
 //	class CSpeedTreeMaterial declaration/definiton
@@ -69,11 +67,11 @@ class CSpeedTreeMaterial
 			m_cMaterial.Power = pMaterialArray[12];
 		}
 		
-		D3DMATERIAL9 * Get()
+		Renderer::MaterialValues * Get()
 		{
 			return &m_cMaterial;
 		}
 		
 	private:
-		D3DMATERIAL9 m_cMaterial;	// the material object
+		Renderer::MaterialValues m_cMaterial;	// the material object
 };

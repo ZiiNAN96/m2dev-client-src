@@ -1,7 +1,7 @@
 #include "EterLib/StdAfx.h"
 #include "EterLib/TerrainTextureLoader.h"
 #include "EterLib/StaticObjectTextureLoader.h"
-#include "EterImageLib/DDSTextureLoader9.h"
+#include "EterImageLib/DDSImageData.h"
 #include "TerrainTextureFixtures.h"
 #include "GameLib/TerrainAlphaImage.h"
 #include <iostream>
@@ -63,8 +63,8 @@ int main()
         for(uint32_t mip=0;mip<5;++mip) Check(alpha.Mip(mip).empty(),"alpha CPU storage released");
         std::cout<<"Alpha capture: five mips / padded pitch / A8+A4 / bounds / release PASS\n";
         auto dds=TerrainFixture::DDS(7,5,3);
-        DirectX::DDS2DView view;
-        Check(SUCCEEDED(DirectX::GetDDS2DView(dds.data(),dds.size(),view)),"DDS CPU view");
+        ImageData::DDS2DView view;
+        Check(SUCCEEDED(ImageData::GetDDS2DView(dds.data(),dds.size(),view)),"DDS CPU view");
         Check(view.mips[0].data==dds.data()+128 && view.mips[1].data==dds.data()+160,"borrowed mip offsets");
         auto texture=LoadTerrainTextureMemory(dds.data(),dds.size(),probe);
         Check(texture && probe.width==7 && probe.height==5 && probe.mips.size()==3,"DDS dimensions/mips");

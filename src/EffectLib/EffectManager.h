@@ -41,8 +41,8 @@ class CEffectManager : public CScreen, public CSingleton<CEffectManager>
 		void DeleteAllInstances();
 
 		// Usage
-		int CreateEffect(DWORD dwID, const D3DXVECTOR3 & c_rv3Position, const D3DXVECTOR3 & c_rv3Rotation);
-		int CreateEffect(const char * c_szFileName, const D3DXVECTOR3 & c_rv3Position, const D3DXVECTOR3 & c_rv3Rotation);
+		int CreateEffect(DWORD dwID, const Math::Vector3 & c_rv3Position, const Math::Vector3 & c_rv3Rotation);
+		int CreateEffect(const char * c_szFileName, const Math::Vector3 & c_rv3Position, const Math::Vector3 & c_rv3Rotation);
 
 		void CreateEffectInstance(DWORD dwInstanceIndex, DWORD dwID);
 		BOOL SelectEffectInstance(DWORD dwInstanceIndex);
@@ -50,9 +50,9 @@ class CEffectManager : public CScreen, public CSingleton<CEffectManager>
 		void DeactiveEffectInstance(DWORD dwInstanceIndex);
 
 		void SetEffectTextures(DWORD dwID, std::vector<std::string> textures);
-		void SetEffectInstancePosition(const D3DXVECTOR3 & c_rv3Position);
-		void SetEffectInstanceRotation(const D3DXVECTOR3 & c_rv3Rotation);
-		void SetEffectInstanceGlobalMatrix(const D3DXMATRIX & c_rmatGlobal);
+		void SetEffectInstancePosition(const Math::Vector3 & c_rv3Position);
+		void SetEffectInstanceRotation(const Math::Vector3 & c_rv3Rotation);
+		void SetEffectInstanceGlobalMatrix(const Math::Matrix & c_rmatGlobal);
 
 		void ShowEffect();
 		void HideEffect();

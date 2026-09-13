@@ -19,12 +19,12 @@ float NEW_UnsignedDegreeToSignedDegree(float fUD)
 
 float NEW_GetSignedDegreeFromDirPixelPosition(const TPixelPosition& kPPosDir)
 {
-	D3DXVECTOR3 vtDir(kPPosDir.x, -kPPosDir.y, kPPosDir.z);
-	D3DXVECTOR3 vtDirNormal;
-	D3DXVec3Normalize(&vtDirNormal, &vtDir);
+	Math::Vector3 vtDir(kPPosDir.x, -kPPosDir.y, kPPosDir.z);
+	Math::Vector3 vtDirNormal;
+	Math::Vec3Normalize(&vtDirNormal, &vtDir);
 
-	D3DXVECTOR3 vtDirNormalStan(0, -1, 0);
-	float fDirRot = D3DXToDegree(acosf(D3DXVec3Dot(&vtDirNormal, &vtDirNormalStan)));
+	Math::Vector3 vtDirNormalStan(0, -1, 0);
+	float fDirRot = Math::ToDegree(acosf(Math::Vec3Dot(&vtDirNormal, &vtDirNormalStan)));
 
 	if (vtDirNormal.x<0.0f)
 		fDirRot=-fDirRot;
@@ -140,12 +140,12 @@ void CInstanceBase::NEW_GetRandomPositionInFanRange(CInstanceBase& rkInstTarget,
 
 	float fRot=frandom(fDstDirRot-10.0f, fDstDirRot+10.0f);
 
-	D3DXMATRIX kMatRot;
-	D3DXMatrixRotationZ(&kMatRot, D3DXToRadian(-fRot));
+	Math::Matrix kMatRot;
+	Math::MatrixRotationZ(&kMatRot, Math::ToRadian(-fRot));
 
-	D3DXVECTOR3 v3Src(0.0f, 8000.0f, 0.0f);
-	D3DXVECTOR3 v3Pos;
-	D3DXVec3TransformCoord(&v3Pos, &v3Src, &kMatRot);
+	Math::Vector3 v3Src(0.0f, 8000.0f, 0.0f);
+	Math::Vector3 v3Pos;
+	Math::Vec3TransformCoord(&v3Pos, &v3Src, &kMatRot);
 
 	const TPixelPosition& c_rkPPosCur=NEW_GetCurPixelPositionRef();
 	//const TPixelPosition& c_rkPPosFront=rkInstTarget.NEW_GetCurPixelPositionRef();
@@ -564,14 +564,14 @@ BOOL CInstanceBase::CheckAdvancing()
 
 	// 맵속성 체크
 	CPythonBackground& rkBG=CPythonBackground::Instance();
-	const D3DXVECTOR3 & rv3Position = m_GraphicThingInstance.GetPosition();
-	const D3DXVECTOR3 & rv3MoveDirection = m_GraphicThingInstance.GetMovementVectorRef();
+	const Math::Vector3 & rv3Position = m_GraphicThingInstance.GetPosition();
+	const Math::Vector3 & rv3MoveDirection = m_GraphicThingInstance.GetMovementVectorRef();
 
 	// NOTE : 만약 이동 거리가 크다면 쪼개서 구간 별로 속성을 체크해 본다
 	//        현재 설정해 놓은 10.0f는 임의의 거리 - [levites]
-	int iStep = int(D3DXVec3Length(&rv3MoveDirection) / 10.0f);
-	D3DXVECTOR3 v3CheckStep = rv3MoveDirection / float(iStep);
-	D3DXVECTOR3 v3CheckPosition = rv3Position;
+	int iStep = int(Math::Vec3Length(&rv3MoveDirection) / 10.0f);
+	Math::Vector3 v3CheckStep = rv3MoveDirection / float(iStep);
+	Math::Vector3 v3CheckPosition = rv3Position;
 	for (int j = 0; j < iStep; ++j)
 	{
 		v3CheckPosition += v3CheckStep;
@@ -585,7 +585,7 @@ BOOL CInstanceBase::CheckAdvancing()
 	}
 
 	// Check
-	D3DXVECTOR3 v3NextPosition = rv3Position + rv3MoveDirection;
+	Math::Vector3 v3NextPosition = rv3Position + rv3MoveDirection;
 	if (rkBG.isAttrOn(v3NextPosition.x, -v3NextPosition.y, CTerrainImpl::ATTRIBUTE_BLOCK))
 	{
 		BlockMovement();

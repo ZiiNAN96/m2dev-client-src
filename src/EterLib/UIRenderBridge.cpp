@@ -1,10 +1,10 @@
 // ZiiNAN: Diligent UI rendering integration; consume native vertices and per-draw states.
 #include "StdAfx.h"
-#include "EterLib/NativeStateView.h"
+#include "EterLib/DrawStateView.h"
 #include "UIRenderBridge.h"
-#include "NativeMaterialSnapshot.h"
+#include "MaterialStateSnapshot.h"
 #include "GrpImage.h"
-#include "StateManager.h"
+#include "DrawState.h"
 #include <fstream>
 #include <set>
 
@@ -20,17 +20,17 @@ void Failure(const std::string& message)
     if(reported.size()<64 && reported.insert(message).second) log<<message<<std::endl;
 }
 }
-void Submit(const void* pdt,uint32_t count,Primitive primitive,CGraphicImage* image,HRESULT result,Renderer::TerrainTexturePtr supplied,Renderer::TerrainTexturePtr secondary)
+void Submit(const void* pdt,uint32_t count,Primitive primitive,CGraphicImage* image,Renderer::TerrainTexturePtr supplied,Renderer::TerrainTexturePtr secondary)
 {
     using namespace Renderer;
-    if(!UIActive() || FAILED(result) || !count) return;
+    if(!UIActive() || !count) return;
     if(!pdt || count>UINT32_MAX/sizeof(EffectVertex)) { Failure("invalid UI geometry"); return; }
     EffectDraw draw; std::string error;
-    if(!CaptureNativeMaterial(draw,error,bool(secondary))) { Failure("UI material: "+error); return; }
+    if(!CaptureMaterialState(draw,error,bool(secondary))) { Failure("UI material: "+error); return; }
     draw.secondaryTexture=std::move(secondary);
-    D3DVIEWPORT9 viewport{}; RECT clip{}; DWORD scissor=0;
-    if(FAILED(NativeStateView().GetViewport(&viewport)) || FAILED(NativeStateView().GetScissorRect(&clip)) ||
-       FAILED(NativeStateView().GetRenderState(D3DRS_SCISSORTESTENABLE,&scissor))) { Failure("UI viewport/scissor snapshot"); return; }
+    Math::Viewport viewport{}; RECT clip{}; DWORD scissor=0;
+    if(FAILED(DrawStateView().GetViewport(&viewport)) || FAILED(DrawStateView().GetScissorRect(&clip)) ||
+       FAILED(DrawStateView().GetRenderState(Renderer::StateScissorTestEnable,&scissor))) { Failure("UI viewport/scissor snapshot"); return; }
     draw.ui=true; draw.fog=0;
     draw.floatingText=floatingTextDepth!=0; // ZiiNAN: Ground-label boxes and guild marks share native tail depth.
     if(!draw.floatingText) draw.depthTest=draw.depthWrite=false;
@@ -38,7 +38,7 @@ void Submit(const void* pdt,uint32_t count,Primitive primitive,CGraphicImage* im
     draw.viewport={viewport.X,viewport.Y,viewport.Width,viewport.Height};
     draw.scissor=scissor!=0; draw.clip={clip.left,clip.top,clip.right,clip.bottom};
     if(draw.scissor && (clip.right<=clip.left || clip.bottom<=clip.top)) return;
-    const auto bound=NativeStateView().GetTextureBinding(0);
+    const auto bound=DrawStateView().GetTextureBinding(0);
     const bool matches=!image || bound==image->GetTexturePointer()->GetTextureBinding();
     draw.textured=bool(bound);
     if(!matches || (draw.textured && !image && !supplied)) { Failure("UI texture owner mismatch"); return; }

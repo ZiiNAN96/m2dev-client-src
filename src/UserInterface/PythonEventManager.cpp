@@ -77,7 +77,7 @@ void CPythonEventManager::__InitEventSet(TEventSet& rEventSet)
 	rEventSet.isLock = false;
 	rEventSet.lLastDelayTime = 0;
 	rEventSet.iCurrentLetter = 0;
-	rEventSet.CurrentColor = D3DXCOLOR(1, 1, 1, 1);
+	rEventSet.CurrentColor = Math::Color(1, 1, 1, 1);
 	rEventSet.strCurrentLine = "";
 
 	rEventSet.pCurrentTextLine = NULL;
@@ -87,7 +87,7 @@ void CPythonEventManager::__InitEventSet(TEventSet& rEventSet)
 	rEventSet.pConfirmTimeTextLine = NULL;
 	rEventSet.iConfirmEndTime = 0;
 
-	rEventSet.DiffuseColor = D3DXCOLOR(1, 1, 1, 1);
+	rEventSet.DiffuseColor = Math::Color(1, 1, 1, 1);
 	rEventSet.lWaitingTime = c_lNormal_Waiting_Time;
 	rEventSet.iRestrictedCharacterCount = 30;
 

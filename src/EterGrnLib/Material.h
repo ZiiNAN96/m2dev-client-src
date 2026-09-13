@@ -2,7 +2,7 @@
 
 #include <granny.h>
 #include <windows.h>
-#include <d3d9.h>
+#include "Renderer/DrawStateTypes.h"
 
 #include "Eterlib/ReferenceObject.h"
 #include "Eterlib/Ref.h"
@@ -29,8 +29,8 @@ class CGrannyMaterial : public CReferenceObject
 		static void TranslateSpecularMatrix(float fAddX, float fAddY, float fAddZ);
 
 	private:
-		static D3DXMATRIX ms_matSpecular;
-		static D3DXVECTOR3 ms_v3SpecularTrans;
+		static Math::Matrix ms_matSpecular;
+		static Math::Vector3 ms_v3SpecularTrans;
 
 	public:
 		CGrannyMaterial();
@@ -58,7 +58,7 @@ class CGrannyMaterial : public CReferenceObject
 		const CGraphicTexture * GetDiffuseTexture() const;
 		const CGraphicTexture * GetOpacityTexture() const;
 
-		LPDIRECT3DTEXTURE9		GetD3DTexture(int iStage) const;
+
         TextureBinding GetTextureBinding(int stage) const;
 
 		// MR-12: Fix specular isolation issue

@@ -26,7 +26,7 @@ class CEffectInstance : public CGraphicObjectInstance
 			return CEffectInstance::ID;
 		}
 
-		bool GetBoundingSphere(D3DXVECTOR3 & v3Center, float & fRadius);
+		bool GetBoundingSphere(Math::Vector3 & v3Center, float & fRadius);
 
 		static void DestroySystem();
 
@@ -54,7 +54,7 @@ class CEffectInstance : public CGraphicObjectInstance
 		BOOL isAlive();
 		void SetActive();
 		void SetDeactive();
-		void SetGlobalMatrix(const D3DXMATRIX & c_rmatGlobal);
+		void SetGlobalMatrix(const Math::Matrix & c_rmatGlobal);
 		void UpdateSound();
 		void OnUpdate();
 		void OnRender();
@@ -77,7 +77,7 @@ class CEffectInstance : public CGraphicObjectInstance
 	protected:
 		BOOL					m_isAlive;
 		DWORD					m_dwFrame;
-		D3DXMATRIX				m_matGlobal;
+		Math::Matrix				m_matGlobal;
 
 		CEffectData * m_pkEftData;
         Renderer::EffectResources m_effectResources;
@@ -90,7 +90,7 @@ class CEffectInstance : public CGraphicObjectInstance
 		NSound::TSoundInstanceVector *					m_pSoundInstanceVector;
 
 		float m_fBoundingSphereRadius;
-		D3DXVECTOR3 m_v3BoundingSpherePosition;
+		Math::Vector3 m_v3BoundingSpherePosition;
 
 		float m_fLastTime;
 

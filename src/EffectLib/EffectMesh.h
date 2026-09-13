@@ -1,6 +1,7 @@
 #pragma once
 
-#include <d3dx9.h>
+#include "Renderer/DrawStateTypes.h"
+#include "Math/Math.h"
 
 #include "Eterlib/GrpScreen.h"
 #include "Eterlib/Resource.h"
@@ -91,7 +92,7 @@ class CEffectMeshScript : public CEffectElementBase
 			BOOL bTextureAlphaEnable;
 
 			BYTE byColorOperationType;
-			D3DXCOLOR ColorFactor;
+			Math::Color ColorFactor;
 
 			BOOL bTextureAnimationLoopEnable;
 			float fTextureAnimationFrameDelay;
@@ -124,7 +125,7 @@ class CEffectMeshScript : public CEffectElementBase
 		BYTE GetBlendingDestType(DWORD dwMeshIndex);
 		BOOL isTextureAlphaEnable(DWORD dwMeshIndex);
 		BOOL GetColorOperationType(DWORD dwMeshIndex, BYTE * pbyType);
-		BOOL GetColorFactor(DWORD dwMeshIndex, D3DXCOLOR * pColor);
+		BOOL GetColorFactor(DWORD dwMeshIndex, Math::Color * pColor);
 		BOOL GetTimeTableAlphaPointer(DWORD dwMeshIndex, TTimeEventTableFloat ** pTimeEventAlpha);
 
 		BOOL isMeshAnimationLoop();

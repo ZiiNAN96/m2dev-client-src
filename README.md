@@ -4,26 +4,30 @@
 
 This repository contains the source code necessary to compile the game client executable.
 
-## Renderer selection (M12)
+## Production Renderer: Diligent D3D11 (M13C)
 
-Fresh builds enable Diligent D3D11 by default. Start `Metin2_Release.exe` without a
-renderer argument for Diligent, or use `--renderer=diligent-d3d11` explicitly.
-The preserved Legacy fallback is `--renderer=legacy-d3d9`; there is no automatic
-fallback after initialization failure. The chosen renderer is recorded once in
-`renderer-startup.log` in the runtime working directory.
+The normal client uses Diligent D3D11. Start without a renderer argument or use
+`--renderer=d3d11`. The previous `--renderer=diligent-d3d11` spelling remains an
+alias for the same backend. Unsupported values are rejected; there is no fallback
+or runtime backend switching. Selection and exit status are in `renderer-startup.log`.
 
-Use `-DM2_ENABLE_DILIGENT_D3D11=OFF` for a Legacy-only build; only that build defaults
-to Legacy. Existing CMake caches retain their setting, so explicitly pass `ON` when
-upgrading a previously OFF build. The pinned Diligent dependency requires network access
-on its first configure (or a prepopulated FetchContent source).
-Diligent currently requires `WINDOWED 1`; dynamic shadows remain disabled and native
-D3D9 asset/buffer dependencies are still required. See [M12 behavior and validation](docs/renderer-milestone12.md).
+Requirements: Visual Studio 2022 C++/ATL, a current Windows SDK (including the
+header-only DirectXMath), CMake and the existing project dependencies.
+No DirectX 9 SDK, D3D9 headers, D3D9/D3DX9 libraries or optional renderer build flag
+are required. Diligent is pinned; the first configure needs network access or
+a populated FetchContent source. DirectInput and DirectShow remain independent
+Windows input/video dependencies.
+
+Diligent currently requires `WINDOWED 1`; dynamic shadows remain unsupported.
+See [current architecture, build and troubleshooting](docs/renderer/README.md)
+and the [M13C audit](docs/renderer/milestone13c-audit.md).
+Earlier milestone reports are historical evidence, not current setup instructions.
 
 ## How to build (short version)
 
 > cmake -S . -B build
 >
-> cmake --build build
+> cmake --build build --config Release
 
 **For more installation/configuration, check out the [instructions](#installationconfiguration) below.**
 

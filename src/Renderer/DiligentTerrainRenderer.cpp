@@ -194,7 +194,7 @@ bool DiligentTerrainRenderer::Initialize()
             g.DSVFormat = swap.DepthBufferFormat;
             g.PrimitiveTopology = strip ? PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP : PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
             g.RasterizerDesc.CullMode = CULL_MODE_BACK;
-            g.RasterizerDesc.FrontCounterClockwise = True; // D3D9 D3DCULL_CW.
+            g.RasterizerDesc.FrontCounterClockwise = True; // Clockwise face culling.
             g.RasterizerDesc.DepthClipEnable = True;
             g.DepthStencilDesc.DepthEnable = True;
             g.DepthStencilDesc.DepthWriteEnable = True;
@@ -445,7 +445,7 @@ void DiligentTerrainRenderer::BeginTerrain(const TerrainMatrices& matrices, bool
         MapHelper<TerrainConstants> mapped(s.backend.m_impl->context, s.camera, MAP_WRITE, MAP_FLAG_DISCARD);
         if (!mapped) { s.failed = true; return; }
         s.matrices = matrices;
-        // Preserve D3D9's integer pixel centers on the D3D11 half-integer raster.
+        // Preserve original integer pixel centers on the D3D11 half-integer raster.
         // Shift clip XY by (+1/width, -1/height)*clipW; UV/world/view data stay exact.
         const auto& extent=s.backend.m_impl->swapChain->GetDesc();
         for(size_t row=0;row<4;++row)

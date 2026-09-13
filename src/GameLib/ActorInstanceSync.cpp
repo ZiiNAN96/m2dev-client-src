@@ -12,14 +12,14 @@ void CActorInstance::__Push(int x, int y)
 	//DWORD dwVID=GetVirtualID();
 	//Tracenf("VID %d SyncPixelPosition %d %d", dwVID, x, y);		
 
-	const D3DXVECTOR3& c_rv3Src=GetPosition();
-	const D3DXVECTOR3 c_v3Dst=D3DXVECTOR3(x, -y, c_rv3Src.z);
-	const D3DXVECTOR3 c_v3Delta=c_v3Dst-c_rv3Src;
+	const Math::Vector3& c_rv3Src=GetPosition();
+	const Math::Vector3 c_v3Dst=Math::Vector3(x, -y, c_rv3Src.z);
+	const Math::Vector3 c_v3Delta=c_v3Dst-c_rv3Src;
 	
 	const int LoopValue = 100;
-	const D3DXVECTOR3 inc=c_v3Delta / LoopValue;
+	const Math::Vector3 inc=c_v3Delta / LoopValue;
 	
-	D3DXVECTOR3 v3Movement(0.0f, 0.0f, 0.0f);
+	Math::Vector3 v3Movement(0.0f, 0.0f, 0.0f);
 
 	IPhysicsWorld* pWorld = IPhysicsWorld::GetPhysicsWorld();
 			

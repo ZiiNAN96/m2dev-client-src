@@ -22,7 +22,7 @@ class CArea
 			PITCH_STEP_AMOUNT = YAW_STEP_AMOUNT,
 		};
 
-		typedef D3DXVECTOR3 TObjectPosition;
+		typedef Math::Vector3 TObjectPosition;
 
 		///////////////////////////////////////////////////////////////////////////////////
 		// Object Static Data

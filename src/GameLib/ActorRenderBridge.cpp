@@ -1,10 +1,10 @@
 #include "StdAfx.h"
-#include "EterLib/NativeStateView.h"
+#include "EterLib/DrawStateView.h"
 #include "ActorRenderBridge.h"
 #include "ActorInstance.h"
 #include "StaticObjectBridge.h"
 #include "EterLib/StaticObjectTextureLoader.h"
-#include "EterLib/StateManager.h"
+#include "EterLib/DrawState.h"
 #include <fstream>
 
 // ZiiNAN: Diligent mount actor rendering
@@ -26,26 +26,26 @@ struct ActorStateDiagnostic : CGraphicBase
     static void Write(std::ostream& out)
     {
         out << "capture rejected frame=" << actorFrameSerial << '\n';
-        for(auto state:{D3DRS_ZENABLE,D3DRS_ZFUNC,D3DRS_ZWRITEENABLE,D3DRS_CULLMODE,
-            D3DRS_ALPHATESTENABLE,D3DRS_ALPHAFUNC,D3DRS_ALPHAREF,D3DRS_ALPHABLENDENABLE,
-            D3DRS_SRCBLEND,D3DRS_DESTBLEND,D3DRS_BLENDOP,D3DRS_SEPARATEALPHABLENDENABLE,
-            D3DRS_COLORVERTEX,D3DRS_SPECULARENABLE,D3DRS_LIGHTING,D3DRS_FOGENABLE,
-            D3DRS_FOGVERTEXMODE,D3DRS_FOGTABLEMODE,D3DRS_FOGSTART,D3DRS_FOGEND})
-            out << "state " << state << '=' << STATEMANAGER.GetRenderState(state) << '\n';
+        for(auto state:{Renderer::StateZEnable,Renderer::StateZFunc,Renderer::StateZWriteEnable,Renderer::StateCullMode,
+            Renderer::StateAlphaTestEnable,Renderer::StateAlphaFunc,Renderer::StateAlphaRef,Renderer::StateAlphaBlendEnable,
+            Renderer::StateSrcBlend,Renderer::StateDestBlend,Renderer::StateBlendOp,Renderer::StateSeparateAlphaBlendEnable,
+            Renderer::StateColorVertex,Renderer::StateSpecularEnable,Renderer::StateLighting,Renderer::StateFogEnable,
+            Renderer::StateFogVertexMode,Renderer::StateFogTableMode,Renderer::StateFogStart,Renderer::StateFogEnd})
+            out << "state " << state << '=' << DRAWSTATE.GetRenderState(state) << '\n';
         for(DWORD stage=0;stage<2;++stage) {
-            for(auto state:{D3DTSS_COLOROP,D3DTSS_COLORARG1,D3DTSS_COLORARG2,D3DTSS_ALPHAOP,
-                D3DTSS_ALPHAARG1,D3DTSS_ALPHAARG2,D3DTSS_TEXCOORDINDEX,D3DTSS_TEXTURETRANSFORMFLAGS}) {
-                DWORD value=0; STATEMANAGER.GetTextureStageState(stage,state,&value);
+            for(auto state:{Renderer::StageColorOp,Renderer::StageColorArg1,Renderer::StageColorArg2,Renderer::StageAlphaOp,
+                Renderer::StageAlphaArg1,Renderer::StageAlphaArg2,Renderer::StageTexCoordIndex,Renderer::StageTextureTransformFlags}) {
+                DWORD value=0; DRAWSTATE.GetTextureStageState(stage,state,&value);
                 out << "stage " << stage << ':' << state << '=' << value << '\n';
             }
-            for(auto state:{D3DSAMP_ADDRESSU,D3DSAMP_ADDRESSV,D3DSAMP_MINFILTER,D3DSAMP_MAGFILTER,
-                D3DSAMP_MIPFILTER,D3DSAMP_MAXMIPLEVEL,D3DSAMP_MIPMAPLODBIAS,D3DSAMP_MAXANISOTROPY}) {
-                DWORD value=0; const auto result=NativeStateView().GetSamplerState(stage,state,&value);
+            for(auto state:{Renderer::SamplerAddressU,Renderer::SamplerAddressV,Renderer::SamplerMinFilter,Renderer::SamplerMagFilter,
+                Renderer::SamplerMipFilter,Renderer::SamplerMaxMipLevel,Renderer::SamplerMipMapLodBias,Renderer::SamplerMaxAnisotropy}) {
+                DWORD value=0; const auto result=DrawStateView().GetSamplerState(stage,state,&value);
                 out << "sampler " << stage << ':' << state << '=' << value << " hr=" << result << '\n';
             }
         }
         for(DWORD index=0;index<8;++index) {
-            BOOL enabled=FALSE; const auto result=NativeStateView().GetLightEnable(index,&enabled);
+            BOOL enabled=FALSE; const auto result=DrawStateView().GetLightEnable(index,&enabled);
             out << "light " << index << '=' << enabled << " hr=" << result << '\n';
         }
     }
@@ -120,10 +120,10 @@ void Submit(void* context, const void* nativeInstance, ActorPart part, const Act
     const auto* world=instance->GetStaticObjectWorldMatrix(native.mesh);
     if(!world) { Report(actor,*instance,"ERROR: actor mesh matrix"); return; }
     memcpy(draw.matrices.world.data(),world,64);
-    D3DXMATRIX view,normal; memcpy(&view,draw.matrices.view.data(),64);
+    Math::Matrix view,normal; memcpy(&view,draw.matrices.view.data(),64);
     normal=(*world)*view;
-    if(!D3DXMatrixInverse(&normal,nullptr,&normal)) { Report(actor,*instance,"excluded: singular actor matrix"); return; }
-    D3DXMatrixTranspose(&normal,&normal); memcpy(draw.normalTransform.data(),&normal,64);
+    if(!Math::MatrixInverse(&normal,nullptr,&normal)) { Report(actor,*instance,"excluded: singular actor matrix"); return; }
+    Math::MatrixTranspose(&normal,&normal); memcpy(draw.normalTransform.data(),&normal,64);
     draw.baseVertex=native.baseVertex+(native.rigid ? source->deformVertexCount : 0);
     draw.vertexCount=native.vertexCount; draw.firstIndex=native.firstIndex; draw.indexCount=native.indexCount;
     if(!data.geometry) data.geometry=actorRenderer->CreateGeometry(*source,part,category);

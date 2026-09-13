@@ -17,7 +17,7 @@ class WorldRenderBridge
 {
 public:
     static void Texture(CGraphicImage*);
-    static void Submit(const Renderer::EffectVertex*,uint32_t,bool strip,HRESULT nativeResult);
-    static void SubmitQuad(const void* pdtVertices,HRESULT nativeResult);
+    static void Submit(const Renderer::EffectVertex*,uint32_t,bool strip);
+    static void SubmitQuad(const void* pdtVertices);
     static void Release(Renderer::WorldResources&);
 };

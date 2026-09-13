@@ -30,7 +30,7 @@ public:
 	bool RegisterFlyingData(const char* c_szFilename);
 	bool RegisterFlyingData(const char* c_szFilename, DWORD & r_dwRetCRC);
 
-	CFlyingInstance * CreateFlyingInstanceFlyTarget(const DWORD dwID, const D3DXVECTOR3 & v3StartPosition, const CFlyTarget & cr_FlyTarget, bool canAttack);
+	CFlyingInstance * CreateFlyingInstanceFlyTarget(const DWORD dwID, const Math::Vector3 & v3StartPosition, const CFlyTarget & cr_FlyTarget, bool canAttack);
 
 	void Update();
 	void Render();

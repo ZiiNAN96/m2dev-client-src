@@ -80,8 +80,8 @@ public:
 
 	DWORD			GetMonsterCount() { return m_dwMonsterCount; }
 	EMonsterDir		GetMonsterDir() { return m_eMonsterDir; }
-	D3DXVECTOR2		GetMonsterDirVector() { return m_v2Monsterdirection; }
-	D3DXVECTOR2		GetTempMonsterPos(DWORD dwIndex);
+	Math::Vector2		GetMonsterDirVector() { return m_v2Monsterdirection; }
+	Math::Vector2		GetTempMonsterPos(DWORD dwIndex);
 
 protected:
 	void			SetLRTB();
@@ -102,7 +102,7 @@ protected:
 	// 공통 정보
 	DWORD			m_dwMonsterCount;
 	EMonsterDir		m_eMonsterDir;
-	D3DXVECTOR2		m_v2Monsterdirection;
+	Math::Vector2		m_v2Monsterdirection;
 
 	DWORD			m_dwID;
 
@@ -116,7 +116,7 @@ protected:
 	long			m_lTop;
 	long			m_lBottom;
 
-	std::vector<D3DXVECTOR2> m_TempMonsterPosVector;
+	std::vector<Math::Vector2> m_TempMonsterPosVector;
 };
 
 typedef std::vector<CMonsterAreaInfo *>					TMonsterAreaInfoPtrVector;

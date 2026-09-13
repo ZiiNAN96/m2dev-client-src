@@ -54,7 +54,7 @@ class CTerrain : public CTerrainImpl, public CGraphicBase
 		float			GetHeight(int x, int y);
 
 		// Normal Map
-		bool			GetNormal(int ix, int iy, D3DXVECTOR3 * pv3Normal);
+		bool			GetNormal(int ix, int iy, Math::Vector3 * pv3Normal);
 
 		// TileMap
 		BYTE *			RAW_GetTileMap()		{ return m_abyTileMap; }
@@ -80,7 +80,6 @@ class CTerrain : public CTerrainImpl, public CGraphicBase
 
 		// MiniMap
 		void						LoadMiniMapTexture(const char * c_pszFileName);
-		inline LPDIRECT3DTEXTURE9	GetMiniMapTexture() { return m_lpMiniMapTexture; }
 		CGraphicImage* GetMiniMapImage() { return m_MiniMapGraphicImageInstance.GetGraphicImagePointer(); }
 
 		// Marked Area
@@ -89,7 +88,7 @@ class CTerrain : public CTerrainImpl, public CGraphicBase
 		void						DeallocateMarkedSplats();
 		TTerrainSplatPatch &		GetMarkedSplatPatch() { return m_MarkedSplatPatch; }
 		Renderer::TerrainTexturePtr GetMarkedTexture() const { return m_markedDiligentTexture; }
-        TextureBinding GetMarkedBinding() const { return m_markedSource ? TextureBinding(m_markedSource) : TextureBinding(m_lpMarkedTexture); }
+        TextureBinding GetMarkedBinding() const { return TextureBinding(m_markedSource); }
 
 		// Coordinate
 		void			GetCoordinate(WORD * usCoordX, WORD * usCoordY)
@@ -115,7 +114,7 @@ class CTerrain : public CTerrainImpl, public CGraphicBase
 		void	RAW_DeallocateSplats(bool bBGLoading = false);
 		virtual void RAW_CountTiles();
 
-		LPDIRECT3DTEXTURE9 AddTexture32(BYTE byImageNum, BYTE * pbyImage, long lTextureWidth, long lTextureHeight);
+		void BuildSplatAlpha(BYTE byImageNum, BYTE* pbyImage);
 		void PutImage32(BYTE * pbySrc, BYTE * pbyDst, long src_pitch, long dst_pitch, long lTextureWidth, long lTextureHeight, bool bResize = false);
 		void PutImage16(BYTE * pbySrc, BYTE * pbyDst, long src_pitch, long dst_pitch, long lTextureWidth, long lTextureHeight, bool bResize = false);
 
@@ -134,14 +133,13 @@ class CTerrain : public CTerrainImpl, public CGraphicBase
 
 		//MiniMap
 		CGraphicImageInstance	m_MiniMapGraphicImageInstance;
-		LPDIRECT3DTEXTURE9		m_lpMiniMapTexture;
 
 
 		// Owner COutdoorMap poineter
 		CMapOutdoor *			m_pOwnerOutdoorMap;
 
 		// Picking
-		D3DXVECTOR3				m_v3Pick;
+		Math::Vector3				m_v3Pick;
 
 		DWORD					m_dwNumTexturesShow;
 		std::vector<DWORD>		m_VectorNumShowTexture;
@@ -150,7 +148,6 @@ class CTerrain : public CTerrainImpl, public CGraphicBase
 
 		BOOL					m_bMarked;
 		TTerrainSplatPatch		m_MarkedSplatPatch;
-		LPDIRECT3DTEXTURE9		m_lpMarkedTexture;
 		Renderer::TerrainTexturePtr m_markedDiligentTexture;
         std::shared_ptr<Renderer::TextureResource> m_markedSource;
 

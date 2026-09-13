@@ -66,10 +66,10 @@ void CEmitterProperty::Clear()
 	m_byEmitterShape = EMITTER_SHAPE_POINT;
 	m_byEmitterAdvancedType = EMITTER_ADVANCED_TYPE_FREE;
 	m_bEmitFromEdgeFlag = FALSE;
-	m_v3EmittingSize = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+	m_v3EmittingSize = Math::Vector3(0.0f, 0.0f, 0.0f);
 	m_fEmittingRadius = 0.0f;
 
-	m_v3EmittingDirection = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+	m_v3EmittingDirection = Math::Vector3(0.0f, 0.0f, 0.0f);
 
 	m_TimeEventEmittingSize.clear();
 	m_TimeEventEmittingDirectionX.clear();

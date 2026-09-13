@@ -1,6 +1,6 @@
 #include "StdAfx.h"
 #include "EterBase/Random.h"
-#include "EterLib/StateManager.h"
+#include "EterLib/DrawState.h"
 #include "ParticleSystemData.h"
 #include "ParticleSystemInstance.h"
 #include "ParticleInstance.h"
@@ -49,10 +49,10 @@ void CParticleSystemInstance::CreateParticles(float fElapsedTime)
 
 	float fLifeTime = 0.0f;
 	float fEmittingSize = 0.0f;
-	D3DXVECTOR3 _v3TimePosition;
-	D3DXVECTOR3 _v3Velocity;
+	Math::Vector3 _v3TimePosition;
+	Math::Vector3 _v3Velocity;
 	float fVelocity = 0.0f;
-	D3DXVECTOR2 v2HalfSize;
+	Math::Vector2 v2HalfSize;
 	float fLieRotation = 0;
 	if (iCreatingCount)
 	{
@@ -81,7 +81,7 @@ void CParticleSystemInstance::CreateParticles(float fElapsedTime)
 			float fcx = sqrtf(1.0f - fsx * fsx);
 
 			if (fcx >= 0.00001f) 
-				fLieRotation = D3DXToDegree(atan2f(-mc_pmatLocal->_12, mc_pmatLocal->_22));
+				fLieRotation = Math::ToDegree(atan2f(-mc_pmatLocal->_12, mc_pmatLocal->_22));
 		}
 
 	}
@@ -111,7 +111,7 @@ void CParticleSystemInstance::CreateParticles(float fElapsedTime)
 				pInstance->m_v3Position.x = frandom(-500.0f, 500.0f);
 				pInstance->m_v3Position.y = frandom(-500.0f, 500.0f);
 				pInstance->m_v3Position.z = 0.0f;
-				D3DXVec3Normalize(&pInstance->m_v3Position, &pInstance->m_v3Position);
+				Math::Vec3Normalize(&pInstance->m_v3Position, &pInstance->m_v3Position);
 
 				if (m_pEmitterProperty->isEmitFromEdge())
 				{
@@ -133,7 +133,7 @@ void CParticleSystemInstance::CreateParticles(float fElapsedTime)
 				pInstance->m_v3Position.x = frandom(-500.0f, 500.0f);
 				pInstance->m_v3Position.y = frandom(-500.0f, 500.0f);
 				pInstance->m_v3Position.z = frandom(-500.0f, 500.0f);
-				D3DXVec3Normalize(&pInstance->m_v3Position, &pInstance->m_v3Position);
+				Math::Vec3Normalize(&pInstance->m_v3Position, &pInstance->m_v3Position);
 
 				if (m_pEmitterProperty->isEmitFromEdge())
 				{
@@ -147,14 +147,14 @@ void CParticleSystemInstance::CreateParticles(float fElapsedTime)
 		}
 
 		// Position
-		D3DXVECTOR3 v3TimePosition=_v3TimePosition;
+		Math::Vector3 v3TimePosition=_v3TimePosition;
 
 		pInstance->m_v3Position += v3TimePosition;
 
 		if (mc_pmatLocal && !m_pParticleProperty->m_bAttachFlag)
 		{
-			D3DXVec3TransformCoord(&pInstance->m_v3Position,&pInstance->m_v3Position,mc_pmatLocal);
-			D3DXVec3TransformCoord(&v3TimePosition, &v3TimePosition, mc_pmatLocal);
+			Math::Vec3TransformCoord(&pInstance->m_v3Position,&pInstance->m_v3Position,mc_pmatLocal);
+			Math::Vec3TransformCoord(&v3TimePosition, &v3TimePosition, mc_pmatLocal);
 		}
 		pInstance->m_v3StartPosition = v3TimePosition;
 		// NOTE : Update를 호출하지 않고 Rendering 되기 때문에 length가 0이 되는 문제가 있다.
@@ -169,7 +169,7 @@ void CParticleSystemInstance::CreateParticles(float fElapsedTime)
 		if (CEmitterProperty::EMITTER_ADVANCED_TYPE_INNER == m_pEmitterProperty->GetEmitterAdvancedType())
 		{
 			auto d3dd = (pInstance->m_v3Position - v3TimePosition);
-			D3DXVec3Normalize(&pInstance->m_v3Velocity, &d3dd);
+			Math::Vec3Normalize(&pInstance->m_v3Velocity, &d3dd);
 			pInstance->m_v3Velocity *= -100.0f;
 		}
 		else if (CEmitterProperty::EMITTER_ADVANCED_TYPE_OUTER == m_pEmitterProperty->GetEmitterAdvancedType())
@@ -183,15 +183,15 @@ void CParticleSystemInstance::CreateParticles(float fElapsedTime)
 			else
 			{
 				auto d3dd = (pInstance->m_v3Position - v3TimePosition);
-				D3DXVec3Normalize(&pInstance->m_v3Velocity, &d3dd);
+				Math::Vec3Normalize(&pInstance->m_v3Velocity, &d3dd);
 				pInstance->m_v3Velocity *= 100.0f;
 			}
 		}
 
-		D3DXVECTOR3 v3Velocity = _v3Velocity;
+		Math::Vector3 v3Velocity = _v3Velocity;
 		if (mc_pmatLocal && !m_pParticleProperty->m_bAttachFlag)
 		{
-			D3DXVec3TransformNormal(&v3Velocity, &v3Velocity, mc_pmatLocal);
+			Math::Vec3TransformNormal(&v3Velocity, &v3Velocity, mc_pmatLocal);
 		}
 
 		pInstance->m_v3Velocity += v3Velocity;
@@ -291,8 +291,8 @@ bool CParticleSystemInstance::OnUpdate(float fElapsedTime)
 	
 	if (fAngularVelocity && !m_pParticleProperty->m_bAttachFlag)
 	{
-		auto d3dd = D3DXVECTOR3(0.0f, 0.0f, 1.0f);
-		D3DXVec3TransformNormal(&m_pParticleProperty->m_v3ZAxis,&d3dd,mc_pmatLocal);
+		auto d3dd = Math::Vector3(0.0f, 0.0f, 1.0f);
+		Math::Vec3TransformNormal(&m_pParticleProperty->m_v3ZAxis,&d3dd,mc_pmatLocal);
 	}
 
 	for (dwFrameIndex = 0; dwFrameIndex < dwFrameCount; dwFrameIndex++)
@@ -336,26 +336,26 @@ namespace NParticleRenderer
 {
 	struct TwoSideRenderer
 	{
-		const D3DXMATRIX * pmat;
-		TwoSideRenderer(const D3DXMATRIX * pmat=NULL)
+		const Math::Matrix * pmat;
+		TwoSideRenderer(const Math::Matrix * pmat=NULL)
 			: pmat(pmat)
 		{
 		}
 		
 		inline void operator () (CParticleInstance * pInstance)
 		{
-			pInstance->Transform(pmat,D3DXToRadian(-30.0f));
-			EffectRenderBridge::DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, pInstance->GetParticleMeshPointer(), sizeof(TPTVertex));
+			pInstance->Transform(pmat,Math::ToRadian(-30.0f));
+			EffectRenderBridge::Submit(Renderer::TopologyTriangleStrip, 2, pInstance->GetParticleMeshPointer(), sizeof(TPTVertex));
 
-			pInstance->Transform(pmat,D3DXToRadian(+30.0f));
-			EffectRenderBridge::DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, pInstance->GetParticleMeshPointer(), sizeof(TPTVertex));
+			pInstance->Transform(pmat,Math::ToRadian(+30.0f));
+			EffectRenderBridge::Submit(Renderer::TopologyTriangleStrip, 2, pInstance->GetParticleMeshPointer(), sizeof(TPTVertex));
 		}
 	};
 	
 	struct ThreeSideRenderer
 	{
-		const D3DXMATRIX * pmat;
-		ThreeSideRenderer(const D3DXMATRIX * pmat=NULL)
+		const Math::Matrix * pmat;
+		ThreeSideRenderer(const Math::Matrix * pmat=NULL)
 			: pmat(pmat)
 		{
 		}
@@ -363,11 +363,11 @@ namespace NParticleRenderer
 		inline void operator () (CParticleInstance * pInstance)
 		{
 			pInstance->Transform(pmat);
-			EffectRenderBridge::DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, pInstance->GetParticleMeshPointer(), sizeof(TPTVertex));
-			pInstance->Transform(pmat,D3DXToRadian(-60.0f));
-			EffectRenderBridge::DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, pInstance->GetParticleMeshPointer(), sizeof(TPTVertex));
-			pInstance->Transform(pmat,D3DXToRadian(+60.0f));
-			EffectRenderBridge::DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, pInstance->GetParticleMeshPointer(), sizeof(TPTVertex));
+			EffectRenderBridge::Submit(Renderer::TopologyTriangleStrip, 2, pInstance->GetParticleMeshPointer(), sizeof(TPTVertex));
+			pInstance->Transform(pmat,Math::ToRadian(-60.0f));
+			EffectRenderBridge::Submit(Renderer::TopologyTriangleStrip, 2, pInstance->GetParticleMeshPointer(), sizeof(TPTVertex));
+			pInstance->Transform(pmat,Math::ToRadian(+60.0f));
+			EffectRenderBridge::Submit(Renderer::TopologyTriangleStrip, 2, pInstance->GetParticleMeshPointer(), sizeof(TPTVertex));
 		}
 	};
 	
@@ -376,13 +376,13 @@ namespace NParticleRenderer
 		inline void operator () (CParticleInstance * pInstance)
 		{
 			pInstance->Transform();
-			EffectRenderBridge::DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, pInstance->GetParticleMeshPointer(), sizeof(TPTVertex));
+			EffectRenderBridge::Submit(Renderer::TopologyTriangleStrip, 2, pInstance->GetParticleMeshPointer(), sizeof(TPTVertex));
 		}
 	};
 	struct AttachRenderer
 	{
-		const D3DXMATRIX* pmat;
-		AttachRenderer(const D3DXMATRIX * pmat)
+		const Math::Matrix* pmat;
+		AttachRenderer(const Math::Matrix * pmat)
 			: pmat(pmat)
 		{
 		}
@@ -390,7 +390,7 @@ namespace NParticleRenderer
 		inline void operator () (CParticleInstance * pInstance)
 		{
 			pInstance->Transform(pmat);
-			EffectRenderBridge::DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, pInstance->GetParticleMeshPointer(), sizeof(TPTVertex));
+			EffectRenderBridge::Submit(Renderer::TopologyTriangleStrip, 2, pInstance->GetParticleMeshPointer(), sizeof(TPTVertex));
 		}
 	};
 }
@@ -399,9 +399,9 @@ void CParticleSystemInstance::OnRender()
 {
     EffectRenderBridge::Part(Renderer::EffectPart::Particle);
 	CScreen::Identity();
-	STATEMANAGER.SetRenderState(D3DRS_SRCBLEND, m_pParticleProperty->m_bySrcBlendType);
-	STATEMANAGER.SetRenderState(D3DRS_DESTBLEND, m_pParticleProperty->m_byDestBlendType);
-	STATEMANAGER.SetTextureStageState(0,D3DTSS_COLOROP,m_pParticleProperty->m_byColorOperationType);
+	DRAWSTATE.SetRenderState(Renderer::StateSrcBlend, m_pParticleProperty->m_bySrcBlendType);
+	DRAWSTATE.SetRenderState(Renderer::StateDestBlend, m_pParticleProperty->m_byDestBlendType);
+	DRAWSTATE.SetTextureStageState(0,Renderer::StageColorOp,m_pParticleProperty->m_byColorOperationType);
 	if (m_pParticleProperty->m_byBillboardType < BILLBOARD_TYPE_2FACE)
 	{
 		if (!m_pParticleProperty->m_bAttachFlag)

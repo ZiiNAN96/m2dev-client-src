@@ -4,8 +4,6 @@ target_include_directories(M2RendererInterface INTERFACE "${PROJECT_SOURCE_DIR}/
 add_library(M2RendererBootstrap STATIC RendererBootstrap.cpp TerrainPresentation.cpp)
 target_link_libraries(M2RendererBootstrap PRIVATE M2RendererInterface)
 
-if(M2_ENABLE_DILIGENT_D3D11)
-    # Explicit OFF builds remain independent of Diligent downloads and modern graphics APIs.
     include(FetchContent)
     set(DILIGENT_NO_DIRECT3D11 OFF CACHE BOOL "" FORCE)
     foreach(api DIRECT3D12 OPENGL VULKAN METAL WEBGPU ARCHIVER)
@@ -45,6 +43,4 @@ if(M2_ENABLE_DILIGENT_D3D11)
     target_sources(M2RendererDiligent PRIVATE DiligentEffectRenderer.cpp)
     target_include_directories(M2RendererDiligent PRIVATE "${diligentcore_SOURCE_DIR}")
     target_link_libraries(M2RendererDiligent PUBLIC M2RendererInterface PRIVATE Diligent-GraphicsEngineD3D11-static)
-    target_compile_definitions(M2RendererBootstrap PRIVATE M2_ENABLE_DILIGENT_D3D11=1)
     target_link_libraries(M2RendererBootstrap PRIVATE M2RendererDiligent)
-endif()

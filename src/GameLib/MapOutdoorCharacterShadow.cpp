@@ -1,6 +1,5 @@
 #include "StdAfx.h"
-#include "EterLib/NativeResourceAudit.h"
-#include "EterLib/StateManager.h"
+#include "EterLib/DrawState.h"
 #include "EterLib/Camera.h"
 
 #include "MapOutdoor.h"
@@ -27,9 +26,6 @@ void CMapOutdoor::CreateCharacterShadowTexture()
 
 void CMapOutdoor::ReleaseCharacterShadowTexture()
 {
-	SAFE_RELEASE(m_lpCharacterShadowMapRenderTargetSurface);
-	SAFE_RELEASE(m_lpCharacterShadowMapDepthSurface);
-	SAFE_RELEASE(m_lpCharacterShadowMapTexture);
 }
 
 

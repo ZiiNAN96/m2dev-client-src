@@ -19,14 +19,14 @@
 
 struct HardwareTransformPatch_SSourceVertex
 {
-	D3DXVECTOR3 kPosition;
-	D3DXVECTOR3 kNormal;
+	Math::Vector3 kPosition;
+	Math::Vector3 kNormal;
 };
 
 struct SoftwareTransformPatch_SSourceVertex
 {
-	D3DXVECTOR3 kPosition;
-	D3DXVECTOR3 kNormal;
+	Math::Vector3 kPosition;
+	Math::Vector3 kNormal;
 	DWORD		dwDiffuse;
 };
 
@@ -101,7 +101,7 @@ public:
 
 	UINT GetWaterFaceCount();
 
-	void SoftwareTransformPatch_UpdateTerrainLighting(DWORD dwVersion, const D3DLIGHT9& c_rkLight, const D3DMATERIAL9& c_rkMtrl);
+	void SoftwareTransformPatch_UpdateTerrainLighting(DWORD dwVersion, const Renderer::LightValues& c_rkLight, const Renderer::MaterialValues& c_rkMtrl);
 	
 	void BuildTerrainVertexBuffer(HardwareTransformPatch_SSourceVertex* akSrcVertex);
 	void BuildWaterVertexBuffer(SWaterVertex* akSrcVertex, UINT uWaterVertexCount);
@@ -169,9 +169,9 @@ public:
 
 	void Clear();
 
-	void SetCenterPosition(const D3DXVECTOR3& c_rv3Center);
+	void SetCenterPosition(const Math::Vector3& c_rv3Center);
 
-	bool IsIn(const D3DXVECTOR3& c_rv3Target, float fRadius);
+	bool IsIn(const Math::Vector3& c_rv3Target, float fRadius);
 
 	bool isUsed()																	{ return m_bUsed; }
 	void SetUsed(bool bUsed)														{ m_bUsed = bUsed; }
@@ -203,7 +203,7 @@ public:
 	SoftwareTransformPatch_SSourceVertex* SoftwareTransformPatch_GetTerrainVertexDataPtr();
 	CGraphicVertexBuffer* HardwareTransformPatch_GetVertexBufferPtr();
 
-	void SoftwareTransformPatch_UpdateTerrainLighting(DWORD dwVersion, const D3DLIGHT9& c_rkLight, const D3DMATERIAL9& c_rkMtrl);
+	void SoftwareTransformPatch_UpdateTerrainLighting(DWORD dwVersion, const Renderer::LightValues& c_rkLight, const Renderer::MaterialValues& c_rkMtrl);
 	
 protected:
 	bool					m_bUsed;
@@ -213,7 +213,7 @@ protected:
 
 	CTerrainPatch *			m_pTerrainPatch;
 
-	D3DXVECTOR3				m_v3Center;
+	Math::Vector3				m_v3Center;
 };
 
 inline bool CTerrainPatchProxy::isWaterExists()

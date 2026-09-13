@@ -8,7 +8,7 @@
 #include "AbstractApplication.h"
 #include "packet.h"
 
-#include "EterLib/StateManager.h"
+#include "EterLib/DrawState.h"
 #include "GameLib/ItemManager.h"
 #include "GameLib/ActorRenderBridge.h" // ZiiNAN: Diligent mount actor rendering
 
@@ -1570,7 +1570,7 @@ void CInstanceBase::MovementProcess()
 
 	TPixelPosition kPPosNext;
 	{
-		const D3DXVECTOR3 & c_rkV3Mov = m_GraphicThingInstance.GetMovementVectorRef();
+		const Math::Vector3 & c_rkV3Mov = m_GraphicThingInstance.GetMovementVectorRef();
 
 		kPPosNext.x = kPPosCur.x + (+c_rkV3Mov.x);
 		kPPosNext.y = kPPosCur.y + (-c_rkV3Mov.y);
@@ -1936,7 +1936,7 @@ void CInstanceBase::Transform()
 	{
 		if (IsWalking() || m_GraphicThingInstance.IsUsingMovingSkill())
 		{
-			const D3DXVECTOR3& c_rv3Movment=m_GraphicThingInstance.GetMovementVectorRef();
+			const Math::Vector3& c_rv3Movment=m_GraphicThingInstance.GetMovementVectorRef();
 
 			float len=(c_rv3Movment.x*c_rv3Movment.x)+(c_rv3Movment.y*c_rv3Movment.y);
 			if (len>1.0f)
@@ -2029,18 +2029,18 @@ void CInstanceBase::Render()
 		{
 			static CScreen s_kScreen;
 
-			STATEMANAGER.SetTextureStageState(0, D3DTSS_COLORARG1,	D3DTA_DIFFUSE);
-			STATEMANAGER.SetTextureStageState(0, D3DTSS_COLOROP,	D3DTOP_SELECTARG1);
-			STATEMANAGER.SetTextureStageState(0, D3DTSS_ALPHAOP,	D3DTOP_DISABLE);	
-			STATEMANAGER.SaveRenderState(D3DRS_ZENABLE, FALSE);
-			STATEMANAGER.SetRenderState(D3DRS_FOGENABLE, FALSE);
-			STATEMANAGER.SetRenderState(D3DRS_LIGHTING, FALSE);
+			DRAWSTATE.SetTextureStageState(0, Renderer::StageColorArg1,	Renderer::ArgDiffuse);
+			DRAWSTATE.SetTextureStageState(0, Renderer::StageColorOp,	Renderer::TextureOpSelectArg1);
+			DRAWSTATE.SetTextureStageState(0, Renderer::StageAlphaOp,	Renderer::TextureOpDisable);
+			DRAWSTATE.SaveRenderState(Renderer::StateZEnable, FALSE);
+			DRAWSTATE.SetRenderState(Renderer::StateFogEnable, FALSE);
+			DRAWSTATE.SetRenderState(Renderer::StateLighting, FALSE);
 			
 			TPixelPosition px;
 			m_GraphicThingInstance.GetPixelPosition(&px);
-			D3DXVECTOR3 kD3DVt3Cur(px.x, px.y, px.z);
-			//D3DXVECTOR3 kD3DVt3Cur(NEW_GetSrcPixelPositionRef().x, -NEW_GetSrcPixelPositionRef().y, NEW_GetSrcPixelPositionRef().z);
-			D3DXVECTOR3 kD3DVt3Dest(NEW_GetDstPixelPositionRef().x, -NEW_GetDstPixelPositionRef().y, NEW_GetDstPixelPositionRef().z);
+			Math::Vector3 kD3DVt3Cur(px.x, px.y, px.z);
+			//Math::Vector3 kD3DVt3Cur(NEW_GetSrcPixelPositionRef().x, -NEW_GetSrcPixelPositionRef().y, NEW_GetSrcPixelPositionRef().z);
+			Math::Vector3 kD3DVt3Dest(NEW_GetDstPixelPositionRef().x, -NEW_GetDstPixelPositionRef().y, NEW_GetDstPixelPositionRef().z);
 
 			//printf("%s %f\n", GetNameString(), kD3DVt3Cur.y - kD3DVt3Dest.y);
 			//float fdx = NEW_GetDstPixelPositionRef().x - NEW_GetSrcPixelPositionRef().x;
@@ -2048,9 +2048,9 @@ void CInstanceBase::Render()
 
 			s_kScreen.SetDiffuseColor(0.0f, 0.0f, 1.0f);
 			s_kScreen.RenderLine3d(kD3DVt3Cur.x, kD3DVt3Cur.y, px.z, kD3DVt3Dest.x, kD3DVt3Dest.y, px.z);
-			STATEMANAGER.RestoreRenderState(D3DRS_ZENABLE);
-			STATEMANAGER.SetRenderState(D3DRS_FOGENABLE, TRUE);
-			STATEMANAGER.SetRenderState(D3DRS_LIGHTING, TRUE);
+			DRAWSTATE.RestoreRenderState(Renderer::StateZEnable);
+			DRAWSTATE.SetRenderState(Renderer::StateFogEnable, TRUE);
+			DRAWSTATE.SetRenderState(Renderer::StateLighting, TRUE);
 		}
 	}	
 }
@@ -2617,7 +2617,7 @@ void CInstanceBase::SetRenderMode(int iRenderMode)
 	m_GraphicThingInstance.SetRenderMode(iRenderMode);
 }
 
-void CInstanceBase::SetAddColor(const D3DXCOLOR & c_rColor)
+void CInstanceBase::SetAddColor(const Math::Color & c_rColor)
 {
 	m_GraphicThingInstance.SetAddColor(c_rColor);
 }
@@ -3168,7 +3168,7 @@ CInstanceBase::~CInstanceBase()
 }
 
 
-void CInstanceBase::GetBoundBox(D3DXVECTOR3 * vtMin, D3DXVECTOR3 * vtMax)
+void CInstanceBase::GetBoundBox(Math::Vector3 * vtMin, Math::Vector3 * vtMax)
 {
 	m_GraphicThingInstance.GetBoundBox(vtMin, vtMax);
 }

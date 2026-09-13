@@ -28,20 +28,20 @@ class CGraphicObjectInstance : public CGraphicCollisionObject
 		virtual int GetType() const = 0;
 
 	public:
-		const D3DXVECTOR3 &		GetPosition() const;
-		const D3DXVECTOR3 &		GetScale() const;
+		const Math::Vector3 &		GetPosition() const;
+		const Math::Vector3 &		GetScale() const;
 		float					GetRotation();
 		float					GetYaw();
 		float					GetPitch();
 		float					GetRoll();
 
 		void					SetPosition(float x, float y, float z);
-		void					SetPosition(const D3DXVECTOR3 & newposition);
+		void					SetPosition(const Math::Vector3 & newposition);
 		void					SetScale(float x, float y, float z);
 		void					SetRotation(float fRotation);
 		void					SetRotation(float fYaw, float fPitch, float fRoll);
-		void					SetRotationQuaternion(const D3DXQUATERNION &q);
-		void					SetRotationMatrix(const D3DXMATRIX & m);
+		void					SetRotationQuaternion(const Math::Quaternion &q);
+		void					SetRotationMatrix(const Math::Matrix & m);
 
 		void					Clear();
 		void					Update();
@@ -68,15 +68,15 @@ class CGraphicObjectInstance : public CGraphicCollisionObject
 		bool					isIntersect(const CRay & c_rRay, float * pu, float * pv, float * pt);
 
 		// Bounding Box
-		D3DXVECTOR4 &			GetWTBBoxVertex(const unsigned char & c_rucNumTBBoxVertex);
-		D3DXVECTOR3 &			GetTBBoxMin() { return m_v3TBBoxMin; }
-		D3DXVECTOR3 &			GetTBBoxMax() { return m_v3TBBoxMax; }
-		D3DXVECTOR3 &			GetBBoxMin() { return m_v3BBoxMin; }
-		D3DXVECTOR3 &			GetBBoxMax() { return m_v3BBoxMax; }
+		Math::Vector4 &			GetWTBBoxVertex(const unsigned char & c_rucNumTBBoxVertex);
+		Math::Vector3 &			GetTBBoxMin() { return m_v3TBBoxMin; }
+		Math::Vector3 &			GetTBBoxMax() { return m_v3TBBoxMax; }
+		Math::Vector3 &			GetBBoxMin() { return m_v3BBoxMin; }
+		Math::Vector3 &			GetBBoxMax() { return m_v3BBoxMax; }
 
 		// Matrix
- 		D3DXMATRIX &			GetTransform();
-		const D3DXMATRIX&		GetWorldMatrix() { return m_worldMatrix; }
+		Math::Matrix &			GetTransform();
+		const Math::Matrix&		GetWorldMatrix() { return m_worldMatrix; }
 
 		// Portal
 		void					SetPortal(DWORD dwIndex, int iID);
@@ -90,7 +90,7 @@ class CGraphicObjectInstance : public CGraphicCollisionObject
 	public:
 		void					UpdateBoundingSphere();
 		void					RegisterBoundingSphere();
-		virtual bool			GetBoundingSphere(D3DXVECTOR3 & v3Center, float & fRadius) = 0;
+		virtual bool			GetBoundingSphere(Math::Vector3 & v3Center, float & fRadius) = 0;
 
 		virtual void			OnRender() = 0;
 		virtual void			OnBlendRender() = 0;
@@ -102,27 +102,27 @@ class CGraphicObjectInstance : public CGraphicCollisionObject
 		virtual void			OnDeform(){}
 
 	protected:
-		D3DXVECTOR3				m_v3Position;
-		D3DXVECTOR3				m_v3Scale;
+		Math::Vector3				m_v3Position;
+		Math::Vector3				m_v3Scale;
 
 		float					m_fYaw;
 		float					m_fPitch;
 		float					m_fRoll;
 
-		D3DXMATRIX				m_mRotation;
+		Math::Matrix				m_mRotation;
 
 		bool					m_isVisible;
 		bool					m_isAlwaysHidden;
 
-		D3DXMATRIX				m_worldMatrix;
+		Math::Matrix				m_worldMatrix;
 
 		// Camera Block
 		bool					m_BlockCamera;
 
 		// Bounding Box
-		D3DXVECTOR4				m_v4TBBox[8];
-		D3DXVECTOR3				m_v3TBBoxMin, m_v3TBBoxMax;
-		D3DXVECTOR3				m_v3BBoxMin, m_v3BBoxMax;
+		Math::Vector4				m_v4TBBox[8];
+		Math::Vector3				m_v3TBBoxMin, m_v3TBBoxMax;
+		Math::Vector3				m_v3BBoxMin, m_v3BBoxMax;
 
 		// Portal
 		BYTE					m_abyPortalID[PORTAL_ID_MAX_NUM];
@@ -132,11 +132,11 @@ class CGraphicObjectInstance : public CGraphicCollisionObject
 
 	// Static Collision Data
 	public:
-		void					AddCollision(const CStaticCollisionData * pscd, const D3DXMATRIX * pMat);
+		void					AddCollision(const CStaticCollisionData * pscd, const Math::Matrix * pMat);
 		void					ClearCollision();
 		bool					CollisionDynamicSphere(const CDynamicSphereInstance & s) const;
 		bool					MovementCollisionDynamicSphere(const CDynamicSphereInstance & s) const;
-		D3DXVECTOR3				GetCollisionMovementAdjust(const CDynamicSphereInstance & s) const;
+		Math::Vector3				GetCollisionMovementAdjust(const CDynamicSphereInstance & s) const;
 
 		void					UpdateCollisionData(const CStaticCollisionDataVector * pscdVector = 0);
 

@@ -1,7 +1,7 @@
 #include "StdAfx.h"
 #include "TextRenderBridge.h"
 #include "GrpTextInstance.h"
-#include "StateManager.h"
+#include "DrawState.h"
 #include "IME.h"
 #include "TextTag.h"
 #include "EterBase/Utils.h"
@@ -46,7 +46,7 @@ int CGraphicTextInstance::__DrawCharacter(CGraphicFontTexture * pFontTexture, wc
 	if (pInsCharInfo)
 	{
 		// Round kerning to nearest pixel to keep glyphs on the pixel grid.
-		// Fractional offsets cause bilinear interpolation blur in D3D9.
+		// Fractional offsets cause bilinear interpolation blur on the original pixel grid.
 		float kern = floorf(pFontTexture->GetKerning(prevChar, text) + 0.5f);
 
 		m_dwColorInfoVector.push_back(dwColor);
@@ -565,24 +565,23 @@ void CGraphicTextInstance::Render(RECT * pClipRect)
 	s_outlineBatches.clear();
 	s_mainBatches.clear();
 
-	STATEMANAGER.SaveRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
-	STATEMANAGER.SaveRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
-	DWORD dwFogEnable = STATEMANAGER.GetRenderState(D3DRS_FOGENABLE);
-	DWORD dwLighting = STATEMANAGER.GetRenderState(D3DRS_LIGHTING);
-	STATEMANAGER.SetRenderState(D3DRS_FOGENABLE, FALSE);
-	STATEMANAGER.SetRenderState(D3DRS_LIGHTING, FALSE);
+	DRAWSTATE.SaveRenderState(Renderer::StateSrcBlend, Renderer::BlendSrcAlpha);
+	DRAWSTATE.SaveRenderState(Renderer::StateDestBlend, Renderer::BlendInvSrcAlpha);
+	DWORD dwFogEnable = DRAWSTATE.GetRenderState(Renderer::StateFogEnable);
+	DWORD dwLighting = DRAWSTATE.GetRenderState(Renderer::StateLighting);
+	DRAWSTATE.SetRenderState(Renderer::StateFogEnable, FALSE);
+	DRAWSTATE.SetRenderState(Renderer::StateLighting, FALSE);
 
-	STATEMANAGER.SetFVF(D3DFVF_XYZ|D3DFVF_DIFFUSE|D3DFVF_TEX1);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_COLORARG1,	D3DTA_TEXTURE);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_COLORARG2,	D3DTA_DIFFUSE);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_COLOROP,	D3DTOP_MODULATE);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_ALPHAARG1,	D3DTA_TEXTURE);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_ALPHAARG2,	D3DTA_DIFFUSE);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_ALPHAOP,	D3DTOP_MODULATE);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageColorArg1,	Renderer::ArgTexture);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageColorArg2,	Renderer::ArgDiffuse);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageColorOp,	Renderer::TextureOpModulate);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageAlphaArg1,	Renderer::ArgTexture);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageAlphaArg2,	Renderer::ArgDiffuse);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageAlphaOp,	Renderer::TextureOpModulate);
 
 	// LCD subpixel rendering: mask alpha writes to prevent corruption during two-pass blending
-	STATEMANAGER.SaveRenderState(D3DRS_COLORWRITEENABLE,
-		D3DCOLORWRITEENABLE_RED | D3DCOLORWRITEENABLE_GREEN | D3DCOLORWRITEENABLE_BLUE);
+	DRAWSTATE.SaveRenderState(Renderer::StateColorWriteEnable,
+		Renderer::WriteRed | Renderer::WriteGreen | Renderer::WriteBlue);
 
 	{
 		const float fFontHalfWeight=1.0f;
@@ -893,12 +892,10 @@ void CGraphicTextInstance::Render(RECT * pClipRect)
 			vertices[2].position = TPosition(sx, bot, 0.0f);
 			vertices[3].position = TPosition(ex, bot, 0.0f);
 
-			STATEMANAGER.SetTexture(0, NULL);
-			CGraphicBase::SetDefaultIndexBuffer(CGraphicBase::DEFAULT_IB_FILL_RECT);
-			if (CGraphicBase::SetPDTStream(vertices, 4))
+			DRAWSTATE.SetTexture(0, NULL);
+			if (CGraphicBase::ValidatePDTVertices(vertices, 4))
 			{
-				const auto result=STATEMANAGER.DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 4, 0, 2);
-				TextRenderBridge::Submit(vertices,4,nullptr,result,true);
+				TextRenderBridge::Submit(vertices,4,nullptr,true);
 			}
 		}
 	}
@@ -910,32 +907,28 @@ void CGraphicTextInstance::Render(RECT * pClipRect)
 			if (vtxBatch.empty())
 				continue;
 
-			STATEMANAGER.SetTexture(0, pTexture);
+			DRAWSTATE.SetTexture(0, pTexture);
 
 			// Pass 1: dest.rgb *= (1 - coverage.rgb)
-			STATEMANAGER.SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ZERO);
-			STATEMANAGER.SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCCOLOR);
-			STATEMANAGER.SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
-			STATEMANAGER.SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
-			STATEMANAGER.SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1);
-			STATEMANAGER.SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
-			const auto maskResult=STATEMANAGER.DrawPrimitiveUP(D3DPT_TRIANGLELIST,
-				vtxBatch.size() / 3, vtxBatch.data(), sizeof(SVertex));
-			TextRenderBridge::Submit(vtxBatch.data(),uint32_t(vtxBatch.size()),pFontTexture,maskResult);
+			DRAWSTATE.SetRenderState(Renderer::StateSrcBlend, Renderer::BlendZero);
+			DRAWSTATE.SetRenderState(Renderer::StateDestBlend, Renderer::BlendInvSrcColor);
+			DRAWSTATE.SetTextureStageState(0, Renderer::StageColorOp, Renderer::TextureOpSelectArg1);
+			DRAWSTATE.SetTextureStageState(0, Renderer::StageColorArg1, Renderer::ArgTexture);
+			DRAWSTATE.SetTextureStageState(0, Renderer::StageAlphaOp, Renderer::TextureOpSelectArg1);
+			DRAWSTATE.SetTextureStageState(0, Renderer::StageAlphaArg1, Renderer::ArgTexture);
+			TextRenderBridge::Submit(vtxBatch.data(),uint32_t(vtxBatch.size()),pFontTexture);
 
 			if (!skipPass2) {
 				// Pass 2: dest.rgb += textColor.rgb * coverage.rgb
-				STATEMANAGER.SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
-				STATEMANAGER.SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE);
-				STATEMANAGER.SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
-				STATEMANAGER.SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
-				STATEMANAGER.SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
-				STATEMANAGER.SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
-				STATEMANAGER.SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
-				STATEMANAGER.SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
-				const auto colorResult=STATEMANAGER.DrawPrimitiveUP(D3DPT_TRIANGLELIST,
-					vtxBatch.size() / 3, vtxBatch.data(), sizeof(SVertex));
-				TextRenderBridge::Submit(vtxBatch.data(),uint32_t(vtxBatch.size()),pFontTexture,colorResult);
+				DRAWSTATE.SetRenderState(Renderer::StateSrcBlend, Renderer::BlendOne);
+				DRAWSTATE.SetRenderState(Renderer::StateDestBlend, Renderer::BlendOne);
+				DRAWSTATE.SetTextureStageState(0, Renderer::StageColorOp, Renderer::TextureOpModulate);
+				DRAWSTATE.SetTextureStageState(0, Renderer::StageColorArg1, Renderer::ArgTexture);
+				DRAWSTATE.SetTextureStageState(0, Renderer::StageColorArg2, Renderer::ArgDiffuse);
+				DRAWSTATE.SetTextureStageState(0, Renderer::StageAlphaOp, Renderer::TextureOpModulate);
+				DRAWSTATE.SetTextureStageState(0, Renderer::StageAlphaArg1, Renderer::ArgTexture);
+				DRAWSTATE.SetTextureStageState(0, Renderer::StageAlphaArg2, Renderer::ArgDiffuse);
+				TextRenderBridge::Submit(vtxBatch.data(),uint32_t(vtxBatch.size()),pFontTexture);
 			}
 		}
 	};
@@ -1022,13 +1015,11 @@ void CGraphicTextInstance::Render(RECT * pClipRect)
 		vertices[2].position = TPosition(sx, ey, 0.0f);
 		vertices[3].position = TPosition(ex, ey, 0.0f);
 
-		STATEMANAGER.SetTexture(0, NULL);
+		DRAWSTATE.SetTexture(0, NULL);
 
-		CGraphicBase::SetDefaultIndexBuffer(CGraphicBase::DEFAULT_IB_FILL_RECT);
-		if (CGraphicBase::SetPDTStream(vertices, 4))
+		if (CGraphicBase::ValidatePDTVertices(vertices, 4))
 		{
-			const auto result=STATEMANAGER.DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 4, 0, 2);
-			TextRenderBridge::Submit(vertices,4,nullptr,result,true);
+			TextRenderBridge::Submit(vertices,4,nullptr,true);
 		}
 
 		int ulbegin = CIME::GetULBegin();
@@ -1053,17 +1044,16 @@ void CGraphicTextInstance::Render(RECT * pClipRect)
 			vertices[2].position = TPosition(sx, ey, 0.0f);
 			vertices[3].position = TPosition(ex, ey, 0.0f);
 
-			const auto result=STATEMANAGER.DrawIndexedPrimitiveUP(D3DPT_TRIANGLELIST, 0, 4, 2, c_FillRectIndices, D3DFMT_INDEX16, vertices, sizeof(TPDTVertex));
-			TextRenderBridge::Submit(vertices,4,nullptr,result,true);
+			TextRenderBridge::Submit(vertices,4,nullptr,true);
 		}
 	}
 
-	STATEMANAGER.RestoreRenderState(D3DRS_COLORWRITEENABLE);
-	STATEMANAGER.RestoreRenderState(D3DRS_SRCBLEND);
-	STATEMANAGER.RestoreRenderState(D3DRS_DESTBLEND);
+	DRAWSTATE.RestoreRenderState(Renderer::StateColorWriteEnable);
+	DRAWSTATE.RestoreRenderState(Renderer::StateSrcBlend);
+	DRAWSTATE.RestoreRenderState(Renderer::StateDestBlend);
 
-	STATEMANAGER.SetRenderState(D3DRS_FOGENABLE, dwFogEnable);
-	STATEMANAGER.SetRenderState(D3DRS_LIGHTING, dwLighting);
+	DRAWSTATE.SetRenderState(Renderer::StateFogEnable, dwFogEnable);
+	DRAWSTATE.SetRenderState(Renderer::StateLighting, dwLighting);
 
 	if (m_hyperlinkVector.size() != 0)
 	{
@@ -1158,7 +1148,7 @@ void CGraphicTextInstance::SetColor(DWORD color)
 
 void CGraphicTextInstance::SetColor(float r, float g, float b, float a)
 {
-	SetColor(D3DXCOLOR(r, g, b, a));
+	SetColor(Math::Color(r, g, b, a));
 }
 
 void CGraphicTextInstance::SetOutLineColor(DWORD color)
@@ -1168,7 +1158,7 @@ void CGraphicTextInstance::SetOutLineColor(DWORD color)
 
 void CGraphicTextInstance::SetOutLineColor(float r, float g, float b, float a)
 {
-	m_dwOutLineColor=D3DXCOLOR(r, g, b, a);
+	m_dwOutLineColor=Math::Color(r, g, b, a);
 }
 
 void CGraphicTextInstance::SetSecret(bool Value)

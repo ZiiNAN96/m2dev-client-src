@@ -27,7 +27,7 @@
 #include "StdAfx.h"
 #include "LensFlare.h"
 #include "Camera.h"
-#include "StateManager.h"
+#include "DrawState.h"
 #include "ResourceManager.h"
 #include "WorldRenderBridge.h"
 
@@ -126,11 +126,11 @@ float CLensFlare::Interpolate(float fStart, float fEnd, float fPercent)
 ///////////////////////////////////////////////////////////////////////  
 //	CLensFlare::DrawBeforeFlare
 
-void CLensFlare::Compute(const D3DXVECTOR3 & c_rv3LightDirection)
+void CLensFlare::Compute(const Math::Vector3 & c_rv3LightDirection)
 {
 	float afSunPos[3];
 
-	D3DXVECTOR3 v3Target = CCameraManager::Instance().GetCurrentCamera()->GetTarget();
+	Math::Vector3 v3Target = CCameraManager::Instance().GetCurrentCamera()->GetTarget();
 	
 	afSunPos[0]	= v3Target.x - c_rv3LightDirection.x * 99999999.0f;
 	afSunPos[1]	= v3Target.y - c_rv3LightDirection.y * 99999999.0f;
@@ -162,7 +162,7 @@ void CLensFlare::Compute(const D3DXVECTOR3 & c_rv3LightDirection)
 		(afSunVector[1] * afCameraDirection[1]) +
 		(afSunVector[2] * afCameraDirection[2]);
 	
-	if (acosf(fDotProduct) < 0.5f * D3DX_PI)
+	if (acosf(fDotProduct) < 0.5f * Math::Pi)
 		SetVisible(true);
 	else
 		SetVisible(false);
@@ -192,24 +192,24 @@ void CLensFlare::DrawBeforeFlare()
 	if (m_SunFlareImageInstance.IsEmpty())
 		return;
 
-	D3DXMATRIX matProj;
-	D3DXMatrixOrthoOffCenterRH(&matProj, 0.0f, 1.0f, 1.0f, 0.0f, -1.0f, 1.0f);
-	STATEMANAGER.SaveTransform(Renderer::MatrixProjection, &matProj);
-	STATEMANAGER.SaveTransform(Renderer::MatrixView, &ms_matIdentity);
+	Math::Matrix matProj;
+	Math::MatrixOrthoOffCenterRH(&matProj, 0.0f, 1.0f, 1.0f, 0.0f, -1.0f, 1.0f);
+	DRAWSTATE.SaveTransform(Renderer::MatrixProjection, &matProj);
+	DRAWSTATE.SaveTransform(Renderer::MatrixView, &ms_matIdentity);
 
-	D3DXMATRIX matWorld;
-	D3DXMatrixTranslation(&matWorld, m_afFlarePos[0], m_afFlarePos[1], 0.0f);
-	STATEMANAGER.SetTransform(Renderer::MatrixWorld, &matWorld);
+	Math::Matrix matWorld;
+	Math::MatrixTranslation(&matWorld, m_afFlarePos[0], m_afFlarePos[1], 0.0f);
+	DRAWSTATE.SetTransform(Renderer::MatrixWorld, &matWorld);
 
-	STATEMANAGER.SaveRenderState(D3DRS_LIGHTING, FALSE);
-	STATEMANAGER.SaveRenderState(D3DRS_ZENABLE, FALSE);					// glDisable(GL_DEPTH_TEST);
-	STATEMANAGER.SaveRenderState(D3DRS_ZWRITEENABLE, FALSE);
-	STATEMANAGER.SaveRenderState(D3DRS_CULLMODE, D3DCULL_NONE);			// glDisable(GL_CULL_FACE);
-	STATEMANAGER.SaveRenderState(D3DRS_SHADEMODE, D3DSHADE_FLAT);		// glShadeModel(GL_FLAT);
-    STATEMANAGER.SaveRenderState(D3DRS_ALPHATESTENABLE, FALSE);			// glDisable(GL_ALPHA_TEST);
-    STATEMANAGER.SaveRenderState(D3DRS_ALPHABLENDENABLE, TRUE);			// glEnable(GL_BLEND);
-	STATEMANAGER.SaveRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
-	STATEMANAGER.SaveRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+	DRAWSTATE.SaveRenderState(Renderer::StateLighting, FALSE);
+	DRAWSTATE.SaveRenderState(Renderer::StateZEnable, FALSE);					// glDisable(GL_DEPTH_TEST);
+	DRAWSTATE.SaveRenderState(Renderer::StateZWriteEnable, FALSE);
+	DRAWSTATE.SaveRenderState(Renderer::StateCullMode, Renderer::CullNone);			// glDisable(GL_CULL_FACE);
+	DRAWSTATE.SaveRenderState(Renderer::StateShadeMode, Renderer::ShadeFlat);		// glShadeModel(GL_FLAT);
+    DRAWSTATE.SaveRenderState(Renderer::StateAlphaTestEnable, FALSE);			// glDisable(GL_ALPHA_TEST);
+    DRAWSTATE.SaveRenderState(Renderer::StateAlphaBlendEnable, TRUE);			// glEnable(GL_BLEND);
+	DRAWSTATE.SaveRenderState(Renderer::StateSrcBlend, Renderer::BlendSrcAlpha);
+	DRAWSTATE.SaveRenderState(Renderer::StateDestBlend, Renderer::BlendInvSrcAlpha);
 	/*
 	if (m_fBeforeBright != 0.0f && m_bDrawFlare && m_bDrawBrightScreen && false)	// ¿Ø false?
 	{
@@ -225,7 +225,7 @@ void CLensFlare::DrawBeforeFlare()
 	*/
 	float fAspectRatio = ms_Viewport.Width / float(ms_Viewport.Height);
 	float fHeight = m_fSunSize * fAspectRatio;
-	D3DXCOLOR color(1.0f, 1.0f, 1.0f, 1.0f);
+	Math::Color color(1.0f, 1.0f, 1.0f, 1.0f);
 
 	SVertex vertices[4];
 	vertices[0].x = -m_fSunSize;
@@ -256,30 +256,28 @@ void CLensFlare::DrawBeforeFlare()
 	vertices[3].u = 1.0f;
 	vertices[3].v = 1.0f;
 
-	STATEMANAGER.SetTexture(0, m_SunFlareImageInstance.GetTexturePointer()->GetTextureBinding());
-	STATEMANAGER.SetTexture(1, NULL);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+	DRAWSTATE.SetTexture(0, m_SunFlareImageInstance.GetTexturePointer()->GetTextureBinding());
+	DRAWSTATE.SetTexture(1, NULL);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageColorOp, Renderer::TextureOpModulate);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageColorArg1, Renderer::ArgTexture);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageColorArg2, Renderer::ArgDiffuse);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageAlphaOp, Renderer::TextureOpSelectArg1);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageColorArg1, Renderer::ArgTexture);
 	
-	STATEMANAGER.SetFVF(D3DFVF_XYZ|D3DFVF_DIFFUSE|D3DFVF_TEX1);
-    const auto nativeDraw=STATEMANAGER.DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, vertices, sizeof(SVertex));
-    WorldRenderBridge::SubmitQuad(vertices,nativeDraw);
+    WorldRenderBridge::SubmitQuad(vertices);
 
-	STATEMANAGER.RestoreRenderState(D3DRS_LIGHTING);
-	STATEMANAGER.RestoreRenderState(D3DRS_ZENABLE); // glDisable(GL_DEPTH_TEST);
-	STATEMANAGER.RestoreRenderState(D3DRS_ZWRITEENABLE);
-	STATEMANAGER.RestoreRenderState(D3DRS_CULLMODE); // glDisable(GL_CULL_FACE);
-	STATEMANAGER.RestoreRenderState(D3DRS_SHADEMODE); // glShadeModel(GL_FLAT);
-	STATEMANAGER.RestoreRenderState(D3DRS_ALPHATESTENABLE); // glDisable(GL_ALPHA_TEST);
-	STATEMANAGER.RestoreRenderState(D3DRS_ALPHABLENDENABLE); // glEnable(GL_BLEND);
-	STATEMANAGER.RestoreRenderState(D3DRS_SRCBLEND);
-	STATEMANAGER.RestoreRenderState(D3DRS_DESTBLEND);
+	DRAWSTATE.RestoreRenderState(Renderer::StateLighting);
+	DRAWSTATE.RestoreRenderState(Renderer::StateZEnable); // glDisable(GL_DEPTH_TEST);
+	DRAWSTATE.RestoreRenderState(Renderer::StateZWriteEnable);
+	DRAWSTATE.RestoreRenderState(Renderer::StateCullMode); // glDisable(GL_CULL_FACE);
+	DRAWSTATE.RestoreRenderState(Renderer::StateShadeMode); // glShadeModel(GL_FLAT);
+	DRAWSTATE.RestoreRenderState(Renderer::StateAlphaTestEnable); // glDisable(GL_ALPHA_TEST);
+	DRAWSTATE.RestoreRenderState(Renderer::StateAlphaBlendEnable); // glEnable(GL_BLEND);
+	DRAWSTATE.RestoreRenderState(Renderer::StateSrcBlend);
+	DRAWSTATE.RestoreRenderState(Renderer::StateDestBlend);
 
-	STATEMANAGER.RestoreTransform(Renderer::MatrixView);
-	STATEMANAGER.RestoreTransform(Renderer::MatrixProjection);
+	DRAWSTATE.RestoreTransform(Renderer::MatrixView);
+	DRAWSTATE.RestoreTransform(Renderer::MatrixProjection);
 }
 
 
@@ -323,18 +321,18 @@ void CLensFlare::DrawFlare()
 	if (m_bEnabled && m_bFlareVisible && m_bDrawFlare && m_fAfterBright != 0.0f)
 	{
         //glPushAttrib(GL_ENABLE_BIT);
-		STATEMANAGER.SaveRenderState(D3DRS_LIGHTING, FALSE); // glDisable(GL_LIGHTING);
-		STATEMANAGER.SaveRenderState(D3DRS_ZENABLE, FALSE); // glDisable(GL_DEPTH_TEST);
-		STATEMANAGER.SaveRenderState(D3DRS_CULLMODE, D3DCULL_NONE); // glDisable(GL_CULL_FACE);
-		STATEMANAGER.SaveRenderState(D3DRS_ALPHATESTENABLE, FALSE); // glDisable(GL_ALPHA_TEST);
-		STATEMANAGER.SaveRenderState(D3DRS_ALPHABLENDENABLE, TRUE); // glEnable(GL_BLEND);
+		DRAWSTATE.SaveRenderState(Renderer::StateLighting, FALSE); // glDisable(GL_LIGHTING);
+		DRAWSTATE.SaveRenderState(Renderer::StateZEnable, FALSE); // glDisable(GL_DEPTH_TEST);
+		DRAWSTATE.SaveRenderState(Renderer::StateCullMode, Renderer::CullNone); // glDisable(GL_CULL_FACE);
+		DRAWSTATE.SaveRenderState(Renderer::StateAlphaTestEnable, FALSE); // glDisable(GL_ALPHA_TEST);
+		DRAWSTATE.SaveRenderState(Renderer::StateAlphaBlendEnable, TRUE); // glEnable(GL_BLEND);
 
-		D3DXMATRIX matProj;
-		D3DXMatrixOrthoOffCenterRH(&matProj, 0.0f, ms_Viewport.Width, ms_Viewport.Height, 0.0f, -1.0f, 1.0f);
-		STATEMANAGER.SaveTransform(Renderer::MatrixProjection, &matProj);
-		STATEMANAGER.SaveTransform(Renderer::MatrixView, &ms_matIdentity);
+		Math::Matrix matProj;
+		Math::MatrixOrthoOffCenterRH(&matProj, 0.0f, ms_Viewport.Width, ms_Viewport.Height, 0.0f, -1.0f, 1.0f);
+		DRAWSTATE.SaveTransform(Renderer::MatrixProjection, &matProj);
+		DRAWSTATE.SaveTransform(Renderer::MatrixView, &ms_matIdentity);
 
-		STATEMANAGER.SetTransform(Renderer::MatrixWorld, &ms_matIdentity);
+		DRAWSTATE.SetTransform(Renderer::MatrixWorld, &ms_matIdentity);
 		//glMatrixMode(GL_MODELVIEW);
 		//glLoadIdentity();
 
@@ -348,14 +346,14 @@ void CLensFlare::DrawFlare()
 					  static_cast<int>(m_afFlareWinPos[0]),
 					  static_cast<int>(m_afFlareWinPos[1]));
 
-		STATEMANAGER.RestoreRenderState(D3DRS_LIGHTING); // glDisable(GL_LIGHTING);
-		STATEMANAGER.RestoreRenderState(D3DRS_ZENABLE); // glDisable(GL_DEPTH_TEST);
-		STATEMANAGER.RestoreRenderState(D3DRS_CULLMODE); // glDisable(GL_CULL_FACE);
-		STATEMANAGER.RestoreRenderState(D3DRS_ALPHABLENDENABLE); // glEnable(GL_BLEND);
-		STATEMANAGER.RestoreRenderState(D3DRS_ALPHATESTENABLE); // glDisable(GL_ALPHA_TEST);
+		DRAWSTATE.RestoreRenderState(Renderer::StateLighting); // glDisable(GL_LIGHTING);
+		DRAWSTATE.RestoreRenderState(Renderer::StateZEnable); // glDisable(GL_DEPTH_TEST);
+		DRAWSTATE.RestoreRenderState(Renderer::StateCullMode); // glDisable(GL_CULL_FACE);
+		DRAWSTATE.RestoreRenderState(Renderer::StateAlphaBlendEnable); // glEnable(GL_BLEND);
+		DRAWSTATE.RestoreRenderState(Renderer::StateAlphaTestEnable); // glDisable(GL_ALPHA_TEST);
 
-		STATEMANAGER.RestoreTransform(Renderer::MatrixProjection);
-		STATEMANAGER.RestoreTransform(Renderer::MatrixView);
+		DRAWSTATE.RestoreTransform(Renderer::MatrixProjection);
+		DRAWSTATE.RestoreTransform(Renderer::MatrixView);
 		//glDisable(GL_TEXTURE_2D);
         //glPopAttrib();
 	}
@@ -363,7 +361,7 @@ void CLensFlare::DrawFlare()
 
 ///////////////////////////////////////////////////////////////////////  
 //	CLensFlare::CharacterizeFlare
-void CLensFlare::CharacterizeFlare(bool bEnabled, bool bShowMainFlare, float fMaxBrightness, const D3DXCOLOR & c_rColor)
+void CLensFlare::CharacterizeFlare(bool bEnabled, bool bShowMainFlare, float fMaxBrightness, const Math::Color & c_rColor)
 {
 	m_bEnabled = bEnabled;
 	m_bShowMainFlare = bShowMainFlare;
@@ -451,22 +449,7 @@ void CLensFlare::AdjustBrightness()
 
 void CLensFlare::ReadDepthPixels(float * /*pPixels*/)
 {
-	/*
-	LPDIRECT3DSURFACE9 lpSurface;
-	if (FAILED(ms_lpd3dDevice->GetDepthStencilSurface(&lpSurface)))
-		assert(false);
 
-	D3DLOCKED_RECT rect;
-	lpSurface->LockRect(&rect, NULL, D3DLOCK_READONLY | D3DLOCK_NO_DIRTY_UPDATE);
-
-	lpSurface->UnlockRect();
-	*/
-	/*
-	glReadPixels(GLint(m_afFlareWinPos[0] - c_nDepthTestDimension / 2),
-				 GLint(m_afFlareWinPos[1] - c_nDepthTestDimension / 2),
-				 c_nDepthTestDimension, c_nDepthTestDimension,
-				 GL_DEPTH_COMPONENT, GL_FLOAT, pPixels);
-	*/
 }
 
 ///////////////////////////////////////////////////////////////////////  
@@ -547,20 +530,19 @@ void CFlare::Init(std::string strPath)
 void CFlare::Draw(float fBrightScale, int nWidth, int nHeight, int nX, int nY)
 {
     WorldRenderScope scope(m_diligentResources,Renderer::WorldPart::LensFlare);
-	STATEMANAGER.SaveRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE);
+	DRAWSTATE.SaveRenderState(Renderer::StateDestBlend, Renderer::BlendOne);
 
 	float fDX = float(nX) - float(nWidth) / 2.0f;
 	float fDY = float(nY) - float(nHeight) / 2.0f;
 
-	STATEMANAGER.SetTexture(1, NULL);
-	STATEMANAGER.SetFVF(D3DFVF_XYZ|D3DFVF_DIFFUSE|D3DFVF_TEX1);
+	DRAWSTATE.SetTexture(1, NULL);
 
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_COLORARG1,	D3DTA_TEXTURE);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_COLORARG2,	D3DTA_DIFFUSE);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_COLOROP,	D3DTOP_MODULATE);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_ALPHAARG1,	D3DTA_TEXTURE);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_ALPHAARG2,	D3DTA_DIFFUSE);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_ALPHAOP,	D3DTOP_MODULATE);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageColorArg1,	Renderer::ArgTexture);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageColorArg2,	Renderer::ArgDiffuse);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageColorOp,	Renderer::TextureOpModulate);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageAlphaArg1,	Renderer::ArgTexture);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageAlphaArg2,	Renderer::ArgDiffuse);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageAlphaOp,	Renderer::TextureOpModulate);
 
 	for (unsigned int i = 0; i < m_vFlares.size(); i++)
 	{
@@ -568,12 +550,12 @@ void CFlare::Draw(float fBrightScale, int nWidth, int nHeight, int nX, int nY)
 		float fCenterY = float(nY) - (m_vFlares[i]->m_fPosition + 1.0f) * fDY;
 		float fW = m_vFlares[i]->m_fWidth;
 		
-		D3DXCOLOR d3dColor(m_vFlares[i]->m_pColor[0] * fBrightScale,
+		Math::Color d3dColor(m_vFlares[i]->m_pColor[0] * fBrightScale,
 						   m_vFlares[i]->m_pColor[1] * fBrightScale,
 						   m_vFlares[i]->m_pColor[2] * fBrightScale,
 						   m_vFlares[i]->m_pColor[3] * fBrightScale);
 
-		STATEMANAGER.SetTexture(0, m_vFlares[i]->m_imageInstance.GetTexturePointer()->GetTextureBinding());
+		DRAWSTATE.SetTexture(0, m_vFlares[i]->m_imageInstance.GetTexturePointer()->GetTextureBinding());
 
 		TVertex vertices[4];
 		
@@ -606,9 +588,8 @@ void CFlare::Draw(float fBrightScale, int nWidth, int nHeight, int nX, int nY)
 		vertices[3].color = d3dColor;
 
         WorldRenderBridge::Texture(m_vFlares[i]->m_imageInstance.GetGraphicImagePointer());
-        const auto nativeDraw=STATEMANAGER.DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, 2, vertices, sizeof(TVertex));
-        WorldRenderBridge::SubmitQuad(vertices,nativeDraw);
+        WorldRenderBridge::SubmitQuad(vertices);
 	}
 
-	STATEMANAGER.RestoreRenderState(D3DRS_DESTBLEND);
+	DRAWSTATE.RestoreRenderState(Renderer::StateDestBlend);
 }

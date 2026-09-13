@@ -1,7 +1,7 @@
 #include "StdAfx.h"
 #include "TerrainTextureLoader.h"
 #include "ImageDecoder.h"
-#include "EterImageLib/DDSTextureLoader9.h"
+#include "EterImageLib/DDSImageData.h"
 #include "PackLib/PackManager.h"
 #include <limits>
 
@@ -15,16 +15,16 @@ Renderer::TerrainTexturePtr LoadTerrainTextureMemory(const void* data, size_t si
     memcpy(&magic, data, sizeof(magic));
     if (magic == 0x20534444)
     {
-        DirectX::DDS2DView dds;
-        if (FAILED(DirectX::GetDDS2DView(static_cast<const uint8_t*>(data), size, dds))) return fail();
+        ImageData::DDS2DView dds;
+        if (FAILED(ImageData::GetDDS2DView(static_cast<const uint8_t*>(data), size, dds))) return fail();
         switch (dds.format)
         {
-        case D3DFMT_DXT1: upload.format = TerrainTextureFormat::BC1; break;
-        case D3DFMT_DXT3: upload.format = TerrainTextureFormat::BC2; break;
-        case D3DFMT_DXT5: upload.format = TerrainTextureFormat::BC3; break;
-        case D3DFMT_A8R8G8B8: upload.format = TerrainTextureFormat::BGRA8; break;
-        case D3DFMT_X8R8G8B8: upload.format = TerrainTextureFormat::BGRX8; break;
-        case D3DFMT_A8B8G8R8: upload.format = TerrainTextureFormat::RGBA8; break;
+        case ImageData::DDSFormat::BC1: upload.format = TerrainTextureFormat::BC1; break;
+        case ImageData::DDSFormat::BC2: upload.format = TerrainTextureFormat::BC2; break;
+        case ImageData::DDSFormat::BC3: upload.format = TerrainTextureFormat::BC3; break;
+        case ImageData::DDSFormat::BGRA8: upload.format = TerrainTextureFormat::BGRA8; break;
+        case ImageData::DDSFormat::BGRX8: upload.format = TerrainTextureFormat::BGRX8; break;
+        case ImageData::DDSFormat::RGBA8: upload.format = TerrainTextureFormat::RGBA8; break;
         default: return fail();
         }
         upload.width = dds.width;

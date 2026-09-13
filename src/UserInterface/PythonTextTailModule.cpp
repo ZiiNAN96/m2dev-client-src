@@ -35,7 +35,7 @@ PyObject * textTailRegisterCharacterTextTail(PyObject * poSelf, PyObject * poArg
 	if (!PyTuple_GetInteger(poArgs, 1, &iVirtualID))
 		return Py_BuildException();
 
-	CPythonTextTail::Instance().RegisterCharacterTextTail(iGuildID, iVirtualID, D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f));
+	CPythonTextTail::Instance().RegisterCharacterTextTail(iGuildID, iVirtualID, Math::Color(1.0f, 1.0f, 1.0f, 1.0f));
 
 	return Py_BuildNone();
 }
@@ -56,7 +56,7 @@ PyObject * textTailGetPosition(PyObject * poSelf, PyObject * poArgs)
 		CInstanceBase* pkInstMain=rkChrMgr.GetMainInstancePtr();
 		if (pkInstMain)
 		{
-			const D3DXVECTOR3 & c_rv3Position = pkInstMain->GetGraphicThingInstanceRef().GetPosition();
+			const Math::Vector3 & c_rv3Position = pkInstMain->GetGraphicThingInstanceRef().GetPosition();
 			CPythonGraphic::Instance().ProjectPosition(c_rv3Position.x, c_rv3Position.y, c_rv3Position.z, &x, &y);	
 		}
 	}	
@@ -121,7 +121,7 @@ PyObject * textTailAttachTitle(PyObject * poSelf, PyObject * poArgs)
 	if (!PyTuple_GetFloat(poArgs, 4, &fb))
 		return Py_BuildException();
 
-	CPythonTextTail::Instance().AttachTitle(iVirtualID, szName, D3DXCOLOR(fr, fg, fb, 1.0f));
+	CPythonTextTail::Instance().AttachTitle(iVirtualID, szName, Math::Color(fr, fg, fb, 1.0f));
 
 	return Py_BuildNone();
 }

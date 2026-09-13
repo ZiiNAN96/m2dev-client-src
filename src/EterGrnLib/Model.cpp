@@ -33,7 +33,7 @@ bool CGrannyModel::CanDeformPNTVertices() const
 	return m_canDeformPNVertices;
 }
 
-void CGrannyModel::DeformPNTVertices(void * dstBaseVertices, D3DXMATRIX * boneMatrices, const std::vector<granny_mesh_binding*>& c_rvct_pgrnMeshBinding) const
+void CGrannyModel::DeformPNTVertices(void * dstBaseVertices, Math::Matrix * boneMatrices, const std::vector<granny_mesh_binding*>& c_rvct_pgrnMeshBinding) const
 {
 	int meshCount = GetMeshCount();
 
@@ -72,15 +72,9 @@ granny_model* CGrannyModel::GetGrannyModelPointer()
 	return m_pgrnModel;
 }
 
-LPDIRECT3DINDEXBUFFER9 CGrannyModel::GetD3DIndexBuffer() const
-{
-	return m_idxBuf.GetD3DIndexBuffer();
-}
 
-LPDIRECT3DVERTEXBUFFER9 CGrannyModel::GetPNTD3DVertexBuffer() const
-{
-	return m_pntVtxBuf.GetD3DVertexBuffer();
-}
+
+
 
 bool CGrannyModel::LockVertices(void** indicies, void** vertices) const
 {
@@ -109,7 +103,7 @@ bool CGrannyModel::LoadPNTVertices()
 
 	assert(m_meshs != NULL);
 
-	if (!m_pntVtxBuf.Create(m_rigidVtxCount, m_dwFvF, D3DUSAGE_WRITEONLY, D3DPOOL_DEFAULT))
+	if (!m_pntVtxBuf.Create(m_rigidVtxCount, m_vertexLayout))
 		return false;
 
 	void* vertices;
@@ -132,7 +126,7 @@ bool CGrannyModel::LoadIndices()
 	if (m_idxCount <= 0)
 		return true;
 
-	if (!m_idxBuf.Create(m_idxCount, D3DFMT_INDEX16))
+	if (!m_idxBuf.Create(m_idxCount, Renderer::IndexFormat::UInt16))
 		return false;
 
 	void * indices;
@@ -172,7 +166,7 @@ bool CGrannyModel::LoadMeshs()
 	int meshCount = GetMeshCount();
 	m_meshs = new CGrannyMesh[meshCount];
 
-	m_dwFvF = 0;
+	m_vertexLayout = 0;
 
 	for (int m = 0; m < meshCount; ++m)
 	{
@@ -199,13 +193,13 @@ bool CGrannyModel::LoadMeshs()
 		for (int i = 0; pgrnMesh->PrimaryVertexData->VertexType[i].Name != nullptr; ++i)
 		{
 			if ( 0 == strcmp(pgrnMesh->PrimaryVertexData->VertexType[i].Name, GrannyVertexPositionName) )
-				m_dwFvF |= D3DFVF_XYZ;
+				m_vertexLayout |= Renderer::VertexPosition;
 			else if ( 0 == strcmp(pgrnMesh->PrimaryVertexData->VertexType[i].Name, GrannyVertexNormalName) )
-				m_dwFvF |= D3DFVF_NORMAL;
+				m_vertexLayout |= Renderer::VertexNormal;
 			else if ( 0 == strcmp(pgrnMesh->PrimaryVertexData->VertexType[i].Name, GrannyVertexTextureCoordinatesName"0") )
-				m_dwFvF |= D3DFVF_TEX1;
+				m_vertexLayout |= Renderer::VertexTex1;
 			else if ( 0 == strcmp(pgrnMesh->PrimaryVertexData->VertexType[i].Name, GrannyVertexTextureCoordinatesName"1") )
-				m_dwFvF |= D3DFVF_TEX2;
+				m_vertexLayout |= Renderer::VertexTex2;
 		}
 
 		vtxPos += GrannyGetMeshVertexCount(pgrnMesh);
@@ -236,7 +230,7 @@ bool CGrannyModel::LoadMeshs()
 	}
 
 	// For Dungeon Block
-	if ((D3DFVF_XYZ|D3DFVF_NORMAL|D3DFVF_TEX1|D3DFVF_TEX2) == m_dwFvF)
+	if ((Renderer::VertexPosition|Renderer::VertexNormal|Renderer::VertexTex1|Renderer::VertexTex2) == m_vertexLayout)
 	{
 		for (int n = 0; n < meshCount; ++n)
 		{
@@ -358,10 +352,10 @@ bool CGrannyModel::__LoadVertices()
 	
 	assert(m_meshs != NULL);
 
-//	assert((m_dwFvF & (D3DFVF_XYZ|D3DFVF_NORMAL|D3DFVF_TEX1)) == m_dwFvF);
+//	assert((m_vertexLayout & (Renderer::VertexPosition|Renderer::VertexNormal|Renderer::VertexTex1)) == m_vertexLayout);
 
-//	if (!m_pntVtxBuf.Create(m_rigidVtxCount, D3DFVF_XYZ|D3DFVF_NORMAL|D3DFVF_TEX1, D3DUSAGE_WRITEONLY, D3DPOOL_MANAGED))
-	if (!m_pntVtxBuf.Create(m_rigidVtxCount, m_dwFvF, D3DUSAGE_WRITEONLY, D3DPOOL_DEFAULT))
+//	if (!m_pntVtxBuf.Create(m_rigidVtxCount, Renderer::VertexPosition|Renderer::VertexNormal|Renderer::VertexTex1))
+	if (!m_pntVtxBuf.Create(m_rigidVtxCount, m_vertexLayout))
 		return false;
 	
 	void* vertices;
@@ -398,14 +392,14 @@ void CGrannyModel::Initialize()
 
 	m_canDeformPNVertices = false;
 
-	m_dwFvF = 0;
+	m_vertexLayout = 0;
 	m_bHaveBlendThing = false;
 }
 
 void CGrannyModel::CaptureStaticObjectSource()
 {
     if (!Renderer::staticObjectLoadDepth || m_deformVtxCount || m_bHaveBlendThing ||
-        m_dwFvF != (D3DFVF_XYZ | D3DFVF_NORMAL | D3DFVF_TEX1) ||
+        m_vertexLayout != (Renderer::VertexPosition | Renderer::VertexNormal | Renderer::VertexTex1) ||
         m_rigidVtxCount <= 0 || m_idxCount <= 0) return;
     static_assert(sizeof(Renderer::StaticObjectVertex) == sizeof(TPNTVertex));
     auto source = std::make_shared<Renderer::StaticObjectSource>();
@@ -425,7 +419,7 @@ void CGrannyModel::CaptureActorSource(bool attachment)
 {
     // ZiiNAN: Diligent actor attachment rendering
     if(!Renderer::actorRenderer || m_vtxCount<=0 || m_idxCount<=0 ||
-       m_dwFvF!=(D3DFVF_XYZ|D3DFVF_NORMAL|D3DFVF_TEX1)) return;
+       m_vertexLayout!=(Renderer::VertexPosition|Renderer::VertexNormal|Renderer::VertexTex1)) return;
     auto source=std::make_shared<Renderer::ActorModelSource>();
     source->vertexCount=static_cast<uint32_t>(m_deformVtxCount+m_rigidVtxCount);
     source->deformVertexCount=static_cast<uint32_t>(m_deformVtxCount);

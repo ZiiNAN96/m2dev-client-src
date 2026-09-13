@@ -59,7 +59,7 @@ BOOL CParticleSystemData::OnLoadScript(CTextFileLoader & rTextFileLoader)
 	}
 	if (!rTextFileLoader.GetTokenPosition("emittingsize", &m_EmitterProperty.m_v3EmittingSize))
 	{
-		m_EmitterProperty.m_v3EmittingSize = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+		m_EmitterProperty.m_v3EmittingSize = Math::Vector3(0.0f, 0.0f, 0.0f);
 	}
 	if (!rTextFileLoader.GetTokenFloat("emittingradius", &m_EmitterProperty.m_fEmittingRadius))
 	{
@@ -73,7 +73,7 @@ BOOL CParticleSystemData::OnLoadScript(CTextFileLoader & rTextFileLoader)
 	
 	if (!rTextFileLoader.GetTokenPosition("emittingdirection", &m_EmitterProperty.m_v3EmittingDirection))
 	{
-		m_EmitterProperty.m_v3EmittingDirection = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+		m_EmitterProperty.m_v3EmittingDirection = Math::Vector3(0.0f, 0.0f, 0.0f);
 	}
 
 	if (!GetTokenTimeEventFloat(rTextFileLoader, "timeeventemittingsize", &m_EmitterProperty.m_TimeEventEmittingSize))
@@ -141,15 +141,15 @@ BOOL CParticleSystemData::OnLoadScript(CTextFileLoader & rTextFileLoader)
 
 	if (!rTextFileLoader.GetTokenByte("srcblendtype", &m_ParticleProperty.m_bySrcBlendType))
 	{
-		m_ParticleProperty.m_bySrcBlendType = D3DBLEND_SRCALPHA;
+		m_ParticleProperty.m_bySrcBlendType = Renderer::BlendSrcAlpha;
 	}
 	if (!rTextFileLoader.GetTokenByte("destblendtype", &m_ParticleProperty.m_byDestBlendType))
 	{
-		m_ParticleProperty.m_byDestBlendType = D3DBLEND_ONE;
+		m_ParticleProperty.m_byDestBlendType = Renderer::BlendOne;
 	}
 	if (!rTextFileLoader.GetTokenByte("coloroperationtype", &m_ParticleProperty.m_byColorOperationType))
 	{
-		m_ParticleProperty.m_byColorOperationType = D3DTOP_MODULATE;
+		m_ParticleProperty.m_byColorOperationType = Renderer::TextureOpModulate;
 	}
 
 	if (!rTextFileLoader.GetTokenByte("billboardtype", &m_ParticleProperty.m_byBillboardType))

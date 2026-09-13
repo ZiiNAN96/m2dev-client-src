@@ -51,7 +51,7 @@ class CWeaponTrace
 
 		float m_fLastUpdate;
 
-		typedef std::pair<float, D3DXVECTOR3> TTimePoint;
+		typedef std::pair<float, Math::Vector3> TTimePoint;
 		typedef std::deque<TTimePoint> TTimePointList;
 		TTimePointList m_ShortTimePointList;
 		TTimePointList m_LongTimePointList;

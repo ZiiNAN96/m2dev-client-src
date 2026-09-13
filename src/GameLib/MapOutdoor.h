@@ -7,7 +7,7 @@
 #include "PRTerrainLib/TerrainType.h"
 #include "PRTerrainLib/TextureSet.h"
 
-#include "SpeedTreeLib/SpeedTreeForestDirectX.h"
+#include "SpeedTreeLib/SpeedTreeForestRenderer.h"
 
 #include "MapBase.h"
 #include "Area.h"
@@ -99,7 +99,7 @@ class CMapOutdoor : public CMapBase
 
 		bool			LoadSetting(const char * c_szFileName);
 
-		void			ApplyLight(DWORD dwVersion, const D3DLIGHT9& c_rkLight);
+		void			ApplyLight(DWORD dwVersion, const Renderer::LightValues& c_rkLight);
 		void			SetEnvironmentScreenFilter();
 		void			SetEnvironmentSkyBox();
 		void			SetEnvironmentLensFlare();
@@ -131,9 +131,9 @@ class CMapOutdoor : public CMapBase
 		void			SetWireframe(bool bWireFrame);
 		bool			IsWireframe();
 
-		bool			GetPickingPointWithRay(const CRay & rRay, D3DXVECTOR3 * v3IntersectPt);
-		bool			GetPickingPointWithRayOnlyTerrain(const CRay & rRay, D3DXVECTOR3 * v3IntersectPt);
-		bool			GetPickingPoint(D3DXVECTOR3 * v3IntersectPt);
+		bool			GetPickingPointWithRay(const CRay & rRay, Math::Vector3 * v3IntersectPt);
+		bool			GetPickingPointWithRayOnlyTerrain(const CRay & rRay, Math::Vector3 * v3IntersectPt);
+		bool			GetPickingPoint(Math::Vector3 * v3IntersectPt);
 		void			GetTerrainCount(short * psTerrainCountX, short * psTerrainCountY)
 		{
 			*psTerrainCountX = m_sTerrainCountX;
@@ -149,7 +149,7 @@ class CMapOutdoor : public CMapBase
 		DWORD			GetShadowMapColor(float fx, float fy);
 
 	protected:
-		bool			__PickTerrainHeight(float& fPos, const D3DXVECTOR3& v3Start, const D3DXVECTOR3& v3End, float fStep, float fRayRange, float fLimitRange, D3DXVECTOR3* pv3Pick);
+		bool			__PickTerrainHeight(float& fPos, const Math::Vector3& v3Start, const Math::Vector3& v3End, float fStep, float fRayRange, float fLimitRange, Math::Vector3* pv3Pick);
 
 		virtual void	__ClearGarvage();
 		virtual void	__UpdateGarvage();
@@ -245,7 +245,7 @@ class CMapOutdoor : public CMapBase
 		BOOL			GetTerrainPointer(BYTE c_ucTerrainNum, CTerrain ** ppTerrain);
 		float			GetTerrainHeight(float fx, float fy);
 		bool			GetWaterHeight(int iX, int iY, long * plWaterHeight);
-		bool			GetNormal(int ix, int iy, D3DXVECTOR3 * pv3Normal);
+		bool			GetNormal(int ix, int iy, Math::Vector3 * pv3Normal);
 
 		void			RenderTerrain();
 
@@ -265,14 +265,14 @@ class CMapOutdoor : public CMapBase
 
 		virtual void	DestroyArea();
 
-		void			__UpdateArea(D3DXVECTOR3& v3Player);
-		void			__Game_UpdateArea(D3DXVECTOR3& v3Player);
+		void			__UpdateArea(Math::Vector3& v3Player);
+		void			__Game_UpdateArea(Math::Vector3& v3Player);
 
 		void			__BuildDynamicSphereInstanceVector();
 
-		void			__CollectShadowReceiver(D3DXVECTOR3& v3Target, D3DXVECTOR3& v3Light);
-		void			__CollectCollisionPCBlocker(D3DXVECTOR3& v3Eye, D3DXVECTOR3& v3Target, float fDistance);
-		void			__CollectCollisionShadowReceiver(D3DXVECTOR3& v3Target, D3DXVECTOR3& v3Light);
+		void			__CollectShadowReceiver(Math::Vector3& v3Target, Math::Vector3& v3Light);
+		void			__CollectCollisionPCBlocker(Math::Vector3& v3Eye, Math::Vector3& v3Target, float fDistance);
+		void			__CollectCollisionShadowReceiver(Math::Vector3& v3Target, Math::Vector3& v3Light);
 		void			__UpdateAroundAreaList();
 		bool			__IsInShadowReceiverList(CGraphicObjectInstance* pkObjInstTest);
 		bool			__IsInPCBlockerList(CGraphicObjectInstance* pkObjInstTest);
@@ -399,9 +399,9 @@ class CMapOutdoor : public CMapBase
 
 		void					SetPatchDrawVector();
 
-		void					NEW_DrawWireFrame(CTerrainPatchProxy * pTerrainPatchProxy, WORD wPrimitiveCount, D3DPRIMITIVETYPE ePrimitiveType);
+		void					NEW_DrawWireFrame(CTerrainPatchProxy * pTerrainPatchProxy, WORD wPrimitiveCount, Renderer::PrimitiveTopology ePrimitiveType);
 
-		void					DrawWireFrame(long patchnum, WORD wPrimitiveCount, D3DPRIMITIVETYPE ePrimitiveType);
+		void					DrawWireFrame(long patchnum, WORD wPrimitiveCount, Renderer::PrimitiveTopology ePrimitiveType);
 		void					DrawWater(long patchnum);
 
 		bool					m_bDrawWireFrame;
@@ -410,7 +410,7 @@ class CMapOutdoor : public CMapBase
 
 		//////////////////////////////////////////////////////////////////////////
 		// Water
-		D3DXMATRIX				m_matBump;
+		Math::Matrix				m_matBump;
 		void					LoadWaterTexture();
 		void					UnloadWaterTexture();
 		//Water
@@ -418,24 +418,19 @@ class CMapOutdoor : public CMapBase
 
 		//////////////////////////////////////////////////////////////////////////
 		// Character Shadow
-		LPDIRECT3DTEXTURE9		m_lpCharacterShadowMapTexture;
-		LPDIRECT3DSURFACE9		m_lpCharacterShadowMapRenderTargetSurface;
-		LPDIRECT3DSURFACE9		m_lpCharacterShadowMapDepthSurface;
-		D3DVIEWPORT9			m_ShadowMapViewport;
+		Math::Viewport			m_ShadowMapViewport;
 		WORD					m_wShadowMapSize;
 
 		// Backup Device Context
-		LPDIRECT3DSURFACE9		m_lpBackupRenderTargetSurface;
-		LPDIRECT3DSURFACE9		m_lpBackupDepthSurface;
-		D3DVIEWPORT9			m_BackupViewport;
+		Math::Viewport			m_BackupViewport;
 
 		// Character Shadow
 		//////////////////////////////////////////////////////////////////////////
 
 		// View Frustum Culling
-		D3DXPLANE					m_plane[6];
+		Math::Plane					m_plane[6];
 
-		void BuildViewFrustum(D3DXMATRIX & mat);
+		void BuildViewFrustum(Math::Matrix & mat);
 
 		CTextureSet					m_TextureSet;
 
@@ -446,16 +441,16 @@ class CMapOutdoor : public CMapBase
 
 	protected:
 		void SetIndexBuffer();
-		void SelectIndexBuffer(BYTE byLODLevel, WORD * pwPrimitiveCount, D3DPRIMITIVETYPE * pePrimitiveType);
+		void SelectIndexBuffer(BYTE byLODLevel, WORD * pwPrimitiveCount, Renderer::PrimitiveTopology * pePrimitiveType);
 
-		D3DXMATRIX m_matWorldForCommonUse;
-		D3DXMATRIX m_matViewInverse;
+		Math::Matrix m_matWorldForCommonUse;
+		Math::Matrix m_matViewInverse;
 
-		D3DXMATRIX m_matSplatAlpha;
-		D3DXMATRIX m_matStaticShadow;
-		D3DXMATRIX m_matDynamicShadow;
-		D3DXMATRIX m_matDynamicShadowScale;
-		D3DXMATRIX m_matLightView;
+		Math::Matrix m_matSplatAlpha;
+		Math::Matrix m_matStaticShadow;
+		Math::Matrix m_matDynamicShadow;
+		Math::Matrix m_matDynamicShadowScale;
+		Math::Matrix m_matLightView;
 
 		float m_fTerrainTexCoordBase;
 		float m_fWaterTexCoordBase;
@@ -559,41 +554,27 @@ class CMapOutdoor : public CMapBase
 
 	protected:
 		void __RenderTerrain_RecurseRenderQuadTree(CTerrainQuadtreeNode *Node, bool bCullCheckNeed = true);
-		int	 __RenderTerrain_RecurseRenderQuadTree_CheckBoundingCircle(const D3DXVECTOR3 & c_v3Center, const float & c_fRadius);
+		int	 __RenderTerrain_RecurseRenderQuadTree_CheckBoundingCircle(const Math::Vector3 & c_v3Center, const float & c_fRadius);
 
-		void __RenderTerrain_AppendPatch(const D3DXVECTOR3& c_rv3Center, float fDistance, long lPatchNum);
+		void __RenderTerrain_AppendPatch(const Math::Vector3& c_rv3Center, float fDistance, long lPatchNum);
 
 		void __RenderTerrain_RenderSoftwareTransformPatch();
 		void __RenderTerrain_RenderHardwareTransformPatch();
 
 	protected:
-		void __HardwareTransformPatch_RenderPatchSplat(long patchnum, WORD wPrimitiveCount, D3DPRIMITIVETYPE ePrimitiveType);
-		void __HardwareTransformPatch_RenderPatchNone(long patchnum, WORD wPrimitiveCount, D3DPRIMITIVETYPE ePrimitiveType);
+		void __HardwareTransformPatch_RenderPatchSplat(long patchnum, WORD wPrimitiveCount, Renderer::PrimitiveTopology ePrimitiveType);
+		void __HardwareTransformPatch_RenderPatchNone(long patchnum, WORD wPrimitiveCount, Renderer::PrimitiveTopology ePrimitiveType);
 
 
 	protected:
-		struct SoftwareTransformPatch_SData
-		{
-			enum
-			{
-				SPLAT_VB_NUM = 8,
-				NONE_VB_NUM = 8,
-			};
-
-			IDirect3DVertexBuffer9* m_pkVBSplat[SPLAT_VB_NUM];
-			IDirect3DVertexBuffer9* m_pkVBNone[NONE_VB_NUM];
-			DWORD m_dwSplatPos;
-			DWORD m_dwNonePos;
-			DWORD m_dwLightVersion;
-		} m_kSTPD;
-
+		DWORD m_terrainLightVersion=0;
 		struct SoftwareTransformPatch_SRenderState {
-			D3DXMATRIX m_m4Proj;
-			D3DXMATRIX m_m4Frustum;
-			D3DXMATRIX m_m4DynamicShadow;
-			D3DLIGHT9  m_kLight;
-			D3DMATERIAL9 m_kMtrl;
-			D3DXVECTOR3 m_v3Player;
+			Math::Matrix m_m4Proj;
+			Math::Matrix m_m4Frustum;
+			Math::Matrix m_m4DynamicShadow;
+			Renderer::LightValues  m_kLight;
+			Renderer::MaterialValues m_kMtrl;
+			Math::Vector3 m_v3Player;
 			DWORD m_dwFogColor;
 			float m_fScreenHalfWidth;
 			float m_fScreenHalfHeight;
@@ -607,33 +588,28 @@ class CMapOutdoor : public CMapBase
 
 		struct SoftwareTransformPatch_STVertex
 		{
-			D3DXVECTOR4 kPosition;
+			Math::Vector4 kPosition;
 		};
 
 		struct SoftwareTransformPatch_STLVertex
 		{
-			D3DXVECTOR4 kPosition;
+			Math::Vector4 kPosition;
 			DWORD dwDiffuse;
 			DWORD dwFog;
-			D3DXVECTOR2 kTexTile;
-			D3DXVECTOR2 kTexAlpha;
-			D3DXVECTOR2 kTexStaticShadow;
-			D3DXVECTOR2 kTexDynamicShadow;
+			Math::Vector2 kTexTile;
+			Math::Vector2 kTexAlpha;
+			Math::Vector2 kTexStaticShadow;
+			Math::Vector2 kTexDynamicShadow;
 		};
 
 
 		void __SoftwareTransformPatch_ApplyRenderState();
 		void __SoftwareTransformPatch_RestoreRenderState(DWORD dwFogEnable);
 
-		void __SoftwareTransformPatch_Initialize();
-		bool __SoftwareTransformPatch_Create();
-		void __SoftwareTransformPatch_Destroy();
 		void __SoftwareTransformPatch_BuildPipeline(SoftwareTransformPatch_SRenderState& rkTPRS);
 		void __SoftwareTransformPatch_BuildPipeline_BuildFogFuncTable(SoftwareTransformPatch_SRenderState& rkTPRS);
 		bool __SoftwareTransformPatch_SetTransform(SoftwareTransformPatch_SRenderState& rkTPRS, SoftwareTransformPatch_STLVertex* akTransVertex, CTerrainPatchProxy& rkTerrainPatchProxy, UINT uTerrainX, UINT uTerrainY, bool isFogEnable, bool isDynamicShadow);
 
-		bool __SoftwareTransformPatch_SetSplatStream(SoftwareTransformPatch_STLVertex* akTransVertex);
-		bool __SoftwareTransformPatch_SetShadowStream(SoftwareTransformPatch_STLVertex* akTransVertex);
 
 		void __SoftwareTransformPatch_ApplyStaticShadowRenderState();
 		void __SoftwareTransformPatch_RestoreStaticShadowRenderState();
@@ -642,8 +618,8 @@ class CMapOutdoor : public CMapBase
 		void __SoftwareTransformPatch_RestoreFogShadowRenderState();
 		void __SoftwareTransformPatch_ApplyDynamicShadowRenderState();
 		void __SoftwareTransformPatch_RestoreDynamicShadowRenderState();
-		void __SoftwareTransformPatch_RenderPatchSplat(SoftwareTransformPatch_SRenderState& rkTPRS, long patchnum, WORD wPrimitiveCount, D3DPRIMITIVETYPE ePrimitiveType, bool isFogEnable);
-		void __SoftwareTransformPatch_RenderPatchNone(SoftwareTransformPatch_SRenderState& rkTPRS, long patchnum, WORD wPrimitiveCount, D3DPRIMITIVETYPE ePrimitiveType);
+		void __SoftwareTransformPatch_RenderPatchSplat(SoftwareTransformPatch_SRenderState& rkTPRS, long patchnum, WORD wPrimitiveCount, Renderer::PrimitiveTopology ePrimitiveType, bool isFogEnable);
+		void __SoftwareTransformPatch_RenderPatchNone(SoftwareTransformPatch_SRenderState& rkTPRS, long patchnum, WORD wPrimitiveCount, Renderer::PrimitiveTopology ePrimitiveType);
 
 
 	protected:
@@ -668,7 +644,7 @@ class CMapOutdoor : public CMapBase
 	protected:
 		CGraphicImageInstance	m_attrImageInstance;
 		CGraphicImageInstance	m_BuildingTransparentImageInstance;
-		D3DXMATRIX				m_matBuildingTransparent;
+		Math::Matrix				m_matBuildingTransparent;
 
 	protected:
 		CDynamicPool<CMonsterAreaInfo>		m_kPool_kMonsterAreaInfo;
@@ -701,7 +677,7 @@ class CMapOutdoor : public CMapBase
 		DWORD			m_dwBaseX;
 		DWORD			m_dwBaseY;
 
-		D3DXVECTOR3		m_v3Player;
+		Math::Vector3		m_v3Player;
 		
 		bool			m_bShowEntirePatchTextureCount;
 		bool			m_bTransparentTree;

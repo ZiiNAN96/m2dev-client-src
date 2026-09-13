@@ -2,7 +2,7 @@
 #include "SkyBox.h"
 #include "WorldRenderBridge.h"
 #include "Camera.h"
-#include "StateManager.h"
+#include "DrawState.h"
 #include "ResourceManager.h"
 
 #include "EterBase/Timer.h"
@@ -91,12 +91,10 @@ bool CSkyObjectQuad::Update()
 
 void CSkyObjectQuad::Render()
 {
-	if (CGraphicBase::SetPDTStream(m_Vertex, 4))
+	if (CGraphicBase::ValidatePDTVertices(m_Vertex, 4))
 	{
-		const HRESULT nativeDraw=STATEMANAGER.DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
-		WorldRenderBridge::SubmitQuad(m_Vertex,nativeDraw);
+		WorldRenderBridge::SubmitQuad(m_Vertex);
 	}
-	//STATEMANAGER.DrawIndexedPrimitiveUP(D3DPT_TRIANGLESTRIP, 0, 4, 2, m_Indices, D3DFMT_INDEX16, &m_Vertex, sizeof(TPDTVertex));
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -108,9 +106,9 @@ CSkyObject::CSkyObject() :
 	m_fScaleY(1.0f),
 	m_fScaleZ(1.0f)
 {
-	D3DXMatrixIdentity(&m_matWorld);
-	D3DXMatrixIdentity(&m_matTranslation);
-	D3DXMatrixIdentity(&m_matTextureCloud);
+	Math::MatrixIdentity(&m_matWorld);
+	Math::MatrixIdentity(&m_matTranslation);
+	Math::MatrixIdentity(&m_matTextureCloud);
 
 	m_dwlastTime = CTimer::Instance().GetCurrentMillisecond();
 
@@ -132,7 +130,7 @@ void CSkyObject::Destroy()
 
 void CSkyObject::Update()
 {
-	D3DXVECTOR3 v3Eye = CCameraManager::Instance().GetCurrentCamera()->GetEye();
+	Math::Vector3 v3Eye = CCameraManager::Instance().GetCurrentCamera()->GetEye();
 
 	if (m_v3Position == v3Eye)
 		if (m_bSkyMatrixUpdated == false)
@@ -234,14 +232,14 @@ void CSkyBox::Destroy()
 	Unload();
 }
 
-void CSkyBox::SetSkyBoxScale(const D3DXVECTOR3 & c_rv3Scale)
+void CSkyBox::SetSkyBoxScale(const Math::Vector3 & c_rv3Scale)
 {
 	m_fScaleX = c_rv3Scale.x;
 	m_fScaleY = c_rv3Scale.y;
 	m_fScaleZ = c_rv3Scale.z;
 
 	m_bSkyMatrixUpdated = true;
-	D3DXMatrixScaling(&m_matWorld, m_fScaleX, m_fScaleY, m_fScaleZ);
+	Math::MatrixScaling(&m_matWorld, m_fScaleX, m_fScaleY, m_fScaleZ);
 }
 
 void CSkyBox::SetGradientLevel(BYTE byUpper, BYTE byLower)
@@ -283,12 +281,12 @@ void CSkyBox::SetCloudTexture(const char * c_szFileName)
 //	m_CloudAlphaImageInstance.SetImagePointer(pImage);
 }
 
-void CSkyBox::SetCloudScale(const D3DXVECTOR2 & c_rv2CloudScale)
+void CSkyBox::SetCloudScale(const Math::Vector2 & c_rv2CloudScale)
 {
 	m_fCloudScaleX = c_rv2CloudScale.x;
 	m_fCloudScaleY = c_rv2CloudScale.y;
 
-	D3DXMatrixScaling(&m_matWorldCloud, m_fCloudScaleX, m_fCloudScaleY, 1.0f);
+	Math::MatrixScaling(&m_matWorldCloud, m_fCloudScaleX, m_fCloudScaleY, 1.0f);
 }
 
 void CSkyBox::SetCloudHeight(float fHeight)
@@ -296,7 +294,7 @@ void CSkyBox::SetCloudHeight(float fHeight)
 	m_fCloudHeight = fHeight;
 }
 
-void CSkyBox::SetCloudTextureScale(const D3DXVECTOR2 & c_rv2CloudTextureScale)
+void CSkyBox::SetCloudTextureScale(const Math::Vector2 & c_rv2CloudTextureScale)
 {
 	m_fCloudTextureScaleX = c_rv2CloudTextureScale.x;
 	m_fCloudTextureScaleY = c_rv2CloudTextureScale.y;
@@ -305,7 +303,7 @@ void CSkyBox::SetCloudTextureScale(const D3DXVECTOR2 & c_rv2CloudTextureScale)
 	m_matTextureCloud._22 = m_fCloudTextureScaleY;
 }
 
-void CSkyBox::SetCloudScrollSpeed(const D3DXVECTOR2 & c_rv2CloudScrollSpeed)
+void CSkyBox::SetCloudScrollSpeed(const Math::Vector2 & c_rv2CloudScrollSpeed)
 {
 	m_fCloudScrollSpeedU = c_rv2CloudScrollSpeed.x;
 	m_fCloudScrollSpeedV = c_rv2CloudScrollSpeed.y;
@@ -325,7 +323,7 @@ void CSkyBox::Unload()
 	m_GraphicImageInstanceMap.clear();
 }
 
-void CSkyBox::SetSkyObjectQuadVertical(TSkyObjectQuadVector * pSkyObjectQuadVector, const D3DXVECTOR2 * c_pv2QuadPoints)
+void CSkyBox::SetSkyObjectQuadVertical(TSkyObjectQuadVector * pSkyObjectQuadVector, const Math::Vector2 * c_pv2QuadPoints)
 {
 	TPDTVertex aPDTVertex;
 
@@ -395,7 +393,7 @@ void CSkyBox::SetSkyObjectQuadVertical(TSkyObjectQuadVector * pSkyObjectQuadVect
 	}
 }
 
-//void CSkyBox::UpdateSkyFaceQuadTransform(D3DXVECTOR3 * c_pv3QuadPoints)
+//void CSkyBox::UpdateSkyFaceQuadTransform(Math::Vector3 * c_pv3QuadPoints)
 //{
 //	for( int i = 0; i < 4; ++i )
 //	{
@@ -407,7 +405,7 @@ void CSkyBox::SetSkyObjectQuadVertical(TSkyObjectQuadVector * pSkyObjectQuadVect
 //	}
 //}
 
-void CSkyBox::SetSkyObjectQuadHorizon(TSkyObjectQuadVector * pSkyObjectQuadVector, const D3DXVECTOR3 * c_pv3QuadPoints)
+void CSkyBox::SetSkyObjectQuadHorizon(TSkyObjectQuadVector * pSkyObjectQuadVector, const Math::Vector3 * c_pv3QuadPoints)
 {
 	pSkyObjectQuadVector->clear();
 	pSkyObjectQuadVector->resize(1);
@@ -437,52 +435,52 @@ void CSkyBox::SetSkyObjectQuadHorizon(TSkyObjectQuadVector * pSkyObjectQuadVecto
 
 void CSkyBox::Refresh()
 {
-	D3DXVECTOR3 v3QuadPoints[4];
+	Math::Vector3 v3QuadPoints[4];
 
 	if( m_ucRenderMode == CSkyObject::SKY_RENDER_MODE_DEFAULT ||  m_ucRenderMode == CSkyObject::SKY_RENDER_MODE_DIFFUSE )
 	{
 		if (m_ucVirticalGradientLevelUpper + m_ucVirticalGradientLevelLower <= 0)
 			return;
 
-		D3DXVECTOR2 v2QuadPoints[2];
+		Math::Vector2 v2QuadPoints[2];
 
 		//// Face 0: FRONT
-		v2QuadPoints[0] = D3DXVECTOR2(1.0f, -1.0f);
-		v2QuadPoints[1] = D3DXVECTOR2(-1.0f, -1.0f);
+		v2QuadPoints[0] = Math::Vector2(1.0f, -1.0f);
+		v2QuadPoints[1] = Math::Vector2(-1.0f, -1.0f);
 		SetSkyObjectQuadVertical(&m_Faces[0].m_SkyObjectQuadVector, v2QuadPoints);
 		m_Faces[0].m_strfacename = "front";
 
 		//// Face 1: BACK
-		v2QuadPoints[0] = D3DXVECTOR2(-1.0f, 1.0f);
-		v2QuadPoints[1] = D3DXVECTOR2(1.0f, 1.0f);
+		v2QuadPoints[0] = Math::Vector2(-1.0f, 1.0f);
+		v2QuadPoints[1] = Math::Vector2(1.0f, 1.0f);
 		SetSkyObjectQuadVertical(&m_Faces[1].m_SkyObjectQuadVector, v2QuadPoints);
 		m_Faces[1].m_strfacename = "back";
 
 		//// Face 2: LEFT
-		v2QuadPoints[0] = D3DXVECTOR2(-1.0f, -1.0f);
-		v2QuadPoints[1] = D3DXVECTOR2(-1.0f, 1.0f);
+		v2QuadPoints[0] = Math::Vector2(-1.0f, -1.0f);
+		v2QuadPoints[1] = Math::Vector2(-1.0f, 1.0f);
 		SetSkyObjectQuadVertical(&m_Faces[2].m_SkyObjectQuadVector, v2QuadPoints);
 		m_Faces[2].m_strfacename = "left";
 
 		//// Face 3: RIGHT
-		v2QuadPoints[0] = D3DXVECTOR2(1.0f, 1.0f);
-		v2QuadPoints[1] = D3DXVECTOR2(1.0f, -1.0f);
+		v2QuadPoints[0] = Math::Vector2(1.0f, 1.0f);
+		v2QuadPoints[1] = Math::Vector2(1.0f, -1.0f);
 		SetSkyObjectQuadVertical(&m_Faces[3].m_SkyObjectQuadVector, v2QuadPoints);
 		m_Faces[3].m_strfacename = "right";
 
 		//// Face 4: TOP
-		v3QuadPoints[0] = D3DXVECTOR3(1.0f, 1.0f, 1.0f);
-		v3QuadPoints[1] = D3DXVECTOR3(-1.0f, 1.0f, 1.0f);
-		v3QuadPoints[2] = D3DXVECTOR3(1.0f, -1.0f, 1.0f);
-		v3QuadPoints[3] = D3DXVECTOR3(-1.0f, -1.0f, 1.0f);
+		v3QuadPoints[0] = Math::Vector3(1.0f, 1.0f, 1.0f);
+		v3QuadPoints[1] = Math::Vector3(-1.0f, 1.0f, 1.0f);
+		v3QuadPoints[2] = Math::Vector3(1.0f, -1.0f, 1.0f);
+		v3QuadPoints[3] = Math::Vector3(-1.0f, -1.0f, 1.0f);
 		SetSkyObjectQuadHorizon(&m_Faces[4].m_SkyObjectQuadVector, v3QuadPoints);
 		m_Faces[4].m_strfacename = "top";
 
 		//// Face 5: BOTTOM
-		v3QuadPoints[0] = D3DXVECTOR3(-1.0f, 1.0f, -1.0f);
-		v3QuadPoints[1] = D3DXVECTOR3(1.0f, 1.0f, -1.0f);
-		v3QuadPoints[2] = D3DXVECTOR3(-1.0f, -1.0f, -1.0f);
-		v3QuadPoints[3] = D3DXVECTOR3(1.0f, -1.0f, -1.0f);
+		v3QuadPoints[0] = Math::Vector3(-1.0f, 1.0f, -1.0f);
+		v3QuadPoints[1] = Math::Vector3(1.0f, 1.0f, -1.0f);
+		v3QuadPoints[2] = Math::Vector3(-1.0f, -1.0f, -1.0f);
+		v3QuadPoints[3] = Math::Vector3(1.0f, -1.0f, -1.0f);
 		SetSkyObjectQuadHorizon(&m_Faces[5].m_SkyObjectQuadVector, v3QuadPoints);
 		m_Faces[5].m_strfacename = "bottom";
 
@@ -490,10 +488,10 @@ void CSkyBox::Refresh()
 	else if( m_ucRenderMode == CSkyObject::SKY_RENDER_MODE_TEXTURE )
 	{
 		// Face 0: FRONT
-		v3QuadPoints[0] = D3DXVECTOR3(1.0f, -1.0f, -1.0f);
-		v3QuadPoints[1] = D3DXVECTOR3(1.0f, -1.0f, 1.0f);
-		v3QuadPoints[2] = D3DXVECTOR3(-1.0f, -1.0f, -1.0f);
-		v3QuadPoints[3] = D3DXVECTOR3(-1.0f, -1.0f, 1.0f);
+		v3QuadPoints[0] = Math::Vector3(1.0f, -1.0f, -1.0f);
+		v3QuadPoints[1] = Math::Vector3(1.0f, -1.0f, 1.0f);
+		v3QuadPoints[2] = Math::Vector3(-1.0f, -1.0f, -1.0f);
+		v3QuadPoints[3] = Math::Vector3(-1.0f, -1.0f, 1.0f);
 
 		//UpdateSkyFaceQuadTransform(v3QuadPoints);
 
@@ -501,10 +499,10 @@ void CSkyBox::Refresh()
 		m_Faces[0].m_strfacename = "front";
 
 		//// Face 1: BACK
-		v3QuadPoints[0] = D3DXVECTOR3(-1.0f, 1.0f, -1.0f);
-		v3QuadPoints[1] = D3DXVECTOR3(-1.0f, 1.0f, 1.0f);
-		v3QuadPoints[2] = D3DXVECTOR3(1.0f, 1.0f, -1.0f);
-		v3QuadPoints[3] = D3DXVECTOR3(1.0f, 1.0f, 1.0f);
+		v3QuadPoints[0] = Math::Vector3(-1.0f, 1.0f, -1.0f);
+		v3QuadPoints[1] = Math::Vector3(-1.0f, 1.0f, 1.0f);
+		v3QuadPoints[2] = Math::Vector3(1.0f, 1.0f, -1.0f);
+		v3QuadPoints[3] = Math::Vector3(1.0f, 1.0f, 1.0f);
 
 		//UpdateSkyFaceQuadTransform(v3QuadPoints);
 		
@@ -512,10 +510,10 @@ void CSkyBox::Refresh()
 		m_Faces[1].m_strfacename = "back";
 
 		// Face 2: LEFT
-		v3QuadPoints[0] = D3DXVECTOR3(1.0f, 1.0f, -1.0f);
-		v3QuadPoints[1] = D3DXVECTOR3(1.0f, 1.0f, 1.0f);
-		v3QuadPoints[2] = D3DXVECTOR3(1.0f, -1.0f, -1.0f);
-		v3QuadPoints[3] = D3DXVECTOR3(1.0f, -1.0f, 1.0f);
+		v3QuadPoints[0] = Math::Vector3(1.0f, 1.0f, -1.0f);
+		v3QuadPoints[1] = Math::Vector3(1.0f, 1.0f, 1.0f);
+		v3QuadPoints[2] = Math::Vector3(1.0f, -1.0f, -1.0f);
+		v3QuadPoints[3] = Math::Vector3(1.0f, -1.0f, 1.0f);
 
 		//UpdateSkyFaceQuadTransform(v3QuadPoints);
 
@@ -523,10 +521,10 @@ void CSkyBox::Refresh()
 		m_Faces[2].m_strfacename = "left";
 
 		// Face 3: RIGHT
-		v3QuadPoints[0] = D3DXVECTOR3(-1.0f, -1.0f, -1.0f);
-		v3QuadPoints[1] = D3DXVECTOR3(-1.0f, -1.0f, 1.0f);
-		v3QuadPoints[2] = D3DXVECTOR3(-1.0f, 1.0f, -1.0f);
-		v3QuadPoints[3] = D3DXVECTOR3(-1.0f, 1.0f, 1.0f);
+		v3QuadPoints[0] = Math::Vector3(-1.0f, -1.0f, -1.0f);
+		v3QuadPoints[1] = Math::Vector3(-1.0f, -1.0f, 1.0f);
+		v3QuadPoints[2] = Math::Vector3(-1.0f, 1.0f, -1.0f);
+		v3QuadPoints[3] = Math::Vector3(-1.0f, 1.0f, 1.0f);
 		
 		//UpdateSkyFaceQuadTransform(v3QuadPoints);
 		
@@ -534,10 +532,10 @@ void CSkyBox::Refresh()
 		m_Faces[3].m_strfacename = "right";
 
 		// Face 4: TOP
-		v3QuadPoints[0] = D3DXVECTOR3(1.0f, -1.0f, 1.0f); 
-		v3QuadPoints[1] = D3DXVECTOR3(1.0f, 1.0f, 1.0f);
-		v3QuadPoints[2] = D3DXVECTOR3(-1.0f, -1.0f, 1.0f);
-		v3QuadPoints[3] = D3DXVECTOR3(-1.0f, 1.0f, 1.0f);
+		v3QuadPoints[0] = Math::Vector3(1.0f, -1.0f, 1.0f);
+		v3QuadPoints[1] = Math::Vector3(1.0f, 1.0f, 1.0f);
+		v3QuadPoints[2] = Math::Vector3(-1.0f, -1.0f, 1.0f);
+		v3QuadPoints[3] = Math::Vector3(-1.0f, 1.0f, 1.0f);
 
 		//UpdateSkyFaceQuadTransform(v3QuadPoints);
 
@@ -545,10 +543,10 @@ void CSkyBox::Refresh()
 		m_Faces[4].m_strfacename = "top";
 
 		////// Face 5: BOTTOM
-		v3QuadPoints[0] = D3DXVECTOR3(1.0f, -1.0f, -1.0f);
-		v3QuadPoints[1] = D3DXVECTOR3(1.0f, 1.0f, -1.0f);
-		v3QuadPoints[2] = D3DXVECTOR3(-1.0f, -1.0f, -1.0f);
-		v3QuadPoints[3] = D3DXVECTOR3(-1.0f, 1.0f, -1.0f);
+		v3QuadPoints[0] = Math::Vector3(1.0f, -1.0f, -1.0f);
+		v3QuadPoints[1] = Math::Vector3(1.0f, 1.0f, -1.0f);
+		v3QuadPoints[2] = Math::Vector3(-1.0f, -1.0f, -1.0f);
+		v3QuadPoints[3] = Math::Vector3(-1.0f, 1.0f, -1.0f);
 
 		//UpdateSkyFaceQuadTransform(v3QuadPoints);
 		
@@ -557,10 +555,10 @@ void CSkyBox::Refresh()
 	}
 
 	//// Clouds..
-	v3QuadPoints[0] = D3DXVECTOR3(1.0f, 1.0f, 0.0f);
-	v3QuadPoints[1] = D3DXVECTOR3(-1.0f, 1.0f, 0.0f);
-	v3QuadPoints[2] = D3DXVECTOR3(1.0f, -1.0f, 0.0f);
-	v3QuadPoints[3] = D3DXVECTOR3(-1.0f, -1.0f, 0.0f);
+	v3QuadPoints[0] = Math::Vector3(1.0f, 1.0f, 0.0f);
+	v3QuadPoints[1] = Math::Vector3(-1.0f, 1.0f, 0.0f);
+	v3QuadPoints[2] = Math::Vector3(1.0f, -1.0f, 0.0f);
+	v3QuadPoints[3] = Math::Vector3(-1.0f, -1.0f, 0.0f);
 	SetSkyObjectQuadHorizon(&m_FaceCloud.m_SkyObjectQuadVector, v3QuadPoints);
 }
 
@@ -813,32 +811,31 @@ void CSkyBox::Render()
 	// ZiiNAN: Diligent special world rendering; existing gradient/textured faces.
 	WorldRenderScope worldScope(m_worldResources,Renderer::WorldPart::Sky);
 	// 2004.01.25 myevan 처리를 렌더링 후반으로 옮기고, DepthTest 처리
-	STATEMANAGER.SaveRenderState(D3DRS_ZENABLE,	TRUE);
-	STATEMANAGER.SaveRenderState(D3DRS_ZWRITEENABLE, FALSE);
-	STATEMANAGER.SaveRenderState(D3DRS_LIGHTING, FALSE);
-	STATEMANAGER.SaveRenderState(D3DRS_FOGENABLE, FALSE);
-	STATEMANAGER.SaveRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
+	DRAWSTATE.SaveRenderState(Renderer::StateZEnable,	TRUE);
+	DRAWSTATE.SaveRenderState(Renderer::StateZWriteEnable, FALSE);
+	DRAWSTATE.SaveRenderState(Renderer::StateLighting, FALSE);
+	DRAWSTATE.SaveRenderState(Renderer::StateFogEnable, FALSE);
+	DRAWSTATE.SaveRenderState(Renderer::StateAlphaBlendEnable, FALSE);
 
-	STATEMANAGER.SaveTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG2);
-	STATEMANAGER.SaveTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
-	STATEMANAGER.SaveTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
+	DRAWSTATE.SaveTextureStageState(0, Renderer::StageColorOp, Renderer::TextureOpSelectArg2);
+	DRAWSTATE.SaveTextureStageState(0, Renderer::StageColorArg1, Renderer::ArgTexture);
+	DRAWSTATE.SaveTextureStageState(0, Renderer::StageColorArg2, Renderer::ArgDiffuse);
 
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_DISABLE);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageAlphaOp, Renderer::TextureOpDisable);
 
-	STATEMANAGER.SetTexture(1, NULL);
-	STATEMANAGER.SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_DISABLE);
-	STATEMANAGER.SetTextureStageState(1, D3DTSS_ALPHAOP, D3DTOP_DISABLE);
+	DRAWSTATE.SetTexture(1, NULL);
+	DRAWSTATE.SetTextureStageState(1, Renderer::StageColorOp, Renderer::TextureOpDisable);
+	DRAWSTATE.SetTextureStageState(1, Renderer::StageAlphaOp, Renderer::TextureOpDisable);
 
- 	STATEMANAGER.SetFVF(D3DFVF_XYZ|D3DFVF_DIFFUSE|D3DFVF_TEX1);
 
-	STATEMANAGER.SetTransform(Renderer::MatrixWorld, &m_matWorld);
+	DRAWSTATE.SetTransform(Renderer::MatrixWorld, &m_matWorld);
 
 	//Render Face
 	if( m_ucRenderMode == CSkyObject::SKY_RENDER_MODE_TEXTURE )
 	{
-		STATEMANAGER.SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
-		STATEMANAGER.SaveSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
-		STATEMANAGER.SaveSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
+		DRAWSTATE.SetTextureStageState(0, Renderer::StageColorOp, Renderer::TextureOpSelectArg1);
+		DRAWSTATE.SaveSamplerState(0, Renderer::SamplerAddressU, Renderer::AddressClamp);
+		DRAWSTATE.SaveSamplerState(0, Renderer::SamplerAddressV, Renderer::AddressClamp);
 
 		for (unsigned int i = 0; i < 6; ++i)
 		{
@@ -846,16 +843,16 @@ void CSkyBox::Render()
 			if (!pFaceImageInstance)
 				break;
 
-			STATEMANAGER.SetTexture( 0, pFaceImageInstance->GetTextureReference().GetTextureBinding() );
+			DRAWSTATE.SetTexture( 0, pFaceImageInstance->GetTextureReference().GetTextureBinding() );
 			WorldRenderBridge::Texture(pFaceImageInstance->GetGraphicImagePointer());
 
 			m_Faces[i].Render();
 		}
 
-		//STATEMANAGER.SetTexture( 0, NULL );
+		//DRAWSTATE.SetTexture( 0, NULL );
 
-		STATEMANAGER.RestoreSamplerState(0, D3DSAMP_ADDRESSU);
-		STATEMANAGER.RestoreSamplerState(0, D3DSAMP_ADDRESSV);
+		DRAWSTATE.RestoreSamplerState(0, Renderer::SamplerAddressU);
+		DRAWSTATE.RestoreSamplerState(0, Renderer::SamplerAddressV);
 	}
 	else
 	{
@@ -865,15 +862,15 @@ void CSkyBox::Render()
 		}
 	}
 
-	STATEMANAGER.RestoreRenderState(D3DRS_LIGHTING);
-	STATEMANAGER.RestoreRenderState(D3DRS_ZENABLE);
-	STATEMANAGER.RestoreRenderState(D3DRS_ZWRITEENABLE);
-	STATEMANAGER.RestoreRenderState(D3DRS_FOGENABLE);
-	STATEMANAGER.RestoreRenderState(D3DRS_ALPHABLENDENABLE);
+	DRAWSTATE.RestoreRenderState(Renderer::StateLighting);
+	DRAWSTATE.RestoreRenderState(Renderer::StateZEnable);
+	DRAWSTATE.RestoreRenderState(Renderer::StateZWriteEnable);
+	DRAWSTATE.RestoreRenderState(Renderer::StateFogEnable);
+	DRAWSTATE.RestoreRenderState(Renderer::StateAlphaBlendEnable);
 
-	STATEMANAGER.RestoreTextureStageState(0, D3DTSS_COLOROP);
-	STATEMANAGER.RestoreTextureStageState(0, D3DTSS_COLORARG1);
-	STATEMANAGER.RestoreTextureStageState(0, D3DTSS_COLORARG2);
+	DRAWSTATE.RestoreTextureStageState(0, Renderer::StageColorOp);
+	DRAWSTATE.RestoreTextureStageState(0, Renderer::StageColorArg1);
+	DRAWSTATE.RestoreTextureStageState(0, Renderer::StageColorArg2);
 }
 
 void CSkyBox::RenderCloud()
@@ -887,15 +884,15 @@ void CSkyBox::RenderCloud()
 		return;
 
 	// 2004.01.25 myevan 처리를 렌더링 후반으로 옮기고, DepthTest 처리
-	STATEMANAGER.SaveRenderState(D3DRS_ZENABLE,	TRUE);
-	STATEMANAGER.SaveRenderState(D3DRS_ZWRITEENABLE, FALSE);
-	STATEMANAGER.SaveRenderState(D3DRS_LIGHTING, FALSE);	
-	STATEMANAGER.SaveRenderState(D3DRS_FOGENABLE, FALSE);
-	STATEMANAGER.SaveRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
-	STATEMANAGER.SaveRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
-	STATEMANAGER.SaveRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCCOLOR);
+	DRAWSTATE.SaveRenderState(Renderer::StateZEnable,	TRUE);
+	DRAWSTATE.SaveRenderState(Renderer::StateZWriteEnable, FALSE);
+	DRAWSTATE.SaveRenderState(Renderer::StateLighting, FALSE);
+	DRAWSTATE.SaveRenderState(Renderer::StateFogEnable, FALSE);
+	DRAWSTATE.SaveRenderState(Renderer::StateAlphaBlendEnable, TRUE);
+	DRAWSTATE.SaveRenderState(Renderer::StateSrcBlend, Renderer::BlendOne);
+	DRAWSTATE.SaveRenderState(Renderer::StateDestBlend, Renderer::BlendInvSrcColor);
 
-	STATEMANAGER.SaveTextureStageState(0, D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_COUNT2);
+	DRAWSTATE.SaveTextureStageState(0, Renderer::StageTextureTransformFlags, Renderer::TexTransformCount2);
 
 	m_matTextureCloud._31 = m_fCloudPositionU;
 	m_matTextureCloud._32 = m_fCloudPositionV;
@@ -912,31 +909,31 @@ void CSkyBox::RenderCloud()
 	
 	m_dwlastTime = dwCurTime;
 	
-	STATEMANAGER.SaveTransform(Renderer::MatrixTexture0, &m_matTextureCloud);
+	DRAWSTATE.SaveTransform(Renderer::MatrixTexture0, &m_matTextureCloud);
 
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATEINVALPHA_ADDCOLOR);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
- 	STATEMANAGER.SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageColorOp, Renderer::TextureOpModulateInvAlphaAddColor);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageColorArg1, Renderer::ArgTexture);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageColorArg2, Renderer::ArgDiffuse);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageAlphaOp, Renderer::TextureOpSelectArg1);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageAlphaArg1, Renderer::ArgTexture);
 	
-	D3DXMATRIX matProjCloud;
-	D3DXMatrixPerspectiveFovRH(&matProjCloud, D3DX_PI * 0.25f, 1.33333f, 50.0f, 999999.0f);
-	STATEMANAGER.SetTransform(Renderer::MatrixWorld, &m_matWorldCloud);
-	STATEMANAGER.SaveTransform(Renderer::MatrixProjection, &matProjCloud);
-	STATEMANAGER.SetTexture(0, pCloudGraphicImageInstance->GetTexturePointer()->GetTextureBinding());
+	Math::Matrix matProjCloud;
+	Math::MatrixPerspectiveFovRH(&matProjCloud, Math::Pi * 0.25f, 1.33333f, 50.0f, 999999.0f);
+	DRAWSTATE.SetTransform(Renderer::MatrixWorld, &m_matWorldCloud);
+	DRAWSTATE.SaveTransform(Renderer::MatrixProjection, &matProjCloud);
+	DRAWSTATE.SetTexture(0, pCloudGraphicImageInstance->GetTexturePointer()->GetTextureBinding());
 	WorldRenderBridge::Texture(pCloudGraphicImageInstance->GetGraphicImagePointer());
 	m_FaceCloud.Render();
-	STATEMANAGER.RestoreTransform(Renderer::MatrixProjection);
+	DRAWSTATE.RestoreTransform(Renderer::MatrixProjection);
 	
-	STATEMANAGER.RestoreTransform(Renderer::MatrixTexture0);
-	STATEMANAGER.RestoreTextureStageState(0, D3DTSS_TEXTURETRANSFORMFLAGS);
+	DRAWSTATE.RestoreTransform(Renderer::MatrixTexture0);
+	DRAWSTATE.RestoreTextureStageState(0, Renderer::StageTextureTransformFlags);
 
-	STATEMANAGER.RestoreRenderState(D3DRS_LIGHTING);
-	STATEMANAGER.RestoreRenderState(D3DRS_ZENABLE);
-	STATEMANAGER.RestoreRenderState(D3DRS_ZWRITEENABLE);
-	STATEMANAGER.RestoreRenderState(D3DRS_FOGENABLE);
-	STATEMANAGER.RestoreRenderState(D3DRS_ALPHABLENDENABLE);
-	STATEMANAGER.RestoreRenderState(D3DRS_SRCBLEND);
-	STATEMANAGER.RestoreRenderState(D3DRS_DESTBLEND);
+	DRAWSTATE.RestoreRenderState(Renderer::StateLighting);
+	DRAWSTATE.RestoreRenderState(Renderer::StateZEnable);
+	DRAWSTATE.RestoreRenderState(Renderer::StateZWriteEnable);
+	DRAWSTATE.RestoreRenderState(Renderer::StateFogEnable);
+	DRAWSTATE.RestoreRenderState(Renderer::StateAlphaBlendEnable);
+	DRAWSTATE.RestoreRenderState(Renderer::StateSrcBlend);
+	DRAWSTATE.RestoreRenderState(Renderer::StateDestBlend);
 }

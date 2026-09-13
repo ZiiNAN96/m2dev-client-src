@@ -1,17 +1,17 @@
 #pragma once
-#include <d3d9.h>
+#include <cstddef>
 #include <functional>
 #include "Renderer/ResourceData.h"
 
-// A native handle is borrowed only in Legacy. The neutral source has shared ownership.
+// ZiiNAN: Removed final D3D9 compile-time dependency. Bindings own CPU sources.
 struct TextureBinding
 {
-    IDirect3DBaseTexture9* native = nullptr;
+
     std::shared_ptr<Renderer::TextureResource> source;
     TextureBinding() = default;
-    TextureBinding(IDirect3DBaseTexture9* value) : native(value) {}
+    TextureBinding(std::nullptr_t) {}
     explicit TextureBinding(std::shared_ptr<Renderer::TextureResource> value) : source(std::move(value)) {}
-    const void* Identity() const { return source ? static_cast<const void*>(source.get()) : native; }
+    const void* Identity() const { return source.get(); }
     explicit operator bool() const { return Identity() != nullptr; }
     bool operator==(const TextureBinding& other) const { return Identity() == other.Identity(); }
     bool operator!=(const TextureBinding& other) const { return !(*this == other); }

@@ -3,15 +3,15 @@
 #include "Mesh.h"
 #include "Eterbase/Filename.h"
 #include "Eterlib/ResourceManager.h"
-#include "Eterlib/StateManager.h"
+#include "Eterlib/DrawState.h"
 #include "Eterlib/GrpScreen.h"
 
 CGraphicImageInstance CGrannyMaterial::ms_akSphereMapInstance[SPHEREMAP_NUM];
 
-D3DXVECTOR3	CGrannyMaterial::ms_v3SpecularTrans(0.0f, 0.0f, 0.0f);
-D3DXMATRIX	CGrannyMaterial::ms_matSpecular;
+Math::Vector3	CGrannyMaterial::ms_v3SpecularTrans(0.0f, 0.0f, 0.0f);
+Math::Matrix	CGrannyMaterial::ms_matSpecular;
 
-D3DXCOLOR g_fSpecularColor = D3DXCOLOR(0.0f, 0.0f, 0.0f, 0.0f);
+Math::Color g_fSpecularColor = Math::Color(0.0f, 0.0f, 0.0f, 0.0f);
 
 void CGrannyMaterial::TranslateSpecularMatrix(float fAddX, float fAddY, float fAddZ)
 {
@@ -30,7 +30,7 @@ void CGrannyMaterial::TranslateSpecularMatrix(float fAddX, float fAddY, float fA
 	if (ms_v3SpecularTrans.z>=SPECULAR_TRANSLATE_MAX)
 		ms_v3SpecularTrans.z=0.0f;
 
-	D3DXMatrixTranslation(&ms_matSpecular, 
+	Math::MatrixTranslation(&ms_matSpecular,
 		ms_v3SpecularTrans.x, 
 		ms_v3SpecularTrans.y, 
 		ms_v3SpecularTrans.z
@@ -60,7 +60,7 @@ void CGrannyMaterial::Copy(CGrannyMaterial& rkMtrl)
 CGrannyMaterial::CGrannyMaterial()
 {
 	m_bTwoSideRender = false;
-	m_dwLastCullRenderStateForTwoSideRendering = D3DCULL_CW;
+	m_dwLastCullRenderStateForTwoSideRendering = Renderer::CullCw;
 
 	Initialize();
 }
@@ -145,18 +145,7 @@ TextureBinding CGrannyMaterial::GetTextureBinding(int stage) const
     return image ? image->GetTexturePointer()->GetTextureBinding() : TextureBinding{};
 }
 
-LPDIRECT3DTEXTURE9 CGrannyMaterial::GetD3DTexture(int iStage) const
-{
-	const CGraphicImage::TRef & ratImage = m_roImage[iStage];
 
-	if (ratImage.IsNull())
-		return NULL;
-
-	CGraphicImage * pImage = ratImage.GetPointer();
-	const CGraphicTexture * pTexture = pImage->GetTexturePointer();
-
-	return pTexture->GetD3DTexture();
-}
 
 CGraphicImage * CGrannyMaterial::GetImagePointer(int iStage) const
 {
@@ -290,13 +279,13 @@ void CGrannyMaterial::Initialize()
 
 void CGrannyMaterial::__ApplyDiffuseRenderState()
 {
-	STATEMANAGER.SetTexture(0, GetTextureBinding(0));
+	DRAWSTATE.SetTexture(0, GetTextureBinding(0));
 
 	if (m_bTwoSideRender)
 	{
 		// -_-렌더링 프로세스가 좀 구려서... Save & Restore 하면 순서때문에 좀 꼬인다. 귀찮으니 Save & Restore 대신 따로 저장해 둠.
-		m_dwLastCullRenderStateForTwoSideRendering = STATEMANAGER.GetRenderState(D3DRS_CULLMODE);
-		STATEMANAGER.SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+		m_dwLastCullRenderStateForTwoSideRendering = DRAWSTATE.GetRenderState(Renderer::StateCullMode);
+		DRAWSTATE.SetRenderState(Renderer::StateCullMode, Renderer::CullNone);
 	}
 }
 
@@ -304,13 +293,13 @@ void CGrannyMaterial::__RestoreDiffuseRenderState()
 {
 	if (m_bTwoSideRender)
 	{
-		STATEMANAGER.SetRenderState(D3DRS_CULLMODE, m_dwLastCullRenderStateForTwoSideRendering);
+		DRAWSTATE.SetRenderState(Renderer::StateCullMode, m_dwLastCullRenderStateForTwoSideRendering);
 	}
 }
 
 void CGrannyMaterial::__ApplySpecularRenderState()
 {
-	if (TRUE == STATEMANAGER.GetRenderState(D3DRS_ALPHABLENDENABLE))
+	if (TRUE == DRAWSTATE.GetRenderState(Renderer::StateAlphaBlendEnable))
 	{
 		__ApplyDiffuseRenderState();
 		return;
@@ -318,58 +307,58 @@ void CGrannyMaterial::__ApplySpecularRenderState()
 
 	CGraphicTexture* pkTexture=ms_akSphereMapInstance[m_bSphereMapIndex].GetTexturePointer();
 
-	STATEMANAGER.SetTexture(0, GetTextureBinding(0));
+	DRAWSTATE.SetTexture(0, GetTextureBinding(0));
 
 	if (pkTexture)
-		STATEMANAGER.SetTexture(1, pkTexture->GetTextureBinding());
+		DRAWSTATE.SetTexture(1, pkTexture->GetTextureBinding());
 	else
-		STATEMANAGER.SetTexture(1, NULL);
+		DRAWSTATE.SetTexture(1, NULL);
 
 	// MR-12: Fix specular isolation issue
-	STATEMANAGER.SetRenderState(D3DRS_TEXTUREFACTOR, D3DXCOLOR(g_fSpecularColor.r, g_fSpecularColor.g, g_fSpecularColor.b, GetSpecularPower()));
+	DRAWSTATE.SetRenderState(Renderer::StateTextureFactor, Math::Color(g_fSpecularColor.r, g_fSpecularColor.g, g_fSpecularColor.b, GetSpecularPower()));
 	// MR-12: -- END OF -- Fix specular isolation issue
-	STATEMANAGER.SaveTextureStageState(1, D3DTSS_TEXCOORDINDEX, D3DTSS_TCI_CAMERASPACEREFLECTIONVECTOR);
-	STATEMANAGER.SaveTextureStageState(0, D3DTSS_COLORARG1,	D3DTA_TEXTURE);
-	STATEMANAGER.SaveTextureStageState(0, D3DTSS_COLORARG2,	D3DTA_DIFFUSE);
-	STATEMANAGER.SaveTextureStageState(0, D3DTSS_COLOROP,	D3DTOP_MODULATE);
-	STATEMANAGER.SaveTextureStageState(0, D3DTSS_ALPHAARG1,	D3DTA_TEXTURE);
-	STATEMANAGER.SaveTextureStageState(0, D3DTSS_ALPHAARG2,	D3DTA_TFACTOR);
-	STATEMANAGER.SaveTextureStageState(0, D3DTSS_ALPHAOP,	D3DTOP_MODULATE);
+	DRAWSTATE.SaveTextureStageState(1, Renderer::StageTexCoordIndex, Renderer::StageTciCameraSpaceReflectionVector);
+	DRAWSTATE.SaveTextureStageState(0, Renderer::StageColorArg1,	Renderer::ArgTexture);
+	DRAWSTATE.SaveTextureStageState(0, Renderer::StageColorArg2,	Renderer::ArgDiffuse);
+	DRAWSTATE.SaveTextureStageState(0, Renderer::StageColorOp,	Renderer::TextureOpModulate);
+	DRAWSTATE.SaveTextureStageState(0, Renderer::StageAlphaArg1,	Renderer::ArgTexture);
+	DRAWSTATE.SaveTextureStageState(0, Renderer::StageAlphaArg2,	Renderer::ArgTFactor);
+	DRAWSTATE.SaveTextureStageState(0, Renderer::StageAlphaOp,	Renderer::TextureOpModulate);
 
-	STATEMANAGER.SetTextureStageState(1, D3DTSS_COLORARG1,	D3DTA_CURRENT);
-	STATEMANAGER.SetTextureStageState(1, D3DTSS_COLORARG2,	D3DTA_TEXTURE);
-	STATEMANAGER.SetTextureStageState(1, D3DTSS_COLOROP,	D3DTOP_MODULATEALPHA_ADDCOLOR);
-	STATEMANAGER.SetTextureStageState(1, D3DTSS_ALPHAARG1,	D3DTA_CURRENT);
-	STATEMANAGER.SetTextureStageState(1, D3DTSS_ALPHAOP,	D3DTOP_SELECTARG1);
+	DRAWSTATE.SetTextureStageState(1, Renderer::StageColorArg1,	Renderer::ArgCurrent);
+	DRAWSTATE.SetTextureStageState(1, Renderer::StageColorArg2,	Renderer::ArgTexture);
+	DRAWSTATE.SetTextureStageState(1, Renderer::StageColorOp,	Renderer::TextureOpModulateAlphaAddColor);
+	DRAWSTATE.SetTextureStageState(1, Renderer::StageAlphaArg1,	Renderer::ArgCurrent);
+	DRAWSTATE.SetTextureStageState(1, Renderer::StageAlphaOp,	Renderer::TextureOpSelectArg1);
 
-	STATEMANAGER.SetTransform(Renderer::MatrixTexture1, &ms_matSpecular);
-	STATEMANAGER.SaveTextureStageState(1, D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_COUNT2);
-	STATEMANAGER.SaveSamplerState(1, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP);
-	STATEMANAGER.SaveSamplerState(1, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP);
+	DRAWSTATE.SetTransform(Renderer::MatrixTexture1, &ms_matSpecular);
+	DRAWSTATE.SaveTextureStageState(1, Renderer::StageTextureTransformFlags, Renderer::TexTransformCount2);
+	DRAWSTATE.SaveSamplerState(1, Renderer::SamplerAddressU, Renderer::AddressWrap);
+	DRAWSTATE.SaveSamplerState(1, Renderer::SamplerAddressV, Renderer::AddressWrap);
 }
 
 void CGrannyMaterial::__RestoreSpecularRenderState()
 {
-	if (TRUE == STATEMANAGER.GetRenderState(D3DRS_ALPHABLENDENABLE))
+	if (TRUE == DRAWSTATE.GetRenderState(Renderer::StateAlphaBlendEnable))
 	{
 		__RestoreDiffuseRenderState();
 		return;
 	}
 
-	STATEMANAGER.RestoreTextureStageState(1, D3DTSS_TEXTURETRANSFORMFLAGS);
-	STATEMANAGER.RestoreSamplerState(1, D3DSAMP_ADDRESSU);
-	STATEMANAGER.RestoreSamplerState(1, D3DSAMP_ADDRESSV);
+	DRAWSTATE.RestoreTextureStageState(1, Renderer::StageTextureTransformFlags);
+	DRAWSTATE.RestoreSamplerState(1, Renderer::SamplerAddressU);
+	DRAWSTATE.RestoreSamplerState(1, Renderer::SamplerAddressV);
 
-	STATEMANAGER.RestoreTextureStageState(1, D3DTSS_TEXCOORDINDEX);
-	STATEMANAGER.SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_DISABLE);
-	STATEMANAGER.SetTextureStageState(1, D3DTSS_ALPHAOP, D3DTOP_DISABLE);
+	DRAWSTATE.RestoreTextureStageState(1, Renderer::StageTexCoordIndex);
+	DRAWSTATE.SetTextureStageState(1, Renderer::StageColorOp, Renderer::TextureOpDisable);
+	DRAWSTATE.SetTextureStageState(1, Renderer::StageAlphaOp, Renderer::TextureOpDisable);
 
-	STATEMANAGER.RestoreTextureStageState(0, D3DTSS_COLORARG1);
-	STATEMANAGER.RestoreTextureStageState(0, D3DTSS_COLORARG2);
-	STATEMANAGER.RestoreTextureStageState(0, D3DTSS_COLOROP);
-	STATEMANAGER.RestoreTextureStageState(0, D3DTSS_ALPHAARG1);
-	STATEMANAGER.RestoreTextureStageState(0, D3DTSS_ALPHAARG2);
-	STATEMANAGER.RestoreTextureStageState(0, D3DTSS_ALPHAOP);
+	DRAWSTATE.RestoreTextureStageState(0, Renderer::StageColorArg1);
+	DRAWSTATE.RestoreTextureStageState(0, Renderer::StageColorArg2);
+	DRAWSTATE.RestoreTextureStageState(0, Renderer::StageColorOp);
+	DRAWSTATE.RestoreTextureStageState(0, Renderer::StageAlphaArg1);
+	DRAWSTATE.RestoreTextureStageState(0, Renderer::StageAlphaArg2);
+	DRAWSTATE.RestoreTextureStageState(0, Renderer::StageAlphaOp);
 }
 
 void CGrannyMaterial::CreateSphereMap(UINT uMapIndex, const char* c_szSphereMapImageFileName)

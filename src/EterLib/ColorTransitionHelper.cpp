@@ -88,7 +88,7 @@ bool CColorTransitionHelper::Update()
 	return true;
 }
 
-const D3DCOLOR & CColorTransitionHelper::GetCurColor()
+const uint32_t & CColorTransitionHelper::GetCurColor()
 {
 	return m_dwCurColor; 
 }

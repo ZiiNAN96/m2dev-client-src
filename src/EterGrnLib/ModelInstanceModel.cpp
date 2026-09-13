@@ -168,7 +168,7 @@ void CGrannyModelInstance::__CreateMeshMatrices()
 		return;
 	
 	int meshCount = m_pModel->GetMeshCount();	
-	m_meshMatrices = new D3DXMATRIX[meshCount];
+	m_meshMatrices = new Math::Matrix[meshCount];
 }
 
 void CGrannyModelInstance::__DestroyMeshMatrices()
@@ -211,10 +211,7 @@ bool CGrannyModelInstance::__IsDeformableVertexBuffer()
 	return m_kLocalDeformableVertexBuffer.IsEmpty();
 }
 
-IDirect3DVertexBuffer9* CGrannyModelInstance::__GetDeformableD3DVertexBufferPtr()
-{
-	return __GetDeformableVertexBufferRef().GetD3DVertexBuffer();
-}
+
 
 CGraphicVertexBuffer& CGrannyModelInstance::__GetDeformableVertexBufferRef()
 {
@@ -234,8 +231,7 @@ void CGrannyModelInstance::__CreateDynamicVertexBuffer()
 	if (0 != vtxCount)
 	{
 		if (!m_kLocalDeformableVertexBuffer.Create(vtxCount,
-									   D3DFVF_XYZ|D3DFVF_NORMAL|D3DFVF_TEX1,
-									   D3DUSAGE_DYNAMIC, D3DPOOL_DEFAULT
+									   Renderer::VertexPosition|Renderer::VertexNormal|Renderer::VertexTex1
 		))
 			return;
 	}	

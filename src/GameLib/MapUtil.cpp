@@ -6,12 +6,12 @@ void Environment_Init(SEnvironmentData& envData)
 	for (int i = 0; i < ENV_DIRLIGHT_NUM; ++i)
 	{
 		envData.bDirLightsEnable[i] = false;
-		envData.DirLights[i].Type = D3DLIGHT_DIRECTIONAL;
-		envData.DirLights[i].Direction = D3DXVECTOR3(0.5f, 0.5f, -0.5f);
-		envData.DirLights[i].Position = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
-		envData.DirLights[i].Specular = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
-		envData.DirLights[i].Diffuse = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
-		envData.DirLights[i].Ambient = D3DXCOLOR(0.5f, 0.5f, 0.5f, 1.0f);
+		envData.DirLights[i].Type = Renderer::LightDirectional;
+		envData.DirLights[i].Direction = Math::Vector3(0.5f, 0.5f, -0.5f);
+		envData.DirLights[i].Position = Math::Vector3(0.0f, 0.0f, 0.0f);
+		envData.DirLights[i].Specular = Math::Color(1.0f, 1.0f, 1.0f, 1.0f);
+		envData.DirLights[i].Diffuse = Math::Color(1.0f, 1.0f, 1.0f, 1.0f);
+		envData.DirLights[i].Ambient = Math::Color(0.5f, 0.5f, 0.5f, 1.0f);
 		envData.DirLights[i].Range = 0.0f; // Used by Point Light & Spot Light
 		envData.DirLights[i].Falloff = 1.0f; // Used by Spot Light
 		envData.DirLights[i].Theta = 0.0f; // Used by Spot Light
@@ -21,10 +21,10 @@ void Environment_Init(SEnvironmentData& envData)
 		envData.DirLights[i].Attenuation2 = 0.0f;
 	}
 
-	envData.Material.Diffuse = D3DXCOLOR(0.8f, 0.8f, 0.8f, 1.0f);
-	envData.Material.Ambient = D3DXCOLOR(0.8f, 0.8f, 0.8f, 1.0f);
-	envData.Material.Emissive = D3DXCOLOR(0.8f, 0.8f, 0.8f, 1.0f);
-	envData.Material.Specular = D3DXCOLOR(0.0f, 0.0f, 0.0f, 1.0f);
+	envData.Material.Diffuse = Math::Color(0.8f, 0.8f, 0.8f, 1.0f);
+	envData.Material.Ambient = Math::Color(0.8f, 0.8f, 0.8f, 1.0f);
+	envData.Material.Emissive = Math::Color(0.8f, 0.8f, 0.8f, 1.0f);
+	envData.Material.Specular = Math::Color(0.0f, 0.0f, 0.0f, 1.0f);
 	envData.Material.Power = 0.0f;
 
 	// MR-14: Fog update by Alaric
@@ -34,25 +34,25 @@ void Environment_Init(SEnvironmentData& envData)
 	// MR-14: -- END OF -- Fog update by Alaric
 	envData.m_fFogNearDistance = 25600.0f * 0.5f;
 	envData.m_fFogFarDistance = 25600.0f * 0.7f;
-	envData.FogColor = D3DXCOLOR(0.5f, 0.5f, 0.5f, 1.0f);
+	envData.FogColor = Math::Color(0.5f, 0.5f, 0.5f, 1.0f);
 
 	envData.bFilteringEnable = FALSE;
-	envData.FilteringColor = D3DXCOLOR(0.3f, 0.1f, 0.1f, 0.0f);
-	envData.byFilteringAlphaSrc = D3DBLEND_ONE;
-	envData.byFilteringAlphaDest = D3DBLEND_ONE;
+	envData.FilteringColor = Math::Color(0.3f, 0.1f, 0.1f, 0.0f);
+	envData.byFilteringAlphaSrc = Renderer::BlendOne;
+	envData.byFilteringAlphaDest = Renderer::BlendOne;
 
 	envData.fWindStrength = 0.2f;
 	envData.fWindRandom = 0.0f;
 
-	envData.v3SkyBoxScale = D3DXVECTOR3(3500.0f, 3500.0f, 3500.0f);
+	envData.v3SkyBoxScale = Math::Vector3(3500.0f, 3500.0f, 3500.0f);
 	envData.bySkyBoxGradientLevelUpper = 0;
 	envData.bySkyBoxGradientLevelLower = 0;
 	envData.bSkyBoxTextureRenderMode = FALSE;
 
-	envData.v2CloudScale = D3DXVECTOR2(200000.0f, 200000.0f);
+	envData.v2CloudScale = Math::Vector2(200000.0f, 200000.0f);
 	envData.fCloudHeight = 30000.0f;
-	envData.v2CloudTextureScale = D3DXVECTOR2(4.0f, 4.0f);
-	envData.v2CloudSpeed = D3DXVECTOR2(0.001f, 0.001f);
+	envData.v2CloudTextureScale = Math::Vector2(4.0f, 4.0f);
+	envData.v2CloudSpeed = Math::Vector2(0.001f, 0.001f);
 	envData.strCloudTextureFileName = "";
 	envData.CloudGradientColor.m_FirstColor = .0f;
 	envData.CloudGradientColor.m_SecondColor = .0f;
@@ -60,7 +60,7 @@ void Environment_Init(SEnvironmentData& envData)
 	envData.SkyBoxGradientColorVector.clear();
 
 	envData.bLensFlareEnable = FALSE;
-	envData.LensFlareBrightnessColor = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
+	envData.LensFlareBrightnessColor = Math::Color(1.0f, 1.0f, 1.0f, 1.0f);
 	envData.fLensFlareMaxBrightness = 1.0f;
 
 	envData.bMainFlareEnable = FALSE;
@@ -83,7 +83,7 @@ bool Environment_Load(SEnvironmentData& envData, const char* envFileName)
 
 	if (textLoader.SetChildNode("directionallight"))
 	{
-		D3DVECTOR v3Dir;
+		Math::Vector3 v3Dir;
 		textLoader.GetTokenDirection("direction", &v3Dir);
 
 		if (textLoader.SetChildNode("background"))

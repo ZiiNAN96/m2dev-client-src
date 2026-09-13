@@ -1,6 +1,6 @@
 # ZiiNAN: Private original-UI fixture. Never replace the user's runtime or packages.
 param([Parameter(Mandatory=$true)][ValidatePattern('^[a-zA-Z0-9_-]+$')][string]$Name,[switch]$Normal,[string]$ClientBinary,[string]$UiConfiguration,
-    [ValidateSet('milestone9','milestone10a','milestone10b','milestone11','milestone12','milestone13a','milestone13b')][string]$Milestone='milestone9',[switch]$SpecialWorld,[switch]$StartupFailure)
+    [ValidateSet('milestone9','milestone10a','milestone10b','milestone11','milestone12','milestone13a','milestone13b','milestone13c')][string]$Milestone='milestone13c',[switch]$SpecialWorld,[switch]$StartupFailure)
 $ErrorActionPreference='Stop'
 $source=(Resolve-Path -LiteralPath "$PSScriptRoot/../..").Path
 $original=(Resolve-Path -LiteralPath "$source/../m2dev-client").Path
@@ -13,7 +13,7 @@ $pack="$original/pack"
 if(-not $Normal) {
     New-Item -ItemType Directory -Path "$target/test-root","$target/pack" | Out-Null
     Copy-Item -LiteralPath "$original/assets/root" -Destination "$target/test-root/root" -Recurse
-    $entry=if($Milestone -in @('milestone11','milestone12','milestone13a','milestone13b')) { 'special_entry.py' } elseif($Milestone -eq 'milestone10b') { 'floating_entry.py' } elseif($Milestone -eq 'milestone10a') { 'text_entry.py' } else { 'ui_entry.py' }
+    $entry=if($Milestone -in @('milestone11','milestone12','milestone13a','milestone13b','milestone13c')) { 'special_entry.py' } elseif($Milestone -eq 'milestone10b') { 'floating_entry.py' } elseif($Milestone -eq 'milestone10a') { 'text_entry.py' } else { 'ui_entry.py' }
     if($SpecialWorld) { $entry='special_world_entry.py' }
     if($StartupFailure) { $entry='startup_failure_entry.py' }
     Copy-Item -LiteralPath "$PSScriptRoot/$entry" -Destination "$target/test-root/root/prototype.py"
@@ -33,12 +33,12 @@ if(-not $Normal) {
     if($LASTEXITCODE) { throw 'UI fixture packaging failed.' }
     $pack="$target/pack"
 }
-$backends=if($Milestone -eq 'milestone13b') { @('default','diligent') } elseif($Milestone -in @('milestone12','milestone13a','milestone13b')) { @('default','legacy','diligent') } else { @('legacy','diligent') }
+$backends=@('default','diligent')
 foreach($backend in $backends) {
     New-Item -ItemType Directory -Path "$target/$backend-bin","$target/$backend-runtime" | Out-Null
     $configBackend=if($backend -eq 'default') { 'diligent' } else { $backend }
     Copy-Item -LiteralPath "$source/build/milestone5a/normal-gate/$configBackend-runtime/config" -Destination "$target/$backend-runtime/config" -Recurse
-    if($Milestone -in @('milestone11','milestone12','milestone13a','milestone13b')) { New-Item -ItemType File -Path "$target/$backend-runtime/config/renderer-audit.enabled" | Out-Null }
+    if($Milestone -in @('milestone11','milestone12','milestone13a','milestone13b','milestone13c')) { New-Item -ItemType File -Path "$target/$backend-runtime/config/renderer-audit.enabled" | Out-Null }
     if($StartupFailure) { Copy-Item -LiteralPath "$PSScriptRoot/startup_failure.cfg" -Destination "$target/$backend-runtime/config/metin2.cfg" }
     if($UiConfiguration) {
         Copy-Item -LiteralPath $UiConfiguration -Destination "$target/$backend-runtime/config/ui-fixture.json"

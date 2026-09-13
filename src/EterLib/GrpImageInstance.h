@@ -44,8 +44,8 @@ class CGraphicImageInstance
 		virtual BOOL OnIsType(DWORD dwType);
 
 	protected:
-		D3DXCOLOR m_DiffuseColor;
-		D3DXVECTOR2 m_v2Position;
+		Math::Color m_DiffuseColor;
+		Math::Vector2 m_v2Position;
 
 		CGraphicImage::TRef m_roImage;
 		

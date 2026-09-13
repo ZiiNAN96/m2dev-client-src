@@ -5,7 +5,7 @@
 
 typedef struct STerrainTexture
 {
-	STerrainTexture() :	pd3dTexture(NULL),
+	STerrainTexture() :
 		UScale(4.0f),
 		VScale(4.0f),
 		UOffset(0.0f),
@@ -21,7 +21,6 @@ typedef struct STerrainTexture
 	}
 
 	std::string					stFilename;
-	LPDIRECT3DTEXTURE9			pd3dTexture;
 	CGraphicImageInstance 		ImageInstance;
 	float						UScale;
 	float						VScale;
@@ -29,7 +28,7 @@ typedef struct STerrainTexture
 	float						VOffset;
 	bool						bSplat;
 	unsigned short				Begin, End;	// 0 ~ 65535 의 16bit heightfield 높이값.
-	D3DXMATRIX					m_matTransform;
+	Math::Matrix					m_matTransform;
 } TTerrainTexture;
 
 class CTextureSet

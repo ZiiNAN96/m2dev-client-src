@@ -9,11 +9,8 @@ enum class BackendKind { DiligentD3D11 };
 // Unknown renderer values and conflicting selections are errors, never silent fallback.
 struct StartupOptions
 {
-    // ZiiNAN: Diligent D3D11 is the default production renderer when compiled in.
-    explicit StartupOptions(bool diligentAvailable)
-        : backend(BackendKind::DiligentD3D11), valid(diligentAvailable) {}
-
-    BackendKind backend;
+    // ZiiNAN: Removed final D3D9 compile-time dependency. One production API.
+    BackendKind backend=BackendKind::DiligentD3D11;
     bool selected = false;
     bool smokeTest = false;
     bool valid = true;
@@ -27,7 +24,7 @@ struct StartupOptions
             return; // Preserve all existing, non-renderer command-line arguments.
         const auto value = argument.substr(prefix.size());
         BackendKind requested;
-        if (value == L"diligent-d3d11")
+        if (value == L"d3d11" || value == L"diligent-d3d11")
             requested = BackendKind::DiligentD3D11;
         else
         {

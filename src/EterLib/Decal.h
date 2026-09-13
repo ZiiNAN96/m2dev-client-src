@@ -25,22 +25,22 @@ public:
 
 	void Clear();
 
-	virtual void Make(D3DXVECTOR3 v3Center, D3DXVECTOR3 v3Normal, D3DXVECTOR3 v3Tangent, float fWidth, float fHeight, float fDepth) = 0;
+	virtual void Make(Math::Vector3 v3Center, Math::Vector3 v3Normal, Math::Vector3 v3Tangent, float fWidth, float fHeight, float fDepth) = 0;
 // 	virtual void Update();
 	virtual void Render();
 
 protected:
 	//
-	D3DXVECTOR3		m_v3Center;
-	D3DXVECTOR3		m_v3Normal;
+	Math::Vector3		m_v3Center;
+	Math::Vector3		m_v3Normal;
 	
 	// Clip Plane
-	D3DXPLANE		m_v4LeftPlane;
-	D3DXPLANE		m_v4RightPlane;
-	D3DXPLANE		m_v4BottomPlane;
-	D3DXPLANE		m_v4TopPlane;
-	D3DXPLANE		m_v4FrontPlane;
-	D3DXPLANE		m_v4BackPlane;
+	Math::Plane		m_v4LeftPlane;
+	Math::Plane		m_v4RightPlane;
+	Math::Plane		m_v4BottomPlane;
+	Math::Plane		m_v4TopPlane;
+	Math::Plane		m_v4FrontPlane;
+	Math::Plane		m_v4BackPlane;
 
 	// 개수
 	DWORD			m_dwVertexCount;
@@ -67,19 +67,19 @@ protected:
 	const float m_cfDecalEpsilon;
 
 protected:
-	bool AddPolygon(DWORD dwAddCount, const D3DXVECTOR3 *c_pv3Vertex, const D3DXVECTOR3 *c_pv3Normal);
-	void ClipMesh(DWORD dwPrimitiveCount, const D3DXVECTOR3 *c_pv3Vertex, const D3DXVECTOR3 *c_pv3Normal);
+	bool AddPolygon(DWORD dwAddCount, const Math::Vector3 *c_pv3Vertex, const Math::Vector3 *c_pv3Normal);
+	void ClipMesh(DWORD dwPrimitiveCount, const Math::Vector3 *c_pv3Vertex, const Math::Vector3 *c_pv3Normal);
 	DWORD ClipPolygon(DWORD dwVertexCount, 
-		const D3DXVECTOR3 *c_pv3Vertex, 
-		const D3DXVECTOR3 *c_pv3Normal, 
-		D3DXVECTOR3 *c_pv3NewVertex, 
-		D3DXVECTOR3 *c_pv3NewNormal) const;
-	static DWORD ClipPolygonAgainstPlane(const D3DXPLANE& v4Plane, 
+		const Math::Vector3 *c_pv3Vertex,
+		const Math::Vector3 *c_pv3Normal,
+		Math::Vector3 *c_pv3NewVertex,
+		Math::Vector3 *c_pv3NewNormal) const;
+	static DWORD ClipPolygonAgainstPlane(const Math::Plane& v4Plane,
 		DWORD dwVertexCount,
-		const D3DXVECTOR3 *c_pv3Vertex, 
-		const D3DXVECTOR3 *c_pv3Normal, 
-		D3DXVECTOR3 *c_pv3NewVertex, 
-		D3DXVECTOR3 *c_pv3NewNormal);
+		const Math::Vector3 *c_pv3Vertex,
+		const Math::Vector3 *c_pv3Normal,
+		Math::Vector3 *c_pv3NewVertex,
+		Math::Vector3 *c_pv3NewNormal);
 };
 /*
 

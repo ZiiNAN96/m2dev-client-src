@@ -10,7 +10,7 @@ class CFlyTrace : public CScreen
 
 		void Create(const CFlyingData::TFlyingAttachData & rFlyingAttachData);
 
-		void UpdateNewPosition(const D3DXVECTOR3 & v3Position);
+		void UpdateNewPosition(const Math::Vector3 & v3Position);
 
 		void Update();
 		void Render();		
@@ -19,11 +19,10 @@ class CFlyTrace : public CScreen
 		void __Initialize();
 
 	protected:
-		typedef std::pair<float, D3DXVECTOR3> TTimePosition;
+		typedef std::pair<float, Math::Vector3> TTimePosition;
 		typedef std::deque<TTimePosition> TTimePositionDeque;
 
 		//CGraphicImageInstance m_ImageInstance;
-		//LPDIRECT3DTEXTURE9 m_lpTexture;
 
 		bool m_bRectShape;
 		DWORD m_dwColor;

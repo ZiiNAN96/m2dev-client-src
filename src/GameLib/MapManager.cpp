@@ -1,6 +1,6 @@
 #include "StdAfx.h"
-#include "EterLib/NativeStateView.h"
-#include "EterLib/StateManager.h"
+#include "EterLib/DrawStateView.h"
+#include "EterLib/DrawState.h"
 #include "PackLib/PackManager.h"
 
 #include "MapManager.h"
@@ -242,28 +242,28 @@ void CMapManager::BeginEnvironment()
 	CMapOutdoor& rkMap=GetMapOutdoorRef();
 
 	// Light always on
- 	STATEMANAGER.SaveRenderState(D3DRS_LIGHTING, TRUE);
+	DRAWSTATE.SaveRenderState(Renderer::StateLighting, TRUE);
 
 	// Fog
- 	STATEMANAGER.SaveRenderState(D3DRS_FOGENABLE, mc_pcurEnvironmentData->bFogEnable);
+	DRAWSTATE.SaveRenderState(Renderer::StateFogEnable, mc_pcurEnvironmentData->bFogEnable);
 
 	// Material
-	STATEMANAGER.SetMaterial(&mc_pcurEnvironmentData->Material);
+	DRAWSTATE.SetMaterial(&mc_pcurEnvironmentData->Material);
 
 	// Directional Light
 	if (mc_pcurEnvironmentData->bDirLightsEnable[ENV_DIRLIGHT_BACKGROUND])
 	{
-		STATEMANAGER.LightEnable(0, TRUE);
+		DRAWSTATE.LightEnable(0, TRUE);
 
 		rkMap.ApplyLight((DWORD)mc_pcurEnvironmentData, mc_pcurEnvironmentData->DirLights[ENV_DIRLIGHT_BACKGROUND]);		
 	}
 	else
-		STATEMANAGER.LightEnable(0, FALSE);
+		DRAWSTATE.LightEnable(0, FALSE);
 
 	if (mc_pcurEnvironmentData->bFogEnable)
 	{
 		const DWORD dwFogColor = mc_pcurEnvironmentData->FogColor;
-		STATEMANAGER.SetRenderState(D3DRS_FOGCOLOR, dwFogColor);
+		DRAWSTATE.SetRenderState(Renderer::StateFogColor, dwFogColor);
 
 		const int iFogLevel = CPythonSystem::Instance().GetFogLevel(); // 2=Dense,1=Middle,0=Light
 
@@ -272,11 +272,11 @@ void CMapManager::BeginEnvironment()
 			const float fFogDensityLevel[3] = { 0.000006f, 0.000004f, 0.000002f };
 			float fDensity = mc_pcurEnvironmentData->bFogLevel * fFogDensityLevel[iFogLevel];
 
-			STATEMANAGER.SetRenderState(D3DRS_FOGVERTEXMODE, D3DFOG_EXP);			// pixel fog
-			STATEMANAGER.SetRenderState(D3DRS_FOGDENSITY, *((DWORD *) &fDensity));	// vertex fog
+			DRAWSTATE.SetRenderState(Renderer::StateFogVertexMode, Renderer::FogExp);			// pixel fog
+			DRAWSTATE.SetRenderState(Renderer::StateFogDensity, *((DWORD *) &fDensity));	// vertex fog
 
 			float fApproxFogFar = 2.3f / fDensity;
-			CSpeedTreeForestDirectX& rkForest = CSpeedTreeForestDirectX::Instance();
+			CSpeedTreeForestRenderer& rkForest = CSpeedTreeForestRenderer::Instance();
 			rkForest.SetFog(0.0f, fApproxFogFar);
 		}
 		else
@@ -289,13 +289,13 @@ void CMapManager::BeginEnvironment()
 			fFogNear *= fFogScaleLevel[iFogLevel];
 			fFogFar  *= fFogScaleLevel[iFogLevel];
 
-			CSpeedTreeForestDirectX& rkForest=CSpeedTreeForestDirectX::Instance();
+			CSpeedTreeForestRenderer& rkForest=CSpeedTreeForestRenderer::Instance();
 			rkForest.SetFog(fFogNear, fFogFar);
 
-			STATEMANAGER.SetRenderState(D3DRS_FOGVERTEXMODE, D3DFOG_LINEAR);		// vertex fox
-			STATEMANAGER.SetRenderState(D3DRS_RANGEFOGENABLE, TRUE);				// vertex fox
-			STATEMANAGER.SetRenderState(D3DRS_FOGSTART, *((DWORD *) &fFogNear));	// USED BY D3DFOG_LINEAR
-			STATEMANAGER.SetRenderState(D3DRS_FOGEND, *((DWORD *) &fFogFar));		// USED BY D3DFOG_LINEAR
+			DRAWSTATE.SetRenderState(Renderer::StateFogVertexMode, Renderer::FogLinear);		// vertex fox
+			DRAWSTATE.SetRenderState(Renderer::StateRangeFogEnable, TRUE);				// vertex fox
+			DRAWSTATE.SetRenderState(Renderer::StateFogStart, *((DWORD *) &fFogNear));	// USED BY Renderer::FogLinear
+			DRAWSTATE.SetRenderState(Renderer::StateFogEnd, *((DWORD *) &fFogFar));		// USED BY Renderer::FogLinear
 		}
 	}
 
@@ -307,8 +307,8 @@ void CMapManager::EndEnvironment()
 	if (!mc_pcurEnvironmentData)
 		return;
 
-	STATEMANAGER.RestoreRenderState(D3DRS_LIGHTING);
-	STATEMANAGER.RestoreRenderState(D3DRS_FOGENABLE);
+	DRAWSTATE.RestoreRenderState(Renderer::StateLighting);
+	DRAWSTATE.RestoreRenderState(Renderer::StateFogEnable);
 }
 
 void CMapManager::SetEnvironmentData(int nEnvDataIndex)
@@ -510,7 +510,7 @@ CArea::TCRCWithNumberVector & CMapManager::GetRenderedGraphicThingInstanceNum(DW
 	return rkMap.GetRenderedGraphicThingInstanceNum(pdwGraphicThingInstanceNum, pdwCRCNum);
 }
 
-bool CMapManager::GetNormal(int ix, int iy, D3DXVECTOR3 * pv3Normal)
+bool CMapManager::GetNormal(int ix, int iy, Math::Vector3 * pv3Normal)
 {
 	if (!IsMapReady())
 		return false;
@@ -519,7 +519,7 @@ bool CMapManager::GetNormal(int ix, int iy, D3DXVECTOR3 * pv3Normal)
 	return rkMap.GetNormal(ix, iy, pv3Normal);
 }
 
-bool CMapManager::isPhysicalCollision(const D3DXVECTOR3 & c_rvCheckPosition)
+bool CMapManager::isPhysicalCollision(const Math::Vector3 & c_rvCheckPosition)
 {
 	if (!IsMapReady())
 		return false;

@@ -40,28 +40,22 @@
 #include "SpeedTreeMaterial.h"
 
 ///////////////////////////////////////////////////////////////////////  
-//	class CSpeedTreeForestDirectX declaration
-class CSpeedTreeForestDirectX : public CSpeedTreeForest, public CGraphicBase, public CSingleton<CSpeedTreeForestDirectX>
+//	class CSpeedTreeForestRenderer declaration
+class CSpeedTreeForestRenderer : public CSpeedTreeForest, public CGraphicBase, public CSingleton<CSpeedTreeForestRenderer>
 {
 	public:
-		CSpeedTreeForestDirectX();
-		virtual ~CSpeedTreeForestDirectX();
+		CSpeedTreeForestRenderer();
+		virtual ~CSpeedTreeForestRenderer();
 
 		void			UploadWindMatrix(unsigned int uiLocation, const float* pMatrix) const;
-		void			UpdateCompundMatrix(const D3DXVECTOR3 & c_rEyeVec, const D3DXMATRIX & c_rmatView, const D3DXMATRIX& c_rmatProj);
+		void			UpdateCompundMatrix(const Math::Vector3 & c_rEyeVec, const Math::Matrix & c_rmatView, const Math::Matrix& c_rmatProj);
 
 		void			Render(unsigned long ulRenderBitVector = Forest_RenderAll);
-		bool			SetRenderingDevice(LPDIRECT3DDEVICE9 pDevice);
-		bool			EnsureVertexShaders() { return m_pDx ? InitVertexShaders() : false; }
+		bool			InitializeLighting();
 		
 	private:
-		bool			InitVertexShaders();
 		
 	private:
-		LPDIRECT3DDEVICE9		m_pDx;							// the rendering context
 
-		LPDIRECT3DVERTEXDECLARATION9 m_dwBranchVertexShader;			// branch/frond vertex shaders	
 
-		LPDIRECT3DVERTEXDECLARATION9	m_pLeafVertexShaderDecl;			// leaf vertex shader declaration
-		LPDIRECT3DVERTEXSHADER9			m_pLeafVertexShader;				// leaf vertex shader
 };

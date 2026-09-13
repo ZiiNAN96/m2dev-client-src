@@ -2,7 +2,7 @@
 #include "EffectElementBase.h"
 
 
-void CEffectElementBase::GetPosition(float fTime, D3DXVECTOR3 & rPosition)
+void CEffectElementBase::GetPosition(float fTime, Math::Vector3 & rPosition)
 {
 	rPosition = GetTimeEventBlendValue(fTime, m_TimeEventTablePosition);
 }
@@ -60,7 +60,7 @@ BOOL CEffectElementBase::LoadScript(CTextFileLoader & rTextFileLoader)
 				EffectPosition.m_Value.y = atof(pTokenVector->at(i++).c_str());
 				EffectPosition.m_Value.z = atof(pTokenVector->at(i++).c_str());
 
-				EffectPosition.m_vecControlPoint = D3DXVECTOR3(0.0f,0.0f,0.0f);
+				EffectPosition.m_vecControlPoint = Math::Vector3(0.0f,0.0f,0.0f);
 			}
 			else
 			{

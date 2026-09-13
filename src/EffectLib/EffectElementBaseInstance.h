@@ -13,7 +13,7 @@ class CEffectElementBaseInstance
 		void Initialize();
 		void Destroy();
 
-		void SetLocalMatrixPointer(const D3DXMATRIX * c_pMatrix);
+		void SetLocalMatrixPointer(const Math::Matrix * c_pMatrix);
 		bool Update(float fElapsedTime);
 		void Render();
 
@@ -31,7 +31,7 @@ class CEffectElementBaseInstance
 		virtual void OnRender() = 0;
 
 	protected:
-		const D3DXMATRIX *						mc_pmatLocal;
+		const Math::Matrix *						mc_pmatLocal;
 
 		bool									m_isActive;
 

@@ -13,26 +13,20 @@ bool GRAPHICS_CAPS_SOFTWARE_TILING = false;
 
 // ZiiNAN: Legacy D3D9 renderer removed from production path.
 // This compatibility-named owner initializes only CPU camera/draw data.
-CGraphicDevice::CGraphicDevice() : m_uBackBufferCount(0), m_pStateManager(nullptr) {}
+CGraphicDevice::CGraphicDevice() : m_drawState(nullptr) {}
 CGraphicDevice::~CGraphicDevice() { Destroy(); }
-void CGraphicDevice::InitBackBufferCount(UINT) {}
-void CGraphicDevice::RegisterWarningString(UINT, const char*) {}
-void CGraphicDevice::MoveWebBrowserRect(const RECT&) {}
-void CGraphicDevice::EnableWebBrowserMode(const RECT&) {}
-void CGraphicDevice::DisableWebBrowserMode() {}
 DWORD GetMaxTextureWidth() { return Renderer::graphicsCapabilities.maxTextureDimension; }
 DWORD GetMaxTextureHeight() { return Renderer::graphicsCapabilities.maxTextureDimension; }
 
 int CGraphicDevice::Create(HWND window,int width,int height,bool windowed,int,int)
 {
-    if(m_pStateManager || !window || width<=0 || height<=0 || !windowed) return CREATE_DEVICE;
+    if(m_drawState || !window || width<=0 || height<=0 || !windowed) return CREATE_DEVICE;
     ms_hWnd=window; ms_hDC=GetDC(window);
-    m_pStateManager=new CRenderState();
-    if(FAILED(D3DXCreateMatrixStack(0,&ms_lpd3dMatStack))) { Destroy(); return CREATE_DEVICE; }
-    ms_lpd3dMatStack->LoadIdentity();
+    m_drawState=new CDrawState();
+    ms_matrixStack.Clear();
     for(auto* matrix : {&ms_matIdentity,&ms_matWorld,&ms_matWorldView,&ms_matView,&ms_matProj,
         &ms_matInverseView,&ms_matInverseViewYAxis,&ms_matScreen0,&ms_matScreen1,&ms_matScreen2})
-        D3DXMatrixIdentity(matrix);
+        Math::MatrixIdentity(matrix);
     ms_matScreen0._22=-1;
     ms_matScreen1._41=ms_matScreen1._42=1;
     ms_dwWavingEndTime=ms_dwFlashingEndTime=0;
@@ -44,22 +38,19 @@ int CGraphicDevice::Create(HWND window,int width,int height,bool windowed,int,in
 }
 bool CGraphicDevice::ResizeBackBuffer(UINT width,UINT height)
 {
-    if(!m_pStateManager) return false;
+    if(!m_drawState) return false;
     if(!width || !height) return true; // Suspension does not discard CPU resource/state owners.
     ms_iWidth=width; ms_iHeight=height;
     ms_Viewport={0,0,width,height,0,1};
-    m_pStateManager->SetViewport(&ms_Viewport);
-    m_pStateManager->SetScissorRect(RECT{0,0,LONG(width),LONG(height)});
+    m_drawState->SetViewport(&ms_Viewport);
+    m_drawState->SetScissorRect(RECT{0,0,LONG(width),LONG(height)});
     ms_matScreen2._11=float(width)/2; ms_matScreen2._22=float(height)/2;
     return true;
 }
-CGraphicDevice::EDeviceState CGraphicDevice::GetDeviceState()
-{ return m_pStateManager ? DEVICESTATE_OK : DEVICESTATE_NULL; }
-bool CGraphicDevice::Reset() { return false; } // No D3D9 lost-device recovery.
 void CGraphicDevice::Destroy()
 {
-    delete m_pStateManager; m_pStateManager=nullptr;
-    safe_release(ms_lpd3dMatStack);
+    delete m_drawState; m_drawState=nullptr;
+    ms_matrixStack.Clear();
     if(ms_hDC) ReleaseDC(ms_hWnd,ms_hDC);
     ms_hDC=nullptr; ms_hWnd=nullptr;
 }

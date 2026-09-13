@@ -15,12 +15,12 @@
 #include <utf8.h>
 // EPlaceDir and TextTailBiDi() template are defined in utf8.h
 
-const D3DXCOLOR c_TextTail_Player_Color = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
-const D3DXCOLOR c_TextTail_Monster_Color = D3DXCOLOR(1.0f, 0.0f, 0.0f, 1.0f);
-const D3DXCOLOR c_TextTail_Item_Color = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
-const D3DXCOLOR c_TextTail_Chat_Color = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
-const D3DXCOLOR c_TextTail_Info_Color = D3DXCOLOR(1.0f, 0.785f, 0.785f, 1.0f);
-const D3DXCOLOR c_TextTail_Guild_Name_Color = 0xFFEFD3FF;
+const Math::Color c_TextTail_Player_Color = Math::Color(1.0f, 1.0f, 1.0f, 1.0f);
+const Math::Color c_TextTail_Monster_Color = Math::Color(1.0f, 0.0f, 0.0f, 1.0f);
+const Math::Color c_TextTail_Item_Color = Math::Color(1.0f, 1.0f, 1.0f, 1.0f);
+const Math::Color c_TextTail_Chat_Color = Math::Color(1.0f, 1.0f, 1.0f, 1.0f);
+const Math::Color c_TextTail_Info_Color = Math::Color(1.0f, 0.785f, 0.785f, 1.0f);
+const Math::Color c_TextTail_Guild_Name_Color = 0xFFEFD3FF;
 const float c_TextTail_Name_Position = -10.0f;
 const float c_fxMarkPosition = 1.5f;
 const float c_fyGuildNamePosition = 15.0f;
@@ -132,7 +132,7 @@ void CPythonTextTail::UpdateTextTail(TTextTail * pTextTail)
 	CPythonGraphic & rpyGraphic = CPythonGraphic::Instance();
 	rpyGraphic.Identity();
 
-	const D3DXVECTOR3 & c_rv3Position = pTextTail->pOwner->GetPosition();
+	const Math::Vector3 & c_rv3Position = pTextTail->pOwner->GetPosition();
 	rpyGraphic.ProjectPosition(c_rv3Position.x,
 							   c_rv3Position.y,
 							   c_rv3Position.z + pTextTail->fHeight,
@@ -354,9 +354,9 @@ void CPythonTextTail::HideAllTextTail()
 
 void CPythonTextTail::UpdateDistance(const TPixelPosition & c_rCenterPosition, TTextTail * pTextTail)
 {
-	const D3DXVECTOR3 & c_rv3Position = pTextTail->pOwner->GetPosition();
-	D3DXVECTOR2 v2Distance(c_rv3Position.x - c_rCenterPosition.x, -c_rv3Position.y - c_rCenterPosition.y);
-	pTextTail->fDistanceFromPlayer = D3DXVec2Length(&v2Distance);
+	const Math::Vector3 & c_rv3Position = pTextTail->pOwner->GetPosition();
+	Math::Vector2 v2Distance(c_rv3Position.x - c_rCenterPosition.x, -c_rv3Position.y - c_rCenterPosition.y);
+	pTextTail->fDistanceFromPlayer = Math::Vec2Length(&v2Distance);
 }
 
 void CPythonTextTail::ShowAllTextTail()
@@ -445,7 +445,7 @@ bool CPythonTextTail::isIn(CPythonTextTail::TTextTail * pSource, CPythonTextTail
 	return false;
 }
 
-void CPythonTextTail::RegisterCharacterTextTail(DWORD dwGuildID, DWORD dwVirtualID, const D3DXCOLOR & c_rColor, float fAddHeight)
+void CPythonTextTail::RegisterCharacterTextTail(DWORD dwGuildID, DWORD dwVirtualID, const Math::Color & c_rColor, float fAddHeight)
 {
 	CInstanceBase * pCharacterInstance = CPythonCharacterManager::Instance().GetInstancePtr(dwVirtualID);
 
@@ -632,7 +632,7 @@ bool CPythonTextTail::IsChatTextTail(DWORD dwVID)
 	return true;
 }
 
-void CPythonTextTail::SetCharacterTextTailColor(DWORD VirtualID, const D3DXCOLOR & c_rColor)
+void CPythonTextTail::SetCharacterTextTailColor(DWORD VirtualID, const Math::Color & c_rColor)
 {
 	TTextTailMap::iterator itorCharacter = m_CharacterTextTailMap.find(VirtualID);
 
@@ -726,7 +726,7 @@ void CPythonTextTail::DeleteItemTextTail(DWORD VirtualID)
 	m_ItemTextTailMap.erase(itor);
 }
 
-CPythonTextTail::TTextTail * CPythonTextTail::RegisterTextTail(DWORD dwVirtualID, const char * c_szText, CGraphicObjectInstance * pOwner, float fHeight, const D3DXCOLOR & c_rColor)
+CPythonTextTail::TTextTail * CPythonTextTail::RegisterTextTail(DWORD dwVirtualID, const char * c_szText, CGraphicObjectInstance * pOwner, float fHeight, const Math::Color & c_rColor)
 {
 	TTextTail * pTextTail = m_TextTailPool.Alloc();
 
@@ -827,7 +827,7 @@ void CPythonTextTail::SelectItemName(DWORD dwVirtualID)
 	pTextTail->pTextInstance->SetColor(0.1f, 0.9f, 0.1f);
 }
 
-void CPythonTextTail::AttachTitle(DWORD dwVID, const char * c_szName, const D3DXCOLOR & c_rColor)
+void CPythonTextTail::AttachTitle(DWORD dwVID, const char * c_szName, const Math::Color & c_rColor)
 {
 	if (!bPKTitleEnable)
 		return;
@@ -876,7 +876,7 @@ void CPythonTextTail::EnablePKTitle(BOOL bFlag)
 	bPKTitleEnable = bFlag;
 }
 
-void CPythonTextTail::AttachLevel(DWORD dwVID, const char * c_szText, const D3DXCOLOR & c_rColor)
+void CPythonTextTail::AttachLevel(DWORD dwVID, const char * c_szText, const Math::Color & c_rColor)
 {
 	if (!bPKTitleEnable)
 		return;

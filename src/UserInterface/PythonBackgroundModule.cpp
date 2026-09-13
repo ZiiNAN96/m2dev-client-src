@@ -1,7 +1,7 @@
 #include "StdAfx.h"
 #include "PythonSystem.h"
 #include "PythonBackground.h"
-#include "EterLib/StateManager.h"
+#include "EterLib/DrawState.h"
 #include "GameLib/MapOutDoor.h"
 #ifdef M2_RENDERER_DIAGNOSTICS
 #include "../../tests/Renderer/SpecialClientProbe.h"

@@ -1,7 +1,7 @@
 #include "StdAfx.h"
-#include "EterLib/NativeStateView.h"
+#include "EterLib/DrawStateView.h"
 #include "Renderer/TerrainPresentation.h"
-#include "EterLib/StateManager.h"
+#include "EterLib/DrawState.h"
 #include "EterLib/JpegFile.h"
 #include "EterImageLib/ScreenshotJPEG.h"
 #include "PythonGraphic.h"
@@ -14,10 +14,7 @@ void CPythonGraphic::Destroy()
 {	
 }
 
-LPDIRECT3D9EX CPythonGraphic::GetD3D()
-{
-	return ms_lpd3d;
-}
+
 
 float CPythonGraphic::GetOrthoDepth()
 {
@@ -27,35 +24,35 @@ float CPythonGraphic::GetOrthoDepth()
 void CPythonGraphic::SetInterfaceRenderState()
 {
 	Renderer::uiMode=true; // ZiiNAN: Explicit UI boundary, not inferred from the last world draw.
-	STATEMANAGER.SetTransform(Renderer::MatrixProjection, &ms_matIdentity);
-	STATEMANAGER.SetTransform(Renderer::MatrixView, &ms_matIdentity);
-	STATEMANAGER.SetTransform(Renderer::MatrixWorld, &ms_matIdentity);
+	DRAWSTATE.SetTransform(Renderer::MatrixProjection, &ms_matIdentity);
+	DRAWSTATE.SetTransform(Renderer::MatrixView, &ms_matIdentity);
+	DRAWSTATE.SetTransform(Renderer::MatrixWorld, &ms_matIdentity);
 
-	STATEMANAGER.SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_NONE);
-	STATEMANAGER.SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_NONE);
-	STATEMANAGER.SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_NONE);
+	DRAWSTATE.SetSamplerState(0, Renderer::SamplerMinFilter, Renderer::FilterNone);
+	DRAWSTATE.SetSamplerState(0, Renderer::SamplerMagFilter, Renderer::FilterNone);
+	DRAWSTATE.SetSamplerState(0, Renderer::SamplerMipFilter, Renderer::FilterNone);
 
-	STATEMANAGER.SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
-	STATEMANAGER.SetRenderState(D3DRS_SRCBLEND,	D3DBLEND_SRCALPHA);
-	STATEMANAGER.SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
-	STATEMANAGER.SetRenderState(D3DRS_MULTISAMPLEANTIALIAS, FALSE);
+	DRAWSTATE.SetRenderState(Renderer::StateAlphaBlendEnable, TRUE);
+	DRAWSTATE.SetRenderState(Renderer::StateSrcBlend,	Renderer::BlendSrcAlpha);
+	DRAWSTATE.SetRenderState(Renderer::StateDestBlend, Renderer::BlendInvSrcAlpha);
+	DRAWSTATE.SetRenderState(Renderer::StateMultisampleAntialias, FALSE);
 
 	CPythonGraphic::Instance().SetBlendOperation();
 	CPythonGraphic::Instance().SetOrtho2D(ms_iWidth, ms_iHeight, GetOrthoDepth());
 
-	STATEMANAGER.SetRenderState(D3DRS_LIGHTING, FALSE);
+	DRAWSTATE.SetRenderState(Renderer::StateLighting, FALSE);
 }
 
 void CPythonGraphic::SetGameRenderState()
 {
 	Renderer::uiMode=false;
-	STATEMANAGER.SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_ANISOTROPIC);
-	STATEMANAGER.SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_ANISOTROPIC);
-	STATEMANAGER.SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
+	DRAWSTATE.SetSamplerState(0, Renderer::SamplerMinFilter, Renderer::FilterAnisotropic);
+	DRAWSTATE.SetSamplerState(0, Renderer::SamplerMagFilter, Renderer::FilterAnisotropic);
+	DRAWSTATE.SetSamplerState(0, Renderer::SamplerMipFilter, Renderer::FilterLinear);
 
-	STATEMANAGER.SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
-	STATEMANAGER.SetRenderState(D3DRS_LIGHTING, TRUE);
-	STATEMANAGER.SetRenderState(D3DRS_MULTISAMPLEANTIALIAS, TRUE);
+	DRAWSTATE.SetRenderState(Renderer::StateAlphaBlendEnable, FALSE);
+	DRAWSTATE.SetRenderState(Renderer::StateLighting, TRUE);
+	DRAWSTATE.SetRenderState(Renderer::StateMultisampleAntialias, TRUE);
 }
 
 void CPythonGraphic::SetCursorPosition(int x, int y)
@@ -66,18 +63,18 @@ void CPythonGraphic::SetCursorPosition(int x, int y)
 void CPythonGraphic::SetOmniLight()
 {
     // Set up a material
-    D3DMATERIAL9 Material;
-	Material.Ambient = D3DXCOLOR(0.3f, 0.3f, 0.3f, 1.0f);
-	Material.Diffuse = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
-	Material.Emissive = D3DXCOLOR(0.1f, 0.1f, 0.1f, 1.0f);
-    STATEMANAGER.SetMaterial(&Material);
+    Renderer::MaterialValues Material;
+	Material.Ambient = Math::Color(0.3f, 0.3f, 0.3f, 1.0f);
+	Material.Diffuse = Math::Color(1.0f, 1.0f, 1.0f, 1.0f);
+	Material.Emissive = Math::Color(0.1f, 0.1f, 0.1f, 1.0f);
+    DRAWSTATE.SetMaterial(&Material);
 
-	D3DLIGHT9 Light;
-	Light.Type = D3DLIGHT_SPOT;
-    Light.Position = D3DXVECTOR3(50.0f, 150.0f, 350.0f);
-    Light.Direction = D3DXVECTOR3(-0.15f, -0.3f, -0.9f);
-    Light.Theta = D3DXToRadian(30.0f);
-    Light.Phi = D3DXToRadian(45.0f);
+	Renderer::LightValues Light;
+	Light.Type = Renderer::LightSpot;
+    Light.Position = Math::Vector3(50.0f, 150.0f, 350.0f);
+    Light.Direction = Math::Vector3(-0.15f, -0.3f, -0.9f);
+    Light.Theta = Math::ToRadian(30.0f);
+    Light.Phi = Math::ToRadian(45.0f);
     Light.Falloff = 1.0f;
     Light.Attenuation0 = 0.0f;
     Light.Attenuation1 = 0.005f;
@@ -91,23 +88,23 @@ void CPythonGraphic::SetOmniLight()
 	Light.Ambient.b = 1.0f;
 	Light.Ambient.a = 1.0f;
     Light.Range = 500.0f;
-	STATEMANAGER.SetLight(0, &Light);
-	STATEMANAGER.LightEnable(0, TRUE);
+	DRAWSTATE.SetLight(0, &Light);
+	DRAWSTATE.LightEnable(0, TRUE);
 
-	Light.Type = D3DLIGHT_POINT;
-	Light.Position = D3DXVECTOR3(0.0f, 200.0f, 200.0f);
+	Light.Type = Renderer::LightPoint;
+	Light.Position = Math::Vector3(0.0f, 200.0f, 200.0f);
 	Light.Attenuation0 = 0.1f;
 	Light.Attenuation1 = 0.01f;
 	Light.Attenuation2 = 0.0f;
-	STATEMANAGER.SetLight(1, &Light);
-	STATEMANAGER.LightEnable(1, TRUE);
+	DRAWSTATE.SetLight(1, &Light);
+	DRAWSTATE.LightEnable(1, TRUE);
 }
 
 void CPythonGraphic::SetViewport(float fx, float fy, float fWidth, float fHeight)
 {
-	NativeStateView().GetViewport(&m_backupViewport);
+	DrawStateView().GetViewport(&m_backupViewport);
 
-	D3DVIEWPORT9 ViewPort;
+	Math::Viewport ViewPort;
 	ViewPort.X = fx;
 	ViewPort.Y = fy;
 	ViewPort.Width = fWidth;
@@ -115,7 +112,7 @@ void CPythonGraphic::SetViewport(float fx, float fy, float fWidth, float fHeight
 	ViewPort.MinZ = 0.0f;
 	ViewPort.MaxZ = 1.0f;
 	if (FAILED(
-		STATEMANAGER.SetViewport(&ViewPort)
+		DRAWSTATE.SetViewport(&ViewPort)
 	))
 	{
 		Tracef("CPythonGraphic::SetViewport(%d, %d, %d, %d) - Error", 
@@ -127,7 +124,7 @@ void CPythonGraphic::SetViewport(float fx, float fy, float fWidth, float fHeight
 
 void CPythonGraphic::RestoreViewport()
 {
-	STATEMANAGER.SetViewport(&m_backupViewport);
+	DRAWSTATE.SetViewport(&m_backupViewport);
 }
 
 void CPythonGraphic::SetGamma(float fGammaFactor)
@@ -257,7 +254,7 @@ void CPythonGraphic::PushState()
 
 	curState.matProj = ms_matProj;
 	curState.matView = ms_matView;
-	//STATEMANAGER.SaveTransform(Renderer::MatrixWorld, &m_SaveWorldMatrix);
+	//DRAWSTATE.SaveTransform(Renderer::MatrixWorld, &m_SaveWorldMatrix);
 
 	m_stateStack.push(curState);
 	//CCamera::Instance().PushParams();
@@ -273,7 +270,7 @@ void CPythonGraphic::PopState()
 	
 	TState & rState = m_stateStack.top();
 
-	//STATEMANAGER.RestoreTransform(Renderer::MatrixWorld);
+	//DRAWSTATE.RestoreTransform(Renderer::MatrixWorld);
 	ms_matProj = rState.matProj;
 	ms_matView = rState.matView;
 	
@@ -311,8 +308,8 @@ void CPythonGraphic::RenderAlphaImage(CGraphicImageInstance* pImageInstance, flo
 {
 	assert(pImageInstance != NULL);
 
-	D3DXCOLOR DiffuseColor1 = D3DXCOLOR(1.0f, 1.0f, 1.0f, aLeft);
-	D3DXCOLOR DiffuseColor2 = D3DXCOLOR(1.0f, 1.0f, 1.0f, aRight);
+	Math::Color DiffuseColor1 = Math::Color(1.0f, 1.0f, 1.0f, aLeft);
+	Math::Color DiffuseColor2 = Math::Color(1.0f, 1.0f, 1.0f, aRight);
 
 	const CGraphicTexture * c_pTexture = pImageInstance->GetTexturePointer();
 
@@ -349,13 +346,10 @@ void CPythonGraphic::RenderAlphaImage(CGraphicImageInstance* pImageInstance, flo
 	vertices[3].diffuse = DiffuseColor2;
 	vertices[3].texCoord = TTextureCoordinate(eu, ev);
 
-	STATEMANAGER.SetVertexDeclaration(ms_pntVS);
 	// 2004.11.18.myevan.DrawIndexPrimitiveUP -> DynamicVertexBuffer
-	CGraphicBase::SetDefaultIndexBuffer(DEFAULT_IB_FILL_RECT);
-	if (CGraphicBase::SetPDTStream(vertices, 4))
+	if (CGraphicBase::ValidatePDTVertices(vertices, 4))
 	{
-		const auto nativeDraw=STATEMANAGER.DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 4, 0, 2);
-		UIRenderBridge::IndexedQuad(vertices,pImageInstance->GetGraphicImagePointer(),nativeDraw);
+		UIRenderBridge::IndexedQuad(vertices,pImageInstance->GetGraphicImagePointer());
 	}
 }
 
@@ -366,18 +360,18 @@ void CPythonGraphic::RenderCoolTimeBox(float fxCenter, float fyCenter, float fRa
 
 	fTime = std::max(0.0f, fTime);
 
-	static D3DXCOLOR color = D3DXCOLOR(0.0f, 0.0f, 0.0f, 0.5f);
+	static Math::Color color = Math::Color(0.0f, 0.0f, 0.0f, 0.5f);
 	static WORD s_wBoxIndicies[10] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-	static D3DXVECTOR2 s_v2BoxPos[8] =
+	static Math::Vector2 s_v2BoxPos[8] =
 	{
-		D3DXVECTOR2( -1.0f, -1.0f ),
-		D3DXVECTOR2( -1.0f,  0.0f ),
-		D3DXVECTOR2( -1.0f, +1.0f ),
-		D3DXVECTOR2(  0.0f, +1.0f ),
-		D3DXVECTOR2( +1.0f, +1.0f ),
-		D3DXVECTOR2( +1.0f,  0.0f ),
-		D3DXVECTOR2( +1.0f, -1.0f ),
-		D3DXVECTOR2(  0.0f, -1.0f ),
+		Math::Vector2( -1.0f, -1.0f ),
+		Math::Vector2( -1.0f,  0.0f ),
+		Math::Vector2( -1.0f, +1.0f ),
+		Math::Vector2(  0.0f, +1.0f ),
+		Math::Vector2( +1.0f, +1.0f ),
+		Math::Vector2( +1.0f,  0.0f ),
+		Math::Vector2( +1.0f, -1.0f ),
+		Math::Vector2(  0.0f, -1.0f ),
 	};
 
 	int iTriCount = int(8 - 8.0f * fTime);
@@ -409,8 +403,8 @@ void CPythonGraphic::RenderCoolTimeBox(float fxCenter, float fyCenter, float fRa
 
 	if (fLastPercentage > 0.0f)
 	{
-		D3DXVECTOR2 * pv2Pos;
-		D3DXVECTOR2 * pv2LastPos;
+		Math::Vector2 * pv2Pos;
+		Math::Vector2 * pv2LastPos;
 
 		assert((iTriCount-1+8)%8 >= 0 && (iTriCount-1+8)%8 < 8);
 		assert((iTriCount+8)%8 >= 0 && (iTriCount+8)%8 < 8);
@@ -426,22 +420,20 @@ void CPythonGraphic::RenderCoolTimeBox(float fxCenter, float fyCenter, float fRa
 	if (vertices.empty())
 		return;
 
-	if (SetPDTStream(&vertices[0], vertices.size()))
+	if (ValidatePDTVertices(&vertices[0], vertices.size()))
 	{
-		STATEMANAGER.SaveTextureStageState(0, D3DTSS_COLORARG1,	D3DTA_DIFFUSE);
-		STATEMANAGER.SaveTextureStageState(0, D3DTSS_COLOROP,	D3DTOP_SELECTARG1);
-		STATEMANAGER.SaveTextureStageState(0, D3DTSS_ALPHAARG1,	D3DTA_DIFFUSE);
-		STATEMANAGER.SaveTextureStageState(0, D3DTSS_ALPHAOP,	D3DTOP_SELECTARG1);
-		STATEMANAGER.SetTexture(0, NULL);
-		STATEMANAGER.SetTexture(1, NULL);
-		STATEMANAGER.SetFVF(D3DFVF_XYZ|D3DFVF_DIFFUSE|D3DFVF_TEX1);
-		const auto nativeDraw=STATEMANAGER.DrawPrimitive(D3DPT_TRIANGLEFAN, 0, iTriCount);
+		DRAWSTATE.SaveTextureStageState(0, Renderer::StageColorArg1,	Renderer::ArgDiffuse);
+		DRAWSTATE.SaveTextureStageState(0, Renderer::StageColorOp,	Renderer::TextureOpSelectArg1);
+		DRAWSTATE.SaveTextureStageState(0, Renderer::StageAlphaArg1,	Renderer::ArgDiffuse);
+		DRAWSTATE.SaveTextureStageState(0, Renderer::StageAlphaOp,	Renderer::TextureOpSelectArg1);
+		DRAWSTATE.SetTexture(0, NULL);
+		DRAWSTATE.SetTexture(1, NULL);
 		// ZiiNAN: Keep original cooldown geometry/timing; expand only the fan topology.
-		UIRenderBridge::Submit(vertices.data(),UINT(vertices.size()),UIRenderBridge::Primitive::Fan,nullptr,nativeDraw);
-		STATEMANAGER.RestoreTextureStageState(0, D3DTSS_COLORARG1);
-		STATEMANAGER.RestoreTextureStageState(0, D3DTSS_COLOROP);
-		STATEMANAGER.RestoreTextureStageState(0, D3DTSS_ALPHAARG1);
-		STATEMANAGER.RestoreTextureStageState(0, D3DTSS_ALPHAOP);
+		UIRenderBridge::Submit(vertices.data(),UINT(vertices.size()),UIRenderBridge::Primitive::Fan,nullptr);
+		DRAWSTATE.RestoreTextureStageState(0, Renderer::StageColorArg1);
+		DRAWSTATE.RestoreTextureStageState(0, Renderer::StageColorOp);
+		DRAWSTATE.RestoreTextureStageState(0, Renderer::StageAlphaArg1);
+		DRAWSTATE.RestoreTextureStageState(0, Renderer::StageAlphaOp);
 	}
 }
 
@@ -486,7 +478,7 @@ CPythonGraphic::CPythonGraphic()
 	m_lightColor = GetColor(1.0f, 1.0f, 1.0f);
 	m_darkColor = GetColor(0.0f, 0.0f, 0.0f);
 	
-	memset(&m_backupViewport, 0, sizeof(D3DVIEWPORT9));
+	memset(&m_backupViewport, 0, sizeof(Math::Viewport));
 
 	m_fOrthoDepth = 1000.0f;
 }

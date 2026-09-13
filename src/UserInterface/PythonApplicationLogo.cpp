@@ -24,7 +24,7 @@ int CPythonApplication::OnLogoOpen(char* szName)
 
 
 	// Ã³À½¿¡´Â 1/1 Å©±âÀÇ ÅØ½ºÃÄ¸¦ »ý¼ºÇØµÐ´Ù.
-	if(!m_pLogoTex->Create(1, 1, D3DFMT_A8R8G8B8)) { return 0; }
+	if(!m_pLogoTex->Create(1, 1, Renderer::TerrainTextureFormat::BGRA8)) { return 0; }
 
 	// Set GraphBuilder / SampleGrabber
 	if(FAILED(CoCreateInstance(CLSID_FilterGraph, NULL, CLSCTX_INPROC_SERVER, IID_IGraphBuilder, (VOID**)(&m_pGraphBuilder)))) { return 0; }
@@ -117,19 +117,17 @@ int CPythonApplication::OnLogoUpdate()
 	{
 		m_bLogoError = true;
 
-		LPDIRECT3DTEXTURE9 tex = m_pLogoTex->GetD3DTexture();
-		D3DLOCKED_RECT rt;
-		ZeroMemory(&rt, sizeof(rt));
+		int pitch=0; void* pixels=nullptr;
 
 		// ½ÇÆÐÇÑ °æ¿ì¿¡´Â ÅØ½ºÃÄ¸¦ ±î¸Ä°Ô ºñ¿î´Ù.
-		tex->LockRect(0, &rt, 0, 0);
-		uint8_t* destb = static_cast<unsigned char*>(rt.pBits);
+		if(!m_pLogoTex->Lock(&pitch,&pixels)) return 0;
+		uint8_t* destb=static_cast<uint8_t*>(pixels);
 		for(int a = 0; a < 4; a+= 4)
 		{
 			uint8_t* dest = &destb[a];
 			dest[0] = 0; dest[1] = 0; dest[2] = 0; dest[3] = 0xff;
 		}
-		tex->UnlockRect(0);
+		m_pLogoTex->Unlock();
 
 		return 1;
 	}
@@ -157,23 +155,24 @@ int CPythonApplication::OnLogoUpdate()
 	// Å©±â°¡ 1, Áï ÅØ½ºÃÄ °ø°£ÀÌ Á¦´ë·Î ÁØºñ ¾ÈµÈ°æ¿ì ´Ù½Ã ¸¸µç´Ù.
 	if(m_pLogoTex->GetWidth() == 1)
 	{
-		m_pLogoTex->Destroy(); m_pLogoTex->Create(lWidth, lHeight, D3DFMT_A8R8G8B8);
+		m_pLogoTex->Destroy(); m_pLogoTex->Create(lWidth, lHeight, Renderer::TerrainTextureFormat::BGRA8);
 		
 	}
 
 	// ÁØºñçÀ¸¸?¹öÆÛ¿¡¼­ ÅØ½ºÃÄ·Î º¹»çÇØ¿Â´Ù.
-	LPDIRECT3DTEXTURE9 tex = m_pLogoTex->GetD3DTexture();
-	D3DLOCKED_RECT rt;
-	ZeroMemory(&rt, sizeof(rt));
-
-	tex->LockRect(0, &rt, 0, 0);
-	uint8_t* destb = static_cast<unsigned char*>(rt.pBits);
-	for(int a = 0; a < lBufferSize; a+= 4)
-	{
-		uint8_t* src = &m_pCaptureBuffer[a]; uint8_t* dest = &destb[a];
-		dest[0] = src[0]; dest[1] = src[1]; dest[2] = src[2]; dest[3] = 0xff;
-	}
-	tex->UnlockRect(0);
+    // ZiiNAN: Removed final D3D9 compile-time dependency. The video decoder remains unchanged.
+    int pitch=0; void* pixels=nullptr;
+    if(!m_pLogoTex->Lock(&pitch,&pixels)) return 0;
+    const size_t rowBytes=size_t(lWidth)*4;
+    if(lWidth<=0 || lHeight<=0 || size_t(lBufferSize)<rowBytes*size_t(lHeight)) {
+        m_pLogoTex->Unlock(); return 0;
+    }
+    for(long y=0;y<lHeight;++y) {
+        auto* dst=static_cast<uint8_t*>(pixels)+size_t(y)*pitch;
+        const auto* src=m_pCaptureBuffer+size_t(y)*rowBytes;
+        for(long x=0;x<lWidth;++x) { memcpy(dst+x*4,src+x*4,3); dst[x*4+3]=0xff; }
+    }
+    m_pLogoTex->Unlock();
 
 	long evCode;
 	LONG_PTR param1, param2;
@@ -202,8 +201,8 @@ void CPythonApplication::OnLogoRender()
 {
 	if(!m_pLogoTex->IsEmpty() && !m_bLogoError && true == bInitializedLogo)
 	{
-		STATEMANAGER.SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
-		STATEMANAGER.SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
+		DRAWSTATE.SetSamplerState(0, Renderer::SamplerMinFilter, Renderer::FilterLinear);
+		DRAWSTATE.SetSamplerState(0, Renderer::SamplerMagFilter, Renderer::FilterLinear);
 		m_pLogoTex->SetTextureStage(0);
 		CPythonGraphic::instance().RenderTextureBox(m_nLeft, m_nTop, m_nRight, m_nBottom, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f);
 	}
@@ -240,8 +239,8 @@ void CPythonApplication::OnLogoClose()
 	if(m_pFilterSG != NULL) m_pFilterSG->Release(); m_pFilterSG = NULL;
 	if(m_pGraphBuilder != NULL) m_pGraphBuilder->Release(); m_pGraphBuilder = NULL;
 
-	STATEMANAGER.SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_POINT);
-	STATEMANAGER.SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_POINT);
+	DRAWSTATE.SetSamplerState(0, Renderer::SamplerMinFilter, Renderer::FilterPoint);
+	DRAWSTATE.SetSamplerState(0, Renderer::SamplerMagFilter, Renderer::FilterPoint);
 
 	
 }

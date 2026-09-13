@@ -1,6 +1,6 @@
 #include "StdAfx.h"
 #include "EffectRenderBridge.h" // ZiiNAN: Diligent effect rendering integration.
-#include "EterLib/StateManager.h"
+#include "EterLib/DrawState.h"
 #include "EterLib/ResourceManager.h"
 #include "EffectMeshInstance.h"
 #include "Eterlib/GrpMath.h"
@@ -77,16 +77,16 @@ void CEffectMeshInstance::OnRender()
 
 		int iBillboardType = m_pMeshScript->GetBillboardType(i);
 
-		D3DXMATRIX m_matWorld;
-		D3DXMatrixIdentity(&m_matWorld);
+		Math::Matrix m_matWorld;
+		Math::MatrixIdentity(&m_matWorld);
 
 		switch(iBillboardType)
 		{
 			case MESH_BILLBOARD_TYPE_ALL:
 				{
-					D3DXMATRIX matTemp;
-					D3DXMatrixRotationX(&matTemp, 90.0f);
-					D3DXMatrixInverse(&m_matWorld, NULL, &CScreen::GetViewMatrix());
+					Math::Matrix matTemp;
+					Math::MatrixRotationX(&matTemp, 90.0f);
+					Math::MatrixInverse(&m_matWorld, NULL, &CScreen::GetViewMatrix());
 
 					m_matWorld = matTemp * m_matWorld;
 				}
@@ -94,10 +94,10 @@ void CEffectMeshInstance::OnRender()
 
 			case MESH_BILLBOARD_TYPE_Y:
 				{
-					D3DXMATRIX matTemp;
-					D3DXMatrixIdentity(&matTemp);
+					Math::Matrix matTemp;
+					Math::MatrixIdentity(&matTemp);
 
-					D3DXMatrixInverse(&matTemp, NULL, &CScreen::GetViewMatrix());
+					Math::MatrixInverse(&matTemp, NULL, &CScreen::GetViewMatrix());
 					m_matWorld._11 = matTemp._11;
 					m_matWorld._12 = matTemp._12;
 					m_matWorld._21 = matTemp._21;
@@ -107,16 +107,16 @@ void CEffectMeshInstance::OnRender()
 
 			case MESH_BILLBOARD_TYPE_MOVE:
 				{
-					D3DXVECTOR3 Position;
+					Math::Vector3 Position;
 					m_pMeshScript->GetPosition(m_fLocalTime, Position);
-					D3DXVECTOR3 LastPosition;
+					Math::Vector3 LastPosition;
 					m_pMeshScript->GetPosition(m_fLocalTime-CTimer::Instance().GetElapsedSecond(), LastPosition);
 					Position -= LastPosition;
-					if (D3DXVec3LengthSq(&Position)>0.001f)
+					if (Math::Vec3LengthSq(&Position)>0.001f)
 					{
-						D3DXVec3Normalize(&Position,&Position);
-						D3DXQUATERNION q = SafeRotationNormalizedArc(D3DXVECTOR3(0.0f,-1.0f,0.0f),Position);
-						D3DXMatrixRotationQuaternion(&m_matWorld,&q);
+						Math::Vec3Normalize(&Position,&Position);
+						Math::Quaternion q = SafeRotationNormalizedArc(Math::Vector3(0.0f,-1.0f,0.0f),Position);
+						Math::MatrixRotationQuaternion(&m_matWorld,&q);
 					}
 				}
 				break;
@@ -124,29 +124,29 @@ void CEffectMeshInstance::OnRender()
 
 		if (!m_pMeshScript->isBlendingEnable(i))
 		{
-			STATEMANAGER.SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
+			DRAWSTATE.SetRenderState(Renderer::StateAlphaBlendEnable, FALSE);
 		}
 		else
 		{
 			int iBlendingSrcType = m_pMeshScript->GetBlendingSrcType(i);
 			int iBlendingDestType = m_pMeshScript->GetBlendingDestType(i);
-			STATEMANAGER.SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
-			STATEMANAGER.SetRenderState(D3DRS_SRCBLEND, iBlendingSrcType);
-			STATEMANAGER.SetRenderState(D3DRS_DESTBLEND, iBlendingDestType);
+			DRAWSTATE.SetRenderState(Renderer::StateAlphaBlendEnable, TRUE);
+			DRAWSTATE.SetRenderState(Renderer::StateSrcBlend, iBlendingSrcType);
+			DRAWSTATE.SetRenderState(Renderer::StateDestBlend, iBlendingDestType);
 		}
 
-		D3DXVECTOR3 Position;
+		Math::Vector3 Position;
 		m_pMeshScript->GetPosition(m_fLocalTime, Position);
 		m_matWorld._41 = Position.x;
 		m_matWorld._42 = Position.y;
 		m_matWorld._43 = Position.z;
 		m_matWorld = m_matWorld * *mc_pmatLocal;
-		STATEMANAGER.SetTransform(Renderer::MatrixWorld, &m_matWorld);
+		DRAWSTATE.SetTransform(Renderer::MatrixWorld, &m_matWorld);
 
 		BYTE byType;
-		D3DXCOLOR Color(1.0f, 1.0f, 1.0f, 1.0f);
+		Math::Color Color(1.0f, 1.0f, 1.0f, 1.0f);
 		if (m_pMeshScript->GetColorOperationType(i, &byType))
-			STATEMANAGER.SetTextureStageState(0, D3DTSS_COLOROP, byType);
+			DRAWSTATE.SetTextureStageState(0, Renderer::StageColorOp, byType);
 		m_pMeshScript->GetColorFactor(i, &Color);
 
 		TTimeEventTableFloat * TableAlpha;
@@ -165,14 +165,13 @@ void CEffectMeshInstance::OnRender()
 		if (dwcurTextureFrame < m_TextureInstanceVector[i].TextureInstanceVector.size())
 		{
 			CGraphicImageInstance * pImageInstance = m_TextureInstanceVector[i].TextureInstanceVector[dwcurTextureFrame];
-			STATEMANAGER.SetTexture(0, pImageInstance->GetTexturePointer()->GetTextureBinding());
+			DRAWSTATE.SetTexture(0, pImageInstance->GetTexturePointer()->GetTextureBinding());
             EffectRenderBridge::Texture(pImageInstance->GetGraphicImagePointer());
 		}
 
 		Color.a = fAlpha * rFrameData.fVisibility;
-		STATEMANAGER.SetRenderState(D3DRS_TEXTUREFACTOR, DWORD(Color));
-		STATEMANAGER.SetFVF(D3DFVF_XYZ | D3DFVF_TEX1);
-		EffectRenderBridge::DrawPrimitiveUP(D3DPT_TRIANGLELIST,
+		DRAWSTATE.SetRenderState(Renderer::StateTextureFactor, DWORD(Color));
+		EffectRenderBridge::Submit(Renderer::TopologyTriangleList,
 									 rFrameData.dwIndexCount/3,
 									 &rFrameData.PDTVertexVector[0],
 									 sizeof(TPTVertex));

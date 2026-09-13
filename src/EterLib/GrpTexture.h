@@ -12,8 +12,8 @@ class CGraphicTexture : public CGraphicBase
 		int GetHeight() const;
 
 		void SetTextureStage(int stage) const;
-		LPDIRECT3DTEXTURE9 GetD3DTexture() const;
-		TextureBinding GetTextureBinding() const { return m_source ? TextureBinding(m_source) : TextureBinding(m_lpd3dTexture); }
+
+		TextureBinding GetTextureBinding() const { return TextureBinding(m_source); }
 		const std::shared_ptr<Renderer::TextureResource>& GetSource() const { return m_source; }
 
 		void DestroyDeviceObjects();
@@ -31,6 +31,6 @@ class CGraphicTexture : public CGraphicBase
 		int m_width;
 		int m_height;
 
-		LPDIRECT3DTEXTURE9 m_lpd3dTexture;
+
 		std::shared_ptr<Renderer::TextureResource> m_source;
 };

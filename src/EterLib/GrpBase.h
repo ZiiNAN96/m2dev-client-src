@@ -4,8 +4,8 @@
 #include "../Renderer/MatrixState.h"
 #include <vector>
 
-void PixelPositionToD3DXVECTOR3(const D3DXVECTOR3& c_rkPPosSrc, D3DXVECTOR3* pv3Dst);
-void D3DXVECTOR3ToPixelPosition(const D3DXVECTOR3& c_rv3Src, D3DXVECTOR3* pv3Dst);
+void PixelPositionToWorldPosition(const Math::Vector3& c_rkPPosSrc, Math::Vector3* pv3Dst);
+void WorldPositionToPixelPosition(const Math::Vector3& c_rv3Src, Math::Vector3* pv3Dst);
 
 class CGraphicTexture;
 
@@ -16,11 +16,11 @@ typedef struct SFace
 	TIndex indices[3];
 } TFace;
 
-typedef D3DXVECTOR3 TPosition;
+typedef Math::Vector3 TPosition;
 
-typedef D3DXVECTOR3 TNormal;
+typedef Math::Vector3 TNormal;
 
-typedef D3DXVECTOR2 TTextureCoordinate;
+typedef Math::Vector2 TTextureCoordinate;
 
 typedef DWORD TDiffuse;
 typedef DWORD TAmbient;
@@ -132,8 +132,8 @@ class CGraphicBase
 {
 	public:
 		static DWORD GetAvailableTextureMemory();
-		static const D3DXMATRIX& GetViewMatrix();
-		static const D3DXMATRIX & GetIdentityMatrix();
+		static const Math::Matrix& GetViewMatrix();
+		static const Math::Matrix & GetIdentityMatrix();
 
 		enum
 		{			
@@ -172,8 +172,8 @@ class CGraphicBase
 		////////////////////////////////////////////////////////////////////////
 		void		PushMatrix();
 
-		void		MultMatrix( const D3DXMATRIX* pMat );
-		void		MultMatrixLocal( const D3DXMATRIX* pMat );
+		void		MultMatrix( const Math::Matrix* pMat );
+		void		MultMatrixLocal( const Math::Matrix* pMat );
 	
 		void		Translate(float x, float y, float z);
 		void		Rotate(float degree, float x, float y, float z);
@@ -181,17 +181,17 @@ class CGraphicBase
 		void		RotateYawPitchRollLocal(float fYaw, float fPitch, float fRoll);
 		void		Scale(float x, float y, float z);
 		void		PopMatrix();		
-		void		LoadMatrix(const D3DXMATRIX & c_rSrcMatrix);		
-		void		GetMatrix(D3DXMATRIX * pRetMatrix) const;
-		const		D3DXMATRIX * GetMatrixPointer() const;
+		void		LoadMatrix(const Math::Matrix & c_rSrcMatrix);
+		void		GetMatrix(Math::Matrix * pRetMatrix) const;
+		const		Math::Matrix * GetMatrixPointer() const;
 
 		// Special Routine
-		void		GetSphereMatrix(D3DXMATRIX * pMatrix, float fValue = 0.1f);
+		void		GetSphereMatrix(Math::Matrix * pMatrix, float fValue = 0.1f);
 
 		////////////////////////////////////////////////////////////////////////
 		void		InitScreenEffect();
 		void		SetScreenEffectWaving(float fDuringTime, int iPower);
-		void		SetScreenEffectFlashing(float fDuringTime, const D3DXCOLOR & c_rColor);
+		void		SetScreenEffectFlashing(float fDuringTime, const Math::Color & c_rColor);
 
 		////////////////////////////////////////////////////////////////////////
 		DWORD		GetColor(float r, float g, float b, float a = 1.0f);
@@ -210,29 +210,27 @@ class CGraphicBase
 		static bool		IsLowTextureMemory();
 		static bool		IsHighTextureMemory();
 
-		static void SetDefaultIndexBuffer(UINT eDefIB);
-		static bool SetPDTStream(SPDTVertexRaw* pVertices, UINT uVtxCount);
-		static bool SetPDTStream(SPDTVertex* pVertices, UINT uVtxCount);
+		static bool ValidatePDTVertices(SPDTVertexRaw* pVertices, UINT uVtxCount);
+		static bool ValidatePDTVertices(SPDTVertex* pVertices, UINT uVtxCount);
 		
 	protected:
-		static D3DXMATRIX				ms_matIdentity;
+		static Math::Matrix				ms_matIdentity;
 
-		static D3DXMATRIX				ms_matView;
-		static D3DXMATRIX				ms_matProj;
-		static D3DXMATRIX				ms_matInverseView;
-		static D3DXMATRIX				ms_matInverseViewYAxis;
+		static Math::Matrix				ms_matView;
+		static Math::Matrix				ms_matProj;
+		static Math::Matrix				ms_matInverseView;
+		static Math::Matrix				ms_matInverseViewYAxis;
 
-		static D3DXMATRIX				ms_matWorld;
-		static D3DXMATRIX				ms_matWorldView;
+		static Math::Matrix				ms_matWorld;
+		static Math::Matrix				ms_matWorldView;
 
 	protected:
 		//void		UpdatePrePipeLineMatrix();
 		void		UpdatePipeLineMatrix();
 
 	protected:
-		// 각종 D3DX Mesh 들 (컬루젼 데이터 등을 표시활 때 쓴다)
-		static LPD3DXMESH				ms_lpSphereMesh;
-		static LPD3DXMESH				ms_lpCylinderMesh;
+
+
 
 	protected:
 		static HRESULT					ms_hLastResult;
@@ -242,27 +240,27 @@ class CGraphicBase
 
 		static HWND						ms_hWnd;
 		static HDC						ms_hDC;
-		static LPDIRECT3D9EX			ms_lpd3d;
-		static LPDIRECT3DDEVICE9EX		ms_lpd3dDevice;
-		static ID3DXMatrixStack*		ms_lpd3dMatStack;
-		static D3DVIEWPORT9				ms_Viewport;
+
+
+		static Math::MatrixStack ms_matrixStack;
+		static Math::Viewport				ms_Viewport;
 
 		static DWORD					ms_faceCount;
-		static D3DCAPS9					ms_d3dCaps;
-		static D3DPRESENT_PARAMETERS	ms_d3dPresentParameter;
+
+
 		
-		static DWORD					ms_dwD3DBehavior;
-		static LPDIRECT3DVERTEXDECLARATION9					ms_ptVS;
-		static LPDIRECT3DVERTEXDECLARATION9					ms_pntVS;
-		static LPDIRECT3DVERTEXDECLARATION9					ms_pnt2VS;
 
-		static D3DXMATRIX				ms_matScreen0;
-		static D3DXMATRIX				ms_matScreen1;
-		static D3DXMATRIX				ms_matScreen2;
-		//static D3DXMATRIX				ms_matPrePipeLine;
 
-		static D3DXVECTOR3				ms_vtPickRayOrig;
-		static D3DXVECTOR3				ms_vtPickRayDir;
+
+
+
+		static Math::Matrix				ms_matScreen0;
+		static Math::Matrix				ms_matScreen1;
+		static Math::Matrix				ms_matScreen2;
+		//static Math::Matrix				ms_matPrePipeLine;
+
+		static Math::Vector3				ms_vtPickRayOrig;
+		static Math::Vector3				ms_vtPickRayDir;
 
 		static float					ms_fFieldOfView;
 		static float					ms_fAspect;
@@ -285,7 +283,7 @@ class CGraphicBase
 		static DWORD					ms_dwWavingEndTime;
 		static int						ms_iWavingPower;
 		static DWORD					ms_dwFlashingEndTime;
-		static D3DXCOLOR				ms_FlashingColor;
+		static Math::Color				ms_FlashingColor;
 
 		// Terrain picking용 Ray... CCamera 이용하는 버전.. 기존의 Ray와 통합 필요...
  		static CRay						ms_Ray;
@@ -302,6 +300,6 @@ class CGraphicBase
 		};
 		
 		
-		static LPDIRECT3DVERTEXBUFFER9	ms_alpd3dPDTVB[PDT_VERTEXBUFFER_NUM];
-		static LPDIRECT3DINDEXBUFFER9	ms_alpd3dDefIB[DEFAULT_IB_NUM];
+
+
 };

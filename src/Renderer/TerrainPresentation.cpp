@@ -1,5 +1,4 @@
 #include "TerrainPresentation.h"
-#ifdef M2_ENABLE_DILIGENT_D3D11
 #include "DiligentTerrainRenderer.h"
 #include "DiligentStaticObjectRenderer.h"
 #include "DiligentActorRenderer.h" // ZiiNAN: Same world surface and depth target.
@@ -41,7 +40,7 @@ public:
     {
         if (terrainRenderer || !IsWindow(parent) || !width || !height) return false;
         m_parent = parent;
-        // Separate HWND/swapchain, no D3D9/D3D11 shared textures. M9 composes native UI primitives here.
+        // Separate HWND/swapchain, no cross-API shared textures. M9 composes native UI primitives here.
         // Disabled child receives no input: existing game camera and UI handlers stay on the parent.
         m_surface = CreateWindowExW(0, L"STATIC", L"Metin2 Diligent terrain", WS_CHILD | WS_DISABLED,
                                     0, 0, width, height, parent, nullptr, GetModuleHandleW(nullptr), nullptr);
@@ -283,7 +282,6 @@ public:
     }
 };
 }
-bool IsDiligentTerrainAvailable() { return true; }
 std::unique_ptr<ITerrainPresentation> CreateTerrainPresentation(void* parent, uint32_t width, uint32_t height)
 {
     auto result = std::make_unique<TerrainPresentation>();
@@ -291,10 +289,3 @@ std::unique_ptr<ITerrainPresentation> CreateTerrainPresentation(void* parent, ui
     return result;
 }
 }
-#else
-namespace Renderer
-{
-bool IsDiligentTerrainAvailable() { return false; }
-std::unique_ptr<ITerrainPresentation> CreateTerrainPresentation(void*, uint32_t, uint32_t) { return {}; }
-}
-#endif

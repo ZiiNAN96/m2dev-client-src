@@ -4,9 +4,9 @@
 #include "EterLib/GrpDevice.h"
 #include "EterLib/GrpScreen.h"
 #include "EterLib/Camera.h"
-#include "EterLib/NativeResourceAudit.h"
+#include "EterLib/SourceResourceAudit.h"
 #include "EterLib/TerrainTextureLoader.h"
-#include "EterLib/NativeMaterialSnapshot.h"
+#include "EterLib/MaterialStateSnapshot.h"
 #include "GameLib/TerrainPatch.h"
 #include "Renderer/DiligentD3D11BackendInternal.h"
 #include "Renderer/DiligentTerrainRenderer.h"
@@ -65,13 +65,12 @@ class CameraProbe : public CScreen {
 public:
     Renderer::TerrainMatrices Matrices() {
         Renderer::TerrainMatrices result;
-        D3DXMATRIX identity; D3DXMatrixIdentity(&identity);
+        Math::Matrix identity; Math::MatrixIdentity(&identity);
         memcpy(result.world.data(),&identity,64);
         memcpy(result.view.data(),&ms_matView,64);
         memcpy(result.projection.data(),&ms_matProj,64);
         return result;
     }
-    static bool NoNativeDevice() { return !ms_lpd3dDevice && !ms_lpd3d; }
 };
 #include "ActorGpuChecks.h"
 #include "ActorStateIsolationChecks.h"
@@ -102,7 +101,7 @@ static void WorldMaterialChecks(Renderer::DiligentD3D11Backend& backend)
     }
     EffectDraw overlay; overlay.ui=true; overlay.depthTest=overlay.depthWrite=false;
     overlay.matrices={identity,identity,identity}; overlay.textureTransform=identity;
-    D3DXMATRIX projection; D3DXMatrixOrthoOffCenterRH(&projection,0,160,120,0,0,1000);
+    Math::Matrix projection; Math::MatrixOrthoOffCenterRH(&projection,0,160,120,0,0,1000);
     memcpy(overlay.matrices.projection.data(),&projection,64);
     overlay.viewport={0,0,160,120}; overlay.textured=false; overlay.blend=false;
     overlay.scissor=true; overlay.clip={40,30,80,70}; overlay.colorOp=overlay.alphaOp=2;
@@ -133,7 +132,6 @@ int main()
         DiligentD3D11Backend backend;
         Check(window && backend.Initialize({window,640,480}) &&
               graphics.Create(window,640,480)==CGraphicDevice::CREATE_OK,"Diligent-only context");
-        Check(CameraProbe::NoNativeDevice(),"D3D9 device must not exist");
         screen.SetPositionCamera(1600,-1600,0,5000,45,0);
         screen.SetPerspective(30,640.f/480.f,100,25600);
         {
@@ -141,7 +139,7 @@ int main()
             terrainRenderer=&terrain;
             HardwareTransformPatch_SSourceVertex vertices[289];
             for(int y=0;y<17;++y) for(int x=0;x<17;++x)
-                vertices[y*17+x]={D3DXVECTOR3(float(x*200),float(-y*200),0),D3DXVECTOR3(0,0,1)};
+                vertices[y*17+x]={Math::Vector3(float(x*200),float(-y*200),0),Math::Vector3(0,0,1)};
             const uint16_t indices[]{0,272,16,16,272,288};
             auto ib=terrain.UploadIndices(indices,6);
             CTerrainPatch patch; const bool oldSoftware=CTerrainPatch::SOFTWARE_TRANSFORM_PATCH_ENABLE;
@@ -242,10 +240,8 @@ int main()
         Check(!activePresentation && !terrainRenderer && !actorRenderer && !treeRenderer &&
               !worldRenderer && !effectRenderer && !uiRenderer && !textRenderer,"all production owners released");
         graphics.Destroy();
-        Check(CameraProbe::NoNativeDevice() && compatibilityDeviceCreations==0,"zero D3D9 devices");
-        for(const auto& counter:nativeResourceCounters) Check(counter.attempts==0,"zero native resource attempts");
         Check(liveSourceTextures==0 && liveSourceBuffers==0,"CPU owners released");
-        WriteNativeResourceAudit(std::cout);
+        WriteSourceResourceAudit(std::cout);
         DestroyWindow(window); return 0;
     } catch(const std::exception& e) { std::cerr<<e.what()<<'\n'; DestroyWindow(window); return 1; }
 }

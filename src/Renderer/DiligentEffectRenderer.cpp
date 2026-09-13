@@ -67,7 +67,7 @@ float4 Operation(uint op,float4 a,float4 b,float4 current) {
  if(op==1) return current; if(op==2) return a; if(op==3) return b;
  if(op==4) return saturate(a*b); if(op==5) return saturate(2*a*b); if(op==6) return saturate(4*a*b);
  if(op==8) return saturate(a+b-0.5);
- // ZiiNAN: Original SkyBox cloud combiner, D3DTOP_MODULATEINVALPHA_ADDCOLOR.
+ // ZiiNAN: Original SkyBox cloud combiner, Renderer::TextureOpModulateInvAlphaAddColor.
  if(op==20) return saturate(a+(1-a.a)*b); return current;
 }
 bool Compare(uint f,float a,float b) {
@@ -219,7 +219,7 @@ void DiligentEffectRenderer::Draw(const EffectVertex* vertices,uint32_t count,co
         auto& b=*s.backend.m_impl;
         uint32_t src=d.src,dst=d.dst;
         if(src==12) { src=5; dst=6; } else if(src==13) { src=6; dst=5; }
-        // Original magmabublea.mse uses destination 13; native D3D9 readback matches INVSRCALPHA.
+        // Original magmabublea.mse uses destination 13; original renderer readback matches INVSRCALPHA.
         // Unlike a source BOTH value, it does not override the other factor. Covered by GPU parity.
         else if(dst==13) dst=6;
         if(dst>11) { s.failed=true; return; }

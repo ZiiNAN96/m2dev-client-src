@@ -43,7 +43,7 @@ void CGrannyModelInstance::UpdateLocalTime(float fElapsedTime)
 	m_fLocalTime += fElapsedTime;
 }
 
-void CGrannyModelInstance::UpdateTransform(D3DXMATRIX * pMatrix, float fSecondsElapsed)
+void CGrannyModelInstance::UpdateTransform(Math::Matrix * pMatrix, float fSecondsElapsed)
 {
 	if (!m_pgrnModelInstance)
 	{
@@ -55,7 +55,7 @@ void CGrannyModelInstance::UpdateTransform(D3DXMATRIX * pMatrix, float fSecondsE
 	
 }
 
-void CGrannyModelInstance::Deform(const D3DXMATRIX * c_pWorldMatrix)
+void CGrannyModelInstance::Deform(const Math::Matrix * c_pWorldMatrix)
 {
 	if (IsEmpty())
 		return;
@@ -147,7 +147,7 @@ class CGrannyLocalPose
 };
 //////////////////////////////////////////////////////
 
-void CGrannyModelInstance::UpdateSkeleton(const D3DXMATRIX * c_pWorldMatrix, float /*fLocalTime*/)
+void CGrannyModelInstance::UpdateSkeleton(const Math::Matrix * c_pWorldMatrix, float /*fLocalTime*/)
 {	
 	// DELETED
 	//m_pgrnWorldPose = m_pgrnWorldPoseReal;
@@ -182,7 +182,7 @@ void CGrannyModelInstance::UpdateWorldPose()
 
 }
 
-void CGrannyModelInstance::UpdateWorldMatrices(const D3DXMATRIX* c_pWorldMatrix)
+void CGrannyModelInstance::UpdateWorldMatrices(const Math::Matrix* c_pWorldMatrix)
 {
 	// NO_MESH_BUG_FIX
 	if (!m_meshMatrices)
@@ -190,16 +190,15 @@ void CGrannyModelInstance::UpdateWorldMatrices(const D3DXMATRIX* c_pWorldMatrix)
 	// END_OF_NO_MESH_BUG_FIX
 	
 	assert(m_pModel != NULL);
-	assert(ms_lpd3dMatStack != NULL);
 	
 	int meshCount = m_pModel->GetMeshCount();
 	
 	granny_matrix_4x4 * pgrnMatCompositeBuffer = GrannyGetWorldPoseComposite4x4Array(__GetWorldPosePtr());
-	D3DXMATRIX * boneMatrices = (D3DXMATRIX *) pgrnMatCompositeBuffer;
+	Math::Matrix * boneMatrices = (Math::Matrix *) pgrnMatCompositeBuffer;
 
 	for (int i = 0; i < meshCount; ++i)
 	{
-		D3DXMATRIX & rWorldMatrix = m_meshMatrices[i];
+		Math::Matrix & rWorldMatrix = m_meshMatrices[i];
 
 		const CGrannyMesh * pMesh = m_pModel->GetMeshPointer(i);
 
@@ -214,7 +213,7 @@ void CGrannyModelInstance::UpdateWorldMatrices(const D3DXMATRIX* c_pWorldMatrix)
 		else
 		{
 			int iBone = *boneIndices;
-			D3DXMatrixMultiply(&rWorldMatrix, &boneMatrices[iBone], c_pWorldMatrix);
+			Math::MatrixMultiply(&rWorldMatrix, &boneMatrices[iBone], c_pWorldMatrix);
 		}
 	}
 
@@ -229,6 +228,6 @@ void CGrannyModelInstance::DeformPNTVertices(void * pvDest)
 	assert(m_pModel->CanDeformPNTVertices());
 
 	// WORK
-	m_pModel->DeformPNTVertices(pvDest, (D3DXMATRIX *) GrannyGetWorldPoseComposite4x4Array(__GetWorldPosePtr()), m_vct_pgrnMeshBinding);
+	m_pModel->DeformPNTVertices(pvDest, (Math::Matrix *) GrannyGetWorldPoseComposite4x4Array(__GetWorldPosePtr()), m_vct_pgrnMeshBinding);
 	// END_OF_WORK
 }

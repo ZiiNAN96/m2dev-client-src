@@ -14,7 +14,7 @@ CFlyTarget::CFlyTarget(IFlyTargetableObject * pFlyTarget)
 	m_pFlyTarget=pFlyTarget;
 	m_pFlyTarget->AddFlyTargeter(this);
 }
-CFlyTarget::CFlyTarget(const D3DXVECTOR3& v3FlyTargetPosition)
+CFlyTarget::CFlyTarget(const Math::Vector3& v3FlyTargetPosition)
 {
 	__Initialize();
 
@@ -37,7 +37,7 @@ CFlyTarget::~CFlyTarget()
 
 void CFlyTarget::__Initialize()
 {
-	m_v3FlyTargetPosition=D3DXVECTOR3(0.0f,0.0f,0.0f);	
+	m_v3FlyTargetPosition=Math::Vector3(0.0f,0.0f,0.0f);
 	m_pFlyTarget=NULL;
 	m_eType=TYPE_NONE;
 }
@@ -81,7 +81,7 @@ IFlyTargetableObject* CFlyTarget::GetFlyTarget()
 	return m_pFlyTarget; 
 }
 
-const D3DXVECTOR3 & CFlyTarget::GetFlyTargetPosition() const
+const Math::Vector3 & CFlyTarget::GetFlyTargetPosition() const
 {
 	if (m_eType == TYPE_OBJECT)
 	{

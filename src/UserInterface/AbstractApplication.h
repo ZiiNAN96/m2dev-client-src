@@ -16,7 +16,7 @@ class IAbstractApplication : public TAbstractSingleton<IAbstractApplication>
 
 		struct SCameraSetting
 		{
-			D3DXVECTOR3				v3CenterPosition;
+			Math::Vector3				v3CenterPosition;
 			SCameraPos				kCmrPos;
 			float					fRotation;
 			float					fPitch;

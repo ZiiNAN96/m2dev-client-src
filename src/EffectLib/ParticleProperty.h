@@ -83,5 +83,5 @@ class CParticleProperty
 		CParticleProperty & operator = ( const CParticleProperty& c_ParticleProperty );
 		
 		// pre-transformed variables
-		D3DXVECTOR3 m_v3ZAxis;
+		Math::Vector3 m_v3ZAxis;
 };

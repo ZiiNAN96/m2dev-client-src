@@ -1,9 +1,9 @@
 // ZiiNAN: Diligent special world rendering; synchronous snapshots, no second simulation.
 #include "StdAfx.h"
-#include "EterLib/NativeStateView.h"
+#include "EterLib/DrawStateView.h"
 #include "WorldRenderBridge.h"
-#include "NativeMaterialSnapshot.h"
-#include "StateManager.h"
+#include "MaterialStateSnapshot.h"
+#include "DrawState.h"
 #include "GrpImage.h"
 #include "StaticObjectTextureLoader.h"
 #include <fstream>
@@ -43,21 +43,21 @@ void WorldRenderBridge::Release(Renderer::WorldResources& resources)
     if(worldRenderer && !resources.textures.empty()) worldRenderer->ReleaseBindings();
     resources.textures.clear();
 }
-void WorldRenderBridge::SubmitQuad(const void* pdt,HRESULT result)
+void WorldRenderBridge::SubmitQuad(const void* pdt)
 {
     if(!Active()) return;
     static_assert(sizeof(TPDTVertex)==sizeof(EffectVertex));
     EffectVertex vertices[4]; memcpy(vertices,pdt,sizeof(vertices));
-    Submit(vertices,4,true,result);
+    Submit(vertices,4,true);
 }
-void WorldRenderBridge::Submit(const Renderer::EffectVertex* vertices,uint32_t count,bool strip,HRESULT result)
+void WorldRenderBridge::Submit(const Renderer::EffectVertex* vertices,uint32_t count,bool strip)
 {
-    if(!Active() || FAILED(result)) return;
+    if(!Active()) return;
     EffectDraw draw; draw.strip=strip; std::string error;
-    if(!CaptureNativeMaterial(draw,error) || !EffectDrawValid(draw,count)) {
+    if(!CaptureMaterialState(draw,error) || !EffectDrawValid(draw,count)) {
         Report("unsupported material "+error+" color="+std::to_string(draw.colorOp)+" coords="+std::to_string(draw.textureCoordinates),true); return;
     }
-    const auto bound=NativeStateView().GetTextureBinding(0);
+    const auto bound=DrawStateView().GetTextureBinding(0);
     draw.textured=bool(bound);
     TerrainTexturePtr texture;
     // Gradient sky uses only diffuse; its native, potentially stale image is immaterial.
@@ -75,7 +75,7 @@ void WorldRenderBridge::Submit(const Renderer::EffectVertex* vertices,uint32_t c
     if(gradient) { draw.textured=false; draw.colorArg1=0; }
     std::vector<EffectVertex> litVertices;
     if(part==WorldPart::Water && !draw.textured) {
-        if(!ResolveNativeWaterDiffuse(vertices,count,litVertices)) { Report("unsupported native water diffuse",true); return; }
+        if(!ResolveWaterDiffuse(vertices,count,litVertices)) { Report("unsupported native water diffuse",true); return; }
         if(!litVertices.empty()) vertices=litVertices.data();
     }
     worldRenderer->Draw(vertices,count,texture,draw,part);

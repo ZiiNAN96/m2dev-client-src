@@ -1,6 +1,6 @@
 #include "StdAfx.h"
 #include "Renderer/ResourceData.h"
-#include "EterLib/NativeResourceAudit.h"
+#include "EterLib/SourceResourceAudit.h"
 #include "PythonApplication.h"
 #include "ProcessScanner.h"
 #include "PythonExceptionSender.h"
@@ -299,8 +299,7 @@ void __ErrorPythonLibraryIsNotExist()
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-    const bool diligentAvailable = Renderer::IsDiligentTerrainAvailable();
-	Renderer::StartupOptions rendererOptions(diligentAvailable);
+	Renderer::StartupOptions rendererOptions;
     std::ofstream rendererLog("renderer-startup.log", std::ios::trunc);
 	int rendererArgc = 0;
 	LPWSTR* rendererArgv = CommandLineToArgvW(GetCommandLineW(), &rendererArgc);
@@ -312,20 +311,14 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	if (!rendererOptions.valid)
 	{
         rendererLog << "ERROR: Invalid/conflicting renderer selection; no fallback. ExitCode=2" << std::endl;
-		MessageBoxW(nullptr, L"Legacy D3D9 has been removed. Use --renderer=diligent-d3d11 or omit the renderer argument. No fallback.",
+		MessageBoxW(nullptr, L"Unsupported renderer. Use --renderer=d3d11 or omit the renderer argument.",
 		            L"Invalid renderer selection", MB_OK | MB_ICONERROR);
 		return 2;
 	}
     // ZiiNAN: Production renderer selection is logged once, before any game/device setup.
     rendererLog << "Renderer: " << "Diligent D3D11" << std::endl;
     rendererLog << "Selection=" << (rendererOptions.selected ? "explicit" : "default")
-                << " DiligentCompiled=" << diligentAvailable << std::endl;
-	if (rendererOptions.backend == Renderer::BackendKind::DiligentD3D11 && !diligentAvailable)
-	{
-        rendererLog << "ERROR: Diligent D3D11 not compiled in; no fallback. ExitCode=2" << std::endl;
-		MessageBoxW(nullptr, L"This build does not include Diligent D3D11.", L"Renderer unavailable", MB_OK | MB_ICONERROR);
-		return 2;
-	}
+                << " API=d3d11" << std::endl;
     if (rendererOptions.smokeTest)
     {
         const int result = Renderer::RunRendererBootstrap(hInstance, rendererOptions);
@@ -340,8 +333,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     // ZiiNAN: Backend-neutral graphics resource ownership
     const int result = Main(hInstance, lpCmdLine, rendererOptions.backend);
-    std::ofstream resourceLog("native-resource-audit.log",std::ios::trunc);
-    Renderer::WriteNativeResourceAudit(resourceLog);
+    std::ofstream resourceLog("source-resource-audit.log",std::ios::trunc);
+    Renderer::WriteSourceResourceAudit(resourceLog);
 	::CoUninitialize();
 
 	SAFE_FREE_GLOBAL (szArgv);

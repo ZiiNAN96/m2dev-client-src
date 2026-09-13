@@ -1,8 +1,8 @@
 # ZiiNAN: Exercise the real WinMain selection in a private directory, including expected errors.
 param([Parameter(Mandatory=$true)][string]$ClientBinary,
       [Parameter(Mandatory=$true)][string]$OutputDirectory,
-      [Parameter(Mandatory=$true)][ValidateSet('default','diligent','legacy','invalid','conflict','unavailable')][string]$Case,
-      [Parameter(Mandatory=$true)][ValidateSet('diligent','legacy','none')][string]$ExpectedBackend,
+      [Parameter(Mandatory=$true)][ValidateSet('default','d3d11','alias','invalid','removed')][string]$Case,
+      [Parameter(Mandatory=$true)][ValidateSet('d3d11','none')][string]$ExpectedBackend,
       [int]$ExpectedExit=0)
 $ErrorActionPreference='Stop'
 $binary=(Resolve-Path -LiteralPath $ClientBinary).Path
@@ -12,11 +12,10 @@ $output=(Resolve-Path -LiteralPath $OutputDirectory).Path
 Copy-Item -LiteralPath $binary -Destination "$output/Metin2_Release.exe"
 $arguments=switch($Case) {
     'default' { @('--renderer-smoke-test') }
-    'diligent' { @('--renderer=diligent-d3d11','--renderer-smoke-test') }
-    'legacy' { @('--renderer=legacy-d3d9','--renderer-smoke-test') }
+    'd3d11' { @('--renderer=d3d11','--renderer-smoke-test') }
+    'alias' { @('--renderer=diligent-d3d11','--renderer-smoke-test') }
+    'removed' { @('--renderer=legacy-d3d9','--renderer-smoke-test') }
     'invalid' { @('--renderer=vulkan') }
-    'conflict' { @('--renderer=diligent-d3d11','--renderer=legacy-d3d9') }
-    'unavailable' { @('--renderer=diligent-d3d11') }
 }
 $process=Start-Process -FilePath "$output/Metin2_Release.exe" -WorkingDirectory $output -ArgumentList $arguments -WindowStyle Hidden -PassThru
 Write-Output "Started startup case=$Case PID=$($process.Id)"
@@ -25,7 +24,7 @@ $process.WaitForExit()
 if($process.ExitCode -ne $ExpectedExit) { throw 'Unexpected process exit code.' }
 $log=Get-Content -LiteralPath "$output/renderer-startup.log" -Raw
 if($ExpectedBackend -ne 'none') {
-    $label=if($ExpectedBackend -eq 'diligent') { 'Renderer: Diligent D3D11' } else { 'Renderer: Legacy D3D9Ex' }
+    $label='Renderer: Diligent D3D11'
     if(!$log.Contains($label)) { throw 'Unexpected selected backend.' }
 } elseif($log.Contains('Renderer: ')) { throw 'Invalid selection reached backend setup.' }
 if($ExpectedExit -eq 0) {

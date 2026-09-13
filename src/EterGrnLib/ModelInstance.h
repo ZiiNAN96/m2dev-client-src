@@ -49,11 +49,11 @@ class CGrannyModelInstance : public CGraphicCollisionObject
 		// Update & Render
 		void	Update(DWORD dwAniFPS);
 		void	UpdateLocalTime(float fElapsedTime);
-		void	UpdateTransform(D3DXMATRIX * pMatrix, float fSecondsElapsed);
+		void	UpdateTransform(Math::Matrix * pMatrix, float fSecondsElapsed);
 
-		void	UpdateSkeleton(const D3DXMATRIX * c_pWorldMatrix, float fLocalTime);
-		void	DeformNoSkin(const D3DXMATRIX * c_pWorldMatrix);
-		void	Deform(const D3DXMATRIX * c_pWorldMatrix);
+		void	UpdateSkeleton(const Math::Matrix * c_pWorldMatrix, float fLocalTime);
+		void	DeformNoSkin(const Math::Matrix * c_pWorldMatrix);
+		void	Deform(const Math::Matrix * c_pWorldMatrix);
 
 		// FIXME : 현재는 하드웨어의 한계로 2장의 텍스춰로 제한이 되어있는 상태이기에 이런
 		//         불안정한 아키텍춰가 가능하지만, 궁극적인 방향은 (모델 텍스춰 전부) + (효과용 텍스춰)
@@ -72,7 +72,7 @@ class CGrannyModelInstance : public CGraphicCollisionObject
         // ZiiNAN: Completed native deformation and renderer handles belong to this instance.
         Renderer::ActorInstanceData& GetActorRenderData() { return m_actorRenderData; }
         CGrannyMaterialPalette& GetStaticObjectMaterialPalette() { return m_kMtrlPal; }
-        const D3DXMATRIX* GetStaticObjectWorldMatrix(int mesh) const
+        const Math::Matrix* GetStaticObjectWorldMatrix(int mesh) const
         {
             return m_pModel && m_meshMatrices && mesh>=0 && mesh<m_pModel->GetMeshCount() ? &m_meshMatrices[mesh] : nullptr;
         }
@@ -106,15 +106,15 @@ class CGrannyModelInstance : public CGraphicCollisionObject
 		// Bone & Attaching
 		const float *	GetBoneMatrixPointer(int iBone) const;
 		const float *	GetCompositeBoneMatrixPointer(int iBone) const;
-		bool			GetMeshMatrixPointer(int iMesh, const D3DXMATRIX ** c_ppMatrix) const;
+		bool			GetMeshMatrixPointer(int iMesh, const Math::Matrix ** c_ppMatrix) const;
 		bool			GetBoneIndexByName(const char * c_szBoneName, int * pBoneIndex) const;
 		void			SetParentModelInstance(const CGrannyModelInstance* c_pParentModelInstance, const char * c_szBoneName);
 		void			SetParentModelInstance(const CGrannyModelInstance* c_pParentModelInstance, int iBone);
 
 		// Collision Detection
-		bool	Intersect(const D3DXMATRIX * c_pMatrix, float * pu, float * pv, float * pt);
-		void	MakeBoundBox(TBoundBox* pBoundBox, const float* mat, const float* OBBMin, const float* OBBMax, D3DXVECTOR3* vtMin, D3DXVECTOR3* vtMax);
-		void	GetBoundBox(D3DXVECTOR3 * vtMin, D3DXVECTOR3* vtMax);
+		bool	Intersect(const Math::Matrix * c_pMatrix, float * pu, float * pv, float * pt);
+		void	MakeBoundBox(TBoundBox* pBoundBox, const float* mat, const float* OBBMin, const float* OBBMax, Math::Vector3* vtMin, Math::Vector3* vtMax);
+		void	GetBoundBox(Math::Vector3 * vtMin, Math::Vector3* vtMax);
 
 		// Reload Texture
 		void	ReloadTexture();
@@ -144,7 +144,6 @@ class CGrannyModelInstance : public CGraphicCollisionObject
 		bool	__IsDeformableVertexBuffer();
 		void	__SetSharedDeformableVertexBuffer(CGraphicVertexBuffer* pkSharedDeformableVertexBuffer);
 		
-		IDirect3DVertexBuffer9* __GetDeformableD3DVertexBufferPtr();
 		CGraphicVertexBuffer&	__GetDeformableVertexBufferRef();
 		
 		granny_world_pose* __GetWorldPosePtr() const;
@@ -153,7 +152,7 @@ class CGrannyModelInstance : public CGraphicCollisionObject
 
 		// Update & Render
 		void	UpdateWorldPose();
-		void	UpdateWorldMatrices(const D3DXMATRIX * c_pWorldMatrix);
+		void	UpdateWorldMatrices(const Math::Matrix * c_pWorldMatrix);
 		void	DeformPNTVertices(void * pvDest);
 
 		void	RenderMeshNodeListWithOneTexture(CGrannyMesh::EType eMeshType, CGrannyMaterial::EType eMtrlType);
@@ -173,7 +172,7 @@ class CGrannyModelInstance : public CGraphicCollisionObject
 		granny_animation *				m_pgrnAni;
 
 		// Meshes' Transform Data
-		D3DXMATRIX *					m_meshMatrices;
+		Math::Matrix *					m_meshMatrices;
 
 		
 		// Attaching Data
@@ -206,7 +205,7 @@ class CGrannyModelInstance : public CGraphicCollisionObject
 		// MR-12: -- END OF -- Fix specular isolation issue
 		// END_OF_TEST
 #ifdef _TEST
-		D3DXMATRIX TEST_matWorld;
+		Math::Matrix TEST_matWorld;
 #endif
 	public:
 		bool							HaveBlendThing() { return m_pModel->HaveBlendThing(); }

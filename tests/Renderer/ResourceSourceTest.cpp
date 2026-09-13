@@ -4,31 +4,28 @@
 #include "EterLib/GrpImageTexture.h"
 #include "EterLib/GrpVertexBuffer.h"
 #include "EterLib/GrpIndexBuffer.h"
-#include "EterLib/NativeStateView.h"
-#include "EterLib/NativeResourceAudit.h"
+#include "EterLib/DrawStateView.h"
+#include "EterLib/SourceResourceAudit.h"
 #include "EterLib/TextureSource.h"
 #include "EterLib/Camera.h"
 #include "GameLib/TerrainAlphaImage.h"
 #include "TerrainTextureFixtures.h"
-#ifdef M2_ENABLE_DILIGENT_D3D11
 #include "Renderer/DiligentTerrainRenderer.h"
-#endif
 #include <iostream>
 #include <stdexcept>
 
 float CCamera::CAMERA_MAX_DISTANCE=2500.0f;
 static void Check(bool condition,const char* error) { if(!condition) throw std::runtime_error(error); }
 
-#ifdef M2_ENABLE_DILIGENT_D3D11
 static void CheckDiligentResources(HWND window)
 {
     Renderer::DiligentD3D11Backend backend;
-    Check(backend.Initialize({window,400,300}),"Diligent initialize with native resource guard active");
+    Check(backend.Initialize({window,400,300}),"Diligent initialize with CPU resource sources");
     {
         Renderer::DiligentTerrainRenderer terrain(backend);
         Check(terrain.Initialize(),"Diligent pipeline/depth resources without native declarations");
         CGraphicVertexBuffer sourceVertices;
-        Check(sourceVertices.Create(289,D3DFVF_XYZ|D3DFVF_NORMAL,D3DUSAGE_WRITEONLY,D3DPOOL_DEFAULT),"CPU upload vertex source");
+        Check(sourceVertices.Create(289,Renderer::VertexPosition|Renderer::VertexNormal),"CPU upload vertex source");
         void* data=nullptr; Check(sourceVertices.Lock(&data),"CPU upload vertex lock");
         auto* v=static_cast<float*>(data);
         const float triangle[18]={-.5f,-.5f,.5f,0,0,1, -.5f,.5f,.5f,0,0,1, .5f,-.5f,.5f,0,0,1};
@@ -60,7 +57,6 @@ static void CheckDiligentResources(HWND window)
     }
     backend.Shutdown(); backend.Shutdown();
 }
-#endif
 
 static void CheckAlpha()
 {
@@ -106,11 +102,11 @@ int main()
             Check(source->desc.format==Renderer::TerrainTextureFormat::BC1 && source->asset=="fixture.dds","asset format/reference");
             const auto first=source->mips[0].pixels; bytes.assign(bytes.size(),0);
             Check(first==source->mips[0].pixels,"source owns borrowed decoder bytes");
-            Check(!DecodeTextureSource(bytes.data(),bytes.size(),"invalid.dds"),"invalid image cannot fall back to D3D9");
+            Check(!DecodeTextureSource(bytes.data(),bytes.size(),"invalid.dds"),"invalid image is rejected");
             Check(!Renderer::TextureResource::Copy({4,4,Renderer::TerrainTextureFormat::BGRA8,{{first.data(),first.size(),0}}}),"invalid row stride");
 
             CGraphicImageTexture texture,alias;
-            Check(texture.Create(8,4,D3DFMT_A8R8G8B8) && !texture.GetD3DTexture(),"dynamic CPU texture");
+            Check(texture.Create(8,4,Renderer::TerrainTextureFormat::BGRA8) && texture.GetSource()!=nullptr,"dynamic CPU texture");
             int pitch=0; void* pixels=nullptr;
             Check(texture.Lock(&pitch,&pixels) && pitch==32 && pixels,"CPU atlas lock");
             memset(pixels,0x7b,size_t(pitch)*4);
@@ -121,36 +117,36 @@ int main()
             Check(alias.GetTextureBinding()==texture.GetTextureBinding(),"shared subimage identity");
             auto binding=texture.GetTextureBinding();
             std::weak_ptr<Renderer::TextureResource> lifetime=binding.source;
-            STATEMANAGER.SetTexture(0,binding);
-            STATEMANAGER.SaveTexture(0,TextureBinding(source));
-            STATEMANAGER.SaveTexture(0,nullptr);
+            DRAWSTATE.SetTexture(0,binding);
+            DRAWSTATE.SaveTexture(0,TextureBinding(source));
+            DRAWSTATE.SaveTexture(0,nullptr);
             texture.Destroy(); alias.Destroy(); binding={};
             Check(!lifetime.expired(),"saved binding retains original owner");
-            Check(!NativeStateView().GetTextureBinding(0),"neutral unbind");
-            STATEMANAGER.RestoreTexture(0);
-            Check(NativeStateView().GetTextureBinding(0).source==source,"nested restore source");
-            STATEMANAGER.RestoreTexture(0);
-            Check(NativeStateView().GetTextureBinding(0).source==lifetime.lock(),"nested restore dynamic page");
-            STATEMANAGER.SetTexture(0,nullptr);
-            Check(lifetime.expired(),"null native pointer still clears neutral source");
-            STATEMANAGER.SetTexture(0,TextureBinding(source));
+            Check(!DrawStateView().GetTextureBinding(0),"neutral unbind");
+            DRAWSTATE.RestoreTexture(0);
+            Check(DrawStateView().GetTextureBinding(0).source==source,"nested restore source");
+            DRAWSTATE.RestoreTexture(0);
+            Check(DrawStateView().GetTextureBinding(0).source==lifetime.lock(),"nested restore dynamic page");
+            DRAWSTATE.SetTexture(0,nullptr);
+            Check(lifetime.expired(),"null binding clears source");
+            DRAWSTATE.SetTexture(0,TextureBinding(source));
             Check(graphics.ResizeBackBuffer(400,300),"resize without native resources");
-            Check(NativeStateView().GetTextureBinding(0).source==source,"resize preserves CPU bindings without device reset");
-            STATEMANAGER.SetTexture(0,nullptr);
+            Check(DrawStateView().GetTextureBinding(0).source==source,"resize preserves CPU bindings without device reset");
+            DRAWSTATE.SetTexture(0,nullptr);
 
             CGraphicVertexBuffer vertices;
-            Check(vertices.Create(4,D3DFVF_XYZ|D3DFVF_TEX1,D3DUSAGE_DYNAMIC,D3DPOOL_DEFAULT),"CPU vertex creation");
-            Check(!vertices.GetD3DVertexBuffer() && !vertices.IsEmpty() && vertices.GetVertexStride()==20,"vertex metadata/presence");
+            Check(vertices.Create(4,Renderer::VertexPosition|Renderer::VertexTex1),"CPU vertex creation");
+            Check(!vertices.IsEmpty() && !vertices.IsEmpty() && vertices.GetVertexStride()==20,"vertex metadata/presence");
             void* data=nullptr; Check(vertices.LockRange(4,&data),"vertex producer lock");
             memset(data,0x23,80); Check(vertices.Unlock(),"vertex unlock");
             Check(!vertices.LockRange(5,&data),"vertex range bounds");
             Check(vertices.Lock(&data) && static_cast<uint8_t*>(data)[79]==0x23,"vertex data retained"); vertices.Unlock();
             Check(!vertices.Copy(81,first.data()),"vertex copy bounds");
             vertices.DestroyDeviceObjects(); Check(vertices.IsEmpty(),"vertex destruction");
-            Check(vertices.CreateDeviceObjects() && !vertices.GetD3DVertexBuffer(),"vertex recreate remains CPU");
+            Check(vertices.CreateDeviceObjects() && !vertices.IsEmpty(),"vertex recreate remains CPU");
             CGraphicVertexBuffer dungeonVertices;
             // The original dungeon FVF ORs TEX1/TEX2 (48 allocation bytes); its draw source is PNT2 (40 bytes).
-            Check(dungeonVertices.Create(3,D3DFVF_XYZ|D3DFVF_NORMAL|D3DFVF_TEX1|D3DFVF_TEX2,D3DUSAGE_WRITEONLY,D3DPOOL_DEFAULT),"dungeon CPU capacity");
+            Check(dungeonVertices.Create(3,Renderer::VertexPosition|Renderer::VertexNormal|Renderer::VertexTex1|Renderer::VertexTex2),"dungeon CPU capacity");
             Check(dungeonVertices.GetBufferSize()>=3*40 && dungeonVertices.GetVertexStride()==48,"allocation capacity is not draw stride");
             std::array<uint8_t,3*40> dungeonPixels{}; dungeonPixels.back()=0x6c;
             Check(dungeonVertices.Copy(int(dungeonPixels.size()),dungeonPixels.data()) && dungeonVertices.Lock(&data),"dungeon packed PNT2 source");
@@ -158,13 +154,13 @@ int main()
 
             CGraphicIndexBuffer indices;
             const uint16_t triangle[]={0,2,1};
-            Check(indices.Create(3,D3DFMT_INDEX16) && !indices.GetD3DIndexBuffer(),"CPU index creation");
+            Check(indices.Create(3,Renderer::IndexFormat::UInt16) && indices.GetIndexCount()==3,"CPU index creation");
             Check(indices.Copy(sizeof(triangle),triangle) && indices.Lock(&data),"CPU index producer");
             Check(memcmp(data,triangle,sizeof(triangle))==0,"index data retained"); indices.Unlock();
             Check(!indices.Copy(7,triangle),"index copy bounds");
             TFace face{};
             face.indices[0]=0; face.indices[1]=2; face.indices[2]=1;
-            Check(indices.Create(1,&face) && !indices.GetD3DIndexBuffer(),"CPU face index creation");
+            Check(indices.Create(1,&face) && indices.GetIndexCount()==3,"CPU face index creation");
             Check(indices.Lock(&data) && memcmp(data,triangle,sizeof(triangle))==0,"face index source parity"); indices.Unlock();
             Renderer::CpuBuffer buffer;
             Check(buffer.Create(32) && buffer.Lock(8,24,&data),"buffer subrange");
@@ -174,18 +170,11 @@ int main()
             buffer.Clear(); Check(!buffer.Unlock(),"released lock");
             CheckAlpha();
         }
-#ifdef M2_ENABLE_DILIGENT_D3D11
         CheckDiligentResources(window);
-#endif
         graphics.Destroy(); DestroyWindow(window); window=nullptr;
-        for(const auto& counter:Renderer::nativeResourceCounters)
-            Check(counter.attempts==0 && counter.succeeded==0 && counter.blocked==0,"native allocation entry point reached");
         Check(Renderer::liveSourceTextures==0 && Renderer::liveSourceBuffers==0,"CPU source lifetime leak");
-        Renderer::WriteNativeResourceAudit(std::cout);
-        bool invoked=false;
-        const auto result=M2_NATIVE_RESOURCE(Texture,(invoked=true,S_OK));
-        Check(FAILED(result) && !invoked && Renderer::nativeResourceCounters[0].blocked==1,"native guard must not call allocator");
-        std::cout << "Texture/buffer identity, metadata, bounds, reload, alpha parity, resize, shutdown and allocation guard: PASS\n";
+        Renderer::WriteSourceResourceAudit(std::cout);
+        std::cout << "Texture/buffer identity, metadata, bounds, reload, alpha parity, resize, shutdown and source lifetime: PASS\n";
         return 0;
     } catch(const std::exception& error) { std::cerr<<error.what()<<'\n'; if(window) DestroyWindow(window); return 1; }
 }

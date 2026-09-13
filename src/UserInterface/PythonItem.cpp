@@ -30,7 +30,7 @@ void CPythonItem::TGroundItemInstance::Clear()
 	CEffectManager::Instance().DestroyEffectInstance(dwEffectInstanceIndex);
 }
 
-void CPythonItem::TGroundItemInstance::__PlayDropSound(DWORD eItemType, const D3DXVECTOR3& c_rv3Pos)
+void CPythonItem::TGroundItemInstance::__PlayDropSound(DWORD eItemType, const Math::Vector3& c_rv3Pos)
 {
 	if (eItemType>=DROPSOUND_NUM)
 		return;
@@ -46,19 +46,19 @@ bool CPythonItem::TGroundItemInstance::Update()
 	{
 		ThingInstance.SetRotationQuaternion(qEnd);
 
-		/*D3DXVECTOR3 v3Adjust = -v3Center;
-		D3DXMATRIX mat;
-		D3DXMatrixRotationYawPitchRoll(&mat, 
-		D3DXToRadian(rEnd.y), 
-		D3DXToRadian(rEnd.x), 
-		D3DXToRadian(rEnd.z));
-		D3DXVec3TransformCoord(&v3Adjust,&v3Adjust,&mat);*/
+		/*Math::Vector3 v3Adjust = -v3Center;
+		Math::Matrix mat;
+		Math::MatrixRotationYawPitchRoll(&mat,
+		Math::ToRadian(rEnd.y),
+		Math::ToRadian(rEnd.x),
+		Math::ToRadian(rEnd.z));
+		Math::Vec3TransformCoord(&v3Adjust,&v3Adjust,&mat);*/
 
-		D3DXQUATERNION qAdjust(-v3Center.x, -v3Center.y, -v3Center.z, 0.0f);
-		D3DXQUATERNION qc;
-		D3DXQuaternionConjugate(&qc, &qEnd);
-		D3DXQuaternionMultiply(&qAdjust,&qAdjust,&qEnd);
-		D3DXQuaternionMultiply(&qAdjust,&qc,&qAdjust);
+		Math::Quaternion qAdjust(-v3Center.x, -v3Center.y, -v3Center.z, 0.0f);
+		Math::Quaternion qc;
+		Math::QuaternionConjugate(&qc, &qEnd);
+		Math::QuaternionMultiply(&qAdjust,&qAdjust,&qEnd);
+		Math::QuaternionMultiply(&qAdjust,&qc,&qAdjust);
 
 		ThingInstance.SetPosition(v3EndPosition.x+qAdjust.x, 
 			v3EndPosition.y+qAdjust.y,
@@ -74,33 +74,33 @@ bool CPythonItem::TGroundItemInstance::Update()
 		DWORD etime = dwEndTime - CTimer::Instance().GetCurrentMillisecond();
 		float rate = time * 1.0f / (dwEndTime - dwStartTime);
 
-		D3DXVECTOR3 v3NewPosition=v3EndPosition;// = rate*(v3EndPosition - v3StartPosition) + v3StartPosition;
+		Math::Vector3 v3NewPosition=v3EndPosition;// = rate*(v3EndPosition - v3StartPosition) + v3StartPosition;
 		v3NewPosition.z += 100-100*rate*(3*rate-2);//-100*(rate-1)*(3*rate+2);
 
-		D3DXQUATERNION q;
-		D3DXQuaternionRotationAxis(&q, &v3RotationAxis, etime * 0.03f *(-1+rate*(3*rate-2)));
+		Math::Quaternion q;
+		Math::QuaternionRotationAxis(&q, &v3RotationAxis, etime * 0.03f *(-1+rate*(3*rate-2)));
 		//ThingInstance.SetRotation(rEnd.y + etime*rStart.y, rEnd.x + etime*rStart.x, rEnd.z + etime*rStart.z);
-		D3DXQuaternionMultiply(&q,&qEnd,&q);
+		Math::QuaternionMultiply(&q,&qEnd,&q);
 
 		ThingInstance.SetRotationQuaternion(q);
-		D3DXQUATERNION qAdjust(-v3Center.x, -v3Center.y, -v3Center.z, 0.0f);
-		D3DXQUATERNION qc;
-		D3DXQuaternionConjugate(&qc, &q);
-		D3DXQuaternionMultiply(&qAdjust,&qAdjust,&q);
-		D3DXQuaternionMultiply(&qAdjust,&qc,&qAdjust);
+		Math::Quaternion qAdjust(-v3Center.x, -v3Center.y, -v3Center.z, 0.0f);
+		Math::Quaternion qc;
+		Math::QuaternionConjugate(&qc, &q);
+		Math::QuaternionMultiply(&qAdjust,&qAdjust,&q);
+		Math::QuaternionMultiply(&qAdjust,&qc,&qAdjust);
 		
 		ThingInstance.SetPosition(v3NewPosition.x+qAdjust.x, 
 			v3NewPosition.y+qAdjust.y,
 			v3NewPosition.z+qAdjust.z);
 		
-		/*D3DXVECTOR3 v3Adjust = -v3Center;
-		D3DXMATRIX mat;
-		D3DXMatrixRotationYawPitchRoll(&mat, 
-		D3DXToRadian(rEnd.y + etime*rStart.y), 
-		D3DXToRadian(rEnd.x + etime*rStart.x), 
-		D3DXToRadian(rEnd.z + etime*rStart.z));
+		/*Math::Vector3 v3Adjust = -v3Center;
+		Math::Matrix mat;
+		Math::MatrixRotationYawPitchRoll(&mat,
+		Math::ToRadian(rEnd.y + etime*rStart.y),
+		Math::ToRadian(rEnd.x + etime*rStart.x),
+		Math::ToRadian(rEnd.z + etime*rStart.z));
 						
-		D3DXVec3TransformCoord(&v3Adjust,&v3Adjust,&mat);
+		Math::Vec3TransformCoord(&v3Adjust,&v3Adjust,&mat);
 		//Tracef("%f %f %f\n",v3Adjust.x,v3Adjust.y,v3Adjust.z);
 		v3NewPosition += v3Adjust;
 		ThingInstance.SetPosition(v3NewPosition.x, v3NewPosition.y, v3NewPosition.z);*/
@@ -330,15 +330,15 @@ void CPythonItem::CreateItem(DWORD dwVirtualID, DWORD dwVirtualNumber, float x, 
 		// attaching effect
 		CEffectManager & rem =CEffectManager::Instance();
 		pGroundItemInstance->dwEffectInstanceIndex = 
-		rem.CreateEffect(m_dwDropItemEffectID, D3DXVECTOR3(x, -y, z), D3DXVECTOR3(0,0,0));		
+		rem.CreateEffect(m_dwDropItemEffectID, Math::Vector3(x, -y, z), Math::Vector3(0,0,0));
 
 		pGroundItemInstance->eDropSoundType=__GetDropSoundType(*pItemData);
 	}
 
 
-	D3DXVECTOR3 normal;
+	Math::Vector3 normal;
 	if (!CPythonBackground::Instance().GetNormal(int(x),int(y),&normal))
-		normal = D3DXVECTOR3(0.0f,0.0f,1.0f);
+		normal = Math::Vector3(0.0f,0.0f,1.0f);
 
 	pGroundItemInstance->ThingInstance.Clear();
 	pGroundItemInstance->ThingInstance.ReserveModelThing(1);
@@ -347,7 +347,7 @@ void CPythonItem::CreateItem(DWORD dwVirtualID, DWORD dwVirtualNumber, float x, 
 	pGroundItemInstance->ThingInstance.SetModelInstance(0, 0, 0);
 	if (bDrop)
 	{
-		pGroundItemInstance->v3EndPosition = D3DXVECTOR3(x,-y,z);
+		pGroundItemInstance->v3EndPosition = Math::Vector3(x,-y,z);
 		pGroundItemInstance->ThingInstance.SetPosition(0,0,0);
 	}
 	else
@@ -359,7 +359,7 @@ void CPythonItem::CreateItem(DWORD dwVirtualID, DWORD dwVirtualNumber, float x, 
 
 	if (bDrop)
 	{
-		D3DXVECTOR3 vMin, vMax;
+		Math::Vector3 vMin, vMax;
 		pGroundItemInstance->ThingInstance.GetBoundBox(&vMin,&vMax);
 		pGroundItemInstance->v3Center = (vMin + vMax) * 0.5f;
 
@@ -374,7 +374,7 @@ void CPythonItem::CreateItem(DWORD dwVirtualID, DWORD dwVirtualNumber, float x, 
 
 		//int no_rotation_axis=-1;
 		
-		D3DXVECTOR3 rEnd;
+		Math::Vector3 rEnd;
 
 		if (/*f[1].first-f[0].first < (f[2].first-f[0].first)*0.30f*/ bStabGround)
 		{
@@ -407,39 +407,39 @@ void CPythonItem::CreateItem(DWORD dwVirtualID, DWORD dwVirtualNumber, float x, 
 				// y,z = by normal
 				pGroundItemInstance->qEnd = 
 					RotationArc(
-						D3DXVECTOR3(
+						Math::Vector3(
 						((float)(random()%2))*2-1+frandom(-0.1f,0.1f),
 						0+frandom(-0.1f,0.1f),
 						0+frandom(-0.1f,0.1f)),
-						D3DXVECTOR3(0,0,1)/*normal*/);
+						Math::Vector3(0,0,1)/*normal*/);
 			}
 			else if (f[0].second == 1)
 			{
 				pGroundItemInstance->qEnd = 
 					RotationArc(
-						D3DXVECTOR3(
+						Math::Vector3(
 							0+frandom(-0.1f,0.1f),
 							((float)(random()%2))*2-1+frandom(-0.1f,0.1f),
 							0+frandom(-0.1f,0.1f)),
-						D3DXVECTOR3(0,0,1)/*normal*/);
+						Math::Vector3(0,0,1)/*normal*/);
 			}
 			else 
 			{
 				pGroundItemInstance->qEnd = 
 					RotationArc(
-					D3DXVECTOR3(
+					Math::Vector3(
 					0+frandom(-0.1f,0.1f),
 					0+frandom(-0.1f,0.1f),
 					((float)(random()%2))*2-1+frandom(-0.1f,0.1f)),
-					D3DXVECTOR3(0,0,1)/*normal*/);
+					Math::Vector3(0,0,1)/*normal*/);
 			}
 		}
-		//D3DXQuaternionRotationYawPitchRoll(&pGroundItemInstance->qEnd, rEnd.y, rEnd.x, rEnd.z );
+		//Math::QuaternionRotationYawPitchRoll(&pGroundItemInstance->qEnd, rEnd.y, rEnd.x, rEnd.z );
 		float rot = frandom(0, 2*3.1415926535f);
-		D3DXQUATERNION q(0,0,cosf(rot),sinf(rot));
-		D3DXQuaternionMultiply(&pGroundItemInstance->qEnd, &pGroundItemInstance->qEnd, &q);
-		q = RotationArc(D3DXVECTOR3(0,0,1),normal);
-		D3DXQuaternionMultiply(&pGroundItemInstance->qEnd, &pGroundItemInstance->qEnd, &q);
+		Math::Quaternion q(0,0,cosf(rot),sinf(rot));
+		Math::QuaternionMultiply(&pGroundItemInstance->qEnd, &pGroundItemInstance->qEnd, &q);
+		q = RotationArc(Math::Vector3(0,0,1),normal);
+		Math::QuaternionMultiply(&pGroundItemInstance->qEnd, &pGroundItemInstance->qEnd, &q);
 
 		pGroundItemInstance->dwStartTime = CTimer::Instance().GetCurrentMillisecond();
 		pGroundItemInstance->dwEndTime = pGroundItemInstance->dwStartTime+300;
@@ -461,15 +461,15 @@ void CPythonItem::CreateItem(DWORD dwVirtualID, DWORD dwVirtualNumber, float x, 
 			break;
 		}*/
 
-		D3DXVECTOR3 v3Adjust = -pGroundItemInstance->v3Center;
-		D3DXMATRIX mat;
-		D3DXMatrixRotationQuaternion(&mat, &pGroundItemInstance->qEnd);
-		/*D3DXMatrixRotationYawPitchRoll(&mat, 
-			D3DXToRadian(pGroundItemInstance->rEnd.y), 
-			D3DXToRadian(pGroundItemInstance->rEnd.x), 
-			D3DXToRadian(pGroundItemInstance->rEnd.z));*/
+		Math::Vector3 v3Adjust = -pGroundItemInstance->v3Center;
+		Math::Matrix mat;
+		Math::MatrixRotationQuaternion(&mat, &pGroundItemInstance->qEnd);
+		/*Math::MatrixRotationYawPitchRoll(&mat,
+			Math::ToRadian(pGroundItemInstance->rEnd.y),
+			Math::ToRadian(pGroundItemInstance->rEnd.x),
+			Math::ToRadian(pGroundItemInstance->rEnd.z));*/
 
-		D3DXVec3TransformCoord(&v3Adjust,&v3Adjust,&mat);
+		Math::Vec3TransformCoord(&v3Adjust,&v3Adjust,&mat);
 		//Tracef("%f %f %f\n",v3Adjust.x,v3Adjust.y,v3Adjust.z);
 		//pGroundItemInstance->v3EndPosition += v3Adjust;
 		//pGroundItemInstance->rEnd.z += pGroundItemInstance->v3Center.z;
@@ -670,7 +670,7 @@ BOOL CPythonItem::GetGroundItemPosition(DWORD dwVirtualID, TPixelPosition * pPos
 
 	TGroundItemInstance * pInstance = itor->second;
 
-	const D3DXVECTOR3& rkD3DVct3=pInstance->ThingInstance.GetPosition();
+	const Math::Vector3& rkD3DVct3=pInstance->ThingInstance.GetPosition();
 
 	pPosition->x=+rkD3DVct3.x;
 	pPosition->y=-rkD3DVct3.y;

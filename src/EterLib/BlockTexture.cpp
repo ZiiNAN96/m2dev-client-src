@@ -1,10 +1,9 @@
 #include "StdAfx.h"
-#include "EterLib/NativeResourceAudit.h"
 #include "BlockTexture.h"
 #include "GrpBase.h"
 #include "GrpDib.h"
 #include "Eterbase/Stl.h"
-#include "Eterlib/StateManager.h"
+#include "Eterlib/DrawState.h"
 #include "UIRenderBridge.h"
 
 void CBlockTexture::SetClipRect(const RECT & c_rRect)
@@ -89,19 +88,16 @@ void CBlockTexture::Render(int ix, int iy)
 	vertices[3].texCoord	= TTextureCoordinate(eu, ev);	
 	vertices[3].diffuse		= 0xffffffff;
 
-	if (CGraphicBase::SetPDTStream(vertices, 4))
+	if (CGraphicBase::ValidatePDTVertices(vertices, 4))
 	{
-		CGraphicBase::SetDefaultIndexBuffer(CGraphicBase::DEFAULT_IB_FILL_RECT);
 
-		STATEMANAGER.SetTexture(0, m_source ? TextureBinding(m_source) : TextureBinding(m_lpd3dTexture));
-		STATEMANAGER.SetTexture(1, NULL);
-		STATEMANAGER.SetFVF(D3DFVF_XYZ|D3DFVF_TEX1|D3DFVF_DIFFUSE);
+		DRAWSTATE.SetTexture(0, TextureBinding(m_source));
+		DRAWSTATE.SetTexture(1, NULL);
 
-		STATEMANAGER.SaveRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
-		STATEMANAGER.SaveRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
-		STATEMANAGER.SaveRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+		DRAWSTATE.SaveRenderState(Renderer::StateAlphaBlendEnable, TRUE);
+		DRAWSTATE.SaveRenderState(Renderer::StateSrcBlend, Renderer::BlendSrcAlpha);
+		DRAWSTATE.SaveRenderState(Renderer::StateDestBlend, Renderer::BlendInvSrcAlpha);
 
-		STATEMANAGER.DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 4, 0, 2);
 		// ZiiNAN: Original notice-banner DIB blocks, unchanged text rasterization.
 		if(Renderer::UIActive()) {
 			if(!m_uiTexture && m_source) m_uiTexture=Renderer::uiRenderer->UploadTexture(m_source->View());
@@ -110,12 +106,12 @@ void CBlockTexture::Render(int ix, int iy)
 					{{m_uiPixels.data(),m_uiPixels.size()*4,size_t(m_dwWidth)*4}}};
 				m_uiTexture=Renderer::uiRenderer->UploadTexture(data);
 			}
-			UIRenderBridge::Submit(vertices,4,UIRenderBridge::Primitive::IndexedQuad,nullptr,S_OK,m_uiTexture);
+			UIRenderBridge::Submit(vertices,4,UIRenderBridge::Primitive::IndexedQuad,nullptr,m_uiTexture);
 		}
 
-		STATEMANAGER.RestoreRenderState(D3DRS_DESTBLEND);
-		STATEMANAGER.RestoreRenderState(D3DRS_SRCBLEND);
-		STATEMANAGER.RestoreRenderState(D3DRS_ALPHABLENDENABLE);
+		DRAWSTATE.RestoreRenderState(Renderer::StateDestBlend);
+		DRAWSTATE.RestoreRenderState(Renderer::StateSrcBlend);
+		DRAWSTATE.RestoreRenderState(Renderer::StateAlphaBlendEnable);
 	}
 }
 
@@ -155,47 +151,12 @@ void CBlockTexture::InvalidateRect(const RECT & c_rsrcRect)
         }
         ++m_source->revision; m_uiTexture.reset(); return;
     }
-	D3DLOCKED_RECT lockedRect;
-	if (FAILED(m_lpd3dTexture->LockRect(0, &lockedRect, &clipRect, 0)))
-	{
-		Tracef("InvalidateRect() - Failed to LockRect");
-		return;
-	}
-
-	int iclipWidth = clipRect.right - clipRect.left;
-	int iclipHeight = clipRect.bottom - clipRect.top;
-	DWORD * pdwDst = (DWORD *)lockedRect.pBits;
-	DWORD dwDstWidth = lockedRect.Pitch>>2;
-	DWORD dwSrcWidth = m_pDIB->GetWidth();
-	if(Renderer::uiRenderer) {
-		m_uiTexture.reset();
-		if(m_uiPixels.empty()) m_uiPixels.resize(size_t(m_dwWidth)*m_dwHeight);
-	}
-	for (int y = 0; y < iclipHeight; ++y)
-	{
-		for (int x = 0; x < iclipWidth; ++x)
-		{
-			pdwDst[x] = pdwSrc[x];
-			if(Renderer::uiRenderer) m_uiPixels[size_t(y+clipRect.top)*m_dwWidth+x+clipRect.left]=pdwSrc[x];
-		}
-		pdwDst += dwDstWidth;
-		pdwSrc += dwSrcWidth;
-	}
-
-	m_lpd3dTexture->UnlockRect(0);
 }
 
 bool CBlockTexture::Create(CGraphicDib * pDIB, const RECT & c_rRect, DWORD dwWidth, DWORD dwHeight)
-{	
-	if (Renderer::UseNeutralResources()) {
-        m_source=Renderer::TextureResource::Dynamic(dwWidth,dwHeight,Renderer::TerrainTextureFormat::BGRA8);
-        if(!m_source) return false;
-    } else if (FAILED(M2_NATIVE_RESOURCE(Texture, ms_lpd3dDevice->CreateTexture(dwWidth, dwHeight, 0, D3DUSAGE_DYNAMIC, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &m_lpd3dTexture, nullptr))))
-	{
-		Tracef("Failed to create block texture %u, %u\n", dwWidth, dwHeight);
-		return false;
-	}
-
+{
+    m_source=Renderer::TextureResource::Dynamic(dwWidth,dwHeight,Renderer::TerrainTextureFormat::BGRA8);
+    if(!m_source) return false;
 	m_pDIB = pDIB;
 	m_rect = c_rRect;
 	m_dwWidth = dwWidth;
@@ -208,11 +169,8 @@ bool CBlockTexture::Create(CGraphicDib * pDIB, const RECT & c_rRect, DWORD dwWid
 CBlockTexture::CBlockTexture()
 {
 	m_pDIB = NULL;
-	m_lpd3dTexture = NULL;
 }
 
 CBlockTexture::~CBlockTexture()
 {
-	safe_release(m_lpd3dTexture);
-	m_lpd3dTexture = NULL;
 }

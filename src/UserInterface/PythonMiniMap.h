@@ -188,7 +188,6 @@ class CPythonMiniMap : public CScreen, public CSingleton<CPythonMiniMap>
 		float							m_fMiniMapRadius;
 
 		// 맵 그림...
-		LPDIRECT3DTEXTURE9				m_lpMiniMapTexture[AROUND_AREA_NUM];
 
 		// 미니맵 커버
 		CGraphicImageInstance			m_MiniMapFilterGraphicImageInstance;
@@ -212,13 +211,13 @@ class CPythonMiniMap : public CScreen, public CSingleton<CPythonMiniMap>
 		std::array<Renderer::EffectVertex,36> m_uiMapVertices{};
 		CGraphicIndexBuffer				m_IndexBuffer;
 
-		D3DXMATRIX						m_matIdentity;
-		D3DXMATRIX						m_matWorld;
-		D3DXMATRIX						m_matMiniMapCover;
+		Math::Matrix						m_matIdentity;
+		Math::Matrix						m_matWorld;
+		Math::Matrix						m_matMiniMapCover;
 
 		bool							m_bShowAtlas;
 		CGraphicExpandedImageInstance	m_AtlasImageInstance;
-		D3DXMATRIX						m_matWorldAtlas;
+		Math::Matrix						m_matWorldAtlas;
 		CGraphicExpandedImageInstance	m_AtlasPlayerMark;
 
 		float							m_fAtlasScreenX;
@@ -255,7 +254,7 @@ class CPythonMiniMap : public CScreen, public CSingleton<CPythonMiniMap>
 		// SignalPoint
 		struct TSignalPoint
 		{
-			D3DXVECTOR2 v2Pos;
+			Math::Vector2 v2Pos;
 			unsigned int id;
 		};
 		std::vector<TSignalPoint>				m_SignalPointVector;

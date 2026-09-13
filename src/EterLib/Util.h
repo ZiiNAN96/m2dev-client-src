@@ -6,7 +6,8 @@
 #include <map>
 #include <vector>
 
-#include <d3dx9.h>
+#include "Renderer/DrawStateTypes.h"
+#include "Math/Math.h"
 
 template<typename T>
 class CTransitor
@@ -78,8 +79,8 @@ class CTransitor
 };
 
 typedef CTransitor<float>			TTransitorFloat;
-typedef CTransitor<D3DXVECTOR3>		TTransitorVector3;
-typedef CTransitor<D3DXCOLOR>		TTransitorColor;
+typedef CTransitor<Math::Vector3>		TTransitorVector3;
+typedef CTransitor<Math::Color>		TTransitorColor;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -91,8 +92,8 @@ void PrintfTabs(FILE * File, int iTabCount, const char * c_szString, ...);
 extern bool	LoadTextData(const char * c_szFileName, CTokenMap & rstTokenMap);
 extern bool	LoadMultipleTextData(const char * c_szFileName, CTokenVectorMap & rstTokenVectorMap);
 
-extern D3DXVECTOR3 TokenToVector(CTokenVector & rVector);
-extern D3DXCOLOR TokenToColor(CTokenVector & rVector);
+extern Math::Vector3 TokenToVector(CTokenVector & rVector);
+extern Math::Color TokenToColor(CTokenVector & rVector);
 
 #define GOTO_CHILD_NODE(TextFileLoader, Index) CTextFileLoader::CGotoChild Child(TextFileLoader, Index);
 

@@ -1,7 +1,7 @@
 #include "StdAfx.h"
 #include "EterBase/CRC32.h"
 #include "GrpExpandedImageInstance.h"
-#include "StateManager.h"
+#include "DrawState.h"
 #include "UIRenderBridge.h"
 
 CDynamicPool<CGraphicExpandedImageInstance>		CGraphicExpandedImageInstance::ms_kPool;
@@ -79,7 +79,7 @@ void CGraphicExpandedImageInstance::OnRender()
 		vertices[3].position.x += fimgWidth + m_RenderingRect.right;
 		vertices[3].position.y += fimgHeight + m_RenderingRect.bottom;
 		if ((0.0f < m_v2Scale.x && 0.0f > m_v2Scale.y) || (0.0f > m_v2Scale.x && 0.0f < m_v2Scale.y)) {
-			STATEMANAGER.SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
+			DRAWSTATE.SetRenderState(Renderer::StateCullMode, Renderer::CullCcw);
 		}
 	}
 	else
@@ -93,7 +93,7 @@ void CGraphicExpandedImageInstance::OnRender()
 			vertices[i].position.y += m_v2Origin.y;
 		}
 
-		float fRadian = D3DXToRadian(m_fRotation);
+		float fRadian = Math::ToRadian(m_fRotation);
 		vertices[0].position.x += (-fimgHalfWidth*cosf(fRadian)) - (-fimgHalfHeight*sinf(fRadian));
 		vertices[0].position.y += (-fimgHalfWidth*sinf(fRadian)) + (-fimgHalfHeight*cosf(fRadian));
 		vertices[1].position.x += (+fimgHalfWidth*cosf(fRadian)) - (-fimgHalfHeight*sinf(fRadian));
@@ -108,27 +108,23 @@ void CGraphicExpandedImageInstance::OnRender()
 	{
 		case RENDERING_MODE_SCREEN:
 		case RENDERING_MODE_COLOR_DODGE:
-			STATEMANAGER.SaveRenderState(D3DRS_SRCBLEND, D3DBLEND_INVDESTCOLOR);
-			STATEMANAGER.SaveRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE);
+			DRAWSTATE.SaveRenderState(Renderer::StateSrcBlend, Renderer::BlendInvDestColor);
+			DRAWSTATE.SaveRenderState(Renderer::StateDestBlend, Renderer::BlendOne);
 			break;
 		case RENDERING_MODE_MODULATE:
-			STATEMANAGER.SaveRenderState(D3DRS_SRCBLEND, D3DBLEND_ZERO);
-			STATEMANAGER.SaveRenderState(D3DRS_DESTBLEND, D3DBLEND_SRCCOLOR);
+			DRAWSTATE.SaveRenderState(Renderer::StateSrcBlend, Renderer::BlendZero);
+			DRAWSTATE.SaveRenderState(Renderer::StateDestBlend, Renderer::BlendSrcColor);
 			break;
 	}
 
 	// 2004.11.18.myevan.ctrl+alt+del 반복 사용시 튕기는 문제 	
-	if (CGraphicBase::SetPDTStream(vertices, 4))
+	if (CGraphicBase::ValidatePDTVertices(vertices, 4))
 	{
-		CGraphicBase::SetDefaultIndexBuffer(CGraphicBase::DEFAULT_IB_FILL_RECT);
 
-		STATEMANAGER.SetTexture(0, pTexture->GetTextureBinding());
-		STATEMANAGER.SetTexture(1, NULL);
-		STATEMANAGER.SetFVF(D3DFVF_XYZ|D3DFVF_DIFFUSE|D3DFVF_TEX1);
-		const auto nativeDraw=STATEMANAGER.DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 4, 0, 2);
-		UIRenderBridge::IndexedQuad(vertices,pImage,nativeDraw); // ZiiNAN: Preserve native rotation/scale/blend.
+		DRAWSTATE.SetTexture(0, pTexture->GetTextureBinding());
+		DRAWSTATE.SetTexture(1, NULL);
+		UIRenderBridge::IndexedQuad(vertices,pImage); // ZiiNAN: Preserve native rotation/scale/blend.
 	}
-	//STATEMANAGER.DrawIndexedPrimitiveUP(D3DPT_TRIANGLELIST, 0, 4, 2, c_FillRectIndices, D3DFMT_INDEX16, vertices, sizeof(TPDTVertex));
 	/////////////////////////////////////////////////////////////
 
 	switch (m_iRenderingMode)
@@ -136,11 +132,11 @@ void CGraphicExpandedImageInstance::OnRender()
 		case RENDERING_MODE_SCREEN:
 		case RENDERING_MODE_COLOR_DODGE:
 		case RENDERING_MODE_MODULATE:
-			STATEMANAGER.RestoreRenderState(D3DRS_SRCBLEND);
-			STATEMANAGER.RestoreRenderState(D3DRS_DESTBLEND);
+			DRAWSTATE.RestoreRenderState(Renderer::StateSrcBlend);
+			DRAWSTATE.RestoreRenderState(Renderer::StateDestBlend);
 			break;
 	}
-	STATEMANAGER.SetRenderState(D3DRS_CULLMODE, D3DCULL_CW);
+	DRAWSTATE.SetRenderState(Renderer::StateCullMode, Renderer::CullCw);
 }
 
 void CGraphicExpandedImageInstance::SetDepth(float fDepth)

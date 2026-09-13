@@ -5,7 +5,7 @@
 #include "SimpleLightInstance.h"
 
 #include "EterBase/Stl.h"
-#include "EterLib/StateManager.h"
+#include "EterLib/DrawState.h"
 #include "AudioLib/SoundEngine.h"
 
 CDynamicPool<CEffectInstance>	CEffectInstance::ms_kPool;
@@ -94,44 +94,43 @@ void CEffectInstance::OnUpdate()
 void CEffectInstance::OnRender()
 {
     EffectRenderScope effectScope(m_effectResources,m_pkEftData ? m_pkEftData->GetFileName() : nullptr);
-	STATEMANAGER.SetFVF(D3DFVF_XYZ | D3DFVF_TEX1);
 
-	STATEMANAGER.SaveSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_NONE);
-	STATEMANAGER.SaveSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_NONE);
+	DRAWSTATE.SaveSamplerState(0, Renderer::SamplerMinFilter, Renderer::FilterNone);
+	DRAWSTATE.SaveSamplerState(0, Renderer::SamplerMagFilter, Renderer::FilterNone);
 
-	STATEMANAGER.SaveRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
-	STATEMANAGER.SaveRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
-	STATEMANAGER.SaveRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
-	STATEMANAGER.SaveRenderState(D3DRS_ALPHATESTENABLE, FALSE);
-	STATEMANAGER.SaveRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
-	STATEMANAGER.SaveRenderState(D3DRS_ZWRITEENABLE, FALSE);
+	DRAWSTATE.SaveRenderState(Renderer::StateAlphaBlendEnable, TRUE);
+	DRAWSTATE.SaveRenderState(Renderer::StateSrcBlend, Renderer::BlendSrcAlpha);
+	DRAWSTATE.SaveRenderState(Renderer::StateDestBlend, Renderer::BlendInvSrcAlpha);
+	DRAWSTATE.SaveRenderState(Renderer::StateAlphaTestEnable, FALSE);
+	DRAWSTATE.SaveRenderState(Renderer::StateCullMode, Renderer::CullNone);
+	DRAWSTATE.SaveRenderState(Renderer::StateZWriteEnable, FALSE);
 	/////
 
-    STATEMANAGER.SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TFACTOR);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_TEXTURE);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_COLOROP,   D3DTOP_MODULATE);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TFACTOR);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_TEXTURE);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_ALPHAOP,   D3DTOP_MODULATE);
+    DRAWSTATE.SetTextureStageState(0, Renderer::StageColorArg1, Renderer::ArgTFactor);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageColorArg2, Renderer::ArgTexture);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageColorOp,   Renderer::TextureOpModulate);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageAlphaArg1, Renderer::ArgTFactor);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageAlphaArg2, Renderer::ArgTexture);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageAlphaOp,   Renderer::TextureOpModulate);
 
 	std::for_each(m_ParticleInstanceVector.begin(),m_ParticleInstanceVector.end(),std::mem_fn(&CEffectElementBaseInstance::Render));
 	std::for_each(m_MeshInstanceVector.begin(),m_MeshInstanceVector.end(),std::mem_fn(&CEffectElementBaseInstance::Render));
 
 	/////
-	STATEMANAGER.RestoreSamplerState(0, D3DSAMP_MINFILTER);
-	STATEMANAGER.RestoreSamplerState(0, D3DSAMP_MAGFILTER);
+	DRAWSTATE.RestoreSamplerState(0, Renderer::SamplerMinFilter);
+	DRAWSTATE.RestoreSamplerState(0, Renderer::SamplerMagFilter);
 
-	STATEMANAGER.RestoreRenderState(D3DRS_ALPHABLENDENABLE);
-	STATEMANAGER.RestoreRenderState(D3DRS_SRCBLEND);
-	STATEMANAGER.RestoreRenderState(D3DRS_DESTBLEND);
-	STATEMANAGER.RestoreRenderState(D3DRS_ALPHATESTENABLE);
-	STATEMANAGER.RestoreRenderState(D3DRS_CULLMODE);
-	STATEMANAGER.RestoreRenderState(D3DRS_ZWRITEENABLE);
+	DRAWSTATE.RestoreRenderState(Renderer::StateAlphaBlendEnable);
+	DRAWSTATE.RestoreRenderState(Renderer::StateSrcBlend);
+	DRAWSTATE.RestoreRenderState(Renderer::StateDestBlend);
+	DRAWSTATE.RestoreRenderState(Renderer::StateAlphaTestEnable);
+	DRAWSTATE.RestoreRenderState(Renderer::StateCullMode);
+	DRAWSTATE.RestoreRenderState(Renderer::StateZWriteEnable);
 
 	++ms_iRenderingEffectCount;
 }
 
-void CEffectInstance::SetGlobalMatrix(const D3DXMATRIX & c_rmatGlobal)
+void CEffectInstance::SetGlobalMatrix(const Math::Matrix & c_rmatGlobal)
 {
 	m_matGlobal = c_rmatGlobal;
 }
@@ -238,7 +237,7 @@ void CEffectInstance::SetEffectDataPointer(CEffectData * pEffectData)
 	m_pSoundInstanceVector = pEffectData->GetSoundInstanceVector();
 }
 
-bool CEffectInstance::GetBoundingSphere(D3DXVECTOR3 & v3Center, float & fRadius)
+bool CEffectInstance::GetBoundingSphere(Math::Vector3 & v3Center, float & fRadius)
 {
 	v3Center.x = m_matGlobal._41 + m_v3BoundingSpherePosition.x;
 	v3Center.y = m_matGlobal._42 + m_v3BoundingSpherePosition.y;
@@ -284,7 +283,7 @@ void CEffectInstance::__Initialize()
 
 	m_pkEftData=NULL;
 
-	D3DXMatrixIdentity(&m_matGlobal);
+	Math::MatrixIdentity(&m_matGlobal);
 }
 
 CEffectInstance::CEffectInstance() 

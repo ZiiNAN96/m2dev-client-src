@@ -1,9 +1,8 @@
 #include "StdAfx.h"
-#include "EterLib/NativeResourceAudit.h"
 #include "PRTerrainLib/StdAfx.h"
 
 #include "EterLib/ResourceManager.h"
-#include "EterLib/StateManager.h"
+#include "EterLib/DrawState.h"
 #include "PackLib/PackManager.h"
 
 #include "AreaTerrain.h"
@@ -29,8 +28,6 @@ void CTerrain::Delete(CTerrain* pkTerrain)
 
 CTerrain::CTerrain()
 {
-	memset(&m_lpAlphaTexture, 0, sizeof(m_lpAlphaTexture));
-	memset(&m_lpMarkedTexture, 0, sizeof(m_lpMarkedTexture));
 	Initialize();
 }
 
@@ -77,13 +74,11 @@ void CTerrain::LoadMiniMapTexture(const char * c_pchMiniMapFileName)
 	
 	if (!m_MiniMapGraphicImageInstance.GetTexturePointer()->IsEmpty())
 	{
-		m_lpMiniMapTexture = m_MiniMapGraphicImageInstance.GetTexturePointer()->GetD3DTexture();
 		Tracef("CTerrain::LoadMiniMapTexture %d ms\n", ELTimer_GetMSec() - dwStart);
 	}
 	else
 	{
 		Tracef(" CTerrain::LoadMiniMapTexture - MiniMapTexture Error");
-		m_lpMiniMapTexture = NULL;
 	}
 }
 
@@ -93,12 +88,9 @@ void CTerrain::LoadShadowTexture(const char * ShadowFileName)
 	CGraphicImage * pImage = (CGraphicImage *) CResourceManager::Instance().GetResourcePointer(ShadowFileName);
 	m_ShadowGraphicImageInstance.SetImagePointer(pImage);
 
-	if (!m_ShadowGraphicImageInstance.GetTexturePointer()->IsEmpty())
-		m_lpShadowTexture = m_ShadowGraphicImageInstance.GetTexturePointer()->GetD3DTexture();
-	else
+	if (m_ShadowGraphicImageInstance.GetTexturePointer()->IsEmpty())
 	{
 		TraceError(" CTerrain::LoadShadowTexture - ShadowTexture is Empty");
-		m_lpShadowTexture = NULL;
 	}
 	Tracef("CTerrain::LoadShadowTexture %d ms\n", ELTimer_GetMSec() - dwStart);
 }
@@ -340,7 +332,7 @@ WORD CTerrain::WE_GetHeightMapValue(short sX, short sY)
 	}
 }
 
-bool CTerrain::GetNormal(int ix, int iy, D3DXVECTOR3 * pv3Normal)
+bool CTerrain::GetNormal(int ix, int iy, Math::Vector3 * pv3Normal)
 {
 	long lMapWidth = XSIZE * CELLSCALE;
 	long lMapHeight = YSIZE * CELLSCALE;
@@ -359,7 +351,7 @@ bool CTerrain::GetNormal(int ix, int iy, D3DXVECTOR3 * pv3Normal)
 	ix /= CELLSCALE;
 	iy /= CELLSCALE;
 
-	D3DXVECTOR3 v3Noraml;
+	Math::Vector3 v3Noraml;
 	char * n = (char*) &m_acNormalMap[(iy * NORMALMAP_XSIZE + ix)*3];
 	pv3Normal->x = -((float)*n++) * 0.007874016f;
 	pv3Normal->y = ((float)*n++) * 0.007874016f;
@@ -439,13 +431,13 @@ float CTerrain::GetHeight(int x, int y)
 
 void CTerrain::CalculateNormal(long x, long y)
 {
-	D3DXVECTOR3 normal;
+	Math::Vector3 normal;
 
 	normal.x = -m_fHeightScale * ((float)GetHeightMapValue((x-1),y)-(float)GetHeightMapValue((x+1),y));
 	normal.y = -m_fHeightScale * ((float)GetHeightMapValue(x,(y-1))-(float)GetHeightMapValue(x,(y+1)));
 
 	normal.z = 2.0f * static_cast<float>(CELLSCALE);
-	normal *= 127.0f / D3DXVec3Length(&normal);
+	normal *= 127.0f / Math::Vec3Length(&normal);
 
 	int ix, iy, iz;
 	PR_FLOAT_TO_INT(normal.x, ix);
@@ -574,16 +566,8 @@ void CTerrain::RAW_DeallocateSplats(bool bBGLoading)
 	{
 		TTerainSplat & rSplat = m_TerrainSplatPatch.Splats[i];
 
-		if (m_lpAlphaTexture[i])
-		{
-			ULONG ulRef;
-			do
-			{
-				ulRef = m_lpAlphaTexture[i]->Release();
-			} while(ulRef > 0);
-		}
 
-		rSplat.pd3dTexture = m_lpAlphaTexture[i] = NULL;
+
  	}
 
 	memset(&m_TerrainSplatPatch, 0, sizeof(m_TerrainSplatPatch));
@@ -682,18 +666,8 @@ void CTerrain::RAW_GenerateSplat(bool bBGLoading)
 			{
 				if (rSplat.Active)   // We already have an alpha map which needs to be updated
 				{
-					if (m_lpAlphaTexture[i])
-					{
-						ULONG ulRef;
-						do
-						{
-							ulRef = m_lpAlphaTexture[i]->Release();
-							if (ulRef > 0)
-								TraceError(" CTerrain::RAW_GenerateSplat - TileCount > 0 : Alpha Texture Release(%d) ERROR", ulRef);
-						} while(ulRef > 0);
-					}
 
-					rSplat.pd3dTexture = m_lpAlphaTexture[i] = NULL;
+
  				}
 
 				rSplat.Active = 1;
@@ -751,24 +725,14 @@ void CTerrain::RAW_GenerateSplat(bool bBGLoading)
 				}
 
 
-				rSplat.pd3dTexture = AddTexture32(i, abyAlphaMap, SPLATALPHA_RAW_XSIZE, SPLATALPHA_RAW_YSIZE);
+				BuildSplatAlpha(i, abyAlphaMap);
 			}
 			else
 			{
 				if (rSplat.Active)
 				{
-					if (m_lpAlphaTexture[i])
-					{
-						ULONG ulRef;
-						do
-						{
-							ulRef = m_lpAlphaTexture[i]->Release();
-							if (ulRef > 0)
-								TraceError(" CTerrain::RAW_GenerateSplat - TileDount 0 : Alpha Texture Release(%d) ERROR", ulRef);
-						} while(ulRef > 0);
-					}
 					
-					rSplat.pd3dTexture = m_lpAlphaTexture[i] = NULL;
+
  				}
 				rSplat.NeedsUpdate = 0;
 				rSplat.Active = 0;
@@ -777,125 +741,9 @@ void CTerrain::RAW_GenerateSplat(bool bBGLoading)
 	}
 }
 
-LPDIRECT3DTEXTURE9 CTerrain::AddTexture32(BYTE byImageNum, BYTE * pbyImage, long lTextureWidth, long lTextureHeight)
+void CTerrain::BuildSplatAlpha(BYTE byImageNum, BYTE* pbyImage)
 {
-    if (Renderer::UseNeutralResources()) {
-        m_rendererAlpha[byImageNum].Build(pbyImage,!ms_bSupportDXT);
-        return nullptr; // Native splat POD belongs exclusively to Legacy.
-    }
-	assert(NULL==m_lpAlphaTexture[byImageNum]);
-
-	if (m_lpAlphaTexture[byImageNum])
-		m_lpAlphaTexture[byImageNum]->Release();
-
-	m_lpAlphaTexture[byImageNum]=NULL;
-
-	HRESULT hr;
-	D3DFORMAT format;
-
-	if(ms_bSupportDXT)
-		format = D3DFMT_A8R8G8B8;
-	else
-		format = D3DFMT_A4R4G4B4;
-
-
-	bool bResizedAndSuccess = false;
-
-	IDirect3DTexture9* pkTex=NULL;
-
-	UINT uiNewWidth = 256;
-	UINT uiNewHeight = 256;
-	hr = M2_NATIVE_RESOURCE(Texture, ms_lpd3dDevice->CreateTexture(
-		uiNewWidth, uiNewHeight, 5, D3DUSAGE_DYNAMIC,
-		format, D3DPOOL_DEFAULT, &pkTex, nullptr));
-	if (FAILED(hr))
-	{
-		TraceError("CTerrain::AddTexture32 - CreateTexture failed with hr=%p", hr);
-		return NULL;
-	}
-	
-
-	BYTE abResizeImage[256*256];
-	{
-		BYTE* pbDstPixel=abResizeImage;
-		BYTE* pbSrcPixel;
-		BYTE* abCurLine=pbyImage;
-		for (UINT y=0; y<256; ++y, abCurLine+=258)
-		{
-			for (UINT x=0; x<256; ++x)
-			{
-				pbSrcPixel=abCurLine+x;
-				*pbDstPixel++=
-				(((	pbSrcPixel[0]+pbSrcPixel[1]+pbSrcPixel[2]+
-					pbSrcPixel[258]+pbSrcPixel[260]+
-					pbSrcPixel[258*2]+pbSrcPixel[258*2+1]+pbSrcPixel[258*2+2])
-				>>3)+pbSrcPixel[259])>>1;
-			}
-		}
-
-		D3DLOCKED_RECT  d3dlr;
-		hr = pkTex->LockRect(0, &d3dlr, 0, 0);
-		if (FAILED(hr))
-		{
-			pkTex->Release();
-			return NULL;
-		}
-		
-		if(ms_bSupportDXT)
-			PutImage32(abResizeImage, (BYTE*) d3dlr.pBits, 256, d3dlr.Pitch, 256, 256, bResizedAndSuccess);
-		else
-			PutImage16(abResizeImage, (BYTE*) d3dlr.pBits, 256, d3dlr.Pitch, 256, 256, bResizedAndSuccess);
-
-		if(Renderer::terrainRenderer)
-			m_rendererAlpha[byImageNum].Capture(0,d3dlr.pBits,256,d3dlr.Pitch,!ms_bSupportDXT);
-		pkTex->UnlockRect(0);
-	}
-
-	BYTE abResizeImage2[128*128];
-
-	BYTE* pbSrcBuffer=abResizeImage;
-	BYTE* pbDstBuffer=abResizeImage2;
-
-	UINT uSrcSize=256;
-	
-	for (UINT uMipMapLevel=1; uMipMapLevel!=pkTex->GetLevelCount(); ++uMipMapLevel)
-	{
-		UINT uDstSize=uSrcSize>>1;
-
-		BYTE* pbDstPixel=pbDstBuffer;
-		BYTE* pbSrcPixel;
-		BYTE* abCurLine=pbSrcBuffer;
-		for (UINT y=0; y!=uSrcSize; y+=2, abCurLine+=uSrcSize*2)
-		{
-			for (UINT x=0; x!=uSrcSize; x+=2)
-			{
-				pbSrcPixel=abCurLine+x;
-				*pbDstPixel++=(pbSrcPixel[0]+pbSrcPixel[1]+pbSrcPixel[uSrcSize+0]+pbSrcPixel[uSrcSize+1])>>2;
-			}
-		}
-
-		D3DLOCKED_RECT  d3dlr;
-	
-		hr = pkTex->LockRect(uMipMapLevel, &d3dlr, 0, 0);
-		if (FAILED(hr))
-			continue;
-
-		if(ms_bSupportDXT)
-			PutImage32(pbDstBuffer, (BYTE*) d3dlr.pBits, uDstSize, d3dlr.Pitch, uDstSize, uDstSize, bResizedAndSuccess);
-		else
-			PutImage16(pbDstBuffer, (BYTE*) d3dlr.pBits, uDstSize, d3dlr.Pitch, uDstSize, uDstSize, bResizedAndSuccess);
-
-		if(Renderer::terrainRenderer)
-			m_rendererAlpha[byImageNum].Capture(uMipMapLevel,d3dlr.pBits,uDstSize,d3dlr.Pitch,!ms_bSupportDXT);
-		hr = pkTex->UnlockRect(uMipMapLevel);
-		
-		std::swap(pbSrcBuffer, pbDstBuffer);
-		uSrcSize=uDstSize;
-	}
-
-	m_lpAlphaTexture[byImageNum]=pkTex;
-
-	return pkTex;
+    m_rendererAlpha[byImageNum].Build(pbyImage,!ms_bSupportDXT);
 }
 
 void CTerrain::PutImage32(BYTE *src, BYTE *dst, long src_pitch, long dst_pitch, long texturewidth, long textureheight, bool bResize)
@@ -1005,8 +853,8 @@ void CTerrain::_CalculateTerrainPatch(BYTE byPatchNumX, BYTE byPatchNumY)
 	HardwareTransformPatch_SSourceVertex*	lpTerrainVertex=akSrcTerrainVertex;	
 	UINT uTerrainVertexCount=0;
 
-	D3DXVECTOR3 kNormal;
-	D3DXVECTOR3 kPosition;
+	Math::Vector3 kNormal;
+	Math::Vector3 kPosition;
 	for (DWORD dwY = dwStartY; dwY <= dwStartY + PATCH_YSIZE; ++dwY)
     {
 		WORD * pwRawHeight	= wOrigRawHeightPtr;
@@ -1165,74 +1013,20 @@ void CTerrain::_CalculateTerrainPatch(BYTE byPatchNumX, BYTE byPatchNumY)
 	rkTerrainPatch.NeedUpdate(false);
 }
 
-void CTerrain::AllocateMarkedSplats(BYTE * pbyAlphaMap)
+void CTerrain::AllocateMarkedSplats(BYTE* pbyAlphaMap)
 {
-    if (Renderer::UseNeutralResources()) {
-        DeallocateMarkedSplats();
-        m_markedSource=Renderer::TextureResource::Dynamic(ATTRMAP_XSIZE,ATTRMAP_YSIZE,Renderer::TerrainTextureFormat::BGRA8);
-        if (!m_markedSource) return;
-        PutImage32(pbyAlphaMap,m_markedSource->mips[0].pixels.data(),ATTRMAP_XSIZE,ATTRMAP_XSIZE*4,ATTRMAP_XSIZE,ATTRMAP_YSIZE);
-        if (Renderer::worldRenderer) m_markedDiligentTexture=Renderer::worldRenderer->UploadTexture(m_markedSource->View());
-        m_bMarked=bool(m_markedDiligentTexture); return;
-    }
-	TTerainSplat & rAttrSplat = m_MarkedSplatPatch.Splats[0];
-	HRESULT hr;
-
-	if (m_lpMarkedTexture)
-	{
-		ULONG ulRef;
-		do
-		{
-			ulRef = m_lpMarkedTexture->Release();
-		} while(ulRef > 0);
-	}
-
-	do
-	{
-		hr = M2_NATIVE_RESOURCE(Texture, ms_lpd3dDevice->CreateTexture(ATTRMAP_XSIZE, ATTRMAP_YSIZE, 1, D3DUSAGE_DYNAMIC, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &m_lpMarkedTexture, nullptr));
-	} while(FAILED(hr));
-
-	D3DLOCKED_RECT d3dlr;
-	do
-	{
-		hr = m_lpMarkedTexture->LockRect(0, &d3dlr, 0, 0);
-	} while(FAILED(hr));
-
-	PutImage32(pbyAlphaMap, (BYTE*) d3dlr.pBits, ATTRMAP_XSIZE, d3dlr.Pitch, ATTRMAP_XSIZE, ATTRMAP_YSIZE);
-	if(Renderer::worldRenderer) {
-		// ZiiNAN: Upload the exact generated guild alpha bytes while they are CPU-visible.
-		Renderer::TerrainTextureData data{ATTRMAP_XSIZE,ATTRMAP_YSIZE,Renderer::TerrainTextureFormat::BGRA8,
-			{{d3dlr.pBits,size_t(d3dlr.Pitch)*ATTRMAP_YSIZE,size_t(d3dlr.Pitch)}}};
-		m_markedDiligentTexture=Renderer::worldRenderer->UploadTexture(data);
-	}
-
-	do
-	{
-		hr = m_lpMarkedTexture->UnlockRect(0);
-	} while(FAILED(hr));
-
-	rAttrSplat.pd3dTexture = m_lpMarkedTexture;
-	m_bMarked = true;
+    // ZiiNAN: Removed final D3D9 compile-time dependency.
+    DeallocateMarkedSplats();
+    m_markedSource=Renderer::TextureResource::Dynamic(ATTRMAP_XSIZE,ATTRMAP_YSIZE,Renderer::TerrainTextureFormat::BGRA8);
+    if (!m_markedSource) return;
+    PutImage32(pbyAlphaMap,m_markedSource->mips[0].pixels.data(),ATTRMAP_XSIZE,ATTRMAP_XSIZE*4,ATTRMAP_XSIZE,ATTRMAP_YSIZE);
+    if (Renderer::worldRenderer) m_markedDiligentTexture=Renderer::worldRenderer->UploadTexture(m_markedSource->View());
+    m_bMarked=bool(m_markedDiligentTexture);
 }
 
 void CTerrain::DeallocateMarkedSplats()
 {
-	if(Renderer::worldRenderer && m_markedDiligentTexture) Renderer::worldRenderer->ReleaseBindings();
-	m_markedDiligentTexture.reset();
-    m_markedSource.reset();
-	TTerainSplat & rSplat = m_MarkedSplatPatch.Splats[0];
-	if (m_lpMarkedTexture)
-	{
-		ULONG ulRef;
-		do
-		{
-			ulRef = m_lpMarkedTexture->Release();
-		} while(ulRef > 0);
-	}
-
-	rSplat.pd3dTexture = NULL;
-	m_lpMarkedTexture = NULL;
-	m_bMarked = FALSE;
-
-	memset(&m_MarkedSplatPatch, 0, sizeof(m_MarkedSplatPatch));
+    if(Renderer::worldRenderer && m_markedDiligentTexture) Renderer::worldRenderer->ReleaseBindings();
+    m_markedDiligentTexture.reset(); m_markedSource.reset(); m_bMarked=FALSE;
+    memset(&m_MarkedSplatPatch,0,sizeof(m_MarkedSplatPatch));
 }

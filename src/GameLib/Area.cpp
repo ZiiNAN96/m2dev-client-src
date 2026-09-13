@@ -1,9 +1,9 @@
 #include "StdAfx.h"
 
 #include "EterLib/ResourceManager.h"
-#include "EterLib/StateManager.h"
+#include "EterLib/DrawState.h"
 #include "EffectLib/EffectManager.h"
-#include "SpeedTreeLib/SpeedTreeForestDirectX.h"
+#include "SpeedTreeLib/SpeedTreeForestRenderer.h"
 #include "EterBase/Timer.h"
 
 #include "Area.h"
@@ -133,8 +133,8 @@ void CArea::RenderEffect()
 	__UpdateEffectList();
 
 	// Effect
-	STATEMANAGER.SetTexture(0, NULL);
-	STATEMANAGER.SetTexture(1, NULL);
+	DRAWSTATE.SetTexture(0, NULL);
+	DRAWSTATE.SetTexture(1, NULL);
 
 	bool m_isDisableSortRendering=false;
 
@@ -256,18 +256,18 @@ void CArea::RenderCollision()
 {
 	DWORD i;
 
-	STATEMANAGER.SetTexture(0, NULL);
-	STATEMANAGER.SetTexture(1, NULL);
+	DRAWSTATE.SetTexture(0, NULL);
+	DRAWSTATE.SetTexture(1, NULL);
 
-	STATEMANAGER.SaveRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
-	STATEMANAGER.SaveRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
-	STATEMANAGER.SetRenderState(D3DRS_LIGHTING, FALSE);
-	STATEMANAGER.SetRenderState(D3DRS_TEXTUREFACTOR, 0xff000000);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_COLORARG1,	D3DTA_TEXTURE);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_COLOROP,	D3DTOP_SELECTARG1);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_DISABLE);
-	STATEMANAGER.SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_DISABLE);
-	STATEMANAGER.SetTextureStageState(1, D3DTSS_ALPHAOP, D3DTOP_DISABLE);
+	DRAWSTATE.SaveRenderState(Renderer::StateAlphaBlendEnable, FALSE);
+	DRAWSTATE.SaveRenderState(Renderer::StateCullMode, Renderer::CullNone);
+	DRAWSTATE.SetRenderState(Renderer::StateLighting, FALSE);
+	DRAWSTATE.SetRenderState(Renderer::StateTextureFactor, 0xff000000);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageColorArg1,	Renderer::ArgTexture);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageColorOp,	Renderer::TextureOpSelectArg1);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageAlphaOp, Renderer::TextureOpDisable);
+	DRAWSTATE.SetTextureStageState(1, Renderer::StageColorOp, Renderer::TextureOpDisable);
+	DRAWSTATE.SetTextureStageState(1, Renderer::StageAlphaOp, Renderer::TextureOpDisable);
 
 	for(i=0;i<GetObjectInstanceCount();i++)
 	{
@@ -301,40 +301,40 @@ void CArea::RenderCollision()
 		}
 	}
 
-	STATEMANAGER.RestoreRenderState(D3DRS_ALPHABLENDENABLE);
-	STATEMANAGER.RestoreRenderState(D3DRS_CULLMODE);
-	STATEMANAGER.SetRenderState(D3DRS_LIGHTING, TRUE);
+	DRAWSTATE.RestoreRenderState(Renderer::StateAlphaBlendEnable);
+	DRAWSTATE.RestoreRenderState(Renderer::StateCullMode);
+	DRAWSTATE.SetRenderState(Renderer::StateLighting, TRUE);
 }
 
 void CArea::RenderAmbience()
 {
 	DWORD dwColorArg1, dwColorOp;
-	STATEMANAGER.GetTextureStageState(0, D3DTSS_COLORARG1, &dwColorArg1);
-	STATEMANAGER.GetTextureStageState(0, D3DTSS_COLOROP, &dwColorOp);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TFACTOR);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
+	DRAWSTATE.GetTextureStageState(0, Renderer::StageColorArg1, &dwColorArg1);
+	DRAWSTATE.GetTextureStageState(0, Renderer::StageColorOp, &dwColorOp);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageColorArg1, Renderer::ArgTFactor);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageColorOp, Renderer::TextureOpSelectArg1);
 	TAmbienceInstanceVector::iterator itor = m_AmbienceCloneInstanceVector.begin();
 	for (; itor != m_AmbienceCloneInstanceVector.end(); ++itor)
 	{
 		TAmbienceInstance * pInstance = *itor;
 		pInstance->Render();
 	}
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_COLORARG1, dwColorArg1);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_COLOROP, dwColorOp);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageColorArg1, dwColorArg1);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageColorOp, dwColorOp);
 }
 
 void CArea::RenderDungeon()
 {
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_COLORARG1,	D3DTA_TEXTURE);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_COLOROP,	D3DTOP_SELECTARG1);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_ALPHAARG1,	D3DTA_TEXTURE);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_COLOROP,	D3DTOP_SELECTARG1);
-	STATEMANAGER.SetTextureStageState(1, D3DTSS_COLORARG1,	D3DTA_TEXTURE);
-	STATEMANAGER.SetTextureStageState(1, D3DTSS_COLORARG2,	D3DTA_CURRENT);
-	STATEMANAGER.SetTextureStageState(1, D3DTSS_COLOROP,	D3DTOP_MODULATE);
-	STATEMANAGER.SetTextureStageState(1, D3DTSS_ALPHAARG1,	D3DTA_TEXTURE);
-	STATEMANAGER.SetTextureStageState(1, D3DTSS_ALPHAARG2,	D3DTA_CURRENT);
-	STATEMANAGER.SetTextureStageState(1, D3DTSS_ALPHAOP,	D3DTOP_MODULATE);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageColorArg1,	Renderer::ArgTexture);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageColorOp,	Renderer::TextureOpSelectArg1);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageAlphaArg1,	Renderer::ArgTexture);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageColorOp,	Renderer::TextureOpSelectArg1);
+	DRAWSTATE.SetTextureStageState(1, Renderer::StageColorArg1,	Renderer::ArgTexture);
+	DRAWSTATE.SetTextureStageState(1, Renderer::StageColorArg2,	Renderer::ArgCurrent);
+	DRAWSTATE.SetTextureStageState(1, Renderer::StageColorOp,	Renderer::TextureOpModulate);
+	DRAWSTATE.SetTextureStageState(1, Renderer::StageAlphaArg1,	Renderer::ArgTexture);
+	DRAWSTATE.SetTextureStageState(1, Renderer::StageAlphaArg2,	Renderer::ArgCurrent);
+	DRAWSTATE.SetTextureStageState(1, Renderer::StageAlphaOp,	Renderer::TextureOpModulate);
 
 	TDungeonBlockInstanceVector::iterator itor = m_DungeonBlockCloneInstanceVector.begin();
 	for (; itor != m_DungeonBlockCloneInstanceVector.end(); ++itor)
@@ -342,8 +342,8 @@ void CArea::RenderDungeon()
 		(*itor)->Render();
 	}
 
-	STATEMANAGER.SetTextureStageState(1, D3DTSS_COLOROP,	D3DTOP_DISABLE);
-	STATEMANAGER.SetTextureStageState(1, D3DTSS_ALPHAOP,	D3DTOP_DISABLE);
+	DRAWSTATE.SetTextureStageState(1, Renderer::StageColorOp,	Renderer::TextureOpDisable);
+	DRAWSTATE.SetTextureStageState(1, Renderer::StageAlphaOp,	Renderer::TextureOpDisable);
 }
 
 void CArea::Refresh()
@@ -517,11 +517,11 @@ void CArea::__SetObjectInstance_SetEffect(TObjectInstance * pObjectInstance, con
 	CEffectInstance * pEffectInstance;
 	rem.CreateUnsafeEffectInstance(pObjectInstance->dwEffectID, &pEffectInstance);
 
-	D3DXMATRIX mat;
-	D3DXMatrixRotationYawPitchRoll(&mat,
-		D3DXToRadian(c_pData->m_fYaw),
-		D3DXToRadian(c_pData->m_fPitch),
-		D3DXToRadian(c_pData->m_fRoll)
+	Math::Matrix mat;
+	Math::MatrixRotationYawPitchRoll(&mat,
+		Math::ToRadian(c_pData->m_fYaw),
+		Math::ToRadian(c_pData->m_fPitch),
+		Math::ToRadian(c_pData->m_fRoll)
 	);
 
 	mat._41 = c_pData->Position.x;
@@ -551,7 +551,7 @@ void CArea::__SetObjectInstance_SetTree(TObjectInstance * pObjectInstance, const
 
 void CArea::TObjectInstance::SetTree(float x, float y, float z, DWORD dwTreeCRC, const char* c_szTreeName)
 {
-	CSpeedTreeForestDirectX& rkForest=CSpeedTreeForestDirectX::Instance();
+	CSpeedTreeForestRenderer& rkForest=CSpeedTreeForestRenderer::Instance();
 	pTree=rkForest.CreateInstance(x, y, z, dwTreeCRC, c_szTreeName);
 	dwType = prt::PROPERTY_TYPE_TREE;
 }
@@ -707,17 +707,17 @@ void CArea::__LoadAttribute(TObjectInstance * pObjectInstance, const char * c_sz
 			{
 				CGraphicThingInstance* object = pObjectInstance->pThingInstance;
 
-				D3DXVECTOR3 v3Min, v3Max;
+				Math::Vector3 v3Min, v3Max;
 
 				object->GetBoundingAABB(v3Min, v3Max);
 				
 				CStaticCollisionData collision;
 				collision.dwType = COLLISION_TYPE_OBB;
-				D3DXQuaternionRotationYawPitchRoll(&collision.quatRotation, object->GetYaw(), object->GetPitch(), object->GetRoll());
+				Math::QuaternionRotationYawPitchRoll(&collision.quatRotation, object->GetYaw(), object->GetPitch(), object->GetRoll());
 				strcpy(collision.szName, "DummyCollisionOBB");
 				collision.v3Position = (v3Min + v3Max) * 0.5f;
 
-				D3DXVECTOR3 vDelta = (v3Max - v3Min);
+				Math::Vector3 vDelta = (v3Max - v3Min);
 				collision.fDimensions[0] = vDelta.x * 0.5f;
 				collision.fDimensions[1] = vDelta.y * 0.5f;
 				collision.fDimensions[2] = vDelta.z * 0.5f;
@@ -1108,7 +1108,7 @@ void CArea::__Clear_DestroyObjectInstance(TObjectInstance * pObjectInstance)
 	if (pObjectInstance->pTree)
 	{
 		pObjectInstance->pTree->Clear();
-		CSpeedTreeForestDirectX::Instance().DeleteInstance(pObjectInstance->pTree);
+		CSpeedTreeForestRenderer::Instance().DeleteInstance(pObjectInstance->pTree);
 		pObjectInstance->pTree = NULL;
 	}
 
@@ -1264,18 +1264,16 @@ float CArea::TAmbienceInstance::__GetVolumeFromDistance(float fDistance)
 void CArea::TAmbienceInstance::Render()
 {
 	float fBoxSize = 10.0f;
-	STATEMANAGER.SetRenderState(D3DRS_TEXTUREFACTOR, 0xff00ff00);
+	DRAWSTATE.SetRenderState(Renderer::StateTextureFactor, 0xff00ff00);
 	RenderCube(fx-fBoxSize, fy-fBoxSize, fz-fBoxSize, fx+fBoxSize, fy+fBoxSize, fz+fBoxSize);
-	STATEMANAGER.SetRenderState(D3DRS_TEXTUREFACTOR, 0xffffffff);
-	RenderSphere(NULL, fx, fy, fz, float(dwRange) * fMaxVolumeAreaPercentage, D3DFILL_POINT);
-	RenderSphere(NULL, fx, fy, fz, float(dwRange), D3DFILL_POINT);
+	DRAWSTATE.SetRenderState(Renderer::StateTextureFactor, 0xffffffff);
 	RenderCircle2d(fx, fy, fz, float(dwRange) * fMaxVolumeAreaPercentage);
 	RenderCircle2d(fx, fy, fz, float(dwRange));
 
 	for (int i = 0; i < 4; ++i)
 	{
-		float fxAdd = cosf(float(i) * D3DX_PI/4.0f) * float(dwRange) / 2.0f;
-		float fyAdd = sinf(float(i) * D3DX_PI/4.0f) * float(dwRange) / 2.0f;
+		float fxAdd = cosf(float(i) * Math::Pi/4.0f) * float(dwRange) / 2.0f;
+		float fyAdd = sinf(float(i) * Math::Pi/4.0f) * float(dwRange) / 2.0f;
 
 		if (i%2)
 		{
@@ -1289,7 +1287,7 @@ void CArea::TAmbienceInstance::Render()
 
 bool CArea::SAmbienceInstance::Picking()
 {
-	return CGraphicCollisionObject::IntersectSphere(D3DXVECTOR3(fx, fy, fz), dwRange);
+	return CGraphicCollisionObject::IntersectSphere(Math::Vector3(fx, fy, fz), dwRange);
 }
 
 CArea::SAmbienceInstance::SAmbienceInstance()

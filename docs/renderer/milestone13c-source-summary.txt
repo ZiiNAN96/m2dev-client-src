@@ -1,0 +1,9 @@
+
+Count Name
+----- ----
+   19 Documentation-only code comment / requested ZiiNAN marker
+ 1896 Documentation: history or current removal/dependency explanation
+ 4865 E: external artifact / not included by normal D3D9-free build
+   31 E: test/tool guard, fixture or historical audit (not normal client)
+
+

@@ -389,7 +389,7 @@ CInstanceBase * CPythonCharacterManager::OLD_GetPickedInstancePtr()
 	return m_pkInstPick;
 }
 
-D3DXVECTOR2 & CPythonCharacterManager::OLD_GetPickedInstPosReference()
+Math::Vector2 & CPythonCharacterManager::OLD_GetPickedInstPosReference()
 {
 	return m_v2PickedInstProjPos;
 }
@@ -422,20 +422,20 @@ bool CPythonCharacterManager::IsDeadVID(DWORD dwVID)
 // to avoid overdrawing
 struct LessCharacterInstancePtrRenderOrder
 {
-	D3DXVECTOR3 v3CameraPosition;
+	Math::Vector3 v3CameraPosition;
 	bool operator() (CInstanceBase* pkLeft, CInstanceBase* pkRight)
 	{
-		D3DXVECTOR3 v3Left, v3Right;
+		Math::Vector3 v3Left, v3Right;
 		pkLeft->NEW_GetPixelPosition(&v3Left);
 		pkRight->NEW_GetPixelPosition(&v3Right);
 
 		v3Left.y *= -1;
 		v3Right.y *= -1;
 
-		D3DXVECTOR3 v3LeftDiff = v3Left - v3CameraPosition;
-		D3DXVECTOR3 v3RightDiff = v3Right - v3CameraPosition;
+		Math::Vector3 v3LeftDiff = v3Left - v3CameraPosition;
+		Math::Vector3 v3RightDiff = v3Right - v3CameraPosition;
 
-		return D3DXVec3Dot(&v3LeftDiff, &v3LeftDiff) < D3DXVec3Dot(&v3RightDiff, &v3RightDiff);
+		return Math::Vec3Dot(&v3LeftDiff, &v3LeftDiff) < Math::Vec3Dot(&v3RightDiff, &v3RightDiff);
 	}
 };
 
@@ -509,16 +509,16 @@ void CPythonCharacterManager::__RenderSortedDeadActorList()
 
 void CPythonCharacterManager::Render()
 {
-	STATEMANAGER.SetTexture(0, NULL);	
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_COLORARG1,	D3DTA_TEXTURE);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_COLORARG2,	D3DTA_CURRENT);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_COLOROP,	D3DTOP_MODULATE);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_ALPHAARG1,	D3DTA_TEXTURE);
-	STATEMANAGER.SetTextureStageState(0, D3DTSS_ALPHAOP,	D3DTOP_SELECTARG1);
+	DRAWSTATE.SetTexture(0, NULL);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageColorArg1,	Renderer::ArgTexture);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageColorArg2,	Renderer::ArgCurrent);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageColorOp,	Renderer::TextureOpModulate);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageAlphaArg1,	Renderer::ArgTexture);
+	DRAWSTATE.SetTextureStageState(0, Renderer::StageAlphaOp,	Renderer::TextureOpSelectArg1);
 
-	STATEMANAGER.SetTexture(1, NULL);
-	STATEMANAGER.SetTextureStageState(1, D3DTSS_COLOROP,	D3DTOP_DISABLE);
-	STATEMANAGER.SetTextureStageState(1, D3DTSS_ALPHAOP,	D3DTOP_DISABLE);
+	DRAWSTATE.SetTexture(1, NULL);
+	DRAWSTATE.SetTextureStageState(1, Renderer::StageColorOp,	Renderer::TextureOpDisable);
+	DRAWSTATE.SetTextureStageState(1, Renderer::StageAlphaOp,	Renderer::TextureOpDisable);
 
 
 	__RenderSortedAliveActorList();
@@ -527,7 +527,7 @@ void CPythonCharacterManager::Render()
 	CInstanceBase * pkPickedInst = OLD_GetPickedInstancePtr();
 	if (pkPickedInst)
 	{
-		const D3DXVECTOR3 & c_rv3Position = pkPickedInst->GetGraphicThingInstanceRef().GetPosition();
+		const Math::Vector3 & c_rv3Position = pkPickedInst->GetGraphicThingInstanceRef().GetPosition();
 		CPythonGraphic::Instance().ProjectPosition(c_rv3Position.x, c_rv3Position.y, c_rv3Position.z, &m_v2PickedInstProjPos.x, &m_v2PickedInstProjPos.y);
 	}
 }
@@ -752,7 +752,7 @@ struct CInstanceBase_SLessCameraDistance
 void CPythonCharacterManager::__SortPickedActorList()
 {
 	CCamera * pCamera = CCameraManager::Instance().GetCurrentCamera();
-	const D3DXVECTOR3& c_rv3EyePos=pCamera->GetEye();
+	const Math::Vector3& c_rv3EyePos=pCamera->GetEye();
 
 	CInstanceBase_SLessCameraDistance kLess;
 	kLess.m_kPPosEye=TPixelPosition(+c_rv3EyePos.x, -c_rv3EyePos.y, +c_rv3EyePos.z);
@@ -975,7 +975,7 @@ void CPythonCharacterManager::__Initialize()
 	m_pkInstMain = NULL;
 	m_pkInstBind = NULL;
 	m_pkInstPick = NULL;
-	m_v2PickedInstProjPos = D3DXVECTOR2(0.0f, 0.0f);
+	m_v2PickedInstProjPos = Math::Vector2(0.0f, 0.0f);
 }
 
 

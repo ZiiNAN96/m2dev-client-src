@@ -1,18 +1,18 @@
 #pragma once
 #include "Renderer/UIRenderData.h"
-#include <d3d9.h>
+#include "Renderer/DrawStateTypes.h"
 
 class CGraphicImage;
 // ZiiNAN: Only explicitly selected UI primitives enter this synchronous bridge.
 namespace UIRenderBridge
 {
 enum class Primitive { Strip, List, Fan, Lines, IndexedQuad };
-void Submit(const void* pdt,uint32_t count,Primitive,CGraphicImage*,HRESULT,
+void Submit(const void* pdt,uint32_t count,Primitive,CGraphicImage*,
             Renderer::TerrainTexturePtr supplied={},Renderer::TerrainTexturePtr secondary={});
-inline void Quad(const void* pdt,CGraphicImage* image,HRESULT result)
-{ Submit(pdt,4,Primitive::Strip,image,result); }
-inline void IndexedQuad(const void* pdt,CGraphicImage* image,HRESULT result)
-{ Submit(pdt,4,Primitive::IndexedQuad,image,result); }
+inline void Quad(const void* pdt,CGraphicImage* image)
+{ Submit(pdt,4,Primitive::Strip,image); }
+inline void IndexedQuad(const void* pdt,CGraphicImage* image)
+{ Submit(pdt,4,Primitive::IndexedQuad,image); }
 inline CGraphicImage* scopedImage=nullptr;
 struct ImageScope
 {

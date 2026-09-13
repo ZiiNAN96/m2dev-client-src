@@ -35,7 +35,7 @@ target_link_libraries(UserInterface
 	libzstd_static
 	mio
 	
-	DirectX
+	WindowsInput
 	Granny
 	SpeedTree
 	Python

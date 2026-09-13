@@ -1,5 +1,5 @@
 #include "StdAfx.h"
-#include "EterLib/StateManager.h"
+#include "EterLib/DrawState.h"
 #include "EterLib/Camera.h"
 #include "PRTerrainLib/StdAfx.h"
 #include "EffectLib/EffectManager.h"
@@ -37,12 +37,12 @@ struct FGetObjectHeight
 
 struct FGetPickingPoint
 {	
-	D3DXVECTOR3 m_v3Start;
-	D3DXVECTOR3 m_v3Dir;
-	D3DXVECTOR3 m_v3PickingPoint;
+	Math::Vector3 m_v3Start;
+	Math::Vector3 m_v3Dir;
+	Math::Vector3 m_v3PickingPoint;
 	bool		m_bPicked; 
 
-	FGetPickingPoint(D3DXVECTOR3 & v3Start, D3DXVECTOR3 & v3Dir) : m_v3Start(v3Start), m_v3Dir(v3Dir), m_bPicked(false) {}
+	FGetPickingPoint(Math::Vector3 & v3Start, Math::Vector3 & v3Dir) : m_v3Start(v3Start), m_v3Dir(v3Dir), m_bPicked(false) {}
 	void operator() (CGraphicObjectInstance * pInstance)
 	{
 		if( pInstance && pInstance->GetType() == CGraphicThingInstance::ID )
@@ -75,13 +75,10 @@ CMapOutdoor::CMapOutdoor()
 
 	Initialize();
 
-	__SoftwareTransformPatch_Initialize();
-	__SoftwareTransformPatch_Create();
 }
 
 CMapOutdoor::~CMapOutdoor()
 {
-	__SoftwareTransformPatch_Destroy();
 
 	// 2004.10.14.myevan.TEMP_CAreaLoaderThread
 	//ms_AreaLoaderThread.Shutdown();
@@ -131,12 +128,7 @@ bool CMapOutdoor::Initialize()
 	
 	//////////////////////////////////////////////////////////////////////////
 	// Character Shadow
-	m_lpCharacterShadowMapTexture = NULL;
-	m_lpCharacterShadowMapRenderTargetSurface = NULL;
-	m_lpCharacterShadowMapDepthSurface = NULL;
 
-	m_lpBackupRenderTargetSurface = NULL;
-	m_lpBackupDepthSurface = NULL;
 	// Character Shadow
 	//////////////////////////////////////////////////////////////////////////
 
@@ -164,7 +156,7 @@ bool CMapOutdoor::Initialize()
 	//m_bBGLoadingEnable = false;
 	m_eTerrainRenderSort = DISTANCE_SORT;
 
-	D3DXMatrixIdentity(&m_matWorldForCommonUse);
+	Math::MatrixIdentity(&m_matWorldForCommonUse);
 	
 	InitializeVisibleParts();
 
@@ -218,7 +210,7 @@ bool CMapOutdoor::Destroy()
 
 	m_rkList_kGuildArea.clear();
 	m_kPool_kMonsterAreaInfo.Destroy();
-	CSpeedTreeForestDirectX::Instance().Clear();
+	CSpeedTreeForestRenderer::Instance().Clear();
 
 	return true;
 }
@@ -248,9 +240,9 @@ void CMapOutdoor::OnBeginEnvironment()
 	if (!mc_pEnvironmentData)
 		return;
 
-	CSpeedTreeForestDirectX& rkForest=CSpeedTreeForestDirectX::Instance();
+	CSpeedTreeForestRenderer& rkForest=CSpeedTreeForestRenderer::Instance();
 
-	const D3DLIGHT9& c_rkLight = mc_pEnvironmentData->DirLights[ENV_DIRLIGHT_CHARACTER];
+	const Renderer::LightValues& c_rkLight = mc_pEnvironmentData->DirLights[ENV_DIRLIGHT_CHARACTER];
 	rkForest.SetLight(
 		(const float *)&c_rkLight.Direction,
 		(const float *)&c_rkLight.Ambient, 
@@ -437,21 +429,21 @@ bool CMapOutdoor::GetTerrainNum(float fx, float fy, BYTE * pbyTerrainNum)
 	return GetTerrainNumFromCoord(wTerrainNumX, wTerrainNumY, pbyTerrainNum);
 }
 
-bool CMapOutdoor::GetPickingPoint(D3DXVECTOR3 * v3IntersectPt)
+bool CMapOutdoor::GetPickingPoint(Math::Vector3 * v3IntersectPt)
 {
 	return GetPickingPointWithRay(ms_Ray, v3IntersectPt);
 }
 
-bool CMapOutdoor::__PickTerrainHeight(float& fPos, const D3DXVECTOR3& v3Start, const D3DXVECTOR3& v3End, float fStep, float fRayRange, float fLimitRange, D3DXVECTOR3* pv3Pick)
+bool CMapOutdoor::__PickTerrainHeight(float& fPos, const Math::Vector3& v3Start, const Math::Vector3& v3End, float fStep, float fRayRange, float fLimitRange, Math::Vector3* pv3Pick)
 {
 	CTerrain * pTerrain;
 
-	D3DXVECTOR3 v3CurPos;
+	Math::Vector3 v3CurPos;
 
 	float fRayRangeInv=1.0f/fRayRange;
 	while (fPos < fRayRange && fPos<fLimitRange)
 	{
-		D3DXVec3Lerp(&v3CurPos, &v3Start, &v3End, fPos*fRayRangeInv);
+		Math::Vec3Lerp(&v3CurPos, &v3Start, &v3End, fPos*fRayRangeInv);
 		BYTE byTerrainNum;
 		float fMultiplier = 1.0f;
 		if (GetTerrainNum(v3CurPos.x, v3CurPos.y, &byTerrainNum))
@@ -478,13 +470,13 @@ bool CMapOutdoor::__PickTerrainHeight(float& fPos, const D3DXVECTOR3& v3Start, c
 
 	return false;
 }
-bool CMapOutdoor::GetPickingPointWithRay(const CRay & rRay, D3DXVECTOR3 * v3IntersectPt)
+bool CMapOutdoor::GetPickingPointWithRay(const CRay & rRay, Math::Vector3 * v3IntersectPt)
 {
 	bool bObjectPick = false;
 	bool bTerrainPick = false;
-	D3DXVECTOR3 v3ObjectPick, v3TerrainPick;
+	Math::Vector3 v3ObjectPick, v3TerrainPick;
 
-	D3DXVECTOR3 v3Start, v3End, v3Dir, v3CurPos;
+	Math::Vector3 v3Start, v3End, v3Dir, v3CurPos;
  	float fRayRange;
 	rRay.GetStartPoint(&v3Start);
 	rRay.GetDirection(&v3Dir, &fRayRange);
@@ -523,7 +515,7 @@ bool CMapOutdoor::GetPickingPointWithRay(const CRay & rRay, D3DXVECTOR3 * v3Inte
 	{
 		const auto vv = (v3TerrainPick - v3Start);
 		const auto vv2 = (v3ObjectPick - v3Start);
-		if ( D3DXVec3Length( &vv2) >= D3DXVec3Length( & vv) )
+		if ( Math::Vec3Length( &vv2) >= Math::Vec3Length( & vv) )
 			*v3IntersectPt = v3TerrainPick;
 		else
 			*v3IntersectPt = v3ObjectPick;
@@ -543,12 +535,12 @@ bool CMapOutdoor::GetPickingPointWithRay(const CRay & rRay, D3DXVECTOR3 * v3Inte
 	return false;
 }
 
-bool CMapOutdoor::GetPickingPointWithRayOnlyTerrain(const CRay & rRay, D3DXVECTOR3 * v3IntersectPt)
+bool CMapOutdoor::GetPickingPointWithRayOnlyTerrain(const CRay & rRay, Math::Vector3 * v3IntersectPt)
 {
 	bool bTerrainPick = false;
-	D3DXVECTOR3 v3TerrainPick;
+	Math::Vector3 v3TerrainPick;
 
-	D3DXVECTOR3 v3Start, v3End, v3Dir, v3CurPos;
+	Math::Vector3 v3Start, v3End, v3Dir, v3CurPos;
  	float fRayRange;
 	rRay.GetStartPoint(&v3Start);
 	rRay.GetDirection(&v3Dir, &fRayRange);
@@ -657,18 +649,18 @@ bool CMapOutdoor::GetTerrainNumFromCoord(WORD wCoordX, WORD wCoordY, BYTE * pbyT
 	return true;
 }
 
-void CMapOutdoor::BuildViewFrustum(D3DXMATRIX & mat)
+void CMapOutdoor::BuildViewFrustum(Math::Matrix & mat)
 {
-	//m_plane[0] = D3DXPLANE(mat._14 + mat._13, mat._24 + mat._23, mat._34 + mat._33, mat._44 + mat._43);
-	m_plane[0] = D3DXPLANE(          mat._13,           mat._23,           mat._33,           mat._43);		// Near
-	m_plane[1] = D3DXPLANE(mat._14 - mat._13, mat._24 - mat._23, mat._34 - mat._33, mat._44 - mat._43);		// Far
-	m_plane[2] = D3DXPLANE(mat._14 + mat._11, mat._24 + mat._21, mat._34 + mat._31, mat._44 + mat._41);		// Left
-	m_plane[3] = D3DXPLANE(mat._14 - mat._11, mat._24 - mat._21, mat._34 - mat._31, mat._44 - mat._41);		// Right
-	m_plane[4] = D3DXPLANE(mat._14 + mat._12, mat._24 + mat._22, mat._34 + mat._32, mat._44 + mat._42);		// Bottom
-	m_plane[5] = D3DXPLANE(mat._14 - mat._12, mat._24 - mat._22, mat._34 - mat._32, mat._44 - mat._42);		// Top
+	//m_plane[0] = Math::Plane(mat._14 + mat._13, mat._24 + mat._23, mat._34 + mat._33, mat._44 + mat._43);
+	m_plane[0] = Math::Plane(          mat._13,           mat._23,           mat._33,           mat._43);		// Near
+	m_plane[1] = Math::Plane(mat._14 - mat._13, mat._24 - mat._23, mat._34 - mat._33, mat._44 - mat._43);		// Far
+	m_plane[2] = Math::Plane(mat._14 + mat._11, mat._24 + mat._21, mat._34 + mat._31, mat._44 + mat._41);		// Left
+	m_plane[3] = Math::Plane(mat._14 - mat._11, mat._24 - mat._21, mat._34 - mat._31, mat._44 - mat._41);		// Right
+	m_plane[4] = Math::Plane(mat._14 + mat._12, mat._24 + mat._22, mat._34 + mat._32, mat._44 + mat._42);		// Bottom
+	m_plane[5] = Math::Plane(mat._14 - mat._12, mat._24 - mat._22, mat._34 - mat._32, mat._44 - mat._42);		// Top
 
 	for (int i = 0; i < 6; ++i)
-		D3DXPlaneNormalize(&m_plane[i],&m_plane[i]);
+		Math::PlaneNormalize(&m_plane[i],&m_plane[i]);
 }
 
 bool MAPOUTDOOR_GET_HEIGHT_USE2D = true;
@@ -842,7 +834,7 @@ float CMapOutdoor::GetCacheHeight(float fx, float fy)
 	return fHeight;
 }
 
-bool CMapOutdoor::GetNormal(int ix, int iy, D3DXVECTOR3 * pv3Normal)
+bool CMapOutdoor::GetNormal(int ix, int iy, Math::Vector3 * pv3Normal)
 {
 	if (ix <= 0)
 		ix = 0;
@@ -1262,7 +1254,7 @@ void CMapOutdoor::XMasTree_Destroy()
 {
 	if (m_kXMas.m_pkTree)
 	{
-		CSpeedTreeForestDirectX& rkForest=CSpeedTreeForestDirectX::Instance();
+		CSpeedTreeForestRenderer& rkForest=CSpeedTreeForestRenderer::Instance();
 		m_kXMas.m_pkTree->Clear();
 		rkForest.DeleteInstance(m_kXMas.m_pkTree);
 		m_kXMas.m_pkTree=NULL;
@@ -1280,15 +1272,15 @@ void CMapOutdoor::__XMasTree_Create(float x, float y, float z, const char* c_szT
 	assert(NULL==m_kXMas.m_pkTree);
 	assert(-1==m_kXMas.m_iEffectID);
 
-	CSpeedTreeForestDirectX& rkForest=CSpeedTreeForestDirectX::Instance();
+	CSpeedTreeForestRenderer& rkForest=CSpeedTreeForestRenderer::Instance();
 	DWORD dwCRC32 = GetCaseCRC32(c_szTreeName, strlen(c_szTreeName));
 	m_kXMas.m_pkTree=rkForest.CreateInstance(x, y, z, dwCRC32, c_szTreeName);
 
 	CEffectManager& rkEffMgr = CEffectManager::Instance();
 	rkEffMgr.RegisterEffect(c_szEffName);
 	m_kXMas.m_iEffectID = rkEffMgr.CreateEffect(c_szEffName,
-												D3DXVECTOR3(x, y, z),
-												D3DXVECTOR3(0.0f, 0.0f, 0.0f));
+												Math::Vector3(x, y, z),
+												Math::Vector3(0.0f, 0.0f, 0.0f));
 }
 
 void CMapOutdoor::XMasTree_Set(float x, float y, float z, const char* c_szTreeName, const char* c_szEffName)
@@ -1307,8 +1299,8 @@ void CMapOutdoor::SpecialEffect_Create(DWORD dwID, float x, float y, float z, co
 		DWORD dwEffectID = itor->second;
 		if (rkEffMgr.SelectEffectInstance(dwEffectID))
 		{
-			D3DXMATRIX mat;
-			D3DXMatrixIdentity(&mat);
+			Math::Matrix mat;
+			Math::MatrixIdentity(&mat);
 			mat._41 = x;
 			mat._42 = y;
 			mat._43 = z;
@@ -1319,8 +1311,8 @@ void CMapOutdoor::SpecialEffect_Create(DWORD dwID, float x, float y, float z, co
 
 	rkEffMgr.RegisterEffect(c_szEffName);
 	DWORD dwEffectID = rkEffMgr.CreateEffect(c_szEffName,
-											 D3DXVECTOR3(x, y, z),
-											 D3DXVECTOR3(0.0f, 0.0f, 0.0f));
+											 Math::Vector3(x, y, z),
+											 Math::Vector3(0.0f, 0.0f, 0.0f));
 	m_kMap_dwID_iEffectID.insert(std::make_pair(dwID, dwEffectID));
 }
 

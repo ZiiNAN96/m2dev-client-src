@@ -15,8 +15,7 @@
 #pragma warning(disable:4201 4512 4238 4239)
 #endif
 
-#include <d3d9.h>
-#include <d3dx9.h>
+#include "Renderer/DrawStateTypes.h"
 
 #define DIRECTINPUT_VERSION 0x0800
 

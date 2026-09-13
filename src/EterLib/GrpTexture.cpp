@@ -1,11 +1,11 @@
 #include "StdAfx.h"
 #include "EterBase/Stl.h"
 #include "GrpTexture.h"
-#include "StateManager.h"
+#include "DrawState.h"
 
 void CGraphicTexture::DestroyDeviceObjects()
 {
-	safe_release(m_lpd3dTexture);
+    m_source.reset();
 }
 
 void CGraphicTexture::Destroy()
@@ -18,7 +18,7 @@ void CGraphicTexture::Destroy()
 void CGraphicTexture::Initialize()
 {
 	m_source.reset();
-	m_lpd3dTexture = NULL;
+
 	m_width = 0;
 	m_height = 0;
 	m_bEmpty = true;
@@ -31,14 +31,10 @@ bool CGraphicTexture::IsEmpty() const
 
 void CGraphicTexture::SetTextureStage(int stage) const
 {
-	assert(Renderer::UseNeutralResources());
-	STATEMANAGER.SetTexture(stage, GetTextureBinding());
+	DRAWSTATE.SetTexture(stage, GetTextureBinding());
 }
 
-LPDIRECT3DTEXTURE9 CGraphicTexture::GetD3DTexture() const
-{
-	return m_lpd3dTexture;
-}
+
 
 int CGraphicTexture::GetWidth() const
 {

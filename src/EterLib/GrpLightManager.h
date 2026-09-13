@@ -39,7 +39,7 @@ class CLight : public CGraphicBase, public CLightBase
 		
 		void		Update();
 
-		void		SetParameter(TLightID id, const D3DLIGHT9 & c_rLight);
+		void		SetParameter(TLightID id, const Renderer::LightValues & c_rLight);
 
 		void		SetDistance(float fDistance);
 		float		GetDistance() const { return m_fDistance;	}
@@ -54,16 +54,16 @@ class CLight : public CGraphicBase, public CLightBase
 		void		SetRange(float fRange);
 		void		SetPosition(float fx, float fy, float fz);
 
-		const D3DVECTOR & GetPosition() const;
+		const Math::Vector3 & GetPosition() const;
 
-		void		BlendDiffuseColor(const D3DXCOLOR & c_rColor, float fBlendTime, float fDelayTime = 0.0f);
-		void		BlendAmbientColor(const D3DXCOLOR & c_rColor, float fBlendTime, float fDelayTime = 0.0f);
+		void		BlendDiffuseColor(const Math::Color & c_rColor, float fBlendTime, float fDelayTime = 0.0f);
+		void		BlendAmbientColor(const Math::Color & c_rColor, float fBlendTime, float fDelayTime = 0.0f);
 		void		BlendRange(float fRange, float fBlendTime, float fDelayTime = 0.0f);
 
 	private:
 		TLightID		m_LightID;		// Light ID. equal to D3D light index
 
-		D3DLIGHT9		m_d3dLight;
+		Renderer::LightValues		m_light;
 		BOOL			m_isEdited;
 		float			m_fDistance;
 
@@ -100,12 +100,12 @@ class CLightManager : public CGraphicBase, public CLightBase, public CSingleton<
 		void		RestoreLight();
 
 		/////
-		void		RegisterLight(ELightType LightType, TLightID * poutLightID, D3DLIGHT9 & LightData);
+		void		RegisterLight(ELightType LightType, TLightID * poutLightID, Renderer::LightValues & LightData);
 		CLight *	GetLight(TLightID LightID);
 		void		DeleteLight(TLightID LightID);
 		/////
 
-		void		SetCenterPosition(const D3DXVECTOR3 & c_rv3Position);
+		void		SetCenterPosition(const Math::Vector3 & c_rv3Position);
 		void		SetLimitLightCount(DWORD dwLightCount);
 		void		SetSkipIndex(DWORD dwSkipIndex);
 
@@ -115,7 +115,7 @@ class CLightManager : public CGraphicBase, public CLightBase, public CSingleton<
 		TLightMap				m_LightMap;
 		TLightSortVector		m_LightSortVector;
 
-		D3DXVECTOR3				m_v3CenterPosition;
+		Math::Vector3				m_v3CenterPosition;
 		DWORD					m_dwLimitLightCount;
 		DWORD					m_dwSkipIndex;
 

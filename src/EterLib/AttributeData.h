@@ -7,7 +7,7 @@
 typedef struct SHeightData
 {
 	char szName[32+1];
-	std::vector<D3DXVECTOR3> v3VertexVector;
+	std::vector<Math::Vector3> v3VertexVector;
 } THeightData;
 
 typedef std::vector<THeightData> THeightDataVector;
@@ -31,9 +31,9 @@ class CAttributeData : public CResource
 			DWORD dwType;
 			char szName[32+1];
 
-			D3DXVECTOR3 v3Position;
+			Math::Vector3 v3Position;
 			float fDimensions[3];
-			D3DXQUATERNION quatRotation;
+			Math::Quaternion quatRotation;
 		} TCollisionData;*/
 
 	public:

@@ -202,7 +202,7 @@ class CActorInstance : public IActorInstance, public IFlyTargetableObject
 			DWORD dwEffectIndex;
 			int iBoneIndex;
 			DWORD dwModelIndex;
-			D3DXMATRIX matTranslation;
+			Math::Matrix matTranslation;
 			BOOL isAttaching;
 
 			int iLifeType;
@@ -290,7 +290,7 @@ class CActorInstance : public IActorInstance, public IFlyTargetableObject
 		void UpdateAttachingInstances();
 		void  DettachEffect(DWORD dwEID);
 		DWORD AttachEffectByName(DWORD dwParentPartIndex, const char * c_pszBoneName, const char * c_pszEffectFileName);
-		DWORD AttachEffectByID(DWORD dwParentPartIndex, const char * c_pszBoneName, DWORD dwEffectID, const D3DXVECTOR3 * c_pv3Position = NULL);
+		DWORD AttachEffectByID(DWORD dwParentPartIndex, const char * c_pszBoneName, DWORD dwEffectID, const Math::Vector3 * c_pv3Position = NULL);
 		DWORD AttachSmokeEffect(DWORD eSmoke);
 
 		/////////////////////////////////////////////////////////////////////////////////////
@@ -318,7 +318,7 @@ class CActorInstance : public IActorInstance, public IFlyTargetableObject
 
 		void UpdatePointInstance();
 		void UpdatePointInstance(TCollisionPointInstance * pPointInstance);
-		bool CheckCollisionDetection(const CDynamicSphereInstanceVector * c_pAttackingSphereVector, D3DXVECTOR3 * pv3Position);
+		bool CheckCollisionDetection(const CDynamicSphereInstanceVector * c_pAttackingSphereVector, Math::Vector3 * pv3Position);
 
 		// Collision Detection Checking
 		virtual bool TestCollisionWithDynamicSphere(const CDynamicSphereInstance & dsi);
@@ -400,8 +400,8 @@ class CActorInstance : public IActorInstance, public IFlyTargetableObject
 
 		/////////////////////////////////////////////////////////////////////////////////////
 		// Position
-		const D3DXVECTOR3&	GetMovementVectorRef();
-		const D3DXVECTOR3&	GetPositionVectorRef();
+		const Math::Vector3&	GetMovementVectorRef();
+		const Math::Vector3&	GetPositionVectorRef();
 
 		void		SetCurPixelPosition(const TPixelPosition& c_rkPPosCur);
 		void		NEW_SetAtkPixelPosition(const TPixelPosition& c_rkPPosAtk);
@@ -471,7 +471,7 @@ class CActorInstance : public IActorInstance, public IFlyTargetableObject
 		void		BeginAddRender();
 		void		EndAddRender();
 		void		SetAddRenderMode();
-		void		SetAddColor(const D3DXCOLOR & c_rColor);
+		void		SetAddColor(const Math::Color & c_rColor);
 
 		void		BeginModulateRender();
 		void		EndModulateRender();
@@ -506,12 +506,12 @@ class CActorInstance : public IActorInstance, public IFlyTargetableObject
 		// Fishing
 		bool		CanFishing();
 		BOOL		IsFishing();
-		void		SetFishingPosition(D3DXVECTOR3 & rv3Position);
+		void		SetFishingPosition(Math::Vector3 & rv3Position);
 
 	// Flying Methods
 		// As a Flying Target
 	public:
-		virtual D3DXVECTOR3 OnGetFlyTargetPosition();
+		virtual Math::Vector3 OnGetFlyTargetPosition();
 
 		void OnShootDamage();
 
@@ -607,7 +607,7 @@ class CActorInstance : public IActorInstance, public IFlyTargetableObject
 		void __ClearCombo();
 		void __OnEndCombo();
 
-		void __ProcessDataAttackSuccess(const NRaceData::TAttackData & c_rAttackData, CActorInstance & rVictim, const D3DXVECTOR3 & c_rv3Position, UINT uiSkill = 0, BOOL isSendPacket = TRUE);
+		void __ProcessDataAttackSuccess(const NRaceData::TAttackData & c_rAttackData, CActorInstance & rVictim, const Math::Vector3 & c_rv3Position, UINT uiSkill = 0, BOOL isSendPacket = TRUE);
 		void __ProcessMotionEventAttackSuccess(DWORD dwMotionKey, BYTE byEventIndex, CActorInstance & rVictim);
 		void __ProcessMotionAttackSuccess(DWORD dwMotionKey, CActorInstance & rVictim);
 
@@ -688,7 +688,7 @@ class CActorInstance : public IActorInstance, public IFlyTargetableObject
 
 		bool		__IsFlyTargetPC();
 		bool		__IsSameFlyTarget(CActorInstance * pInstance);
-		D3DXVECTOR3	__GetFlyTargetPosition();
+		Math::Vector3	__GetFlyTargetPosition();
 
 	protected:
 		void		__DestroyWeaponTrace();	// 무기 잔상을 제거한다
@@ -760,15 +760,15 @@ class CActorInstance : public IActorInstance, public IFlyTargetableObject
 		/////////////////////////////////////////////////////////////////////////////////////
 
 		// Fishing
-		D3DXVECTOR3					m_v3FishingPosition;
+		Math::Vector3					m_v3FishingPosition;
 		int							m_iFishingEffectID;
 
 		// Position
 		float						m_x;
 		float						m_y;
 		float						m_z;
-		D3DXVECTOR3					m_v3Pos;
-		D3DXVECTOR3					m_v3Movement;
+		Math::Vector3					m_v3Pos;
+		Math::Vector3					m_v3Movement;
 		BOOL						m_bNeedUpdateCollision;
 
 		DWORD						m_dwShakeTime;
@@ -792,7 +792,7 @@ class CActorInstance : public IActorInstance, public IFlyTargetableObject
 
 		// Rendering
 		int							m_iRenderMode;
-		D3DXCOLOR					m_AddColor;
+		Math::Color					m_AddColor;
 		float						m_fAlphaValue;
 
 		// Part

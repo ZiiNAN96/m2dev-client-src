@@ -80,8 +80,8 @@ void CMonsterAreaInfo::SetMonsterCount(DWORD dwCount)
 void CMonsterAreaInfo::SetMonsterDirection(EMonsterDir eMonsterDir)
 {
 	m_eMonsterDir = eMonsterDir;
-	D3DXMATRIX matRotation;
-	D3DXVECTOR3 v3Direction(0.0f, 1.0f, 0.0f);
+	Math::Matrix matRotation;
+	Math::Vector3 v3Direction(0.0f, 1.0f, 0.0f);
 	float fDegree = 0.0f;
 	switch(m_eMonsterDir)
 	{
@@ -113,11 +113,11 @@ void CMonsterAreaInfo::SetMonsterDirection(EMonsterDir eMonsterDir)
 		fDegree = 315.0f;
 		break;
 	}
-	D3DXMatrixRotationZ(&matRotation, -D3DXToRadian(fDegree));
-	D3DXVec3TransformCoord(&v3Direction, &v3Direction, &matRotation);
+	Math::MatrixRotationZ(&matRotation, -Math::ToRadian(fDegree));
+	Math::Vec3TransformCoord(&v3Direction, &v3Direction, &matRotation);
 	m_v2Monsterdirection.x = v3Direction.x;
 	m_v2Monsterdirection.y = v3Direction.y;
-	D3DXVec2Normalize(&m_v2Monsterdirection, &m_v2Monsterdirection);
+	Math::Vec2Normalize(&m_v2Monsterdirection, &m_v2Monsterdirection);
 }
 
 void CMonsterAreaInfo::RemoveAllMonsters()
@@ -139,10 +139,10 @@ void CMonsterAreaInfo::RemoveAllMonsters()
 	m_TempMonsterPosVector.clear();
 }
 
-D3DXVECTOR2 CMonsterAreaInfo::GetTempMonsterPos(DWORD dwIndex)
+Math::Vector2 CMonsterAreaInfo::GetTempMonsterPos(DWORD dwIndex)
 {
 	if (dwIndex >= m_TempMonsterPosVector.size())
-		return D3DXVECTOR2(0.0f, 0.0f);
+		return Math::Vector2(0.0f, 0.0f);
 	return m_TempMonsterPosVector[dwIndex];
 }
 

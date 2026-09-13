@@ -29,13 +29,13 @@ enum ViewState
 class Frustum 
 {
 	public:
-		void BuildViewFrustum(D3DXMATRIX & mat);
-		void BuildViewFrustum2(D3DXMATRIX & mat, float fNear, float fFar, float fFov, float fAspect, const D3DXVECTOR3 & vCamera, const D3DXVECTOR3 & vLook);
+		void BuildViewFrustum(Math::Matrix & mat);
+		void BuildViewFrustum2(Math::Matrix & mat, float fNear, float fFar, float fFov, float fAspect, const Math::Vector3 & vCamera, const Math::Vector3 & vLook);
 		ViewState ViewVolumeTest(const Vector3d &c_v3Center,const float c_fRadius) const;
 
 	private:
 		bool m_bUsingSphere;
-		D3DXVECTOR3 m_v3Center;
+		Math::Vector3 m_v3Center;
 		float m_fRadius;
-		D3DXPLANE m_plane[6];
+		Math::Plane m_plane[6];
 };

@@ -1,9 +1,9 @@
 // ZiiNAN: Diligent SpeedTree rendering integration; synchronous CPU data and read-only legacy state.
 #include "StdAfx.h"
-#include "EterLib/NativeStateView.h"
+#include "EterLib/DrawStateView.h"
 #include "TreeRenderBridge.h"
 #include "SpeedTreeWrapper.h"
-#include "EterLib/StateManager.h"
+#include "EterLib/DrawState.h"
 #include "EterLib/StaticObjectTextureLoader.h"
 #include <fstream>
 #include <set>
@@ -21,71 +21,71 @@ void Report(const TreeModelData& data,const std::string& status,bool error=false
     if(!diagnostics.is_open()) diagnostics.open("tree-renderer.log",std::ios::trunc);
     diagnostics << (error ? "ERROR: " : "") << status << " asset=" << data.asset << std::endl;
 }
-DWORD Stage(DWORD index,D3DTEXTURESTAGESTATETYPE type)
-{ DWORD result=0; STATEMANAGER.GetTextureStageState(index,type,&result); return result; }
-float StateFloat(D3DRENDERSTATETYPE type)
-{ DWORD bits=STATEMANAGER.GetRenderState(type); float value; memcpy(&value,&bits,4); return value; }
+DWORD Stage(DWORD index,Renderer::TextureStageKey type)
+{ DWORD result=0; DRAWSTATE.GetTextureStageState(index,type,&result); return result; }
+float StateFloat(Renderer::RenderStateKey type)
+{ DWORD bits=DRAWSTATE.GetRenderState(type); float value; memcpy(&value,&bits,4); return value; }
 bool Sampling(DWORD stage,TreeSampler& sampler)
 {
-    const auto get=[&](D3DSAMPLERSTATETYPE type) { DWORD value=0; return SUCCEEDED(NativeStateView().GetSamplerState(stage,type,&value)) ? value : ~DWORD(0); };
-    const auto u=get(D3DSAMP_ADDRESSU),v=get(D3DSAMP_ADDRESSV),min=get(D3DSAMP_MINFILTER),mag=get(D3DSAMP_MAGFILTER),mip=get(D3DSAMP_MIPFILTER);
-    if((u!=D3DTADDRESS_WRAP && u!=D3DTADDRESS_CLAMP) || (v!=D3DTADDRESS_WRAP && v!=D3DTADDRESS_CLAMP) ||
-       min<D3DTEXF_POINT || min>D3DTEXF_ANISOTROPIC || mag<D3DTEXF_POINT || mag>D3DTEXF_ANISOTROPIC ||
-       mip>D3DTEXF_LINEAR || get(D3DSAMP_MAXMIPLEVEL)!=0 || get(D3DSAMP_MIPMAPLODBIAS)!=0) return false;
-    sampler.sampling={u==D3DTADDRESS_WRAP,v==D3DTADDRESS_WRAP,min==D3DTEXF_LINEAR,mag==D3DTEXF_LINEAR,mip==D3DTEXF_LINEAR,mip!=D3DTEXF_NONE};
-    sampler.anisotropic=min==D3DTEXF_ANISOTROPIC || mag==D3DTEXF_ANISOTROPIC;
+    const auto get=[&](Renderer::SamplerStateKey type) { DWORD value=0; return SUCCEEDED(DrawStateView().GetSamplerState(stage,type,&value)) ? value : ~DWORD(0); };
+    const auto u=get(Renderer::SamplerAddressU),v=get(Renderer::SamplerAddressV),min=get(Renderer::SamplerMinFilter),mag=get(Renderer::SamplerMagFilter),mip=get(Renderer::SamplerMipFilter);
+    if((u!=Renderer::AddressWrap && u!=Renderer::AddressClamp) || (v!=Renderer::AddressWrap && v!=Renderer::AddressClamp) ||
+       min<Renderer::FilterPoint || min>Renderer::FilterAnisotropic || mag<Renderer::FilterPoint || mag>Renderer::FilterAnisotropic ||
+       mip>Renderer::FilterLinear || get(Renderer::SamplerMaxMipLevel)!=0 || get(Renderer::SamplerMipMapLodBias)!=0) return false;
+    sampler.sampling={u==Renderer::AddressWrap,v==Renderer::AddressWrap,min==Renderer::FilterLinear,mag==Renderer::FilterLinear,mip==Renderer::FilterLinear,mip!=Renderer::FilterNone};
+    sampler.anisotropic=min==Renderer::FilterAnisotropic || mag==Renderer::FilterAnisotropic;
     if(sampler.anisotropic) {
-        sampler.maxAnisotropy=get(D3DSAMP_MAXANISOTROPY);
-        if(min!=D3DTEXF_ANISOTROPIC || mag!=D3DTEXF_ANISOTROPIC || mip!=D3DTEXF_LINEAR ||
+        sampler.maxAnisotropy=get(Renderer::SamplerMaxAnisotropy);
+        if(min!=Renderer::FilterAnisotropic || mag!=Renderer::FilterAnisotropic || mip!=Renderer::FilterLinear ||
            sampler.maxAnisotropy<1 || sampler.maxAnisotropy>16) return false;
     }
     return true;
 }
 bool CaptureState(TreeDraw& draw,bool hasSecond)
 {
-    draw.blend=STATEMANAGER.GetRenderState(D3DRS_ALPHABLENDENABLE)!=FALSE;
-    draw.depthTest=STATEMANAGER.GetRenderState(D3DRS_ZENABLE)!=FALSE;
-    draw.depthWrite=STATEMANAGER.GetRenderState(D3DRS_ZWRITEENABLE)!=FALSE;
-    draw.depthFunction=STATEMANAGER.GetRenderState(D3DRS_ZFUNC);
-    draw.cull=STATEMANAGER.GetRenderState(D3DRS_CULLMODE)-1;
-    draw.alphaTest=STATEMANAGER.GetRenderState(D3DRS_ALPHATESTENABLE)!=FALSE;
-    draw.alphaReference=STATEMANAGER.GetRenderState(D3DRS_ALPHAREF);
+    draw.blend=DRAWSTATE.GetRenderState(Renderer::StateAlphaBlendEnable)!=FALSE;
+    draw.depthTest=DRAWSTATE.GetRenderState(Renderer::StateZEnable)!=FALSE;
+    draw.depthWrite=DRAWSTATE.GetRenderState(Renderer::StateZWriteEnable)!=FALSE;
+    draw.depthFunction=DRAWSTATE.GetRenderState(Renderer::StateZFunc);
+    draw.cull=DRAWSTATE.GetRenderState(Renderer::StateCullMode)-1;
+    draw.alphaTest=DRAWSTATE.GetRenderState(Renderer::StateAlphaTestEnable)!=FALSE;
+    draw.alphaReference=DRAWSTATE.GetRenderState(Renderer::StateAlphaRef);
     if(draw.cull>2 || draw.depthFunction<1 || draw.depthFunction>8 || draw.alphaReference>255 ||
-       (draw.alphaTest && STATEMANAGER.GetRenderState(D3DRS_ALPHAFUNC)!=D3DCMP_GREATER) ||
-       (draw.blend && (STATEMANAGER.GetRenderState(D3DRS_SRCBLEND)!=D3DBLEND_SRCALPHA ||
-        STATEMANAGER.GetRenderState(D3DRS_DESTBLEND)!=D3DBLEND_INVSRCALPHA ||
-        STATEMANAGER.GetRenderState(D3DRS_BLENDOP)!=D3DBLENDOP_ADD || STATEMANAGER.GetRenderState(D3DRS_SEPARATEALPHABLENDENABLE)))) return false;
-    if(STATEMANAGER.GetRenderState(D3DRS_LIGHTING) || Stage(0,D3DTSS_COLOROP)!=D3DTOP_MODULATE ||
-       Stage(0,D3DTSS_COLORARG1)!=D3DTA_TEXTURE || Stage(0,D3DTSS_COLORARG2)!=D3DTA_DIFFUSE ||
-       Stage(0,D3DTSS_ALPHAOP)!=D3DTOP_MODULATE || Stage(0,D3DTSS_ALPHAARG1)!=D3DTA_TEXTURE ||
-       Stage(0,D3DTSS_ALPHAARG2)!=D3DTA_DIFFUSE || Stage(0,D3DTSS_TEXCOORDINDEX)!=0 ||
-       Stage(0,D3DTSS_TEXTURETRANSFORMFLAGS)!=D3DTTFF_DISABLE) return false;
+       (draw.alphaTest && DRAWSTATE.GetRenderState(Renderer::StateAlphaFunc)!=Renderer::CompareGreater) ||
+       (draw.blend && (DRAWSTATE.GetRenderState(Renderer::StateSrcBlend)!=Renderer::BlendSrcAlpha ||
+        DRAWSTATE.GetRenderState(Renderer::StateDestBlend)!=Renderer::BlendInvSrcAlpha ||
+        DRAWSTATE.GetRenderState(Renderer::StateBlendOp)!=Renderer::BlendOpAdd || DRAWSTATE.GetRenderState(Renderer::StateSeparateAlphaBlendEnable)))) return false;
+    if(DRAWSTATE.GetRenderState(Renderer::StateLighting) || Stage(0,Renderer::StageColorOp)!=Renderer::TextureOpModulate ||
+       Stage(0,Renderer::StageColorArg1)!=Renderer::ArgTexture || Stage(0,Renderer::StageColorArg2)!=Renderer::ArgDiffuse ||
+       Stage(0,Renderer::StageAlphaOp)!=Renderer::TextureOpModulate || Stage(0,Renderer::StageAlphaArg1)!=Renderer::ArgTexture ||
+       Stage(0,Renderer::StageAlphaArg2)!=Renderer::ArgDiffuse || Stage(0,Renderer::StageTexCoordIndex)!=0 ||
+       Stage(0,Renderer::StageTextureTransformFlags)!=Renderer::TexTransformDisable) return false;
     if(hasSecond) {
-        if(Stage(1,D3DTSS_COLOROP)==D3DTOP_MODULATE && Stage(1,D3DTSS_COLORARG1)==D3DTA_TEXTURE &&
-           Stage(1,D3DTSS_COLORARG2)==D3DTA_CURRENT && Stage(1,D3DTSS_ALPHAOP)==D3DTOP_DISABLE) draw.stage1=1;
-        else if(Stage(1,D3DTSS_COLOROP)==D3DTOP_SELECTARG1 && Stage(1,D3DTSS_COLORARG1)==D3DTA_CURRENT &&
-                Stage(1,D3DTSS_ALPHAOP)==D3DTOP_MODULATE && Stage(1,D3DTSS_ALPHAARG1)==D3DTA_TEXTURE &&
-                Stage(1,D3DTSS_ALPHAARG2)==D3DTA_CURRENT) draw.stage1=2;
+        if(Stage(1,Renderer::StageColorOp)==Renderer::TextureOpModulate && Stage(1,Renderer::StageColorArg1)==Renderer::ArgTexture &&
+           Stage(1,Renderer::StageColorArg2)==Renderer::ArgCurrent && Stage(1,Renderer::StageAlphaOp)==Renderer::TextureOpDisable) draw.stage1=1;
+        else if(Stage(1,Renderer::StageColorOp)==Renderer::TextureOpSelectArg1 && Stage(1,Renderer::StageColorArg1)==Renderer::ArgCurrent &&
+                Stage(1,Renderer::StageAlphaOp)==Renderer::TextureOpModulate && Stage(1,Renderer::StageAlphaArg1)==Renderer::ArgTexture &&
+                Stage(1,Renderer::StageAlphaArg2)==Renderer::ArgCurrent) draw.stage1=2;
         else return false;
-        const auto coordinates=Stage(1,D3DTSS_TEXCOORDINDEX),transform=Stage(1,D3DTSS_TEXTURETRANSFORMFLAGS);
-        if(coordinates==D3DTSS_TCI_CAMERASPACEPOSITION && transform==D3DTTFF_COUNT2) draw.cameraCoordinates=true;
-        else if(coordinates!=1 || transform!=D3DTTFF_DISABLE) return false;
+        const auto coordinates=Stage(1,Renderer::StageTexCoordIndex),transform=Stage(1,Renderer::StageTextureTransformFlags);
+        if(coordinates==Renderer::StageTciCameraSpacePosition && transform==Renderer::TexTransformCount2) draw.cameraCoordinates=true;
+        else if(coordinates!=1 || transform!=Renderer::TexTransformDisable) return false;
     }
     for(unsigned stage=0;stage<2;++stage) if((stage==0 || hasSecond) && !Sampling(stage,draw.samplers[stage])) return false;
-    D3DXMATRIX matrix;
+    Math::Matrix matrix;
     for(auto entry:{std::pair<Renderer::MatrixSlot,std::array<float,16>*>(Renderer::MatrixWorld,&draw.matrices.world),
                     {Renderer::MatrixView,&draw.matrices.view},{Renderer::MatrixProjection,&draw.matrices.projection},{Renderer::MatrixTexture1,&draw.textureTransform}}) {
-        STATEMANAGER.GetTransform(entry.first,&matrix); memcpy(entry.second->data(),&matrix,64);
+        DRAWSTATE.GetTransform(entry.first,&matrix); memcpy(entry.second->data(),&matrix,64);
     }
-    if(draw.part==TreePart::Leaf && FAILED(NativeStateView().GetVertexShaderConstantF(0,draw.legacyConstants[0].data(),96))) return false;
-    if(STATEMANAGER.GetRenderState(D3DRS_FOGENABLE)) {
-        if(STATEMANAGER.GetRenderState(D3DRS_FOGTABLEMODE)!=D3DFOG_NONE) return false;
-        draw.fog=draw.part==TreePart::Leaf ? 4u : STATEMANAGER.GetRenderState(D3DRS_FOGVERTEXMODE);
+    if(draw.part==TreePart::Leaf && FAILED(DrawStateView().GetVertexConstants(0,draw.legacyConstants[0].data(),96))) return false;
+    if(DRAWSTATE.GetRenderState(Renderer::StateFogEnable)) {
+        if(DRAWSTATE.GetRenderState(Renderer::StateFogTableMode)!=Renderer::FogNone) return false;
+        draw.fog=draw.part==TreePart::Leaf ? 4u : DRAWSTATE.GetRenderState(Renderer::StateFogVertexMode);
         if(draw.fog>4) return false;
-        draw.rangeFog=STATEMANAGER.GetRenderState(D3DRS_RANGEFOGENABLE)!=FALSE;
-        draw.fogParameters={StateFloat(D3DRS_FOGSTART),StateFloat(D3DRS_FOGEND),StateFloat(D3DRS_FOGDENSITY),0};
+        draw.rangeFog=DRAWSTATE.GetRenderState(Renderer::StateRangeFogEnable)!=FALSE;
+        draw.fogParameters={StateFloat(Renderer::StateFogStart),StateFloat(Renderer::StateFogEnd),StateFloat(Renderer::StateFogDensity),0};
         if(draw.fog==3 && draw.fogParameters[0]==draw.fogParameters[1]) return false;
-        const D3DXCOLOR color(STATEMANAGER.GetRenderState(D3DRS_FOGCOLOR)); draw.fogColor={color.r,color.g,color.b,color.a};
+        const Math::Color color(DRAWSTATE.GetRenderState(Renderer::StateFogColor)); draw.fogColor={color.r,color.g,color.b,color.a};
     }
     return true;
 }
@@ -155,7 +155,7 @@ void TreeRenderBridge::Draw(CSpeedTreeWrapper const& tree,TreePart part,uint32_t
         if(cameraMask && cameraMask->GetTexturePointer()->GetTextureBinding()==bound) return cameraMask;
         return nullptr;
     };
-    TextureBinding bound[2]{STATEMANAGER.GetTextureBinding(0),STATEMANAGER.GetTextureBinding(1)};
+    TextureBinding bound[2]{DRAWSTATE.GetTextureBinding(0),DRAWSTATE.GetTextureBinding(1)};
     TerrainTexturePtr images[2];
     for(unsigned stage=0;stage<2;++stage) {
         if(stage==1 && !bound[stage]) continue;
@@ -169,9 +169,9 @@ void TreeRenderBridge::Draw(CSpeedTreeWrapper const& tree,TreePart part,uint32_t
     TreeDraw draw; draw.part=part; draw.strip=part==TreePart::Branch || part==TreePart::Frond; draw.first=first; draw.count=count;
     if(!CaptureState(draw,images[1]!=nullptr)) {
         std::string state="unsupported state part="+std::to_string(uint32_t(part));
-        for(auto type:{D3DRS_LIGHTING,D3DRS_ALPHABLENDENABLE,D3DRS_SRCBLEND,D3DRS_DESTBLEND,D3DRS_ZFUNC,D3DRS_ALPHAFUNC,D3DRS_FOGTABLEMODE})
-            state+=" rs"+std::to_string(type)+"="+std::to_string(STATEMANAGER.GetRenderState(type));
-        for(unsigned stage=0;stage<2;++stage) for(auto type:{D3DTSS_COLOROP,D3DTSS_COLORARG1,D3DTSS_COLORARG2,D3DTSS_ALPHAOP,D3DTSS_ALPHAARG1,D3DTSS_ALPHAARG2,D3DTSS_TEXCOORDINDEX,D3DTSS_TEXTURETRANSFORMFLAGS})
+        for(auto type:{Renderer::StateLighting,Renderer::StateAlphaBlendEnable,Renderer::StateSrcBlend,Renderer::StateDestBlend,Renderer::StateZFunc,Renderer::StateAlphaFunc,Renderer::StateFogTableMode})
+            state+=" rs"+std::to_string(type)+"="+std::to_string(DRAWSTATE.GetRenderState(type));
+        for(unsigned stage=0;stage<2;++stage) for(auto type:{Renderer::StageColorOp,Renderer::StageColorArg1,Renderer::StageColorArg2,Renderer::StageAlphaOp,Renderer::StageAlphaArg1,Renderer::StageAlphaArg2,Renderer::StageTexCoordIndex,Renderer::StageTextureTransformFlags})
             state+=" t"+std::to_string(stage)+":"+std::to_string(type)+"="+std::to_string(Stage(stage,type));
         Report(*data,state,true); return;
     }

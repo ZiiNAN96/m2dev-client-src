@@ -1,9 +1,9 @@
 // ZiiNAN: Diligent effect rendering integration; read-only native draw snapshot, no deferred simulation.
 #include "StdAfx.h"
-#include "EterLib/NativeStateView.h"
+#include "EterLib/DrawStateView.h"
 #include "EffectRenderBridge.h"
-#include "EterLib/NativeMaterialSnapshot.h"
-#include "EterLib/StateManager.h"
+#include "EterLib/MaterialStateSnapshot.h"
+#include "EterLib/DrawState.h"
 #include "EterLib/GrpImage.h"
 #include "EterLib/StaticObjectTextureLoader.h"
 #include <fstream>
@@ -38,7 +38,7 @@ void Report(const std::string& reason,bool error)
 bool Snapshot(EffectDraw& d)
 {
     std::string error;
-    const bool valid=CaptureNativeMaterial(d,error);
+    const bool valid=CaptureMaterialState(d,error);
     if(!valid && !error.empty()) Report(error,true);
     return valid;
 }
@@ -62,33 +62,27 @@ void EffectRenderBridge::Texture(CGraphicImage* image)
 }
 void EffectRenderBridge::Part(Renderer::EffectPart p) { part=p; }
 void EffectRenderBridge::VisibleParticle() { if(Active()) ++Renderer::effectVisibleParticles; }
-HRESULT EffectRenderBridge::DrawPrimitiveUP(D3DPRIMITIVETYPE topology,UINT primitives,const void* vertices,UINT stride)
+void EffectRenderBridge::Submit(Renderer::PrimitiveTopology topology,UINT primitives,const void* vertices,UINT stride)
 {
-    const HRESULT result=STATEMANAGER.DrawPrimitiveUP(topology,primitives,vertices,stride);
-    return SubmitNativeDraw(topology,primitives,vertices,stride,result);
-}
-HRESULT EffectRenderBridge::SubmitNativeDraw(D3DPRIMITIVETYPE topology,UINT primitives,const void* vertices,UINT stride,HRESULT result)
-{
-    if(!Active() || !primitives) return result;
-    if(FAILED(result)) { Report("native draw rejected HRESULT="+std::to_string(uint32_t(result)),false); return result; }
-    if((topology!=D3DPT_TRIANGLELIST && topology!=D3DPT_TRIANGLESTRIP) || (stride!=20 && stride!=24) || !vertices || primitives>UINT32_MAX/3) {
-        Report("unsupported geometry",true); return result;
+    if(!Active() || !primitives) return;
+    if((topology!=Renderer::TopologyTriangleList && topology!=Renderer::TopologyTriangleStrip) || (stride!=20 && stride!=24) || !vertices || primitives>UINT32_MAX/3) {
+        Report("unsupported geometry",true); return;
     }
-    EffectDraw draw; draw.strip=topology==D3DPT_TRIANGLESTRIP;
+    EffectDraw draw; draw.strip=topology==Renderer::TopologyTriangleStrip;
     const uint32_t count=draw.strip ? primitives+2 : primitives*3;
-    const auto bound=NativeStateView().GetTextureBinding(0);
+    const auto bound=DrawStateView().GetTextureBinding(0);
     draw.textured=bool(bound);
     TerrainTexturePtr texture;
     if(bound) {
         auto found=textureNames.find(bound.Identity());
-        if(found==textureNames.end()) { Report("unresolved native texture",true); return result; }
+        if(found==textureNames.end()) { Report("unresolved native texture",true); return; }
         auto& owned=owner->textures[found->second];
         if(!owned) {
             auto& shared=textures[found->second]; owned=shared.lock();
             if(!owned) { owned=LoadStaticObjectTextureFile(found->second.c_str(),*effectRenderer); shared=owned; }
             if(owned) Report("texture "+found->second,false);
         }
-        if(!owned) { Report("texture upload "+found->second,true); return result; }
+        if(!owned) { Report("texture upload "+found->second,true); return; }
         texture=owned;
     }
     if(!Snapshot(draw) || !EffectDrawValid(draw,count)) {
@@ -98,7 +92,7 @@ HRESULT EffectRenderBridge::SubmitNativeDraw(D3DPRIMITIVETYPE topology,UINT prim
             " cull="+std::to_string(draw.cull)+" z="+std::to_string(draw.depthFunction)+" alphafunc="+std::to_string(draw.alphaFunction)+
             " args="+std::to_string(draw.colorArg1)+","+std::to_string(draw.colorArg2)+","+std::to_string(draw.alphaArg1)+","+std::to_string(draw.alphaArg2)+
             " sampler="+std::to_string(draw.sampler.addressU)+","+std::to_string(draw.sampler.addressV)+","+std::to_string(draw.sampler.min)+","+std::to_string(draw.sampler.mag)+","+std::to_string(draw.sampler.mip),true);
-        return result;
+        return;
     }
     std::vector<EffectVertex> upload(count);
     auto* bytes=static_cast<const uint8_t*>(vertices);
@@ -110,5 +104,5 @@ HRESULT EffectRenderBridge::SubmitNativeDraw(D3DPRIMITIVETYPE topology,UINT prim
     effectRenderer->Draw(upload.data(),count,texture,draw,part);
     Report("submitted part="+std::to_string(uint32_t(part))+" src="+std::to_string(draw.src)+
         " dst="+std::to_string(draw.dst)+" color="+std::to_string(draw.colorOp)+" fog="+std::to_string(draw.fog),false);
-    return result;
+    return;
 }

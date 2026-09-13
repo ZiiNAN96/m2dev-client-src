@@ -12,13 +12,13 @@ CFlyingData::CFlyingData()
 
 void CFlyingData::__Initialize()
 {
-	m_v3AngVel = D3DXVECTOR3(0.0f,0.0f,0.0f);
+	m_v3AngVel = Math::Vector3(0.0f,0.0f,0.0f);
 	m_bIsHoming = false;
 	m_fInitVel = 200.0f;
 	m_fConeAngle = (0.0f);
 	m_fRollAngle = 0.0f;
 	m_fRange = 500.0f;
-	m_v3Accel = D3DXVECTOR3(0,0,0.0f);// gravity direction :-z
+	m_v3Accel = Math::Vector3(0,0,0.0f);// gravity direction :-z
 	m_fHomingMaxAngle = 3.0f;
 	m_fHomingStartTime = 0.0f;
 	m_fGravity = 0;
@@ -169,7 +169,7 @@ bool CFlyingData::LoadScriptFile(const char* c_szFilename)
 
 	TextFileLoader.GetTokenVector3("angularvelocity",&m_v3AngVel);
 	//if (!TextFileLoader.GetTokenVector3("angularvelocity",&m_v3AngVel))
-	//	m_v3AngVel = D3DXVECTOR3(0.0f,0.0f,0.0f);
+	//	m_v3AngVel = Math::Vector3(0.0f,0.0f,0.0f);
 
 	TextFileLoader.GetTokenFloat("gravity",&m_fGravity);
 	//if (!TextFileLoader.GetTokenFloat("gravity",&m_fGravity))
@@ -221,7 +221,7 @@ bool CFlyingData::LoadScriptFile(const char* c_szFilename)
 		return false;
 
 	if (!TextFileLoader.GetTokenVector3("acceleration",&m_v3Accel))
-		m_v3Accel = D3DXVECTOR3(0.0f,0.0f,0.0f);
+		m_v3Accel = Math::Vector3(0.0f,0.0f,0.0f);
 
 	DWORD i;
 	for(i=0;i<TextFileLoader.GetChildNodeCount();i++)

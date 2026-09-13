@@ -1,6 +1,6 @@
 #include "StdAfx.h"
 #include "GrpMarkInstance.h"
-#include "StateManager.h"
+#include "DrawState.h"
 #include "ResourceManager.h"
 #include "UIRenderBridge.h"
 
@@ -103,16 +103,12 @@ void CGraphicMarkInstance::OnRender()
 	vertices[3].texCoord	= TTextureCoordinate(eu, ev);	
 	vertices[3].diffuse		= m_DiffuseColor;
 
-	if (CGraphicBase::SetPDTStream(vertices, 4))
+	if (CGraphicBase::ValidatePDTVertices(vertices, 4))
 	{
-		CGraphicBase::SetDefaultIndexBuffer(CGraphicBase::DEFAULT_IB_FILL_RECT);
 	
-		STATEMANAGER.SetTexture(0, pTexture->GetTextureBinding());
-		STATEMANAGER.SetTexture(1, NULL);
-		STATEMANAGER.SetFVF(D3DFVF_XYZ|D3DFVF_DIFFUSE|D3DFVF_TEX1);
-		const auto nativeDraw=STATEMANAGER.DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 4, 0, 2);
-		UIRenderBridge::IndexedQuad(vertices,pImage,nativeDraw); // ZiiNAN: UI emblem, not Nameplate rendering.
-		//OLD: STATEMANAGER.DrawIndexedPrimitiveUP(D3DPT_TRIANGLELIST, 0, 4, 2, c_FillRectIndices, D3DFMT_INDEX16, vertices, sizeof(TPDTVertex));
+		DRAWSTATE.SetTexture(0, pTexture->GetTextureBinding());
+		DRAWSTATE.SetTexture(1, NULL);
+		UIRenderBridge::IndexedQuad(vertices,pImage); // ZiiNAN: UI emblem, not Nameplate rendering.
 	}
 }
 

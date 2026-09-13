@@ -1,20 +1,20 @@
 #include "StdAfx.h"
 #include "Renderer/TerrainPresentation.h"
-#include "EterLib/NativeStateView.h"
+#include "EterLib/DrawStateView.h"
 #include "EterBase/Utils.h"
 #include "EterBase/Timer.h"
 #include "GrpBase.h"
 #include "Camera.h"
-#include "StateManager.h"
+#include "DrawState.h"
 
-void PixelPositionToD3DXVECTOR3(const D3DXVECTOR3& c_rkPPosSrc, D3DXVECTOR3* pv3Dst)
+void PixelPositionToWorldPosition(const Math::Vector3& c_rkPPosSrc, Math::Vector3* pv3Dst)
 {
 	pv3Dst->x=+c_rkPPosSrc.x;
 	pv3Dst->y=-c_rkPPosSrc.y;
 	pv3Dst->z=+c_rkPPosSrc.z;
 }
 
-void D3DXVECTOR3ToPixelPosition(const D3DXVECTOR3& c_rv3Src, D3DXVECTOR3* pv3Dst)
+void WorldPositionToPixelPosition(const Math::Vector3& c_rv3Src, Math::Vector3* pv3Dst)
 {
 	pv3Dst->x=+c_rv3Src.x;
 	pv3Dst->y=-c_rv3Src.y;
@@ -24,11 +24,11 @@ void D3DXVECTOR3ToPixelPosition(const D3DXVECTOR3& c_rv3Src, D3DXVECTOR3* pv3Dst
 HWND CGraphicBase::ms_hWnd;
 HDC CGraphicBase::ms_hDC;
 
-LPDIRECT3D9EX			CGraphicBase::ms_lpd3d = NULL;
-LPDIRECT3DDEVICE9EX		CGraphicBase::ms_lpd3dDevice = NULL;
-ID3DXMatrixStack *		CGraphicBase::ms_lpd3dMatStack = NULL;
-D3DPRESENT_PARAMETERS	CGraphicBase::ms_d3dPresentParameter = {};
-D3DVIEWPORT9			CGraphicBase::ms_Viewport;
+
+
+Math::MatrixStack CGraphicBase::ms_matrixStack;
+
+Math::Viewport			CGraphicBase::ms_Viewport;
 
 HRESULT					CGraphicBase::ms_hLastResult = NULL;
 
@@ -37,30 +37,30 @@ int						CGraphicBase::ms_iHeight;
 
 DWORD					CGraphicBase::ms_faceCount = 0;
 
-D3DCAPS9				CGraphicBase::ms_d3dCaps;
 
-DWORD					CGraphicBase::ms_dwD3DBehavior = 0;
 
-LPDIRECT3DVERTEXDECLARATION9					CGraphicBase::ms_ptVS = 0;
-LPDIRECT3DVERTEXDECLARATION9					CGraphicBase::ms_pntVS = 0;
-LPDIRECT3DVERTEXDECLARATION9					CGraphicBase::ms_pnt2VS = 0;
 
-D3DXMATRIX				CGraphicBase::ms_matIdentity;
 
-D3DXMATRIX				CGraphicBase::ms_matView;
-D3DXMATRIX				CGraphicBase::ms_matProj;
-D3DXMATRIX				CGraphicBase::ms_matInverseView;
-D3DXMATRIX				CGraphicBase::ms_matInverseViewYAxis;
 
-D3DXMATRIX				CGraphicBase::ms_matWorld;
-D3DXMATRIX				CGraphicBase::ms_matWorldView;
 
-D3DXMATRIX				CGraphicBase::ms_matScreen0;
-D3DXMATRIX				CGraphicBase::ms_matScreen1;
-D3DXMATRIX				CGraphicBase::ms_matScreen2;
 
-D3DXVECTOR3				CGraphicBase::ms_vtPickRayOrig;
-D3DXVECTOR3				CGraphicBase::ms_vtPickRayDir;
+
+Math::Matrix				CGraphicBase::ms_matIdentity;
+
+Math::Matrix				CGraphicBase::ms_matView;
+Math::Matrix				CGraphicBase::ms_matProj;
+Math::Matrix				CGraphicBase::ms_matInverseView;
+Math::Matrix				CGraphicBase::ms_matInverseViewYAxis;
+
+Math::Matrix				CGraphicBase::ms_matWorld;
+Math::Matrix				CGraphicBase::ms_matWorldView;
+
+Math::Matrix				CGraphicBase::ms_matScreen0;
+Math::Matrix				CGraphicBase::ms_matScreen1;
+Math::Matrix				CGraphicBase::ms_matScreen2;
+
+Math::Vector3				CGraphicBase::ms_vtPickRayOrig;
+Math::Vector3				CGraphicBase::ms_vtPickRayDir;
 
 float					CGraphicBase::ms_fFieldOfView;
 float					CGraphicBase::ms_fNearY;
@@ -70,7 +70,7 @@ float					CGraphicBase::ms_fAspect;
 DWORD					CGraphicBase::ms_dwWavingEndTime;
 int						CGraphicBase::ms_iWavingPower;
 DWORD					CGraphicBase::ms_dwFlashingEndTime;
-D3DXCOLOR				CGraphicBase::ms_FlashingColor;
+Math::Color				CGraphicBase::ms_FlashingColor;
 
 // Terrain picking용 Ray... CCamera 이용하는 버전.. 기존의 Ray와 통합 필요...
 CRay					CGraphicBase::ms_Ray;
@@ -90,12 +90,12 @@ std::vector<TIndex>		CGraphicBase::ms_fillRectIdxVector;
 std::vector<TIndex>		CGraphicBase::ms_fillCubeIdxVector;
 */
 
-LPD3DXMESH				CGraphicBase::ms_lpSphereMesh = NULL;
-LPD3DXMESH				CGraphicBase::ms_lpCylinderMesh = NULL;
 
-LPDIRECT3DVERTEXBUFFER9	CGraphicBase::ms_alpd3dPDTVB[PDT_VERTEXBUFFER_NUM];
 
-LPDIRECT3DINDEXBUFFER9	CGraphicBase::ms_alpd3dDefIB[DEFAULT_IB_NUM];
+
+
+
+
 
 bool CGraphicBase::IsLowTextureMemory()
 {
@@ -122,17 +122,14 @@ void CGraphicBase::GetBackBufferSize(UINT* puWidth, UINT* puHeight)
     *puWidth=ms_iWidth; *puHeight=ms_iHeight;
 }
 
-void CGraphicBase::SetDefaultIndexBuffer(UINT eDefIB)
+
+
+bool CGraphicBase::ValidatePDTVertices(SPDTVertex* pVertices, UINT uVtxCount)
 {
-    // CPU primitive submission supplies indices directly.
+	return ValidatePDTVertices((SPDTVertexRaw*)pVertices, uVtxCount);
 }
 
-bool CGraphicBase::SetPDTStream(SPDTVertex* pVertices, UINT uVtxCount)
-{
-	return SetPDTStream((SPDTVertexRaw*)pVertices, uVtxCount);
-}
-
-bool CGraphicBase::SetPDTStream(SPDTVertexRaw* pSrcVertices, UINT uVtxCount)
+bool CGraphicBase::ValidatePDTVertices(SPDTVertexRaw* pSrcVertices, UINT uVtxCount)
 {
     return pSrcVertices && uVtxCount && uVtxCount < PDT_VERTEX_NUM;
 }
@@ -142,12 +139,12 @@ DWORD CGraphicBase::GetAvailableTextureMemory()
     return 0; // D3D11 has no equivalent free-texture-memory query; unknown, not a fabricated budget.
 }
 
-const D3DXMATRIX& CGraphicBase::GetViewMatrix()
+const Math::Matrix& CGraphicBase::GetViewMatrix()
 {
 	return ms_matView;
 }
 
-const D3DXMATRIX & CGraphicBase::GetIdentityMatrix()
+const Math::Matrix & CGraphicBase::GetIdentityMatrix()
 {
 	return ms_matIdentity;
 }
@@ -156,9 +153,9 @@ void CGraphicBase::SetEyeCamera(float xEye, float yEye, float zEye,
 								float xCenter, float yCenter, float zCenter,
 								float xUp, float yUp, float zUp)
 {
-	D3DXVECTOR3 vectorEye(xEye, yEye, zEye);
-	D3DXVECTOR3 vectorCenter(xCenter, yCenter, zCenter);
-	D3DXVECTOR3 vectorUp(xUp, yUp, zUp);
+	Math::Vector3 vectorEye(xEye, yEye, zEye);
+	Math::Vector3 vectorCenter(xCenter, yCenter, zCenter);
+	Math::Vector3 vectorUp(xUp, yUp, zUp);
 
 //	CCameraManager::Instance().SetCurrentCamera(CCameraManager::DEFAULT_PERSPECTIVE_CAMERA);
 	CCameraManager::Instance().GetCurrentCamera()->SetViewParams(vectorEye, vectorCenter, vectorUp);
@@ -168,25 +165,25 @@ void CGraphicBase::SetEyeCamera(float xEye, float yEye, float zEye,
 void CGraphicBase::SetSimpleCamera(float x, float y, float z, float pitch, float roll)
 {
 	CCamera * pCamera = CCameraManager::Instance().GetCurrentCamera();
-	D3DXVECTOR3 vectorEye(x, y, z);
+	Math::Vector3 vectorEye(x, y, z);
 
-	pCamera->SetViewParams(D3DXVECTOR3(0.0f, y, 0.0f), D3DXVECTOR3(0.0f, 0.0f, 0.0f), D3DXVECTOR3(0.0f, 0.0f, 1.0f));
+	pCamera->SetViewParams(Math::Vector3(0.0f, y, 0.0f), Math::Vector3(0.0f, 0.0f, 0.0f), Math::Vector3(0.0f, 0.0f, 1.0f));
 	pCamera->RotateEyeAroundTarget(pitch, roll);
 	pCamera->Move(vectorEye);
 
 	UpdateViewMatrix();
 
 	// This is levites's virtual(?) code which you should not trust.
-	NativeStateView().GetTransform(Renderer::MatrixWorld, &ms_matWorld);
-	D3DXMatrixMultiply(&ms_matWorldView, &ms_matWorld, &ms_matView);
+	DrawStateView().GetTransform(Renderer::MatrixWorld, &ms_matWorld);
+	Math::MatrixMultiply(&ms_matWorldView, &ms_matWorld, &ms_matView);
 }
 
 void CGraphicBase::SetAroundCamera(float distance, float pitch, float roll, float lookAtZ)
 {
 	CCamera * pCamera = CCameraManager::Instance().GetCurrentCamera();
-	pCamera->SetViewParams(D3DXVECTOR3(0.0f, -distance, 0.0f), D3DXVECTOR3(0.0f, 0.0f, 0.0f), D3DXVECTOR3(0.0f, 0.0f, 1.0f));
+	pCamera->SetViewParams(Math::Vector3(0.0f, -distance, 0.0f), Math::Vector3(0.0f, 0.0f, 0.0f), Math::Vector3(0.0f, 0.0f, 1.0f));
 	pCamera->RotateEyeAroundTarget(pitch, roll);
-	D3DXVECTOR3 v3Target = pCamera->GetTarget();
+	Math::Vector3 v3Target = pCamera->GetTarget();
 	v3Target.z = lookAtZ;
 	pCamera->SetTarget(v3Target);
 // 	pCamera->Move(v3Target);
@@ -194,8 +191,8 @@ void CGraphicBase::SetAroundCamera(float distance, float pitch, float roll, floa
 	UpdateViewMatrix();
 
 	// This is levites's virtual(?) code which you should not trust.
-	NativeStateView().GetTransform(Renderer::MatrixWorld, &ms_matWorld);
-	D3DXMatrixMultiply(&ms_matWorldView, &ms_matWorld, &ms_matView);
+	DrawStateView().GetTransform(Renderer::MatrixWorld, &ms_matWorld);
+	Math::MatrixMultiply(&ms_matWorldView, &ms_matWorld, &ms_matView);
 }
 
 void CGraphicBase::SetPositionCamera(float fx, float fy, float fz, float distance, float pitch, float roll)
@@ -215,23 +212,23 @@ void CGraphicBase::SetPositionCamera(float fx, float fy, float fz, float distanc
 	if (!pCamera)
 		return;
 
-	pCamera->SetViewParams(D3DXVECTOR3(0.0f, -distance, 0.0f), D3DXVECTOR3(0.0f, 0.0f, 0.0f), D3DXVECTOR3(0.0f, 0.0f, 1.0f));
+	pCamera->SetViewParams(Math::Vector3(0.0f, -distance, 0.0f), Math::Vector3(0.0f, 0.0f, 0.0f), Math::Vector3(0.0f, 0.0f, 1.0f));
 	pitch = fMIN(80.0f, fMAX(-80.0f, pitch) );
 //	Tracef("SetPosition Camera : %f, %f\n", pitch, roll);
 	pCamera->RotateEyeAroundTarget(pitch, roll);
-	pCamera->Move(D3DXVECTOR3(fx, fy, fz));
+	pCamera->Move(Math::Vector3(fx, fy, fz));
 
 	UpdateViewMatrix();
 
 	// This is levites's virtual(?) code which you should not trust.
-	STATEMANAGER.GetTransform(Renderer::MatrixWorld, &ms_matWorld);
-	D3DXMatrixMultiply(&ms_matWorldView, &ms_matWorld, &ms_matView);
+	DRAWSTATE.GetTransform(Renderer::MatrixWorld, &ms_matWorld);
+	Math::MatrixMultiply(&ms_matWorldView, &ms_matWorld, &ms_matView);
 }
 
 void CGraphicBase::SetOrtho2D(float hres, float vres, float zres)
 {
 	//CCameraManager::Instance().SetCurrentCamera(CCameraManager::DEFAULT_ORTHO_CAMERA);
-	D3DXMatrixOrthoOffCenterRH(&ms_matProj, 0, hres, vres, 0, 0, zres);
+	Math::MatrixOrthoOffCenterRH(&ms_matProj, 0, hres, vres, 0, 0, zres);
 	//UpdatePipeLineMatrix();
 	UpdateProjMatrix();
 }
@@ -239,7 +236,7 @@ void CGraphicBase::SetOrtho2D(float hres, float vres, float zres)
 void CGraphicBase::SetOrtho3D(float hres, float vres, float zmin, float zmax)
 {
 	//CCameraManager::Instance().SetCurrentCamera(CCameraManager::DEFAULT_PERSPECTIVE_CAMERA);
-	D3DXMatrixOrthoRH(&ms_matProj, hres, vres, zmin, zmax);
+	Math::MatrixOrthoRH(&ms_matProj, hres, vres, zmin, zmax);
 	//UpdatePipeLineMatrix();
 	UpdateProjMatrix();
 }
@@ -249,8 +246,8 @@ void CGraphicBase::SetPerspective(float fov, float aspect, float nearz, float fa
 	ms_fFieldOfView = fov;
 
 
-	//if (ms_d3dPresentParameter.BackBufferWidth>0 && ms_d3dPresentParameter.BackBufferHeight>0)
-	//	ms_fAspect = float(ms_d3dPresentParameter.BackBufferWidth)/float(ms_d3dPresentParameter.BackBufferHeight);
+
+
 	//else
 	ms_fAspect = aspect;
 
@@ -258,14 +255,14 @@ void CGraphicBase::SetPerspective(float fov, float aspect, float nearz, float fa
 	ms_fFarY = farz;
 
 	//CCameraManager::Instance().SetCurrentCamera(CCameraManager::DEFAULT_PERSPECTIVE_CAMERA);
-	D3DXMatrixPerspectiveFovRH(&ms_matProj, D3DXToRadian(fov), ms_fAspect, nearz, farz);		
+	Math::MatrixPerspectiveFovRH(&ms_matProj, Math::ToRadian(fov), ms_fAspect, nearz, farz);
 	//UpdatePipeLineMatrix();
 	UpdateProjMatrix();
 }
 
 void CGraphicBase::UpdateProjMatrix()
 {
-	STATEMANAGER.SetTransform(Renderer::MatrixProjection, &ms_matProj);
+	DRAWSTATE.SetTransform(Renderer::MatrixProjection, &ms_matProj);
 }
 
 void CGraphicBase::UpdateViewMatrix()
@@ -275,9 +272,9 @@ void CGraphicBase::UpdateViewMatrix()
 		return;
 
 	ms_matView = pkCamera->GetViewMatrix();
-	STATEMANAGER.SetTransform(Renderer::MatrixView, &ms_matView);
+	DRAWSTATE.SetTransform(Renderer::MatrixView, &ms_matView);
 
-	D3DXMatrixInverse(&ms_matInverseView, NULL, &ms_matView);
+	Math::MatrixInverse(&ms_matInverseView, NULL, &ms_matView);
 	ms_matInverseViewYAxis._11 = ms_matInverseView._11;
 	ms_matInverseViewYAxis._12 = ms_matInverseView._12;
 	ms_matInverseViewYAxis._21 = ms_matInverseView._21;
@@ -314,21 +311,21 @@ void CGraphicBase::GetCameraPosition(float * px, float * py, float * pz)
 	*pz = CCameraManager::Instance().GetCurrentCamera()->GetEye().z;
 }
 
-void CGraphicBase::GetMatrix(D3DXMATRIX* pRetMatrix) const
+void CGraphicBase::GetMatrix(Math::Matrix* pRetMatrix) const
 {
-	assert(ms_lpd3dMatStack != NULL);
-	*pRetMatrix = *ms_lpd3dMatStack->GetTop();
+
+	*pRetMatrix = *ms_matrixStack.GetTop();
 }
 
-const D3DXMATRIX* CGraphicBase::GetMatrixPointer() const
+const Math::Matrix* CGraphicBase::GetMatrixPointer() const
 {
-	assert(ms_lpd3dMatStack!=NULL);
-	return ms_lpd3dMatStack->GetTop();
+
+	return ms_matrixStack.GetTop();
 }
 
-void CGraphicBase::GetSphereMatrix(D3DXMATRIX * pMatrix, float fValue)
+void CGraphicBase::GetSphereMatrix(Math::Matrix * pMatrix, float fValue)
 {
-	D3DXMatrixIdentity(pMatrix);
+	Math::MatrixIdentity(pMatrix);
 	pMatrix->_11 = fValue * ms_matWorldView._11;
 	pMatrix->_21 = fValue * ms_matWorldView._21;
 	pMatrix->_31 = fValue * ms_matWorldView._31;
@@ -346,54 +343,54 @@ float CGraphicBase::GetFOV()
 
 void CGraphicBase::PushMatrix()
 {
-	ms_lpd3dMatStack->Push();
+	ms_matrixStack.Push();
 }
 
 void CGraphicBase::Scale(float x, float y, float z)
 {
-	ms_lpd3dMatStack->Scale(x, y, z);
+	ms_matrixStack.Scale(x, y, z);
 }
 
 void CGraphicBase::Rotate(float degree, float x, float y, float z)
 {
-	D3DXVECTOR3 vec(x, y, z);
-	ms_lpd3dMatStack->RotateAxis(&vec, D3DXToRadian(degree));
+	Math::Vector3 vec(x, y, z);
+	ms_matrixStack.RotateAxis(&vec, Math::ToRadian(degree));
 }
 
 void CGraphicBase::RotateLocal(float degree, float x, float y, float z)
 {
-	D3DXVECTOR3 vec(x, y, z);
-	ms_lpd3dMatStack->RotateAxisLocal(&vec, D3DXToRadian(degree));
+	Math::Vector3 vec(x, y, z);
+	ms_matrixStack.RotateAxisLocal(&vec, Math::ToRadian(degree));
 }
 
-void CGraphicBase::MultMatrix( const D3DXMATRIX* pMat)
+void CGraphicBase::MultMatrix( const Math::Matrix* pMat)
 {
-	ms_lpd3dMatStack->MultMatrix(pMat);
+	ms_matrixStack.MultMatrix(pMat);
 }
 
-void CGraphicBase::MultMatrixLocal( const D3DXMATRIX* pMat)
+void CGraphicBase::MultMatrixLocal( const Math::Matrix* pMat)
 {
-	ms_lpd3dMatStack->MultMatrixLocal(pMat);
+	ms_matrixStack.MultMatrixLocal(pMat);
 }
 
 void CGraphicBase::RotateYawPitchRollLocal(float fYaw, float fPitch, float fRoll)
 {
-	ms_lpd3dMatStack->RotateYawPitchRollLocal(D3DXToRadian(fYaw), D3DXToRadian(fPitch), D3DXToRadian(fRoll));
+	ms_matrixStack.RotateYawPitchRollLocal(Math::ToRadian(fYaw), Math::ToRadian(fPitch), Math::ToRadian(fRoll));
 }
 
 void CGraphicBase::Translate(float x, float y, float z)
 {
-	ms_lpd3dMatStack->Translate(x, y, z);
+	ms_matrixStack.Translate(x, y, z);
 }
 
-void CGraphicBase::LoadMatrix(const D3DXMATRIX& c_rSrcMatrix)
+void CGraphicBase::LoadMatrix(const Math::Matrix& c_rSrcMatrix)
 {
-	ms_lpd3dMatStack->LoadMatrix(&c_rSrcMatrix);
+	ms_matrixStack.LoadMatrix(&c_rSrcMatrix);
 }
 
 void CGraphicBase::PopMatrix()
 {
-	ms_lpd3dMatStack->Pop();
+	ms_matrixStack.Pop();
 }
 
 DWORD CGraphicBase::GetColor(float r, float g, float b, float a)
@@ -414,7 +411,7 @@ void CGraphicBase::InitScreenEffect()
 	ms_dwWavingEndTime = 0;
 	ms_dwFlashingEndTime = 0;
 	ms_iWavingPower = 0;
-	ms_FlashingColor = D3DXCOLOR(0.0f, 0.0f, 0.0f, 0.0f);
+	ms_FlashingColor = Math::Color(0.0f, 0.0f, 0.0f, 0.0f);
 }
 
 void CGraphicBase::SetScreenEffectWaving(float fDuringTime, int iPower)
@@ -423,7 +420,7 @@ void CGraphicBase::SetScreenEffectWaving(float fDuringTime, int iPower)
 	ms_iWavingPower = iPower;
 }
 
-void CGraphicBase::SetScreenEffectFlashing(float fDuringTime, const D3DXCOLOR & c_rColor)
+void CGraphicBase::SetScreenEffectFlashing(float fDuringTime, const Math::Color & c_rColor)
 {
 	ms_dwFlashingEndTime = CTimer::Instance().GetCurrentMillisecond() + long(fDuringTime * 1000.0f);
 	ms_FlashingColor = c_rColor;

@@ -174,7 +174,7 @@ float CEffectData::GetBoundingSphereRadius()
 	return m_fBoundingSphereRadius;
 }
 
-D3DXVECTOR3 CEffectData::GetBoundingSpherePosition()
+Math::Vector3 CEffectData::GetBoundingSpherePosition()
 {
 	return m_v3BoundingSpherePosition;
 }

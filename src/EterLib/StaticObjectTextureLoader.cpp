@@ -1,14 +1,14 @@
 #include "StdAfx.h"
 #include "StaticObjectTextureLoader.h"
 #include "TerrainTextureLoader.h"
-#include "EterImageLib/DDSTextureLoader9.h"
+#include "EterImageLib/DDSImageData.h"
 #include "PackLib/PackManager.h"
 
 Renderer::TerrainTexturePtr LoadStaticObjectTextureMemory(const void* data, size_t size, Renderer::ITextureUploader& renderer)
 {
-    DirectX::DDS2DView dds;
-    if(data && SUCCEEDED(DirectX::GetDDS2DView(static_cast<const uint8_t*>(data),size,dds)) &&
-       dds.format==D3DFMT_A1R5G5B5) {
+    ImageData::DDS2DView dds;
+    if(data && SUCCEEDED(ImageData::GetDDS2DView(static_cast<const uint8_t*>(data),size,dds)) &&
+       dds.format==ImageData::DDSFormat::B5G5R5A1) {
         Renderer::TerrainTextureData upload;
         upload.width=dds.width; upload.height=dds.height;
         upload.format=Renderer::TerrainTextureFormat::B5G5R5A1;

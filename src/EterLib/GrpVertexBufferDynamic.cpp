@@ -3,7 +3,7 @@
 
 bool CDynamicVertexBuffer::Create(int vtxCount, int fvf)
 {
-	if (m_lpd3dVB)
+	if (!IsEmpty())
 	{
 		if (m_fvf == fvf)
 		{
@@ -15,7 +15,7 @@ bool CDynamicVertexBuffer::Create(int vtxCount, int fvf)
 	m_vtxCount = vtxCount;
 	m_fvf = fvf;
 
-	return CGraphicVertexBuffer::Create(m_vtxCount, m_fvf, D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY, D3DPOOL_DEFAULT);
+	return CGraphicVertexBuffer::Create(m_vtxCount, m_fvf);
 }
 
 CDynamicVertexBuffer::CDynamicVertexBuffer()

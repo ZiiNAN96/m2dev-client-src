@@ -134,7 +134,7 @@ class CGraphicTextInstance
 		/////
 
 		std::string m_stText;
-		D3DXVECTOR3 m_v3Position;
+		Math::Vector3 m_v3Position;
 
 	private:
 		bool m_isUpdate;

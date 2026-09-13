@@ -23,7 +23,7 @@ public:
 	CTerrainQuadtreeNode *	SE_Node;
 	long					Size;
 	long					PatchNum;
-	D3DXVECTOR3				center;
+	Math::Vector3				center;
 	float					radius;
 	BYTE					m_byLODLevel;
 };

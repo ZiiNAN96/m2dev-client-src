@@ -12,15 +12,14 @@ class CGraphicImageTexture : public CGraphicTexture
 
 		void		Destroy();
 
-		bool		Create(UINT width, UINT height, D3DFORMAT d3dFmt, DWORD dwFilter = D3DX_FILTER_LINEAR);
+		bool		Create(UINT width, UINT height, Renderer::TerrainTextureFormat format);
 		bool		CreateDeviceObjects();
 		
 		void		CreateFromTexturePointer(const CGraphicTexture* c_pSrcTexture);
-		bool		CreateFromDiskFile(const char* c_szFileName, D3DFORMAT d3dFmt, DWORD dwFilter = D3DX_FILTER_LINEAR);
-		bool		CreateFromMemoryFile(UINT bufSize, const void* c_pvBuf, D3DFORMAT d3dFmt, DWORD dwFilter = D3DX_FILTER_LINEAR);
-		bool		CreateFromDDSTexture(UINT bufSize, const void* c_pvBuf);
-		bool		CreateFromSTB(UINT bufSize, const void* c_pvBuf);
-		bool		CreateFromDecodedData(const TDecodedImageData& decodedImage, D3DFORMAT d3dFmt, DWORD dwFilter);
+		bool		CreateFromDiskFile(const char* c_szFileName);
+		bool		CreateFromMemoryFile(UINT bufSize, const void* c_pvBuf);
+		bool		CreateFromEncodedImage(UINT bufSize, const void* c_pvBuf);
+		bool		CreateFromDecodedData(const TDecodedImageData& decodedImage);
 
 		void		SetFileName(const char * c_szFileName);
 		
@@ -30,8 +29,7 @@ class CGraphicImageTexture : public CGraphicTexture
 	protected:
 		void		Initialize();
 		
-		D3DFORMAT	m_d3dFmt;
-		DWORD		m_dwFilter;
+		Renderer::TerrainTextureFormat m_format;
 
 		std::string m_stFileName;
 };

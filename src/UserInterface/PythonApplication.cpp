@@ -18,20 +18,8 @@
 #include <utf8.h>
 #include <fstream>
 
-// ZiiNAN: Optional audit evidence separates attempted compatibility draws from GPU calls.
-static void LogDiligentNativeCounters()
-{
-    if(!STATEMANAGER.IsDiligentRendering()) return;
-    static const bool enabled=GetEnvironmentVariableA("M2_RENDERER_AUDIT",nullptr,0)!=0 ||
-        GetFileAttributesA("config/renderer-audit.enabled")!=INVALID_FILE_ATTRIBUTES;
-    if(!enabled) return;
-    static std::ofstream log("native-render-audit.log",std::ios::trunc);
-    static uint64_t frame=0;
-    const auto c=STATEMANAGER.GetNativeCounters();
-    if(++frame%120==0 || c.draws || c.states || c.textures || c.targets)
-        log<<"frame="<<frame<<" draws="<<c.draws<<" states="<<c.states<<" texture_binds="<<c.textures
-           <<" target_changes="<<c.targets<<" suppressed_draws="<<c.suppressedDraws<<std::endl;
-}
+
+
 
 extern void GrannyCreateSharedDeformBuffer();
 extern void GrannyDestroySharedDeformBuffer();
@@ -74,7 +62,7 @@ m_IsMovingMainWindow(false)
 	ms_pInstance = this;
 	m_isWindowFullScreenEnable = FALSE;
 
-	m_v3CenterPosition = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+	m_v3CenterPosition = Math::Vector3(0.0f, 0.0f, 0.0f);
 	m_dwStartLocalTime = ELTimer_GetMSec();
 	m_tServerTime = 0;
 	m_tLocalStartTime = 0;
@@ -500,7 +488,7 @@ bool CPythonApplication::Process()
 					return false;
 				}
 				//DWORD t2 = ELTimer_GetMSec();
-                LogDiligentNativeCounters();
+
 
 				DWORD dwRenderEndTime = ELTimer_GetMSec();
 
@@ -1097,7 +1085,7 @@ void CPythonApplication::Destroy()
 	m_terrainPresentation.reset();
     m_grpDevice.Destroy();
 
-	//CSpeedTreeForestDirectX::Instance().Clear();
+	//CSpeedTreeForestRenderer::Instance().Clear();
 
 	CAttributeInstance::DestroySystem();
 	CTextFileLoader::DestroySystem();

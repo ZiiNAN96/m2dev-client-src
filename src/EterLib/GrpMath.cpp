@@ -43,13 +43,13 @@ bool IsInTriangle2D(float ax, float ay, float bx, float by, float cx, float cy, 
 	return false;
 }
 
-D3DXVECTOR3* D3DXVec3Rotation(D3DXVECTOR3* pvtOut, const D3DXVECTOR3* c_pvtSrc, const D3DXQUATERNION* c_pqtRot)
+Math::Vector3* RotateVector3(Math::Vector3* pvtOut, const Math::Vector3* c_pvtSrc, const Math::Quaternion* c_pqtRot)
 {
-	D3DXQUATERNION qtSrc(c_pvtSrc->x, c_pvtSrc->y, c_pvtSrc->z, 0);
-	D3DXQUATERNION qtRet;
-	D3DXQuaternionConjugate(&qtRet, c_pqtRot);
-	D3DXQuaternionMultiply(&qtRet, &qtSrc, &qtRet);
-	D3DXQuaternionMultiply(&qtRet, c_pqtRot, &qtRet);
+	Math::Quaternion qtSrc(c_pvtSrc->x, c_pvtSrc->y, c_pvtSrc->z, 0);
+	Math::Quaternion qtRet;
+	Math::QuaternionConjugate(&qtRet, c_pqtRot);
+	Math::QuaternionMultiply(&qtRet, &qtSrc, &qtRet);
+	Math::QuaternionMultiply(&qtRet, c_pqtRot, &qtRet);
 
 	pvtOut->x=qtRet.x;
 	pvtOut->y=qtRet.y;
@@ -60,7 +60,7 @@ D3DXVECTOR3* D3DXVec3Rotation(D3DXVECTOR3* pvtOut, const D3DXVECTOR3* c_pvtSrc, 
 
 
 
-void GetRotationFromMatrix(D3DXVECTOR3 * pRotation, const D3DXMATRIX * c_pMatrix)
+void GetRotationFromMatrix(Math::Vector3 * pRotation, const Math::Matrix * c_pMatrix)
 {
 	float sx = c_pMatrix->_32;
 	float cx = sqrtf(1.0f - sx * sx);
@@ -68,9 +68,9 @@ void GetRotationFromMatrix(D3DXVECTOR3 * pRotation, const D3DXMATRIX * c_pMatrix
 	if (cx < 0.00001f)
 	{
 		if (sx > 0)
-			pRotation->x = D3DX_PI / 2;
+			pRotation->x = Math::Pi / 2;
 		else
-			pRotation->x = -D3DX_PI / 2;
+			pRotation->x = -Math::Pi / 2;
 		
 		pRotation->y = atan2f(c_pMatrix->_31, c_pMatrix->_11);
 		pRotation->z = 0.0f;
@@ -83,7 +83,7 @@ void GetRotationFromMatrix(D3DXVECTOR3 * pRotation, const D3DXMATRIX * c_pMatrix
 	}
 }
 
-void GetPivotAndRotationFromMatrix(D3DXMATRIX * pMatrix, D3DXVECTOR3 * pPivot, D3DXVECTOR3 * pRotation)
+void GetPivotAndRotationFromMatrix(Math::Matrix * pMatrix, Math::Vector3 * pPivot, Math::Vector3 * pRotation)
 {
 	float sx = pMatrix->_32;
 	float cx = sqrtf(1.0f - sx * sx);
@@ -92,9 +92,9 @@ void GetPivotAndRotationFromMatrix(D3DXMATRIX * pMatrix, D3DXVECTOR3 * pPivot, D
 	if (cx < 0.00001f)
 	{
 		if (sx > 0)
-			x = D3DX_PI / 2;
+			x = Math::Pi / 2;
 		else
-			x = -D3DX_PI / 2;
+			x = -Math::Pi / 2;
 
 		y = atan2f(pMatrix->_31, pMatrix->_11);
 		z = 0.0f;
@@ -116,21 +116,21 @@ void GetPivotAndRotationFromMatrix(D3DXMATRIX * pMatrix, D3DXVECTOR3 * pPivot, D
 }
 
 // NOTE : must be optimized!
-void ExtractMovement(D3DXMATRIX * pTargetMatrix, D3DXMATRIX * pSourceMatrix)
+void ExtractMovement(Math::Matrix * pTargetMatrix, Math::Matrix * pSourceMatrix)
 {
-	D3DXVECTOR3 v3Pivot;
-	D3DXVECTOR3 v3Rotation;
+	Math::Vector3 v3Pivot;
+	Math::Vector3 v3Rotation;
 	GetPivotAndRotationFromMatrix(pSourceMatrix, &v3Pivot, &v3Rotation);
 
-	D3DXMATRIX matRotationX;
-	D3DXMatrixRotationX(&matRotationX, v3Rotation.x);
-	D3DXMATRIX matRotationY;
-	D3DXMatrixRotationY(&matRotationY, v3Rotation.y);
-	D3DXMATRIX matRotationZ;
-	D3DXMatrixRotationZ(&matRotationZ, v3Rotation.z);
+	Math::Matrix matRotationX;
+	Math::MatrixRotationX(&matRotationX, v3Rotation.x);
+	Math::Matrix matRotationY;
+	Math::MatrixRotationY(&matRotationY, v3Rotation.y);
+	Math::Matrix matRotationZ;
+	Math::MatrixRotationZ(&matRotationZ, v3Rotation.z);
 
-	D3DXMATRIX matTranslation;
-	D3DXMatrixTranslation(&matTranslation, v3Pivot.x, v3Pivot.y, v3Pivot.z);
+	Math::Matrix matTranslation;
+	Math::MatrixTranslation(&matTranslation, v3Pivot.x, v3Pivot.y, v3Pivot.z);
 
 	*pTargetMatrix = matRotationX * matRotationY * matRotationZ * matTranslation;
 }

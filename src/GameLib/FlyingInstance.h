@@ -13,7 +13,7 @@ class CFlyingInstance
 public:
 	// 2004. 3. 26. myevan. 적절한 네이밍이 필요. 게임에서 사용하지 않는다면 툴에서 툴 전용으로 상속받아 만들도록 하자
 	void Clear(); // Destroy와 같다
-	void SetDataPointer(CFlyingData * pData, const D3DXVECTOR3 & v3StartPosition);
+	void SetDataPointer(CFlyingData * pData, const Math::Vector3 & v3StartPosition);
 	void SetFlyTarget(const CFlyTarget & cr_Target); // Shot at Target	
 	
 public:
@@ -31,16 +31,16 @@ public:
 	virtual ~CFlyingInstance();
 
 	void Destroy();
-	void Create(CFlyingData* pData, const D3DXVECTOR3& c_rv3StartPos, const CFlyTarget & c_rkTarget, bool canAttack);		
+	void Create(CFlyingData* pData, const Math::Vector3& c_rv3StartPos, const CFlyTarget & c_rkTarget, bool canAttack);
 
 	bool Update();
 	void Render();
 
 	bool IsAlive() { return m_bAlive; }
 
-	const D3DXVECTOR3 & GetPosition() { return m_v3Position; }
+	const Math::Vector3 & GetPosition() { return m_v3Position; }
 
-	void AdjustDirectionForHoming(const D3DXVECTOR3 & v3TargetPosition);
+	void AdjustDirectionForHoming(const Math::Vector3 & v3TargetPosition);
 
 	typedef std::vector<TAttachEffectInstance> TAttachEffectInstanceVector;
 
@@ -65,14 +65,14 @@ public:
 protected:
 	void __Initialize();
 
-	void __SetDataPointer(CFlyingData * pData, const D3DXVECTOR3 & v3StartPosition);
+	void __SetDataPointer(CFlyingData * pData, const Math::Vector3 & v3StartPosition);
 	void __SetTargetDirection(const CFlyTarget& c_rkTarget);
-	void __SetTargetNormalizedDirection(const D3DXVECTOR3 & v3NormalizedDirection ); // 시작 타겟 방향 설정
+	void __SetTargetNormalizedDirection(const Math::Vector3 & v3NormalizedDirection ); // 시작 타겟 방향 설정
 
 protected:
 	
 	CFlyingData * m_pData;
-	D3DXQUATERNION m_qRot;
+	Math::Quaternion m_qRot;
 
 	float m_fStartTime;
 
@@ -82,16 +82,16 @@ protected:
 	int m_iPierceCount;
 	DWORD m_dwSkillIndex;
 
-	D3DXVECTOR3 m_v3Position;
-	D3DXVECTOR3 m_v3Velocity;
-	D3DXVECTOR3 m_v3LocalVelocity;
-	D3DXVECTOR3 m_v3Accel;
+	Math::Vector3 m_v3Position;
+	Math::Vector3 m_v3Velocity;
+	Math::Vector3 m_v3LocalVelocity;
+	Math::Vector3 m_v3Accel;
 
 	float m_fRemainRange;
 
 	CFlyTarget m_FlyTarget;
 
-	D3DXQUATERNION m_qAttachRotation;
+	Math::Quaternion m_qAttachRotation;
 	TAttachEffectInstanceVector m_vecAttachEffectInstance;
 
 	IFlyEventHandler * m_pHandler;

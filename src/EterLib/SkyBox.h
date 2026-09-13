@@ -121,8 +121,8 @@ protected:
 	
 	// 구름...
 	TSkyObjectFace m_FaceCloud;		// 구름 일단 한장...
-	D3DXMATRIX m_matWorldCloud, m_matTranslationCloud, m_matTextureCloud;
-	D3DXVECTOR3 m_v3PositionCloud;
+	Math::Matrix m_matWorldCloud, m_matTranslationCloud, m_matTextureCloud;
+	Math::Vector3 m_v3PositionCloud;
 	float m_fCloudScaleX, m_fCloudScaleY, m_fCloudHeight;
 	float m_fCloudTextureScaleX, m_fCloudTextureScaleY;
 	float m_fCloudScrollSpeedU, m_fCloudScrollSpeedV;
@@ -135,8 +135,8 @@ protected:
 	Renderer::WorldResources m_worldResources; // ZiiNAN: Native sky/environment lifetime.
 	
 	// Transform...
-	D3DXMATRIX m_matWorld, m_matTranslation;
-	D3DXVECTOR3 m_v3Position;
+	Math::Matrix m_matWorld, m_matTranslation;
+	Math::Vector3 m_v3Position;
 	float m_fScaleX, m_fScaleY, m_fScaleZ;
 
 	// 랜더링 관련... 임시 변수..
@@ -163,24 +163,24 @@ public:
 	void Unload();
 	void ReleaseWorldResources() { if(Renderer::worldRenderer) Renderer::worldRenderer->ReleaseBindings(); m_worldResources.textures.clear(); }
 
-	void SetSkyBoxScale(const D3DXVECTOR3 & c_rv3Scale);
+	void SetSkyBoxScale(const Math::Vector3 & c_rv3Scale);
 	void SetGradientLevel(BYTE byUpper, BYTE byLower);
 	void SetFaceTexture( const char* c_szFileName, int iFaceIndex );
 	void SetCloudTexture(const char * c_szFileName);
-	void SetCloudScale(const D3DXVECTOR2 & c_rv2CloudScale);
+	void SetCloudScale(const Math::Vector2 & c_rv2CloudScale);
 	void SetCloudHeight(float fHeight);
-	void SetCloudTextureScale(const D3DXVECTOR2 & c_rv2CloudTextureScale);
-	void SetCloudScrollSpeed(const D3DXVECTOR2 & c_rv2CloudScrollSpeed);
+	void SetCloudTextureScale(const Math::Vector2 & c_rv2CloudTextureScale);
+	void SetCloudScrollSpeed(const Math::Vector2 & c_rv2CloudScrollSpeed);
 	void SetCloudColor(const TGradientColor & c_rColor, const TGradientColor & c_rNextColor, const DWORD & dwTransitionTime);
 	void Refresh();
 	void SetSkyColor(const TVectorGradientColor & c_rColorVector, const TVectorGradientColor & c_rNextColorVector, long lTransitionTime);
 	void StartTransition();
 
 protected:
-	void SetSkyObjectQuadVertical(TSkyObjectQuadVector * pSkyObjectQuadVector, const D3DXVECTOR2 * c_pv2QuadPoints);
-	void SetSkyObjectQuadHorizon(TSkyObjectQuadVector * pSkyObjectQuadVector, const D3DXVECTOR3 * c_pv3QuadPoints);
+	void SetSkyObjectQuadVertical(TSkyObjectQuadVector * pSkyObjectQuadVector, const Math::Vector2 * c_pv2QuadPoints);
+	void SetSkyObjectQuadHorizon(TSkyObjectQuadVector * pSkyObjectQuadVector, const Math::Vector3 * c_pv3QuadPoints);
 
-	//void UpdateSkyFaceQuadTransform(D3DXVECTOR3 * c_pv3QuadPoints);
+	//void UpdateSkyFaceQuadTransform(Math::Vector3 * c_pv3QuadPoints);
 
 protected:
 	unsigned char m_ucVirticalGradientLevelUpper;
