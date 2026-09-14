@@ -1,0 +1,13 @@
+file(GLOB_RECURSE runtime_sources "${SOURCE_ROOT}/src/*.h" "${SOURCE_ROOT}/src/*.cpp" "${SOURCE_ROOT}/src/CMakeLists.txt" "${SOURCE_ROOT}/src/*/CMakeLists.txt")
+foreach(path IN LISTS runtime_sources)
+    file(READ "${path}" source)
+    if(source MATCHES "#[ \t]*include[ \t]*[<\"][^>\"]*(assimp|meshoptimizer|AssetTool)" OR
+       source MATCHES "target_link_libraries\\([^)]*(assimp|meshoptimizer|AssetToolCore)")
+        message(FATAL_ERROR "Offline dependency leaked into runtime: ${path}")
+    endif()
+endforeach()
+file(READ "${SOURCE_ROOT}/tools/AssetTool/Scene.h" neutral_model)
+if(neutral_model MATCHES "#[ \t]*include[ \t]*[<\"][^>\"]*(assimp|AssetRuntime|Renderer)")
+    message(FATAL_ERROR "Neutral offline model includes importer/runtime types")
+endif()
+message(STATUS "PASS: zero offline importer/optimizer includes or target links in runtime sources; neutral tool model isolated")

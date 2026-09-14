@@ -21,7 +21,7 @@ float CCamera::CAMERA_MAX_DISTANCE = 2500.f;
 static void Check(bool value, const char* message) { if (!value) throw std::runtime_error(message); }
 static constexpr Matrix4 identity{1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1};
 static CResource* NewModel(const char* path) { return new CGraphicThing(path); }
-static void SaveBMP(const std::vector<std::uint8_t>& rgb, std::uint32_t width, std::uint32_t height, int camera, bool special)
+static void SaveBMP(const std::vector<std::uint8_t>& rgb, std::uint32_t width, std::uint32_t height, int camera, bool special, bool offline)
 {
     const auto pitch = (width * 3 + 3) & ~3u;
     BITMAPFILEHEADER file{0x4d42, DWORD(sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + pitch * height), 0, 0,
@@ -29,7 +29,7 @@ static void SaveBMP(const std::vector<std::uint8_t>& rgb, std::uint32_t width, s
     BITMAPINFOHEADER info{};
     info.biSize = sizeof(info); info.biWidth = LONG(width); info.biHeight = -LONG(height);
     info.biPlanes = 1; info.biBitCount = 24; info.biSizeImage = pitch * height;
-    std::ofstream out(std::string("e1x-market-stall-") + (special ? "blend" : "static") + "-camera-" + std::to_string(camera) + ".bmp", std::ios::binary);
+    std::ofstream out(std::string(offline ? "e2x-converted-stall-" : "e1x-market-stall-") + (special ? "blend" : "static") + "-camera-" + std::to_string(camera) + ".bmp", std::ios::binary);
     out.write(reinterpret_cast<const char*>(&file), sizeof(file));
     out.write(reinterpret_cast<const char*>(&info), sizeof(info));
     std::vector<std::uint8_t> row(pitch);
@@ -46,7 +46,8 @@ int main(int argc, char** argv)
 {
     HWND window = nullptr;
     try {
-        Check(argc == 2, "Expected original deterministic GLB path");
+        const bool offline = argc == 3 && std::string_view(argv[2]) == "--offline-asset";
+        Check(argc == 2 || offline, "Expected GLB path and optional --offline-asset");
         CPackManager packs;
         CResourceManager resources;
         for (const auto extension : ModelExtensions()) resources.RegisterResourceNewFunctionPointer(extension.data(), NewModel);
@@ -96,7 +97,7 @@ int main(int argc, char** argv)
                 Check(bool(geometry), "Normal static GPU buffers created");
                 auto& palette = instance.GetStaticObjectMaterialPalette();
                 std::vector<Renderer::TerrainTexturePtr> textures;
-                bool mask = false, blend = false, twoSided = false;
+                bool mask = false, blend = false, twoSided = false, embedded = false;
                 for (DWORD i = 0; i < palette.GetMaterialCount(); ++i) {
                     auto& material = palette.GetMaterialRef(i);
                     auto* image = material.GetImagePointer(0);
@@ -105,9 +106,12 @@ int main(int argc, char** argv)
                     Check(bool(texture) && texture == image->GetAssetTexture(uploader), "Image decode/upload cache is reused");
                     textures.push_back(texture);
                     const auto& asset = material.GetAsset();
+                    embedded |= bool(asset.embeddedImages[0]);
                     mask |= asset.alphaTest; blend |= asset.blending; twoSided |= asset.culling == Culling::None;
                 }
-                Check(mask && blend == special && twoSided, "Material classification selects the existing static or transparent object path");
+                if (offline) Check(palette.GetMaterialCount() >= 4 && embedded && !special,
+                    "Freshly converted OBJ retains multiple materials and embedded texture through normal static path");
+                else Check(mask && blend == special && twoSided, "Material classification selects the existing static or transparent object path");
                 const auto liveTextures = [&] { return renderer.LiveTextureCount()+specialRenderer.LiveTextureCount(); };
                 const auto textureCount = liveTextures();
                 for (int camera = 0; camera != 3; ++camera) {
@@ -139,7 +143,7 @@ int main(int argc, char** argv)
                     std::vector<std::uint8_t> image; std::uint32_t iw{},ih{};
                     Check(backend.CaptureRGB(image,iw,ih), "Actual native image readback succeeds");
                     Check(std::count_if(image.begin(),image.end(),[](auto v){return v>70;}) > 2000, "Asset remains visible after camera change");
-                    SaveBMP(image,iw,ih,camera,special);
+                    SaveBMP(image,iw,ih,camera,special,offline);
                     backend.EndFrame(); backend.Present(); renderer.ReleaseBindings(); specialRenderer.ReleaseBindings();
                     Check(liveTextures()==textureCount && renderer.LiveGeometryCount()+specialRenderer.LiveGeometryCount()==1, "No per-frame GPU asset creation");
                 }

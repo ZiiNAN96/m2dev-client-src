@@ -1,0 +1,10 @@
+# Original fixture materials; base texture is relative, with Windows separators.
+newmtl wood
+Kd 1 1 1
+map_Kd textures\wood.png
+newmtl red_canvas
+Kd 0.72 0.13 0.055
+newmtl cream_canvas
+Kd 0.95 0.83 0.55
+newmtl green_produce
+Kd 0.24 0.55 0.10
