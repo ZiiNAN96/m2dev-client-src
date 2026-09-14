@@ -1,0 +1,89 @@
+{
+  "baseline_commit": "17858daf14e8bb8af9322f4fc31eb0b09ed865d7",
+  "source_clean_at_start": true,
+  "date": "2026-09-14",
+  "raw_corpus": {
+    "total": 9166,
+    "supported": 9114,
+    "percent": 99.432686,
+    "rejected": 52
+  },
+  "evidence": [
+    {
+      "path": "docs/assets/phase-f2x-ziinan-gr2-reader.md",
+      "sha256": "3E646D9F0AB44BC9FBCE23FFDE41C06F94449E89B0E8B5702FF4EBE7183EB276",
+      "bytes": 28248
+    },
+    {
+      "path": "docs/performance/phase-f2p-120fps-load-warmup.md",
+      "sha256": "14404DDE467A850870944047AABA96172572C7F1DF7546AC2C994C2F1E025F5B",
+      "bytes": 38176
+    },
+    {
+      "path": "build/f2x/corpus-final/files.tsv",
+      "sha256": "75AB9596AAF0D67DE4F418990EE19905B6261DDA3F701E94D61790102EB6A07A",
+      "bytes": 602938
+    },
+    {
+      "path": "build/f2x/corpus-final/summary.tsv",
+      "sha256": "139DDE3805D1F43584135DF3513104E303327083C60FA3112DD6F1C04DD4A72D",
+      "bytes": 1889
+    },
+    {
+      "path": "build/f2x/release-final-detail.log",
+      "sha256": "B4C6B7450E098595D794406ED9294B39FA38DEAC63FFE537EF4D4C5801B7E69C",
+      "bytes": 14528
+    },
+    {
+      "path": "build/f2x/debug-final-detail.log",
+      "sha256": "0A68A1F244C6832B774B4B61E095EE2EA250F0E9DD0685261911DAE7777F12A5",
+      "bytes": 19269
+    },
+    {
+      "path": "build/f2p/runtime/local-spawn-fix-03/artifact.txt",
+      "sha256": "0ADEF1E066583949D4766A570C311269966F99A273AB038BBD95E9BC6A0FAE65",
+      "bytes": 291
+    },
+    {
+      "path": "build/f2p/runtime/local-spawn-fix-03/source-resource-audit.log",
+      "sha256": "9806EFA10F82933ABDD067F84C4BDBAF2066E5D2126C8E6DEB24C1C0AD58881B",
+      "bytes": 1015
+    },
+    {
+      "path": "build/f2p/runtime/local-spawn-fix-03/exit.txt",
+      "sha256": "FDB34F6AF0443501B80E93A2CD642CA77FEAC6A38D1C8679AA0809A8BFE56D33",
+      "bytes": 42
+    },
+    {
+      "path": "build-c3x/windows/bin/Release/Metin2_Release.exe",
+      "sha256": "F484BE166DEB305A8141FD1A9A1AB26BF4C29E5D9DDB421E966DD1F3681741CE",
+      "bytes": 31069184
+    },
+    {
+      "path": "build-c3x/windows/bin/Debug/Metin2_Debug.exe",
+      "sha256": "525D32EF7750432F2370BBCB6B07B4FB35FB982A663FC7E8E015B3E34B7350FB",
+      "bytes": 42975232
+    }
+  ],
+  "historical_f1x_tolerances": {
+    "vertex_position": 0.005,
+    "vertex_normal": 5E-05,
+    "scale_shear": 2E-05,
+    "palette": 0.002,
+    "root_matrix": 0.0002,
+    "world_matrix": 0.002,
+    "rotation_radians": 2E-05,
+    "translation": 0.0002
+  },
+  "historical_f2x_release_max_errors": {
+    "vertex_position": 0.0003443,
+    "vertex_normal": 4.262E-06,
+    "scale_shear": 2.384E-07,
+    "palette": 0.0007172,
+    "root_matrix": 1.145E-05,
+    "world_matrix": 0.0003491,
+    "rotation_radians": 1.854E-06,
+    "translation": 3.052E-05
+  },
+  "note": "Evidence inventory and unchanged historical tolerances; this is not a replacement for executable golden fixtures or a new production acceptance."
+}
