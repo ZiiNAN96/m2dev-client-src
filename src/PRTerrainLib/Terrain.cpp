@@ -205,7 +205,7 @@ bool CTerrainImpl::LoadWaterMapFile(const char * c_szFileName)
 		return false;
 	}	
 
-	DWORD	dwFileSize = kMappedFile.size();
+	const std::size_t dwFileSize = kMappedFile.size();
 	BYTE*	abFileData = kMappedFile.data();
 
 	{
@@ -251,40 +251,23 @@ bool CTerrainImpl::LoadWaterMapFile(const char * c_szFileName)
 
 		m_byNumWater = kWaterMapHeader.m_byLayerCount;
 
-		DWORD dwFileRestSize = dwFileSize - sizeof(kWaterMapHeader);
-		DWORD dwFileNeedSize = sizeof(m_abyWaterMap) + sizeof(long) * m_byNumWater;
-		DWORD dwFileNeedSize2 = sizeof(m_abyWaterMap) + sizeof(WORD) * m_byNumWater;
-		if (dwFileRestSize == dwFileNeedSize2)
+		const std::size_t dwFileRestSize = dwFileSize - sizeof(kWaterMapHeader);
+		const std::size_t dwFileNeedSize = sizeof(m_abyWaterMap) + sizeof(m_lWaterHeight[0]) * m_byNumWater;
+		if (dwFileRestSize < sizeof(m_abyWaterMap))
 		{
-			WORD wWaterHeight[MAX_WATER_NUM + 1];
-			
-			BYTE * abSrcWaterData = abFileData + sizeof(kWaterMapHeader);
-			memcpy(m_abyWaterMap, abSrcWaterData, sizeof(m_abyWaterMap));	
-
-			BYTE * abSrcWaterHeight = abSrcWaterData + sizeof(m_abyWaterMap);
-
-			m_byNumWater = MIN(MAX_WATER_NUM, m_byNumWater);
-			if (m_byNumWater)
-			{
-				memcpy(wWaterHeight, abSrcWaterHeight, sizeof(WORD) * m_byNumWater);
-
-				for (int i = 0; i < m_byNumWater; ++i)
-					m_lWaterHeight[i] = wWaterHeight[i];
-			}
-		}
-		else if (dwFileRestSize != dwFileNeedSize)
-		{
-			TraceError("CTerrainImpl::LoadWaterMap - %s FILE DATA SIZE(rest %d != need %d) ERROR", c_szFileName, dwFileRestSize, dwFileNeedSize);
+			TraceError("CTerrainImpl::LoadWaterMap - %s FILE DATA SIZE(rest %zu != need %zu) ERROR", c_szFileName, dwFileRestSize, dwFileNeedSize);
 			return false;
 		}
-	
-		BYTE * abSrcWaterData = abFileData + sizeof(kWaterMapHeader);
-		memcpy(m_abyWaterMap, abSrcWaterData, sizeof(m_abyWaterMap));	
 
-		BYTE * abSrcWaterHeight = abSrcWaterData + sizeof(m_abyWaterMap);
-
-		if (m_byNumWater)
-			memcpy(m_lWaterHeight, abSrcWaterHeight, sizeof(long) * m_byNumWater);
+		const BYTE* abSrcWaterData = abFileData + sizeof(kWaterMapHeader);
+		const BYTE* abSrcWaterHeight = abSrcWaterData + sizeof(m_abyWaterMap);
+		if (!TerrainFormat::DecodeWaterHeights(
+			{abSrcWaterHeight, dwFileRestSize - sizeof(m_abyWaterMap)}, {m_lWaterHeight, m_byNumWater}))
+		{
+			TraceError("CTerrainImpl::LoadWaterMap - %s FILE DATA SIZE(rest %zu != need %zu) ERROR", c_szFileName, dwFileRestSize, dwFileNeedSize);
+			return false;
+		}
+		memcpy(m_abyWaterMap, abSrcWaterData, sizeof(m_abyWaterMap));
 	}
 
 	return true;

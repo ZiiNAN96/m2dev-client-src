@@ -1,105 +1,105 @@
-﻿cmake_minimum_required(VERSION 3.19)
+cmake_minimum_required(VERSION 3.19)
 
-project(m2dev-client-src)
-
+project(m2dev-client-src LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
-if(NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
-	message(FATAL_ERROR "m2dev-client supports only the x64 ABI. Configure a fresh build directory with -A x64.")
-endif()
-if(MSVC AND NOT CMAKE_CXX_COMPILER_ARCHITECTURE_ID MATCHES "^[xX]64$")
-	message(FATAL_ERROR "m2dev-client requires the MSVC x64 target. Configure a fresh build directory with -A x64.")
-endif()
-
-# ZiiNAN: Platform abstraction
-if(NOT WIN32)
-    message(FATAL_ERROR "The production client currently requires Windows and Diligent D3D11. No other platform target is enabled.")
-endif()
-
-# ASan support
+# ZiiNAN: Cross-platform bootstrap
+option(M2_BUILD_WINDOWS_CLIENT "Build the production Windows x64/D3D11 client" ${WIN32})
+option(M2_BUILD_ANDROID_BOOTSTRAP "Build the Android ARM64/Vulkan clear-present app" ${ANDROID})
+option(M2_BUILD_PLATFORM_TESTS "Build short platform and portable ABI tests" ON)
+option(M2_BUILD_RENDERER_TESTS "Build Windows renderer lifecycle and GPU tests" ${M2_BUILD_WINDOWS_CLIENT})
 option(ENABLE_ASAN "Enable AddressSanitizer" OFF)
 
-set(CMAKE_MODULE_PATH
-	${CMAKE_MODULE_PATH}
-	"${CMAKE_CURRENT_SOURCE_DIR}/buildtool"
-)
-
-include(Utils)
-
-set(CMAKE_CONFIGURATION_TYPES "Debug;RelWithDebInfo;Release" CACHE STRING "Configurations" FORCE)
-set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<$<CONFIG:Debug,RelWithDebInfo,Release>:ProgramDatabase>")
-
-set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Zi")
-set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /DEBUG")
-
-add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
-add_compile_options(/MP)
-
-if(MSVC)
-	add_compile_definitions(UNICODE _UNICODE)
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
+    message(FATAL_ERROR "Use a separate build directory, e.g. cmake -S . -B build-windows -A x64.")
+endif()
+if(NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
+    message(FATAL_ERROR "A 64-bit target ABI is required (Windows x64 or Android arm64-v8a).")
+endif()
+if(M2_BUILD_WINDOWS_CLIENT)
+    if(NOT WIN32 OR ANDROID)
+        message(FATAL_ERROR "M2_BUILD_WINDOWS_CLIENT requires Windows. Disable it for portable/Android builds.")
+    endif()
+    if(MSVC AND NOT CMAKE_CXX_COMPILER_ARCHITECTURE_ID MATCHES "^[xX]64$")
+        message(FATAL_ERROR "The production Windows client requires x64. Use a fresh build directory with -A x64.")
+    endif()
+    if(NOT MSVC)
+        string(TOLOWER "${CMAKE_SYSTEM_PROCESSOR}" m2_windows_processor)
+        if(NOT m2_windows_processor MATCHES "^(amd64|x86_64|x64)$" OR
+           CMAKE_CXX_COMPILER_TARGET MATCHES "[Aa][Rr][Mm]|[Aa][Aa][Rr][Cc][Hh]64")
+            message(FATAL_ERROR "The production Windows client requires an x86_64 compiler target.")
+        endif()
+    endif()
+endif()
+if(ANDROID AND NOT CMAKE_ANDROID_ARCH_ABI STREQUAL "arm64-v8a")
+    message(FATAL_ERROR "The C3-X Android target requires ANDROID_ABI=arm64-v8a.")
+endif()
+if(M2_BUILD_ANDROID_BOOTSTRAP AND NOT ANDROID)
+    message(FATAL_ERROR "Use the installed Android NDK android.toolchain.cmake for M2_BUILD_ANDROID_BOOTSTRAP.")
+endif()
+if(M2_BUILD_RENDERER_TESTS AND NOT M2_BUILD_WINDOWS_CLIENT)
+    message(FATAL_ERROR "Renderer regression tests require M2_BUILD_WINDOWS_CLIENT; portable tests use M2_BUILD_PLATFORM_TESTS.")
 endif()
 
-add_compile_options(
-	$<$<CXX_COMPILER_ID:MSVC>:/wd4828>
-	$<$<CXX_COMPILER_ID:MSVC>:/wd4996>
-	$<$<CXX_COMPILER_ID:MSVC>:/wd5033>
-)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/buildtool")
+include(Utils)
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+if(CMAKE_CONFIGURATION_TYPES)
+    set(CMAKE_CONFIGURATION_TYPES "Debug;RelWithDebInfo;Release" CACHE STRING "Configurations" FORCE)
+endif()
+if(MSVC)
+    set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<$<CONFIG:Debug,RelWithDebInfo,Release>:ProgramDatabase>")
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Zi")
+    set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /DEBUG")
+    add_compile_options(/utf-8 /MP /wd4828 /wd4996 /wd5033)
+endif()
 
 add_library(M2FirstPartyArchitectureChecks INTERFACE)
 target_compile_options(M2FirstPartyArchitectureChecks INTERFACE
-	$<$<COMPILE_LANG_AND_ID:CXX,MSVC>:/we4302>
-	$<$<COMPILE_LANG_AND_ID:CXX,MSVC>:/we4311>
-	$<$<COMPILE_LANG_AND_ID:CXX,MSVC>:/we4312>
+    $<$<COMPILE_LANG_AND_ID:CXX,MSVC>:/we4302>
+    $<$<COMPILE_LANG_AND_ID:CXX,MSVC>:/we4311>
+    $<$<COMPILE_LANG_AND_ID:CXX,MSVC>:/we4312>
 )
-
-# ASan flags
 if(ENABLE_ASAN)
-	if(MSVC)
-		add_compile_options(/fsanitize=address)
-		add_link_options(/fsanitize=address)
-		add_definitions(-D_DISABLE_VECTOR_ANNOTATION)
-		add_definitions(-D_DISABLE_STRING_ANNOTATION)
-	else()
-		add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
-		add_link_options(-fsanitize=address)
-	endif()
+    if(MSVC)
+        add_compile_options(/fsanitize=address)
+        add_link_options(/fsanitize=address)
+        add_compile_definitions(_DISABLE_VECTOR_ANNOTATION _DISABLE_STRING_ANNOTATION)
+    else()
+        add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
+        add_link_options(-fsanitize=address)
+    endif()
 endif()
 
-add_definitions(-DNOMINMAX)
-add_definitions(-DWIN32_LEAN_AND_MEAN)
-add_definitions(-D_CRT_SECURE_NO_WARNINGS)
-add_definitions(-DWINDOWS_IGNORE_PACKING_MISMATCH)
+if(M2_BUILD_WINDOWS_CLIENT)
+    add_compile_definitions(UNICODE _UNICODE NOMINMAX WIN32_LEAN_AND_MEAN
+        _CRT_SECURE_NO_WARNINGS WINDOWS_IGNORE_PACKING_MISMATCH
+        USE_LOD DUNGEON_WORK BUILDING_GRANNY_STATIC GRANNY_THREADED Py_NO_ENABLE_SHARED
+        "$<$<CONFIG:Debug>:DEBUG>" "$<$<CONFIG:RelWithDebInfo,Release>:_DISTRIBUTE>")
+    include_directories("src" "extern/include" "vendor/libsodium/src/libsodium/include"
+        "vendor/freetype-2.13.3/include")
+endif()
 
-add_definitions(-DUSE_LOD)
-add_definitions(-DDUNGEON_WORK)
-add_definitions(-DBUILDING_GRANNY_STATIC)
-add_definitions(-DGRANNY_THREADED)
-add_definitions(-DPy_NO_ENABLE_SHARED)
-
-add_compile_definitions("$<$<CONFIG:Debug>:DEBUG>")
-add_compile_definitions("$<$<CONFIG:RelWithDebInfo>:_DISTRIBUTE>")
-add_compile_definitions("$<$<CONFIG:Release>:_DISTRIBUTE>")
-
-include_directories("src")
-include_directories("extern/include")
-include_directories("vendor/libsodium/src/libsodium/include")
-include_directories("vendor/freetype-2.13.3/include")
-
-# Add subdirectories for libraries and executables
-option(M2_BUILD_RENDERER_TESTS "Build renderer lifecycle and GPU smoke tests" ON)
-option(M2_BUILD_PLATFORM_TESTS "Build platform service, boundary and x64 ABI tests" ON)
 enable_testing()
 add_subdirectory(src/Platform)
 add_subdirectory(src/Renderer)
-add_subdirectory(vendor)
-add_subdirectory(src)
-add_subdirectory(extern)
+if(M2_BUILD_WINDOWS_CLIENT)
+    add_subdirectory(vendor)
+    add_subdirectory(src)
+    add_subdirectory(extern)
+elseif(M2_BUILD_ANDROID_BOOTSTRAP)
+    add_subdirectory(android)
+else()
+    message(STATUS "Portable common/ABI tests only; no game, window backend or renderer runtime.")
+endif()
 if(M2_BUILD_PLATFORM_TESTS)
-	add_subdirectory(tests/Platform)
+    add_subdirectory(tests/Platform)
 endif()
 if(M2_BUILD_RENDERER_TESTS)
-	add_subdirectory(tests/Renderer)
+    add_subdirectory(tests/Renderer)
 endif()
+include(PlatformTargetAudit)
+m2_audit_platform_targets()

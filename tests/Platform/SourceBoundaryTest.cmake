@@ -1,0 +1,17 @@
+file(GLOB public_headers "${SOURCE_ROOT}/src/Platform/*.h")
+file(GLOB_RECURSE bootstrap "${SOURCE_ROOT}/src/Platform/Android/*.h"
+    "${SOURCE_ROOT}/src/Platform/Android/*.cpp"
+    "${SOURCE_ROOT}/src/Renderer/Vulkan/*.h" "${SOURCE_ROOT}/src/Renderer/Vulkan/*.cpp")
+foreach(path IN LISTS public_headers bootstrap)
+    file(READ "${path}" source)
+    if(source MATCHES "#[ \t]*include[ \t]*[<\"][^>\"\n]*(windows[.]h|winsock[2]?[.]h|dinput[.]h|shellapi[.]h|d3d11[.]h|WebView2[.]h|granny[.]h|Python[.]h|SpeedTree)")
+        message(FATAL_ERROR "Windows or game dependency leaked into platform/bootstrap: ${path}")
+    endif()
+endforeach()
+foreach(path IN LISTS bootstrap)
+    file(READ "${path}" source)
+    if(source MATCHES "__try|__except|CRITICAL_SECTION|CreateThread|CreateEvent|#pragma[ \t]+comment[ \t]*\\(lib")
+        message(FATAL_ERROR "Windows implementation leaked into Android bootstrap: ${path}")
+    endif()
+endforeach()
+message(STATUS "Common headers and Android/Vulkan source boundaries: PASS")

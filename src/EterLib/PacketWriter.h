@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cstddef>
 #include <cstring>
 #include <cassert>
 
@@ -33,7 +34,7 @@ public:
 
 	bool WriteU8(uint8_t v)
 	{
-		if (m_pos + sizeof(v) > m_capacity)
+		if (sizeof(v) > Remaining())
 			return false;
 		m_buf[m_pos++] = v;
 		return true;
@@ -41,7 +42,7 @@ public:
 
 	bool WriteU16(uint16_t v)
 	{
-		if (m_pos + sizeof(v) > m_capacity)
+		if (sizeof(v) > Remaining())
 			return false;
 		std::memcpy(m_buf + m_pos, &v, sizeof(v));
 		m_pos += sizeof(v);
@@ -50,7 +51,7 @@ public:
 
 	bool WriteU32(uint32_t v)
 	{
-		if (m_pos + sizeof(v) > m_capacity)
+		if (sizeof(v) > Remaining())
 			return false;
 		std::memcpy(m_buf + m_pos, &v, sizeof(v));
 		m_pos += sizeof(v);
@@ -63,7 +64,7 @@ public:
 
 	bool WriteU64(uint64_t v)
 	{
-		if (m_pos + sizeof(v) > m_capacity)
+		if (sizeof(v) > Remaining())
 			return false;
 		std::memcpy(m_buf + m_pos, &v, sizeof(v));
 		m_pos += sizeof(v);
@@ -72,7 +73,7 @@ public:
 
 	bool WriteFloat(float v)
 	{
-		if (m_pos + sizeof(v) > m_capacity)
+		if (sizeof(v) > Remaining())
 			return false;
 		std::memcpy(m_buf + m_pos, &v, sizeof(v));
 		m_pos += sizeof(v);
@@ -84,7 +85,7 @@ public:
 	{
 		if (len == 0)
 			return true;
-		if (m_pos + len > m_capacity)
+		if (len > Remaining())
 			return false;
 		std::memcpy(m_buf + m_pos, data, len);
 		m_pos += len;
@@ -94,13 +95,14 @@ public:
 	// Write a fixed-length null-padded string
 	bool WriteString(const char* str, size_t fixedLen)
 	{
-		if (m_pos + fixedLen > m_capacity)
+		if (fixedLen == 0 || fixedLen > Remaining())
 			return false;
 
 		size_t srcLen = str ? std::strlen(str) : 0;
 		size_t copyLen = (srcLen < fixedLen) ? srcLen : (fixedLen - 1);
 
-		std::memcpy(m_buf + m_pos, str, copyLen);
+		if (copyLen != 0)
+			std::memcpy(m_buf + m_pos, str, copyLen);
 		std::memset(m_buf + m_pos + copyLen, 0, fixedLen - copyLen);
 		m_pos += fixedLen;
 		return true;
@@ -110,7 +112,7 @@ public:
 
 	bool PatchU16(size_t offset, uint16_t v)
 	{
-		if (offset + sizeof(v) > m_pos)
+		if (offset > m_pos || sizeof(v) > m_pos - offset)
 			return false;
 		std::memcpy(m_buf + offset, &v, sizeof(v));
 		return true;
@@ -118,7 +120,7 @@ public:
 
 	bool PatchU32(size_t offset, uint32_t v)
 	{
-		if (offset + sizeof(v) > m_pos)
+		if (offset > m_pos || sizeof(v) > m_pos - offset)
 			return false;
 		std::memcpy(m_buf + offset, &v, sizeof(v));
 		return true;

@@ -1,0 +1,47 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.ziinan.m2bootstrap'
+    compileSdk 35
+    buildToolsVersion '35.0.0'
+    ndkVersion '27.0.12077973'
+
+    defaultConfig {
+        applicationId 'com.ziinan.m2bootstrap'
+        minSdk 26
+        targetSdk 35
+        versionCode 1
+        versionName '0.1-c3x'
+        ndk {
+            abiFilters 'arm64-v8a'
+        }
+        externalNativeBuild {
+            cmake {
+                arguments '-DM2_BUILD_ANDROID_BOOTSTRAP=ON',
+                          '-DM2_BUILD_PLATFORM_TESTS=OFF',
+                          '-DM2_BUILD_RENDERER_TESTS=OFF',
+                          '-DANDROID_STL=c++_shared',
+                          '-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON',
+                          "-DM2_ANDROID_VULKAN_VALIDATION=${providers.gradleProperty('m2VulkanValidation').orElse('OFF').get()}"
+                targets 'M2AndroidBootstrap'
+            }
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path file('../../CMakeLists.txt')
+            version '3.31.6'
+            buildStagingDirectory new File(rootProject.layout.buildDirectory.get().asFile.absolutePath + '-native')
+        }
+    }
+
+    buildTypes {
+        debug {
+            debuggable true
+            jniDebuggable true
+        }
+    }
+}

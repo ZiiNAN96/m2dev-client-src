@@ -1,0 +1,48 @@
+name: Portable common fast gate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  portable:
+    name: "Linux LP64 (${{ matrix.compiler }})"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - compiler: GCC
+            cc: gcc
+            cxx: g++
+          - compiler: Clang
+            cc: clang
+            cxx: clang++
+    env:
+      CC: ${{ matrix.cc }}
+      CXX: ${{ matrix.cxx }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure portable common targets
+        run: >-
+          cmake -S . -B build-portable -G Ninja
+          -DCMAKE_BUILD_TYPE=Debug
+          -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+          -DM2_BUILD_WINDOWS_CLIENT=OFF
+          -DM2_BUILD_RENDERER_TESTS=OFF
+          -DM2_BUILD_ANDROID_BOOTSTRAP=OFF
+          -DM2_BUILD_PLATFORM_TESTS=ON
+
+      - name: Build portable common targets
+        run: cmake --build build-portable --parallel 2
+
+      - name: Run portable headers, ABI and lifecycle contracts
+        run: ctest --test-dir build-portable -L portable --output-on-failure

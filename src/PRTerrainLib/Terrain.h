@@ -11,6 +11,7 @@
 
 #include "TextureSet.h"
 #include "TerrainType.h"
+#include "WaterHeightFormat.h"
 
 class CTerrainImpl 
 {
@@ -122,7 +123,7 @@ class CTerrainImpl
 		//////////////////////////////////////////////////////////////////////////
 		//Water Map
 		BYTE					m_byNumWater;
-		long					m_lWaterHeight[MAX_WATER_NUM + 1];
+		TerrainFormat::WaterHeight	m_lWaterHeight[MAX_WATER_NUM + 1];
 		//Water Map
 		//////////////////////////////////////////////////////////////////////////
 

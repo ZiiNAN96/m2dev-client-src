@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cstddef>
 #include <cstring>
 #include <cassert>
 
@@ -30,13 +31,13 @@ public:
 
 	uint8_t ReadU8()
 	{
-		assert(m_pos + sizeof(uint8_t) <= m_size);
+		assert(HasBytes(sizeof(uint8_t)));
 		return m_buf[m_pos++];
 	}
 
 	uint16_t ReadU16()
 	{
-		assert(m_pos + sizeof(uint16_t) <= m_size);
+		assert(HasBytes(sizeof(uint16_t)));
 		uint16_t v;
 		std::memcpy(&v, m_buf + m_pos, sizeof(v));
 		m_pos += sizeof(v);
@@ -45,7 +46,7 @@ public:
 
 	uint32_t ReadU32()
 	{
-		assert(m_pos + sizeof(uint32_t) <= m_size);
+		assert(HasBytes(sizeof(uint32_t)));
 		uint32_t v;
 		std::memcpy(&v, m_buf + m_pos, sizeof(v));
 		m_pos += sizeof(v);
@@ -58,7 +59,7 @@ public:
 
 	uint64_t ReadU64()
 	{
-		assert(m_pos + sizeof(uint64_t) <= m_size);
+		assert(HasBytes(sizeof(uint64_t)));
 		uint64_t v;
 		std::memcpy(&v, m_buf + m_pos, sizeof(v));
 		m_pos += sizeof(v);
@@ -67,7 +68,7 @@ public:
 
 	float ReadFloat()
 	{
-		assert(m_pos + sizeof(float) <= m_size);
+		assert(HasBytes(sizeof(float)));
 		float v;
 		std::memcpy(&v, m_buf + m_pos, sizeof(v));
 		m_pos += sizeof(v);
@@ -77,8 +78,10 @@ public:
 	// Read raw bytes
 	bool ReadBytes(void* dest, size_t len)
 	{
-		if (m_pos + len > m_size)
+		if (!HasBytes(len))
 			return false;
+		if (len == 0)
+			return true;
 		std::memcpy(dest, m_buf + m_pos, len);
 		m_pos += len;
 		return true;
@@ -87,7 +90,7 @@ public:
 	// Read a fixed-length string (null-terminated in dest)
 	bool ReadString(char* dest, size_t fixedLen)
 	{
-		if (m_pos + fixedLen > m_size)
+		if (fixedLen == 0 || !HasBytes(fixedLen))
 			return false;
 		std::memcpy(dest, m_buf + m_pos, fixedLen);
 		dest[fixedLen - 1] = '\0'; // ensure null termination
@@ -98,7 +101,7 @@ public:
 	// Skip bytes without reading
 	bool Skip(size_t len)
 	{
-		if (m_pos + len > m_size)
+		if (!HasBytes(len))
 			return false;
 		m_pos += len;
 		return true;
@@ -108,13 +111,13 @@ public:
 
 	uint8_t PeekU8() const
 	{
-		assert(m_pos + sizeof(uint8_t) <= m_size);
+		assert(HasBytes(sizeof(uint8_t)));
 		return m_buf[m_pos];
 	}
 
 	uint16_t PeekU16() const
 	{
-		assert(m_pos + sizeof(uint16_t) <= m_size);
+		assert(HasBytes(sizeof(uint16_t)));
 		uint16_t v;
 		std::memcpy(&v, m_buf + m_pos, sizeof(v));
 		return v;
@@ -122,7 +125,7 @@ public:
 
 	uint16_t PeekU16At(size_t offset) const
 	{
-		assert(offset + sizeof(uint16_t) <= m_size);
+		assert(offset <= m_size && sizeof(uint16_t) <= m_size - offset);
 		uint16_t v;
 		std::memcpy(&v, m_buf + offset, sizeof(v));
 		return v;
@@ -133,7 +136,7 @@ public:
 	template<typename T>
 	bool ReadStruct(T& out)
 	{
-		if (m_pos + sizeof(T) > m_size)
+		if (!HasBytes(sizeof(T)))
 			return false;
 		std::memcpy(&out, m_buf + m_pos, sizeof(T));
 		m_pos += sizeof(T);
@@ -142,7 +145,8 @@ public:
 
 	// --- State ---
 
-	bool HasBytes(size_t n) const { return (m_pos + n) <= m_size; }
+	// ZiiNAN: Cross-platform bootstrap
+	bool HasBytes(size_t n) const { return n <= m_size - m_pos; }
 	size_t Remaining() const { return m_size - m_pos; }
 	size_t Position() const { return m_pos; }
 	size_t Size() const { return m_size; }

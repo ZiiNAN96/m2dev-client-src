@@ -106,6 +106,8 @@ add_test(NAME Renderer.SkinningCoverage COMMAND RendererSkinningCoverageTest "${
 set_tests_properties(Renderer.SkinningCoverage PROPERTIES LABELS "gpu;skinning;real-assets" TIMEOUT 900)
 add_test(NAME Renderer.HairLodParity COMMAND RendererSkinningCoverageTest "${M2_SKINNING_ASSET_ROOT}" --lod-only)
 set_tests_properties(Renderer.HairLodParity PROPERTIES LABELS "gpu;skinning;real-assets" TIMEOUT 300)
+add_test(NAME Renderer.HairLodQuick COMMAND RendererSkinningCoverageTest "${M2_SKINNING_ASSET_ROOT}" --lod-quick)
+set_tests_properties(Renderer.HairLodQuick PROPERTIES LABELS "gpu;skinning;c3x;fast" TIMEOUT 60 RUN_SERIAL TRUE)
 
 # ZiiNAN: GPU skinning stability validation
 add_executable(RendererSkinningStabilityTest SkinningStabilityTest.cpp)

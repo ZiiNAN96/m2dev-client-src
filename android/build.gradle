@@ -1,0 +1,9 @@
+plugins {
+    id 'com.android.application' version '8.9.2' apply false
+}
+
+def outputRoot = providers.gradleProperty('m2BuildRoot').orElse('../../m2dev-client-builds/c3x/android').get()
+layout.buildDirectory.set(file(outputRoot))
+subprojects {
+    layout.buildDirectory.set(rootProject.layout.buildDirectory.dir(project.name))
+}

@@ -1,3 +1,4 @@
+if(M2_BUILD_WINDOWS_CLIENT)
 add_executable(PlatformAbiLayoutTest AbiLayoutTest.cpp)
 target_link_libraries(PlatformAbiLayoutTest PRIVATE mio M2FirstPartyArchitectureChecks)
 add_test(NAME Platform.AbiLayouts COMMAND PlatformAbiLayoutTest)
@@ -23,3 +24,22 @@ target_link_libraries(PlatformWindowInputTest PRIVATE M2Platform M2FirstPartyArc
 add_test(NAME Platform.WindowInput COMMAND PlatformWindowInputTest)
 set_tests_properties(Platform.WindowInput PROPERTIES LABELS "platform;x64;windows;c2x" TIMEOUT 30 RUN_SERIAL TRUE)
 set_target_properties(PlatformWindowInputTest PROPERTIES FOLDER "Tests/Platform")
+endif()
+
+# ZiiNAN: Cross-platform bootstrap
+add_executable(PlatformPortableHeadersTest PortableHeadersTest.cpp)
+target_link_libraries(PlatformPortableHeadersTest PRIVATE M2PlatformCommon M2RendererInterface)
+add_executable(PlatformPortableAbiTest PortableAbiTest.cpp)
+target_link_libraries(PlatformPortableAbiTest PRIVATE M2PlatformCommon M2RendererInterface)
+add_executable(PlatformAndroidLifecycleTest AndroidLifecycleTest.cpp)
+target_link_libraries(PlatformAndroidLifecycleTest PRIVATE M2PlatformCommon)
+set_target_properties(PlatformPortableAbiTest PlatformAndroidLifecycleTest PROPERTIES FOLDER "Tests/Platform")
+if(NOT ANDROID)
+    add_test(NAME Platform.PortableHeaders COMMAND PlatformPortableHeadersTest)
+    add_test(NAME Platform.PortableAbi COMMAND PlatformPortableAbiTest)
+    add_test(NAME Platform.AndroidLifecycle COMMAND PlatformAndroidLifecycleTest)
+    set_tests_properties(Platform.PortableHeaders Platform.PortableAbi Platform.AndroidLifecycle PROPERTIES LABELS "platform;portable;c3x" TIMEOUT 10)
+endif()
+add_test(NAME Platform.SourceBoundaries COMMAND ${CMAKE_COMMAND}
+    -DSOURCE_ROOT=${PROJECT_SOURCE_DIR} -P ${CMAKE_CURRENT_SOURCE_DIR}/SourceBoundaryTest.cmake)
+set_tests_properties(Platform.SourceBoundaries PROPERTIES LABELS "platform;portable;c3x" TIMEOUT 10)

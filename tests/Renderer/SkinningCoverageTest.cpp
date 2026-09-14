@@ -216,11 +216,12 @@ struct FallbackInstance : CGrannyModelInstance
     void RejectRemap() { m_skinningRemaps.clear(); }
     void RestoreRemap() { m_skinningBindingDestination.reset(); }
 };
-static void LinkedLods(const std::string& root,DiligentD3D11Backend& backend,DiligentActorRenderer& renderer,const TerrainTexturePtr& texture)
+static void LinkedLods(const std::string& root,DiligentD3D11Backend& backend,DiligentActorRenderer& renderer,const TerrainTexturePtr& texture,bool quick=false)
 {
     // ZiiNAN: GPU skinning actor coverage - compare rebinding against freshly bound native instances.
     for(const std::string folder:{"PC/ymir work/pc/","pc2/ymir work/pc2/"})
     for(const std::string race:{"warrior","assassin","sura","shaman"}) {
+        if(quick && race!="assassin") continue;
         const auto base=root+"/"+folder+race+"/";
         const auto shape=race=="shaman"?"miyeom":"novice";
         Asset body(base+race+"_"+shape+".gr2"),lod1(base+race+"_"+shape+"_lod_01.gr2"),
@@ -232,6 +233,7 @@ static void LinkedLods(const std::string& root,DiligentD3D11Backend& backend,Dil
         if(folder=="PC/ymir work/pc/" && (race=="assassin" || race=="shaman"))
             for(const auto* name:{"hair_15_1.gr2","hair_17_1.gr2"})
                 styles.push_back(root+"/metin2_patch_mundi/ymir work/pc/"+race+"/hair/"+name);
+        if(quick) styles={base+"hair/hair_2_1.gr2"};
         for(const auto& path:styles) {
             const auto name=std::filesystem::path(path).filename().string();
             Asset style(path);Pair hair;
@@ -293,7 +295,8 @@ int main(int argc,char** argv)
     try {
         Check(argc==2 || argc==3,"Real asset root required");const std::string root=argv[1];
         const bool actorsOnly=argc==3 && std::string(argv[2])=="--actors-only";
-        Check(argc==2 || actorsOnly || std::string(argv[2])=="--lod-only","Known diagnostic subset required");
+        const bool lodQuick=argc==3 && std::string(argv[2])=="--lod-quick";
+        Check(argc==2 || actorsOnly || lodQuick || std::string(argv[2])=="--lod-only","Known diagnostic subset required");
         Check(startupSkinningMode==PrototypeSkinningMode::GPU,"B6 production default; CPU reference still selected per comparison scope");
         CPackManager packs;CResourceManager resources;Diligent::GetEngineFactoryD3D11()->SetMessageCallback(Message);
         window=CreateWindowW(L"STATIC",L"B4-X coverage parity",WS_OVERLAPPEDWINDOW,0,0,512,512,nullptr,nullptr,GetModuleHandleW(nullptr),nullptr);
@@ -304,7 +307,7 @@ int main(int argc,char** argv)
             const uint8_t checker[]={220,180,100,255,90,170,230,32,110,210,110,128,240,220,160,255};
             TerrainTextureData textureData{2,2,TerrainTextureFormat::RGBA8,{{checker,sizeof(checker),8}}};
             auto texture=renderer.UploadTexture(textureData);Check(bool(texture),"Diagnostic material texture");const auto world=World();
-            if(!actorsOnly) LinkedLods(root,backend,renderer,texture);
+            if(!actorsOnly) LinkedLods(root,backend,renderer,texture,lodQuick);
             if(argc==2) {
             for(const std::string folder:{"PC/ymir work/pc/","pc2/ymir work/pc2/"}) for(const std::string race:{"warrior","assassin","sura","shaman"}) {
                 const auto base=root+"/"+folder+race+"/";
@@ -361,7 +364,7 @@ int main(int argc,char** argv)
             }
             Check(maxBones==163,"Real 163-bone boss represented");
             }
-            { Asset mob(root+"/Monster/ymir work/monster/wolf/wolf.gr2");Crowd(mob,backend,renderer,texture);Fallback(mob,backend,renderer); }
+            if(!lodQuick) { Asset mob(root+"/Monster/ymir work/monster/wolf/wolf.gr2");Crowd(mob,backend,renderer,texture);Fallback(mob,backend,renderer); }
             texture.reset();renderer.ReleaseBindings();
             Check(!renderer.LiveGeometryCount() && !renderer.LiveTextureCount() && !renderer.MountGeometryCount() && !renderer.AttachmentGeometryCount(),"Actor/mount/attachment resources zero");
             actorRenderer=nullptr;actorWorldFrame=false;actorDeformTargets={};

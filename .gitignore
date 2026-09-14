@@ -65,5 +65,10 @@
 
 # Generated CMake build directories
 /build/
-/build-clean/
-/build-c2x-clean/
+/build-*/
+/android/.gradle/
+/android/.cxx/
+/android/local.properties
+/android/**/build/
+/android/**/.cxx/
+/android/**/generated/
