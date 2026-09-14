@@ -171,7 +171,7 @@ class CGrannyModelInstance : public CGraphicCollisionObject
 		// Static Data
 		CGrannyModel *					m_pModel;
 
-		// Granny Data
+		// Animation Data
         std::unique_ptr<AssetRuntime::AnimationInstance> m_animationInstance;
 
 		// Meshes' Transform Data

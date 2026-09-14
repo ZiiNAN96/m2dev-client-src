@@ -3,7 +3,10 @@
 int main()
 {
     using namespace Renderer;
-    if(StartupOptions{}.gr2Reader!=AssetRuntime::GR2ReaderMode::Granny) return 30;
+    for(auto value:{L"--gr2-reader=granny",L"--animation-runtime=granny"}) {
+        StartupOptions removed; removed.ParseArgument(value); if(removed.valid) return 35;
+    }
+    if(StartupOptions{}.gr2Reader!=AssetRuntime::GR2ReaderMode::ZiiNAN) return 30;
     StartupOptions reader; reader.ParseArgument(L"--gr2-reader=ziinan");
     if(!reader.valid || reader.animationRuntime!=AssetRuntime::AnimationRuntimeMode::ZiiNAN) return 31;
     reader.ParseArgument(L"--animation-runtime=granny"); if(reader.valid) return 32;
@@ -13,8 +16,8 @@ int main()
     StartupOptions stall;
     stall.ParseArgument(L"--animation-stall-audit");
     if (!stall.valid || !stall.animationStallAudit || stall.animationRuntimeSelected ||
-        stall.animationRuntime != AssetRuntime::AnimationRuntimeMode::Granny) return 25;
-    if (StartupOptions{}.animationRuntime!=AssetRuntime::AnimationRuntimeMode::Granny ||
+        stall.animationRuntime != AssetRuntime::AnimationRuntimeMode::ZiiNAN) return 25;
+    if (StartupOptions{}.animationRuntime!=AssetRuntime::AnimationRuntimeMode::ZiiNAN ||
         StartupOptions{}.animationRuntimeSelected) return 20;
     StartupOptions animation;
     animation.ParseArgument(L"--animation-runtime=ziinan");
@@ -47,7 +50,7 @@ int main()
     StartupOptions defaults;
     StartupOptions audit;
     audit.ParseArgument(L"--load-warmup-audit"); audit.ParseArgument(L"--gr2-prewarm=off");
-    if(!audit.valid || !audit.loadWarmupAudit || audit.gr2Prewarm || audit.gr2Reader!=AssetRuntime::GR2ReaderMode::Granny) return 20;
+    if(!audit.valid || !audit.loadWarmupAudit || audit.gr2Prewarm || audit.gr2Reader!=AssetRuntime::GR2ReaderMode::ZiiNAN) return 20;
     audit.ParseArgument(L"--gr2-prewarm=on"); if(audit.valid) return 21;
     StartupOptions invalidPrewarm; invalidPrewarm.ParseArgument(L"--gr2-prewarm=invalid"); if(invalidPrewarm.valid) return 22;
     defaults.ParseArgument(L"--existing-client-option");

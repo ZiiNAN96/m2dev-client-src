@@ -2,6 +2,7 @@
 #include "EterGrnLib/ModelInstance.h"
 #include "EterGrnLib/Thing.h"
 #include "AssetRuntime/GR2ReaderMode.h"
+#include "AssetRuntime/Providers.h"
 #include "EterLib/Camera.h"
 #include "EterLib/ResourceManager.h"
 #include "PackLib/PackManager.h"
@@ -29,7 +30,6 @@ namespace
 struct LoadedThing : CGraphicThing { using CGraphicThing::CGraphicThing; using CGraphicThing::OnLoad; };
 void EmptyAnimationModels(const std::filesystem::path& root)
 {
-    AssetRuntime::startupGR2Reader=AssetRuntime::GR2ReaderMode::ZiiNAN;
     for(const char* name:{"skill/swaeryeong.gr2","skill/geongon.gr2","skill/geomhwan.gr2","onehand_sword/walk.gr2","onehand_sword/run.gr2","onehand_sword/combo_03.gr2","onehand_sword/combo_04.gr2"}) {
         const auto path=root/"PC/ymir work/pc/sura"/name;
         std::ifstream input(path,std::ios::binary|std::ios::ate); Check(bool(input),"Sura animation fixture");
@@ -52,7 +52,7 @@ AssetRuntime::AssetHandle Load(const std::filesystem::path& path)
     const auto count = input.tellg(); Check(count > 0, "Real actor asset nonempty");
     std::vector<std::byte> bytes(static_cast<std::size_t>(count));
     input.seekg(0); input.read(reinterpret_cast<char*>(bytes.data()), count); Check(bool(input), "Real actor asset read");
-    auto loaded = AssetRuntime::LoadModel(path.string(), bytes, AssetRuntime::GetGR2AssetProvider());
+    auto loaded = AssetRuntime::LoadModel(path.string(), bytes);
     Check(bool(loaded), "Real asset loaded through production provider"); return std::move(loaded.asset);
 }
 struct Model
@@ -198,6 +198,52 @@ void Actor(const std::filesystem::path& root, const char* directory, const char*
     }
     std::cout<<"ACTOR "<<modelName<<' '<<clipName<<" independent pose and production GPU draw PASS\n";
 }
+void Players(const std::filesystem::path& root,DiligentD3D11Backend& backend,
+    DiligentActorRenderer& renderer,const TerrainTexturePtr& texture)
+{
+    for(const char* pack:{"PC","PC2"}) for(const char* name:{"warrior","assassin","sura","shaman"}) {
+        const auto base=root/pack/"ymir work"/(std::string(pack)=="PC"?"pc":"pc2")/name;
+        for(const char* armor:{"novice","4-1"}) {
+            Model model(base/(std::string(name)+"_"+armor+".gr2"));
+            Model hairModel(base/"hair/hair_1_1.gr2");
+            const bool assassin=std::string_view(name)=="assassin",shaman=std::string_view(name)=="shaman";
+            Model weaponModel(root/"item/ymir work/item/weapon"/(assassin?"01000.gr2":shaman?"07000.gr2":"00010.gr2"));
+            CGrannyModelInstance actor,hair,weapon,leftWeapon; actor.SetMainModelPointer(model.model,nullptr);
+            CGrannyModelInstance* owner=&actor; hair.SetLinkedModelPointer(hairModel.model,nullptr,&owner,true);
+            int hand=-1; Check(actor.GetBoneIndexByName("Bip01 R Hand",&hand),"class right-hand attachment");
+            weapon.SetMainModelPointer(weaponModel.model,nullptr); weapon.SetParentModelInstance(&actor,hand);
+            if(assassin) {
+                Check(actor.GetBoneIndexByName("Bip01 L Hand",&hand),"assassin left-hand attachment");
+                leftWeapon.SetMainModelPointer(weaponModel.model,nullptr); leftWeapon.SetParentModelInstance(&actor,hand);
+            }
+            // Collision/selection callers can query bones before the first frame.
+            const auto* initial=actor.GetBoneMatrixPointer(0);
+            Check(initial && std::all_of(initial,initial+16,[](float x){return std::isfinite(x);}),"initial bone matrix before first frame");
+            unsigned step=0;
+            const std::string mode=assassin?"dualhand_sword":shaman?"fan":"onehand_sword";
+            for(const std::string& clip:std::vector<std::string>{"general/wait","general/walk","general/run","general/attack",
+                mode+"/combo_01",mode+"/combo_02","general/damage","general/wait"}) {
+                Motion motion(base/(clip+".gr2"));
+                actor.SetMotionPointer(&motion.motion);
+                const auto* preserved=actor.GetBoneMatrixPointer(0);
+                Check(preserved && std::all_of(preserved,preserved+16,[](float x){return std::isfinite(x);}),"motion switch preserves collision pose");
+                Frame(backend,renderer); actor.SetLocalTime(.11f+step*.01f); actor.Update(120);
+                Deform(actor,ActorPart::Body,ActorCategory::Player);
+                Deform(hair,ActorPart::Hair,ActorCategory::Player);
+                Draw(actor,renderer,texture,ActorPart::Body,ActorCategory::Player);
+                Draw(hair,renderer,texture,ActorPart::Hair,ActorCategory::Player);
+                Deform(weapon,ActorPart::Weapon,ActorCategory::Player);
+                Draw(weapon,renderer,texture,ActorPart::Weapon,ActorCategory::Player);
+                if(assassin) {
+                    Deform(leftWeapon,ActorPart::Weapon,ActorCategory::Player);
+                    Draw(leftWeapon,renderer,texture,ActorPart::Weapon,ActorCategory::Player);
+                }
+                Finish(backend,renderer); ++step;
+            }
+            std::cout<<"PLAYER "<<pack<<' '<<name<<' '<<armor<<" hair/weapon, initial collision pose, idle/walk/run/attack/combo_01/combo_02/hit/transitions PASS\n";
+        }
+    }
+}
 void StaticWorld(const std::filesystem::path& root,DiligentD3D11Backend& backend)
 {
     DiligentStaticObjectRenderer renderer(backend); Check(renderer.Initialize(),"Production static renderer initializes");
@@ -247,10 +293,11 @@ int main(int argc,char**argv)
     HWND window=nullptr;
     try
     {
-        Check(argc==2,"Real asset root required");
-        Check(AssetRuntime::startupAnimationRuntime==AssetRuntime::AnimationRuntimeMode::Granny,"Production animation default remains Granny");
+        Check(argc==2 || (argc==3 && std::string_view(argv[2])=="--lod-quick"),"Real asset root and optional --lod-quick required");
+        const bool lodOnly=argc==3;
+        Check(AssetRuntime::startupAnimationRuntime==AssetRuntime::AnimationRuntimeMode::ZiiNAN,"Production animation default is ZiiNAN");
+        Check(AssetRuntime::startupGR2Reader==AssetRuntime::GR2ReaderMode::ZiiNAN,"Production reader default is ZiiNAN");
         Check(startupSkinningMode==PrototypeSkinningMode::GPU,"Production GPU skinning remains enabled");
-        AssetRuntime::startupAnimationRuntime=AssetRuntime::AnimationRuntimeMode::ZiiNAN;
         CPackManager packs; CResourceManager resources;
         Diligent::GetEngineFactoryD3D11()->SetMessageCallback(Message);
         window=CreateWindowW(L"STATIC",L"F2-X native GR2 actors",WS_OVERLAPPEDWINDOW,0,0,256,256,nullptr,nullptr,GetModuleHandleW(nullptr),nullptr);
@@ -262,12 +309,20 @@ int main(int argc,char**argv)
             TerrainTextureData data{1,1,TerrainTextureFormat::RGBA8,{{pixel,4,4}}};
             auto texture=renderer.UploadTexture(data);Check(bool(texture),"Diagnostic actor texture");
             Warrior(argv[1],backend,renderer,texture);
+            if(!lodOnly) {
+            Players(argv[1],backend,renderer,texture);
             Actor(argv[1],"Monster/ymir work/monster/wolf","wolf.gr2","03.gr2",ActorCategory::Mob,backend,renderer,texture);
+            Actor(argv[1],"Monster/ymir work/monster/misterious_diseased_bosshost","misterious_diseased_bosshost.gr2","20.gr2",ActorCategory::Mob,backend,renderer,texture);
+            Actor(argv[1],"NPC/ymir work/npc/doctor","doctor.gr2","wait.gr2",ActorCategory::Npc,backend,renderer,texture);
             Actor(argv[1],"NPC/ymir work/npc/horse","horse_normal.gr2","03.gr2",ActorCategory::Mount,backend,renderer,texture);
             StaticWorld(argv[1],backend);
             EmptyAnimationModels(argv[1]);
+            }
+            const std::array<std::byte,16> invalid{};
+            auto rejected=AssetRuntime::LoadModel("production-invalid.gr2",invalid);
+            Check(!rejected && rejected.error!=AssetRuntime::AssetError::None && !rejected.diagnostic.empty() && AssetRuntime::grannyFileReads==0,"default rejects invalid GR2 with diagnostic and no reference fallback");
             Check(AssetRuntime::independentPoseSamples>0 && AssetRuntime::referencePoseSamples==0 && AssetRuntime::animationRuntimeFailures==0,
-                "Opt-in actor frames use own sampling without hidden fallback");
+                "Production actor frames use own sampling without hidden fallback");
             Check(skinningCpuCalls==0 && skinningFallbacks==0,"GPU actors have zero CPU deformation/fallbacks");
             texture.reset();renderer.ReleaseBindings();
             Check(!renderer.LiveGeometryCount()&&!renderer.LiveTextureCount()&&!livePrototypeGeometry&&!livePrototypePalettes&&!livePrototypeStaticMeshes,"GPU owners zero after actor cleanup");
@@ -281,7 +336,7 @@ int main(int argc,char**argv)
         const auto counts=AnimationRuntime::GetLifetimeCounts();
         Check(!counts.skeletons&&!counts.clips&&!AssetRuntime::liveIndependentAnimationInstances&&!AssetRuntime::liveDocuments&&
             !AssetRuntime::liveAnimationInstances&&!AssetRuntime::liveMeshBindings&&!liveSkinMeshes&&!liveBoneRemaps&&!liveBonePalettes&&!AssetRuntime::retainedImportKeyBytes,"All animation/provider/skin/cache owners zero");
-        std::cout<<"PASS real actor opt-in path, GPU no CPU deformation/fallback, native shutdown owners=0\n";return 0;
+        std::cout<<"PASS real actor production path, GPU no CPU deformation/fallback, native shutdown owners=0\n";return 0;
     }
     catch(const std::exception&error){std::cerr<<"FAIL "<<error.what()<<'\n';if(window)DestroyWindow(window);return 1;}
 }

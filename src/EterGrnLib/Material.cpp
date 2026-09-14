@@ -1,5 +1,4 @@
 #include "StdAfx.h"
-#include "AssetRuntime/Granny/Native.h"
 #include "Material.h"
 #include "Mesh.h"
 #include "Eterbase/Filename.h"
@@ -53,7 +52,6 @@ void CGrannyMaterial::RestoreRenderState()
 
 void CGrannyMaterial::Copy(CGrannyMaterial& rkMtrl)
 {
-	m_pgrnMaterial = rkMtrl.m_pgrnMaterial;
 	m_sourceAsset = rkMtrl.m_sourceAsset;
 	m_roImage[0] =  rkMtrl.m_roImage[0];
 	m_roImage[1] =  rkMtrl.m_roImage[1];
@@ -111,33 +109,7 @@ bool CGrannyMaterial::IsIn(const char* c_szImageName, int* piStage)
         }
         return false;
     }
-    if (!m_pgrnMaterial) return false;
-
-	granny_texture * pgrnDiffuseTexture = GrannyGetMaterialTextureByType(m_pgrnMaterial, GrannyDiffuseColorTexture);
-	if (pgrnDiffuseTexture)
-	{
-		std::string strDiffuseFileName = pgrnDiffuseTexture->FromFileName;
-		CFileNameHelper::StringPath(strDiffuseFileName);
-		if (strDiffuseFileName == strImageName)
-		{
-			*piStage=0;
-			return true;
-		}
-	}
-
-    granny_texture * pgrnOpacityTexture = GrannyGetMaterialTextureByType(m_pgrnMaterial, GrannyOpacityTexture);
-	if (pgrnOpacityTexture)
-	{
-		std::string strOpacityFileName = pgrnOpacityTexture->FromFileName;
-		CFileNameHelper::StringPath(strOpacityFileName);
-		if (strOpacityFileName == strImageName)
-		{
-			*piStage=1;
-			return true;
-		}
-	}
-
-	return false;
+    return false;
 }
 
 void CGrannyMaterial::SetSpecularInfo(BOOL bFlag, float fPower, BYTE uSphereMapIndex)
@@ -161,13 +133,7 @@ void CGrannyMaterial::SetSpecularInfo(BOOL bFlag, float fPower, BYTE uSphereMapI
 	}
 }
 
-bool CGrannyMaterial::IsEqual(granny_material* pgrnMaterial) const
-{
-	if (m_pgrnMaterial==pgrnMaterial)
-		return true;
 
-	return false;
-}
 
 
 TextureBinding CGrannyMaterial::GetTextureBinding(int stage) const
@@ -247,70 +213,7 @@ CGraphicImage* CGrannyMaterial::__GetImagePointer(const char* fileName)
 	return static_cast<CGraphicImage*>(pResource);
 }
 
-bool CGrannyMaterial::CreateFromGrannyMaterialPointer(granny_material * pgrnMaterial)
-{
-	m_sourceAsset = nullptr;
-	m_pgrnMaterial = pgrnMaterial;
 
-	granny_texture * pgrnDiffuseTexture = NULL;
-	granny_texture * pgrnOpacityTexture = NULL;
-
-	if (pgrnMaterial)
-	{
-		if (pgrnMaterial->MapCount > 1 && !_strnicmp(pgrnMaterial->Name, "Blend", 5))
-		{
-			pgrnDiffuseTexture = GrannyGetMaterialTextureByType(pgrnMaterial->Maps[0].Material, GrannyDiffuseColorTexture);
-			pgrnOpacityTexture = GrannyGetMaterialTextureByType(pgrnMaterial->Maps[1].Material, GrannyDiffuseColorTexture);
-		}
-		else
-		{
-			pgrnDiffuseTexture = GrannyGetMaterialTextureByType(m_pgrnMaterial, GrannyDiffuseColorTexture);
-			pgrnOpacityTexture = GrannyGetMaterialTextureByType(m_pgrnMaterial, GrannyOpacityTexture);
-		}
-
-		// Two-Side 렌더링이 필요한 지 검사
-		{			
-			granny_int32 twoSided = 0;
-			granny_data_type_definition TwoSidedFieldType[] =
-			{
-				{GrannyInt32Member, "Two-sided"},
-				{GrannyEndMember},
-			};
-
-			granny_variant twoSideResult;
-
-			if (GrannyFindMatchingMember(pgrnMaterial->ExtendedData.Type, pgrnMaterial->ExtendedData.Object, "Two-sided", &twoSideResult)  && NULL != twoSideResult.Type)
-				GrannyConvertSingleObject(twoSideResult.Type, twoSideResult.Object, TwoSidedFieldType, &twoSided, NULL);
-
-			m_bTwoSideRender = 1 == twoSided;
-		}
-	}
-
-	if (pgrnDiffuseTexture)
-		m_roImage[0].SetPointer(__GetImagePointer(pgrnDiffuseTexture->FromFileName));
-
-	if (pgrnOpacityTexture)
-		m_roImage[1].SetPointer(__GetImagePointer(pgrnOpacityTexture->FromFileName));
-
-	// 오퍼시티가 있으면 블렌딩 메쉬
-	if (!m_roImage[1].IsNull())
-		m_eType = TYPE_BLEND_PNT;
-	else
-		m_eType = TYPE_DIFFUSE_PNT;
-
-    // ZiiNAN: Asset Runtime boundary
-    // Resolve once with the existing resource cache; overrides update only their changed field.
-    m_asset.name = pgrnMaterial && pgrnMaterial->Name ? pgrnMaterial->Name : "";
-    for (int stage = 0; stage < 2; ++stage) {
-        const auto* image = GetImagePointer(stage);
-        m_asset.textures[stage] = image ? image->GetFileName() : "";
-    }
-    m_asset.stage = m_eType == TYPE_BLEND_PNT ? AssetRuntime::MaterialStage::DiffuseOpacity : AssetRuntime::MaterialStage::Diffuse;
-    m_asset.blending = m_eType == TYPE_BLEND_PNT;
-    m_asset.culling = m_bTwoSideRender ? AssetRuntime::Culling::None : AssetRuntime::Culling::Clockwise;
-
-	return true;
-}
 
 bool CGrannyMaterial::CreateFromAsset(const AssetRuntime::MaterialAsset& material)
 {
@@ -319,7 +222,6 @@ bool CGrannyMaterial::CreateFromAsset(const AssetRuntime::MaterialAsset& materia
         for (const auto factor : material.baseColorFactor)
             if (!std::isfinite(factor) || factor < 0.0f || factor > 1.0f) return false;
     }
-    m_pgrnMaterial = nullptr;
     m_sourceAsset = &material;
     m_asset = material;
     m_bTwoSideRender = material.culling == AssetRuntime::Culling::None;
@@ -368,7 +270,6 @@ bool CGrannyMaterial::CreateFromAsset(const AssetRuntime::MaterialAsset& materia
 void CGrannyMaterial::Initialize()
 {
 	m_sourceAsset = nullptr;
-	m_pgrnMaterial = nullptr;
 	m_eType = TYPE_DIFFUSE_PNT;
 	m_roImage[0] = NULL;
 	m_roImage[1] = NULL;
@@ -584,23 +485,7 @@ void CGrannyMaterialPalette::SetSpecularInfo(const char* c_szMtrlName, BOOL bEna
 	}
 }
 
-DWORD CGrannyMaterialPalette::RegisterMaterial(granny_material* pgrnMaterial)
-{
-	DWORD size=m_mtrlVector.size();
-	DWORD i;
-	for (i=0; i<size; ++i)
-	{
-		CGrannyMaterial::TRef& roMtrl=m_mtrlVector[i];
-		if (roMtrl->IsEqual(pgrnMaterial))
-			return i;
-	}
 
-	CGrannyMaterial* pkNewMtrl=new CGrannyMaterial;
-	pkNewMtrl->CreateFromGrannyMaterialPointer(pgrnMaterial);
-	m_mtrlVector.push_back(pkNewMtrl);
-	
-	return size;
-}
 
 DWORD CGrannyMaterialPalette::GetMaterialCount() const
 {

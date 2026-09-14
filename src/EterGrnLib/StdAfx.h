@@ -3,7 +3,6 @@
 #pragma warning(disable:4786)	// character 255 넘어가는거 끄기
 
 //#include <crtdbg.h>
-#include "AssetRuntime/Granny/NativeTypes.h"
 
 #include "EterBase/Utils.h"
 #include "EterBase/Debug.h"

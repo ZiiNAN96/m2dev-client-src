@@ -21,6 +21,12 @@ CDynamicPool<CPlaneCollisionInstance> gs_pci;
 CDynamicPool<CAABBCollisionInstance> gs_aci;
 CDynamicPool<COBBCollisionInstance> gs_oci;
 
+size_t GetCollisionInstanceCapacity()
+{
+    return gs_sci.GetCapacity() + gs_cci.GetCapacity() + gs_pci.GetCapacity()
+        + gs_aci.GetCapacity() + gs_oci.GetCapacity();
+}
+
 void DestroyCollisionInstanceSystem()
 {
 	gs_sci.Destroy();

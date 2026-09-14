@@ -1,7 +1,7 @@
 param(
     [Parameter(Mandatory=$true)][ValidatePattern('^[a-zA-Z0-9_-]+$')][string]$Name,
     [Parameter(Mandatory=$true)][string]$BuildDirectory,
-    [ValidateSet('granny','ziinan')][string]$AnimationRuntime = 'ziinan', [switch]$Visible
+    [ValidateSet('ziinan')][string]$AnimationRuntime = 'ziinan', [switch]$Visible
 )
 $ErrorActionPreference = 'Stop'
 $source = (Resolve-Path -LiteralPath "$PSScriptRoot/../..").Path
@@ -80,7 +80,6 @@ foreach ($field in @('RuntimeSkeletons', 'RuntimeAnimationClips', 'IndependentAn
     if ($observations.Count -ne 1 -or $observations[0].Groups['value'].Value -ne '0') { throw "Expected exactly one $field=0 in the fresh shutdown audit." }
 }
 if ($AnimationRuntime -eq 'ziinan' -and ($audit -notmatch '\bIndependentPoseSamples=[1-9][0-9]*' -or $audit -notmatch '\bReferencePoseSamples=0\b')) { throw 'Independent pose sampling / zero SDK pose sampling not proved.' }
-if ($AnimationRuntime -eq 'granny' -and ($audit -notmatch '\bReferencePoseSamples=[1-9][0-9]*' -or $audit -notmatch '\bIndependentPoseSamples=0\b')) { throw 'Normal Granny reference path was not proved.' }
 if ($audit -notmatch '\bGPUFrames=[1-9][0-9]*') { throw 'GPU skinning never rendered.' }
 $worldLog = Get-Content -LiteralPath "$target/static-object-adapter.log" -Raw
 foreach ($submission in @('static rigid diffuse', 'static camera blocker')) {

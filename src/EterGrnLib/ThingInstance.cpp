@@ -543,7 +543,6 @@ void CGraphicThingInstance::RegisterMotionThing(DWORD dwMotionKey, CGraphicThing
 
 void CGraphicThingInstance::ResetLocalTime()
 {
-	//m_clockLast = GrannyGetSystemSeconds();
 	m_fLastLocalTime = 0.0f;
 	m_fLocalTime = 0.0f;
 
@@ -754,8 +753,6 @@ void CGraphicThingInstance::UpdateLODLevel()
 
 void CGraphicThingInstance::UpdateTime()
 {
-	//granny_system_clock clockNow = GrannyGetSystemSeconds();
-	//m_fSecondElapsed = GrannyGetSecondsElapsed(&m_clockLast, &clockNow) * m_fMotionTimeSpeed;
 	
 	//DWORD t1=ELTimer_GetMSec();
 

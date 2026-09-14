@@ -35,7 +35,7 @@ class CArea
 			// For Tree
 			//  - Nothing
 
-			// For Granny Thing
+			// Model resource
 			float				m_fYaw;
 			float				m_fPitch;
 			float				m_fRoll;

@@ -26,11 +26,11 @@ void CGrannyModelInstance::Update(DWORD dwAniFPS)
 
 #ifdef __PERFORMANCE_CHECKER__
 	{
-		static FILE* fp=fopen("perf_grn_setmodelclock.txt", "w");
+		static FILE* fp=fopen("perf_animation_setmodelclock.txt", "w");
 
 		if (t2-t1>3)
 		{
-			fprintf(fp, "%f:%p:- GrannySetModelClock(time=%f) = %dms\n", timeGetTime()/1000.0f, static_cast<void*>(this), GetLocalTime(), t2-t1);
+			fprintf(fp, "%f:%p:- AnimationSetClock(time=%f) = %dms\n", timeGetTime()/1000.0f, static_cast<void*>(this), GetLocalTime(), t2-t1);
 			fflush(fp);
 		}			
 	}
@@ -48,7 +48,7 @@ void CGrannyModelInstance::UpdateTransform(Math::Matrix * pMatrix, float fSecond
 {
 	if (!m_animationInstance)
 	{
-		TraceError("CGrannyModelIstance::UpdateTransform - m_pgrnModelInstance = NULL");
+		TraceError("Animation instance missing in UpdateTransform");
 		return;
 	}
     m_animationInstance->UpdateTransform(fSecondsElapsed,std::span<float,16>(reinterpret_cast<float*>(pMatrix),16));
@@ -68,7 +68,6 @@ void CGrannyModelInstance::Deform(const Math::Matrix * c_pWorldMatrix)
     if(captureActor) m_actorRenderData.ready=false;
 
 	// DELETED
-	//m_pgrnWorldPose = m_pgrnWorldPoseReal;
 	/////////////////////////////////////////////
 	
 	if (!UpdateWorldPose()) return;
@@ -148,7 +147,6 @@ void CGrannyModelInstance::Deform(const Math::Matrix * c_pWorldMatrix)
 void CGrannyModelInstance::UpdateSkeleton(const Math::Matrix * c_pWorldMatrix, float /*fLocalTime*/)
 {	
 	// DELETED
-	//m_pgrnWorldPose = m_pgrnWorldPoseReal;
 	///////////////////////////////////////////
 	if (!UpdateWorldPose()) return;
 	UpdateWorldMatrices(c_pWorldMatrix);
@@ -177,10 +175,7 @@ bool CGrannyModelInstance::UpdateWorldPose()
     }
     // ZiiNAN: GPU skinning static mesh data
     __CaptureSkinningPose();
-	/*
-	GrannySampleModelAnimations(m_pgrnModelInstance, 0, pgrnSkeleton->BoneCount, pgrnLocalPose);
-	GrannyBuildWorldPose(pgrnSkeleton, 0, pgrnSkeleton->BoneCount, pgrnLocalPose, pAttachBoneMatrix, m_pgrnWorldPose);
-	*/
+
     m_animationInstance->FreeCompletedControls();
     return true;
 }

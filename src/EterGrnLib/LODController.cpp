@@ -106,7 +106,7 @@ void __ReserveSharedVertexBuffers(unsigned index, unsigned count)
 	NANOEND
 }
 
-void GrannyCreateSharedDeformBuffer()
+void CreateSharedDeformBuffer()
 {
 	__ReserveSharedVertexBuffers(SHARED_VB_500, 40);
 	__ReserveSharedVertexBuffers(SHARED_VB_1000, 20);
@@ -115,10 +115,10 @@ void GrannyCreateSharedDeformBuffer()
 	__ReserveSharedVertexBuffers(SHARED_VB_3000, 20);
 }
 
-void GrannyDestroySharedDeformBuffer()
+void DestroySharedDeformBuffer()
 {
 #ifdef _DEBUG
-	TraceError("granny_shared_vbs:");
+	TraceError("shared_deform_buffers:");
 #endif
 	for (int i = 0; i != SHARED_VB_NUM; ++i)
 	{	
@@ -286,7 +286,6 @@ void CGrannyLODController::AddModel(CGraphicThing * pThing, int iSrcModel, CGran
 	}
 	else
 	{
-		// FIXME : CModelInstance::m_pgrnWorldPose를 Update에서 사용하는데,
 		//         Deform을 하지 않으면 NULL 입니다. 구조가 조금 바뀌어야 할지도.. - [levites]
  		pModelInstance->DeformNoSkin(&ms_matIdentity);
 	}	

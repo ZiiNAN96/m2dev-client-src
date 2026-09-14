@@ -58,7 +58,7 @@ void Disabled()
     {
         Audit::WorkScope pose(Audit::Work::Pose);
         Audit::WorkScope fingerprint(Audit::Work::Fingerprint);
-        Audit::ImportStarted(); Audit::InstanceHit(); Audit::GrannyPose();
+        Audit::ImportStarted(); Audit::InstanceHit(); Audit::ReferencePose();
         Audit::ImportKey(&digest, &digest, 1, 2, 3);
         Audit::CacheLookup(&digest, &digest, 1, 2, 3, false);
         Audit::External(10, 2, 40);
@@ -94,7 +94,7 @@ void AcrossUpdates()
         Audit::events[0].binding == binding && Audit::events[0].process == 1 &&
         Audit::events[0].display == 1 && Audit::events[0].kind == 'M' &&
         Audit::events[1].kind == 'I', "content identity or attribution was truncated");
-    Audit::InstanceHit(); Audit::GrannyPose();
+    Audit::InstanceHit(); Audit::ReferencePose();
     {
         Audit::WorkScope pose(Audit::Work::Pose);
         { Audit::WorkScope palette(Audit::Work::Palette); }

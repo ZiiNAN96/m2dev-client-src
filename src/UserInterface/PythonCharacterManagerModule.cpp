@@ -736,7 +736,7 @@ void initchrmgr()
 	{
 		// RaceData 관련		
 		{ "SetEmpireNameMode",			chrmgrSetEmpireNameMode,				METH_VARARGS },
-        { "PrewarmVisibleActors",chrmgrPrewarmVisibleActors,METH_NOARGS },
+        { "PrewarmVisibleActors",chrmgrPrewarmVisibleActors,METH_VARARGS },
 		{ "GetVIDInfo",					chrmgrGetVIDInfo,						METH_VARARGS },
 		{ "GetPickedVID",				chrmgrGetPickedVID,						METH_VARARGS },
 		{ "SetShapeModel",				chrmgrSetShapeModel,					METH_VARARGS },

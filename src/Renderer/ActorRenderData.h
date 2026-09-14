@@ -1,5 +1,5 @@
 #pragma once
-// ZiiNAN: Completed CPU-skinned PNT data only; Granny owns all animation and bones.
+// Actor geometry and submissions; AssetRuntime owns animation and bone data.
 #include "StaticObjectRenderData.h"
 #include "GpuSkinningPrototype.h"
 #include <unordered_map>

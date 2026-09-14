@@ -1,8 +1,8 @@
 #include "StdAfx.h"
-#include "AssetRuntime/Granny/GrannyAssetProvider.h"
 #include "Renderer/ResourceData.h"
 #include "AssetRuntime/GR2/GR2AssetProvider.h"
 #include "EterLib/SourceResourceAudit.h"
+#include "EterLib/CollisionData.h"
 #include "PythonApplication.h"
 #include "ProcessScanner.h"
 #include "PythonExceptionSender.h"
@@ -318,7 +318,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	if (!rendererOptions.valid)
 	{
         rendererLog << "ERROR: Invalid/conflicting renderer or asset reader selection; no fallback. ExitCode=2" << std::endl;
-		MessageBoxW(nullptr, L"Unsupported or conflicting selection. Use --renderer=d3d11, --skinning=gpu or cpu, --animation-runtime=granny or ziinan, --gr2-reader=granny (default) or ziinan (requires ZiiNAN animation).",
+		MessageBoxW(nullptr, L"Unsupported or conflicting selection. Use --renderer=d3d11, --skinning=gpu or cpu. ZiiNAN GR2 and animation are the only supported asset runtime.",
 		            L"Invalid renderer selection", MB_OK | MB_ICONERROR);
 		return 2;
 	}
@@ -327,7 +327,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     AssetRuntime::startupAnimationRuntime=rendererOptions.animationRuntime;
     AssetRuntime::startupGR2Reader=rendererOptions.gr2Reader;
     AssetRuntime::nativeGR2Prewarm=rendererOptions.gr2Prewarm;
-    rendererLog << "GR2Reader=" << (rendererOptions.gr2Reader==AssetRuntime::GR2ReaderMode::ZiiNAN ? "ziinan" : "granny") << std::endl;
+    rendererLog << "GR2Reader=" << "ziinan" << std::endl;
+    rendererLog << "GR2ReaderSelection=" << (rendererOptions.gr2ReaderSelected ? "explicit" : "default") << std::endl;
     if (rendererOptions.animationStallAudit || rendererOptions.loadWarmupAudit)
         AssetRuntime::AnimationStallAudit::Enable(rendererOptions.loadWarmupAudit);
     AssetRuntime::animationRuntimeErrorSink=[](const char* message) { TraceError("%s", message); };
@@ -335,7 +336,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     rendererLog << "VerboseDiagnostics=" << Renderer::verboseDiagnostics << std::endl;
     rendererLog << "Skinning=" << (rendererOptions.skinning==Renderer::PrototypeSkinningMode::CPU ? "cpu" : "gpu") << std::endl;
     rendererLog << "SkinningSelection=" << (rendererOptions.skinningSelected ? "explicit" : "default") << std::endl;
-    rendererLog << "AnimationRuntime=" << (rendererOptions.animationRuntime==AssetRuntime::AnimationRuntimeMode::ZiiNAN ? "ziinan" : "granny") << std::endl;
+    rendererLog << "AnimationRuntime=" << "ziinan" << std::endl;
     rendererLog << "AnimationRuntimeSelection=" << (rendererOptions.animationRuntimeSelected ? "explicit" : "default") << std::endl;
     rendererLog << "AnimationStallAudit=" << rendererOptions.animationStallAudit << std::endl;
     rendererLog << "LoadWarmupAudit=" << rendererOptions.loadWarmupAudit << std::endl;
@@ -363,6 +364,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     std::ofstream resourceLog;
     if(Renderer::verboseDiagnostics || rendererOptions.loadWarmupAudit) resourceLog.open("source-resource-audit.log",std::ios::trunc);
     Renderer::WriteSourceResourceAudit(resourceLog);
+    resourceLog << "CollisionResources=" << GetCollisionInstanceCapacity() << '\n';
     // ZiiNAN: GPU skinning production path — summary only; per-frame CSV is opt-in.
     Renderer::WriteSkinningBenchmark();
     resourceLog << "AllCPUDeformationCalls=" << Renderer::skinningCpuCalls << " AllCPUDeformationVertices=" << Renderer::skinningCpuVertices
@@ -414,6 +416,5 @@ int Setup(LPSTR lpCmdLine)
 	// ZiiNAN: Platform abstraction
 	if (!Platform::Time::BeginTimerPeriod()) return 0;
 
-    AssetRuntime::ConfigureGrannyDiagnostics();
 	return 1;
 }

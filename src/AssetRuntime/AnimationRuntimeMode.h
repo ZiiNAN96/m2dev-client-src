@@ -6,8 +6,8 @@
 namespace AssetRuntime
 {
 // ZiiNAN: Animation Runtime boundary
-enum class AnimationRuntimeMode { Granny, ZiiNAN };
-inline AnimationRuntimeMode startupAnimationRuntime = AnimationRuntimeMode::Granny;
+enum class AnimationRuntimeMode { ZiiNAN };
+inline AnimationRuntimeMode startupAnimationRuntime = AnimationRuntimeMode::ZiiNAN;
 inline std::atomic_uint64_t referencePoseSamples{}, independentPoseSamples{}, animationRuntimeFailures{};
 inline std::atomic_size_t liveIndependentAnimationInstances{};
 inline std::atomic_uint64_t importPoseSamples{}, importedAnimationClips{};

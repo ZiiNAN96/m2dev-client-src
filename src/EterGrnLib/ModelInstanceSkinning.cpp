@@ -1,5 +1,4 @@
 #include "StdAfx.h"
-#include "AssetRuntime/Granny/GrannyInterop.h"
 #include "ModelInstance.h"
 #include "SkinningDataAdapter.h"
 #include "EterBase/Debug.h"
@@ -36,9 +35,7 @@ bool CGrannyModelInstance::__RefreshLinkedLodBinding()
         std::vector<std::shared_ptr<const Renderer::BoneRemap>> remaps;
         if(data.HasSkinnedMeshes()) remaps.resize(data.meshes.size());
         for(size_t m=0;m<next.size();++m) {
-            auto binding=m_pModel->GetAssetHandle() ?
-                owner->m_animationInstance->CreateMeshBinding(m_pModel->GetAssetHandle(),m) :
-                AssetRuntime::GrannyInterop::CreateLegacyMeshBinding(m_pModel->GetGrannyModelPointer(),m,*owner->m_animationInstance);
+            auto binding=owner->m_animationInstance->CreateMeshBinding(m_pModel->GetAssetHandle(),m);
             if(!binding) return fail();
             const auto indices=binding->BoneIndices();
             for(const auto bone:indices)

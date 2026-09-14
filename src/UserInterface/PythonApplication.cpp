@@ -24,8 +24,8 @@
 
 
 
-extern void GrannyCreateSharedDeformBuffer();
-extern void GrannyDestroySharedDeformBuffer();
+extern void CreateSharedDeformBuffer();
+extern void DestroySharedDeformBuffer();
 
 float MIN_FOG = 2400.0f;
 double g_specularSpd=0.007f;
@@ -874,7 +874,7 @@ bool CPythonApplication::Create(PyObject * poSelf, const char * c_szName, int wi
             return false;
         }
 
-		GrannyCreateSharedDeformBuffer();
+		CreateSharedDeformBuffer();
 
 		if (m_pySystem.IsAutoTiling())
 		{
@@ -1088,7 +1088,7 @@ void CPythonApplication::Destroy()
 	DefaultFont_Cleanup();
 	// END_OF_DEFAULT_FONT
 
-	GrannyDestroySharedDeformBuffer();
+	DestroySharedDeformBuffer();
 
 	m_pyGraphic.Destroy();
 	

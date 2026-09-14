@@ -1,277 +1,195 @@
-# F3/4-X – Production Migration / Granny Removal
+# F3/4-X – Production Switch + Complete Granny Removal
 
-Stand: 2026-09-14. **NO-GO. Gate A ist bereits am Produktions-Coverage-Preflight gescheitert. Gate B wurde nicht begonnen.**
+Stand: 2026-09-14, Neustart nach F3-B. **Gate A GO. Gate B GO. F3/4-X abgeschlossen.** Kein Commit/Push.
 
-Der native Reader lehnt **27 nachweislich über Client-Konfigurationen benötigte Dateien** ab. Ihre tatsächlichen Packbytes sind mit den abgelehnten Rohdateien identisch; der explizite Granny-Referenzprovider lädt sie erfolgreich. Ein Wechsel des Defaults würde damit bestehende Produktionspfade verlieren. Die STOP-Bedingung des Auftrags greift: „Wenn IRGENDEIN produktiver Pfad noch Granny braucht: STOP. Gate B NICHT beginnen.“ Dies ist keine Freigabe des unveränderten F2-X-Readers für Production und kein abgeschlossener Granny-Removal.
+## Ausgangslage und aktuelle Coverage
 
-## 1. Ausgangslage / Baseline Freeze
+Source-Baseline `961401a09297a0f0d7504595681b3bf53eb7c134`, zu Beginn sauber. Der ältere F3/4-Versuch hatte vor F3-A/B 52 Rejects und 27 Produktionsblocker; dessen Baseline-/Klassifikationsdateien bleiben erhalten. Maßgeblich ist jetzt [F3-B](phase-f3b-redthief-animation-repair.md).
 
-Sauberer Source-Stand vor Beginn: `17858daf14e8bb8af9322f4fc31eb0b09ed865d7`. Keine Änderungen am produktiven Source, Reader, Animation, Prewarm, Renderer oder an Originalassets in diesem Arbeitsstand.
+Neuer Corpus-Scan: **9.160 / 9.166 parsed, sechs malformed**, 40,108 s. Alle 52 in F3-B klassifizierten Quelldateien besitzen weiterhin denselben SHA256. Damit bleiben die Klassifikation `production_referenced_unsupported=0` und die nicht pauschal aufgelösten 20 Nutzungseinordnungen nachvollziehbar. Keine Finite-Prüfung oder Reader-Semantik verändert. Lokale Evidenz: `build/f34-restart/corpus/`, `f3b-input-verification.json`.
 
-[Baseline-Metadaten](phase-f34-baseline.json) konservieren Commit, SHA-256/Größen der vorhandenen Build-/Referenzbelege und unveränderte F1-X-Toleranzen. Die bisherigen Berichte [F2-X](phase-f2x-ziinan-gr2-reader.md) und [F2-P](../performance/phase-f2p-120fps-load-warmup.md) bleiben vollständig erhalten.
+## Gate A: Production Default / No Fallback
 
-| Nachweis vor F3/4 | Gesicherter Stand |
+`GR2ReaderMode.h`, `AnimationRuntimeMode.h` und `Renderer/StartupOptions.h` verwenden ZiiNAN als Default. Die Startdiagnose protokolliert auch `GR2ReaderSelection=default`. Granny ist während Gate A ausschließlich explizit auswählbarer Entwicklungs-/Referenzpfad. Widersprüchliche Optionen werden abgewiesen; beide Reihenfolgen der ausdrücklichen Granny-Auswahl sind getestet.
+
+Der vorhandene `Providers.cpp`-Dispatch bleibt ein einzelner Provideraufruf. Ein ungültiges `.gr2` liefert einen Fehler mit Diagnose, ohne einen Granny-Read. `GR2RenderTest` verwendet jetzt den normalen Dispatch, keine explizite Native-Provider-Auswahl.
+
+## Golden Reference Preservation
+
+Neue SDK-freie Tests `AssetRuntime.GR2Golden.static` und `.animation`; während Gate A getrenntes, nur ausdrücklich gebautes `GR2GoldenExport` (mit Gate B entfernt). Die Erwartungen stammen vom Granny-Provider und seiner expliziten Granny-Poseauswertung, nicht vom getesteten nativen Reader. Tests können sie nicht neu erzeugen oder überschreiben.
+
+- Static: Warrior, Hair, Weapon, Wolf, Boss, Mount, Building, Prop; Counts, vollständige Bone-Namen/Reihenfolge/Parents, ausgewählte Bind-Transforms, Material-/Skin-Mappings und Vertex-/Index-Hashes.
+- Animation: Warrior Idle/Walk/Run/finite Attack, Wolf, Boss, Mount; Dauer, Loop-/Clamp-Vertrag, ausgewählte Welt-/Palettewerte und finale Vertexpositionen/-normalen an sechs Zeitpunkten.
+- F1-X-Grenzen unverändert: Welt/Palette 2e-3, Position 5e-3, Normale 5e-5. Bestehende Live-Parität prüft während Gate A zusätzlich lokale Translation/Rotation/Scale und vollständige Vertexsets.
+- 3.835 statische und 6.075 Animationswerte/Records, zusammen 103.037 Bytes. Keine GR2-Datei dupliziert. Vollständige Beschreibung: `tests/AssetRuntime/fixtures/gr2-golden-README.md`.
+
+## Player / Actor / Attachments / Static World
+
+`GR2RenderTest`: Warrior, Assassin, Sura, Shaman, jeweils PC/PC2 und Novice/4-1-Rüstung, Haar, Idle/Walk/Run/Attack/Hit/Transitions. Klassenspezifische Waffen (einschließlich beider Assassin-Hände) und Combo_01/02 bestehen im ergänzten Release-/Debug-Nachtest. Wolfman-Assets im vorhandenen Corpus nicht gefunden; keine erfundene Wolfman-Freigabe. Die sieben Sura-Clips mit leeren Model-Records bleiben ausdrücklich geprüft.
+
+Native Bone-Matrizen sind vor dem ersten Frame gültig und bleiben beim Motionwechsel gültig. Native Hair-Near/Far/Near-, Weapon-, Wolf-, Boss-, NPC-/Horse- und statische Building-GPU-Pfade sind geprüft. Der originale Client-Smoke enthält außerdem echten Mount/Rider, Hair/Weapon sowie protokollierte Static- und Camera-Blocker-Submissions. Kein zusätzlicher sichtbarer Shield-GR2-Pfad wurde behauptet.
+
+Die Collision-Freigabe steht unverändert nach dem World-Teardown in `CPythonApplication::Destroy`. Der normale Character-Select-Pfad wurde separat vom Benutzer bestätigt.
+
+## Release / Debug / GCC Fast Gate
+
+| Gate | Ergebnis |
 |---|---|
-| Raw-Corpus | 9.166 total; 9.114 parsed; 52 rejected; **99,43 %** |
-| F2-P Release | 43/43 bestehende gezielte Tests; späterer Spawn-/Namensfarben-Quick-Fix separat dokumentiert |
-| F2-P Debug | 42/43 plus bestandener gezielter Warmup-Nachtest; kein nachträglich behaupteter vollständiger neuer Lauf |
-| F2-P GCC/LP64 | 14/14 |
-| Finaler manueller Release | `F484BE166DEB305A8141FD1A9A1AB26BF4C29E5D9DDB421E966DD1F3681741CE` |
-| Vorhandene Debug-EXE | `525D32EF7750432F2370BBCB6B07B4FB35FB982A663FC7E8E015B3E34B7350FB` |
-| Finaler F2-P-Lauf | 962 Native-Reads; 0 Granny-Reads/Pose-/Importsamples; 0 CPU-Deformation/Fallback; Ressourcen 0; Exit 0 |
+| Release-Build | PASS, inkrementell |
+| Release-Auswahl | 30/31 zunächst PASS; alter Hair-Referenztest abgestürzt; nach expliziter Referenzauswahl gezielter Nachtest 1/1 PASS (6,36 s) |
+| Debug-Build | PASS, inkrementell |
+| Debug-Auswahl | 31/31 PASS, 171,49 s |
+| GCC 12.4 / LP64 | 18/18 PASS, 10,36 s; SDK-freie Common-Tests inklusive beider Goldens |
+| Erweiterte Waffen-/Combo-Coverage | Release PASS 6,24 s; Debug PASS 85,18 s |
 
-Die Debug-EXE ist ein gesichertes vorhandenes Artefakt, kein Nachweis eines frischen Builds des finalen Quick-Fixes. Frühere manuelle Bestätigungen werden nicht als neue F3/4-Abnahme ausgegeben.
+Auswahl: Reader Safety/Independence/Compatibility/Redthief/Parity, Goldens, AssetRuntime-/AnimationRuntime-Verträge, Warmup/StallAudit, HairLodQuick, D3D11-Smoke, Platform inklusive WindowInput und GLB-Provider/Render. Kein Fuzzer, Stresslauf oder große Renderer-Suite. Der GCC-Gate ist keine Android-/Device-Abnahme.
 
-## 2. Gate-A Plan und ausgeführter Umfang
+Der historische Hair-Test baut direkt rohe SDK-Modelle ohne AssetHandle und benötigte eine ausdrückliche Granny-Animationsauswahl. Das korrigiert seinen Referenzvertrag; produktive Consumer verwenden AssetHandles. Native Hair-LOD bleibt gesondert in GR2Render und im Client-Smoke abgesichert.
 
-Baseline erfassen → alle 52 Rejects samt Config-/Packauflösung prüfen → nur bei vollständiger Coverage Golden-Daten fertigstellen, Default wechseln und kurze Build-/Runtime-Gates ausführen → erst dann Gate B.
+Der erste Debug-Aufruf nach dem Hair-Fix selektierte wegen eines Zeilenumbruchs im Regex keine Tests. Er zählt nicht als PASS; der oben genannte echte 31er Lauf verwendet einen bereinigten Filter und `--no-tests=error`.
 
-Ausgeführt: Baseline, vollständiges Inventar aller 52 Einträge, tatsächlicher Pack-/Provider-Preflight, kurze Wiederprüfung der bestehenden Referenztests, Bericht. Der Produktions-Coverage-Fehler stoppt die nachfolgenden Migrationsschritte. Keine Parser-Sicherheitsprüfung wurde zur Erhöhung der Coverage gelockert; fehlende Semantik muss vor einem neuen Gate-A-Versuch korrekt implementiert und gegen Referenzen geprüft werden.
+Builds innerhalb der Sandbox scheiterten an SDK-Erkennung bzw. Cygwin-Schreibrechten; autorisierte Builds außerhalb der Sandbox bestanden. Bekannte Vendor-Warnungen LNK4099/LNK4075/LNK4098 bleiben vorhanden. Auch die frischen Gate-B-Builds sind erfolgreich, aber nicht warnungsfrei.
 
-## 3. 52 Rejected Classification
+## Manual Runtime / Character Select / Multi-Map
 
-Jede Datei mit Pfad, Kategorie, Reader-Grund, Nutzungseinstufung, Rassen-/Konfigurations-/Serververweisen und Disposition steht in der [CSV](phase-f34-rejected-classification.csv). Die [detaillierte JSON-Evidenz](phase-f34-rejected-classification.json) enthält zusätzlich SHA-256 der Rohdateien, genaue Referenzzeilen, Motion-Listen und Ergebnisse für rohe/gepackte Daten.
+**Default-Client manuell bestätigt: „perfekt“.** Angefordert und bestätigt: Login → 3D-Character Select → Ingame, Welt/Player direkt nach Loading ohne sichtbaren Freeze, Idle/Gehen/Laufen/Angriff, Wildhund/NPC, Haar/Waffe/Mount soweit verfügbar, Resize, Minimize/Restore, X. PID 61736, Exitcode 0. Startoptionen enthalten nur Diagnostik/Audit, keinen Reader-/Animationsschalter. Laufkopie: `build/f2x/runtime/f34-default-login/`.
 
-| Einstufung | Dateien | Ergebnis |
-|---|---:|---|
-| Aktive Client-Konfiguration nachgewiesen | **27** | Gepackt byteidentisch; Native lehnt ab; Granny lädt. Produktionsblocker. |
-| Aktive Nutzung nicht abschließend geklärt | **20** | Gepackt byteidentisch; Native lehnt ab; Granny lädt. Nicht als unbenutzt freigegeben. |
-| Abgelehnte Rohkopie wird im Pack überlagert | **5** | Gepacktes Ziel ist verschieden und native-lesbar; defekte Rohkopie bleibt rejected. |
-| Gesamt | **52** | Keine Behauptung von 100-%-Coverage. |
+Automatischer Original-Pack-Smoke: **A1 → B1 → A1 PASS**, 63,1 s, PID 72584, 3.528 gerenderte Frames. Je Map Near/Far/Near und Screenshots; Mount/Rider, NPC, Wildhund, Boss, Haar/Waffe und Static-/Camera-Blocker-Submissions nachgewiesen. B1-Kamera zeigt den durchsichtigen Camera Blocker vor den Actors; A1-Rückkehr zeigt den korrekt dargestellten Warrior mit Waffe und NPC. Kein zusätzlicher Dungeon-Lauf. Laufkopie: `build/f2x/runtime/f34-default-multimap/`.
 
-Alle **52 Raw-Rejects wurden erneut reproduziert**. Die 47 byteidentischen gepackten Rejects wurden über den echten `CPackManager` gelesen. Alle 80 für die Klassifizierung herangezogenen Konfigurationsdateien sind mit den Packversionen byteidentisch. Der Pack-Ladereihenfolge liegt `PackInitialize` in `src/UserInterface/UserInterface.cpp` zugrunde; spätere Packs überschreiben frühere Einträge. Alle 52 gepackten Ziele laden über den expliziten Granny-Referenzprovider.
+| Zähler | Default Multi-Map | Manueller Default |
+|---|---:|---:|
+| NativeGR2Reads | 933 | 735 |
+| IndependentPoseSamples | 30.742 | 5.540 |
+| GPUFrames | 25.414 | 6.444 |
+| GrannyFileReads | 0 | 0 |
+| ReferencePoseSamples / ImportPoseSamples | 0 / 0 | 0 / 0 |
+| AllCPUDeformationCalls / Vertices | 0 / 0 | 0 / 0 |
+| GPUFallbacks / AnimationRuntimeFailures | 0 / 0 | 0 / 0 |
+| Exitcode | 0 | 0 |
+| erfasste Shutdown-Ressourcen | 0 | 0 |
 
-Die Einordnung „malformed“ bedeutet eine Verletzung des aktuellen Reader-Vertrags, nicht automatisch eine für Production unbrauchbare Datei. Insbesondere eindeutige Bone-/Tracknamen sind eine aktuelle Runtime-Anforderung, deren Verletzung Granny nicht am Laden hindert. Ein erfolgreicher Granny-Load allein ist wiederum kein visueller Paritätsnachweis.
+Ressourcen umfassen SourceTextures/Buffers, AssetDocuments, ReaderDocuments, RuntimeSkeletons/Clips, AnimationInstances, MeshBindings, SkinMeshes, Remaps/Palettes und GPU-Prototype-/Static-Skin-Objekte. Kein gesonderter Collision-Pool-Zähler im bisherigen Audit. Manueller syserr: bekannte MarkManager-Baseline `invalid idx 0`, kein Reader-/Animationsfehler.
 
-Konkrete Blocker:
+## Prewarm / Performance
 
-| Produktionspfad | Nachweis / fehlende Semantik |
+Die F2-P-Logik Local Player → relevante Clips → initiale Pose/GPU-Readiness → World Reveal ist unverändert. Manueller Lauf: 90 Prewarm-Anforderungen, 0 Failures/Limits/Bypasses; maximale Game-Pose laut Gesamtaudit 0,3059 ms, maximale Einzelpose 0,1948 ms. Der Benutzer bestätigt keinen sichtbaren Freeze.
+
+Der schwellenbasierte manuelle Audit enthält allerdings 13 neue Clip-Aufbereitungen in acht erfassten Gameplay-Displayzeilen (maximal 99,3 ms Frame). Er trennt neue Umgebungsactors/erstmalige Inhalte nicht zuverlässig vom geprüften warmen Satz und ist **kein pauschaler Null-Decode-Nachweis**. Deshalb wird zusätzlich die vorhandene F2-P-Fixture mit vollständigen Cold-/Warm-Phasen ausgeführt. Der Fixture-Nachtest besteht: 80,417 s, 4.673 Gameplay-Frames, in allen sechs Cold-/Warm-Phasen null GR2-Reads, Animationsdecodes und Clip-/Track-Bindings. Keine Gameplay-Frames über 50 ms, Warm-Movement maximal 18,776 ms, Warm-Combat maximal 18,920 ms. Exitcode und Shutdown-Ressourcen 0. Die normale Framezeit enthält die bestehende Warte-/Present-Taktung; keine neue FPS-Optimierung. Belege: `build/f2p/runtime/f34-default-prewarm-fixed/`, `build/f34-restart/prewarm-analysis.log`.
+
+Dabei wurde eine bestehende Python-Binding-Inkonsistenz sichtbar: `chrmgrPrewarmVisibleActors` verwendet `PyArg_ParseTuple` für optionale Argumente, war aber als `METH_NOARGS` registriert. Der direkte Python-Aufruf endete mit 0xc0000005. Einzige Korrektur: `METH_VARARGS`; kein Umbau/Optimierung von Prewarm, Reader oder Animation. Release/Debug neu gebaut; gezielter Fixture-Nachtest bestanden. Der manuell bestätigte Client stammt vor dieser isolierten Binding-Korrektur; seine Hashes werden getrennt bewahrt.
+
+`GR2WarmupTest` prüft bereits wieder keine neuen Clip-Decodes und keine Release-C++-Heapallokationen im warmen Sample/Blend/Palette-/Motionwechsel-Hotpath. Debug trennt die bekannten STL-Proxy-Allokationen wie F2-P. Keine GPU-Ausführungszeit oder allgemeine FPS-Garantie behauptet.
+
+## Gate-A Decision
+
+**GO.** Warmup-Smoke und ergänzte Waffen-/Combo-Coverage sind ebenfalls bestanden; Gate B ist freigegeben. Alle bisherigen Default-Produktionsläufe enthalten null Granny-Reads/Pose-/Importsamples. Kein produktiver Granny-Fallback hinzugefügt.
+
+## Gate B / Dependency Audit / Removal
+
+Der vor dem Removal gesicherte, nach Dateipfad und Zeilen kategorisierte Audit steht in `phase-f34-dependency-before.json` (production, reference test, docs, dead code, third-party artifact). Kommentare mit toten SDK-Samplingaufrufen sind gesondert ausgewiesen. Historische Verbraucherklassen `CGrannyModel`, `CGrannyMesh`, `CGrannyModelInstance` und `CGrannyLODController` behalten ihre Namen; sie enthalten nur noch neutrale AssetHandles, AnimationInstances, MeshBindings und GPU-Daten.
+
+Entfernt: kompletter `src/AssetRuntime/Granny`-Provider einschließlich AnimationAdapter/Interop/NativeTypes/LegacyVertexTypes, SDK-Header `granny.h`/SPU-Header, `granny2_static.lib` und Importtarget, SDK-Deformer/Util, rohe SDK-Model-/Mesh-/Material-/Motion-Einstiege sowie die SDK-Fallbackzweige der Consumer. Gemeinsame Deform-Buffer-Hilfsfunktionen heißen neutral. GR2 bleibt unverändert unterstützt.
+
+Der normale `.gr2`-Dispatch ruft ausschließlich `GetGR2AssetProvider()` auf. Beide Startoptionen akzeptieren nur noch `ziinan`; `granny` und `auto` werden als ungültig abgewiesen. Die ehemaligen SDK-Zähler bleiben als stets null erwartete Auditfelder erhalten, enthalten aber keinen SDK-Aufruf. `.glb` bleibt beim GlTF-Provider.
+
+Alle Runtime-SDK-Referenztests und der einmalige Golden-Exporter sind entfernt. Die acht statischen und sieben Clip-Goldens sind unverändert erhalten. `GR2RenderTest` deckt den produktiven Consumer ab; `Renderer.HairLodQuick` führt jetzt dessen native Near/Far/Near-Sequenz aus. Die alten SDK-Vollvertex-, Benchmark- und Stressharnesses werden nicht als weiterhin verfügbare Tests ausgegeben. Eine vollständige Live-SDK-Parität wird nach Removal nicht behauptet.
+
+`GetCollisionInstanceCapacity()` summiert die reservierten Plätze der fünf bestehenden Collision-Pools; `CollisionResources` wird nach dem vollständigen Shutdown protokolliert. Pool-Verhalten und Freigabereihenfolge sind unverändert; es wurde nur ein lesender Nachweis ergänzt.
+
+### Clean Build / finale Abnahme
+
+`build-f34-clean` wurde erst nach dem physischen Löschen des SDK neu konfiguriert. Configure PASS. Ausschließlich bereits heruntergeladene Quellpakete werden wiederverwendet: DiligentCore `b036337d68be2353c9950a85929acf796b9a6d50`, Assimp 6.0.2 und meshoptimizer 0.25. Alle zugehörigen Bibliotheken entstehen neu unter `build-f34-clean`; kein alter CMakeCache und keine alten Build-Libs werden verwendet. Die verbleibenden vorgebauten externen Bibliotheken gehören zu anderen, unveränderten Abhängigkeiten.
+
+| Geforderter Gate-B-Nachweis | Ergebnis |
 |---|---|
-| Krieger-Haar `hair_11_1.gr2` | `root/msm/warrior_m.msm`, HairIndex 5001 und weitere Varianten; mehrere Skeleton-Roots |
-| Krustentier-Offizier/-Soldat | Rassen 3604/3601; MSM → motlist → run/walk.msa → GR2; PeriodicLoop/RootMotion |
-| Ent-/Manticore-/Ogre-Bosse und Ogre-Soldat | Registrierte Lauf-/Angriffsclips; PeriodicLoop/RootMotion |
-| Rotdieben-General | `back_damage.gr2`, auch aus anderem General-Set referenziert; nichtendliche Floats |
-| Rotdieben-Soldat 2 | Impliziter `_lod_01.gr2`-Load aus `CRaceData::GetLODModelThing`; leeres Mesh |
-| Doctor, Halloween-NPC, Historian, Pig-Pet | Registrierte Death-/Idle-/Walk-/Run-Clips bzw. Modelle; RootMotion oder nicht eindeutige/leere Namen |
-| Setaou-Offizier / `ch_officer` | Rasse 2404 u. a.; aktuelles `d:/ymir work/monster2/ch_officer`-Set, Modell/LOD und `37.gr2` abgelehnt; lokaler Server-Spawn in `share/locale/english/map/metin2_map_skipia_dungeon_01/regen.txt:645` |
+| Provider-/Adapter-/SDK-/CMake-/Linker-Removal | PASS |
+| Fresh Configure / Release / Debug | PASS |
+| Release Fast Gate | **39/39 PASS, 46,94 s** |
+| Debug Fast Gate | **39/39 PASS, 104,93 s** |
+| GCC 12.4 / LP64 | **19/19 PASS, 10,22 s** |
+| Golden Static / Animation | PASS in allen drei Gates; Original-Hashes unverändert |
+| Native Player-/Actor-/GPU-Coverage | PASS; GR2Render Release 24,81 s, Debug 82,44 s |
+| Native HairLodQuick | PASS; Release 0,98 s, Debug 1,40 s |
+| GLB Provider / Blend-/Static-Render / Wide Indices / Embedded Materials | PASS |
+| Offline Tool Unit / FBX-OBJ-DAE Roundtrip / CLI / Runtime Isolation / Diligent Roundtrip | 6/6 je Release und Debug PASS |
+| Finaler Prewarm-Lauf | PASS, 80,288 s |
+| Finaler A1 → B1 → A1-Lauf | PASS, 63,4 s |
+| Finaler Default-Client / Character Select / Fenster / X | Benutzer bestätigt „perfekt“, Exitcode 0 |
 
-Die 20 ungeklärten Fälle umfassen beide alten `assassin.gr2`, Sura `run10.gr2`, `warrior_rabbit1_backup.gr2`, Rotdieben `front_damage.gr2` sowie 15 `season1/season2`-Offizierdateien. Zum Teil existieren alte lokale Motion-/Modelverweise, aber keine vollständig bewiesene aktuelle Einstiegsroute. Sie werden weder gelöscht noch pauschal als obsolete/editor assets bezeichnet. Dies bleibt eine offene Nutzungsklassifikation und verhindert ebenfalls ein vollständiges Gate-A-GO.
+Logs unter `build/f34-restart/`: `clean-configure.log`, `clean-release-build.log`, `clean-release-finalize.log`, `clean-debug-build.log`, `final-release-tests.log`, `final-debug-tests.log`, `final-gcc-build.log`, `final-gcc-tests.log`. Der kleine Release-Abschlussbuild übernimmt die Collision-Diagnose und neutrale Consumer-Bereinigung. Die abschließenden Besitz-/Material-Kommentarkorrekturen ändern keine C++-Tokens oder Laufzeitlogik; dafür wurde kein weiterer Build gestartet. Release-GPU-Tests liefen parallel zum Debug-Build, daher sind ihre Zeiten keine Performance-Benchmarkwerte. Prewarm lief nach Ende aller Builds/GPU-Tests.
 
-Die fünf `season3_eu/.../haven_dungeon/skipia_{boss,passc,passl,passp,passt}.gr2` haben eine falsche deklarierte Dateigröße. Das spätere `zone`-Pack liefert jeweils eine andere, erfolgreich nativ gelesene Datei. Die logischen Dungeon-Properties existieren; die abgelehnten physischen Rohkopien werden aktuell nicht gewählt. Die Corpuszahl bleibt davon unberührt.
+Es wurde kein Fuzzer, kein Stresslauf und keine große Renderer-Gesamtsuite ausgeführt. Kein einzelner finaler Test benötigte mehr als 83 Sekunden. Die nicht verfügbare Wolfman-/Shield-/zusätzliche Dungeon-Abnahme bleibt wie oben abgegrenzt. Bestehende Vendor-Linkwarnungen LNK4099/LNK4075/LNK4098 bleiben erhalten.
 
-## 4. Golden Reference Preservation
+### Source-/Linker-/Binary-Zero-Audit
 
-Bestehende F2-X-Parity-Harnesses, Original-Testpfade, Resultatlogs und F1-X-Grenzen wurden nicht geändert oder entfernt. Metadaten/Hashes und historische Maximalfehler sind in der Baseline konserviert. Der vorhandene `GR2ParityTest` prüft weiterhin elf Modelle (Warrior, Hair, Weapon, Wolf, Boss, Mount, Building, Prop und drei Randfälle), 13 Loop-Clips plus endlichen Attack sowie Pose-/Palette-/Vertex-Parität einschließlich GPU-Readback.
+`phase-f34-zero-audit.json` enthält den finalen Audit: **2.678 Produktions-/Builddateien**, null SDK-Includes, `granny_*`-Typen, SDK-Aufrufe, SDK-Artefakte und generierte Linkprojekt-Treffer. Alle sieben ausdrücklich geforderten SDK-Typen sind entfernt. SDK-Verzeichnisse sind physisch entfernt. Der zusätzliche CMake-Test `AssetRuntime.NoGrannyDependency` verhindert die Rückkehr dieser Abhängigkeiten.
 
-**Noch nicht abgeschlossen:** eigenständige deterministische Golden-Fixtures mit ausgewählten Referenzmatrizen/Vertexwerten und SDK-freie Golden-Tests. Der Baseline-Hashkatalog ersetzt diese nicht. Da Gate A vorher scheitert und Granny bestehen bleibt, wurde kein Reference-Harness abgelöst. Vor einem künftigen Removal ist dieser Schritt zwingend nachzuholen; keine proprietären GR2-Dateien wurden dupliziert.
+Die effektiven Linkinputs unter `build-f34-clean` referenzieren keine alten `build-c2x`-/`build-c3x`-/`build/e2x`-Bibliotheken. Diligent-Quellrevision wurde separat bestätigt. Das aktuelle `asset-tool-runtime-isolation.txt` bestätigt weiterhin: kein Assimp/meshoptimizer/AssetTool im Runtime-Linkgraph.
 
-## 5. Default Provider Switch
+**Fünf finale EXEs geprüft:** Client Release/Debug, Release PackMaker und Offline AssetTool Release/Debug. Alle AMD64; keine Granny-, D3D8-, D3D9- oder D3DX-Imports. Es entstehen keine Granny-Deploymentdateien. Auch die ASCII-/UTF16-Kennungen `granny2`, `GrannyReadEntireFile`, `GrannyGetFileInfo`, `GrannySampleModelAnimations` und `GrannyPlayControlledAnimation` fehlen in diesen Binärdateien. Die erhaltenen `CGranny*`-Verbrauchernamen und Nullzähler sind keine SDK-Abhängigkeiten.
 
-Nicht vorgenommen. `GR2ReaderMode.h` und `Renderer/StartupOptions.h` behalten Granny als Default. ZiiNAN bleibt explizit anwählbar. Kein neuer Production-Client wurde ausgeliefert.
+Finaler Release-SHA256: `A80C05736F21690F9215A8A84B1557BEC1B3D0CBA5ABAF096A5FEDB75B8F3683`.
+Finaler Debug-SHA256: `993F7B3B09C5D01FC9CDD2643ACF222B96FE6125F035010215444A6D25AD55E8`.
+Alle drei finalen Release-Laufkopien stimmen mit diesem Release-Hash überein.
 
-## 6. No-Fallback Policy
+### Finale Runtime / Shutdown / Grenze der Beobachtung
 
-Der bestehende `LoadModel` wählt für `.gr2` genau einen Provider. Der Audit setzt explizit ZiiNAN und prüft vor/nach jedem nativen Load den Granny-Read-Zähler: **kein Silent-Fallback**. Die anschließenden Granny-Loads sind ausdrücklich getrennte Referenzaufrufe dieses Auditprogramms. Sie sind kein Production-Fallback und kein behaupteter Null-Granny-Lauf.
+Normaler Default-Client: `build/f2x/runtime/f34-final-login/`, PID 52624. Start nur mit Diagnostik-/Stall-Audit, ohne Reader-/Animationsauswahl. Login → 3D-Character Select → Ingame, Welt direkt nach Loading, Bewegung/Kampf/Attachments/NPC, Fenster-Resize, Minimize/Restore und X vom Benutzer mit **„perfekt“** bestätigt. Mount soweit manuell verfügbar; Mount/Rider zusätzlich im automatischen Original-Pack-Lauf nachgewiesen.
 
-## 7. Player Coverage
+Multi-Map: `build/f2x/runtime/f34-final-multimap/`, PID 45772, 3.526 Frames, A1 → B1 → A1 vollständig. Pro Map Near/Far/Near, Idle/Walk/Run/Attack und Near-/Far-Screenshots. B1 zeigt den Camera Blocker vor den Actors; die A1-Rückkehr zeigt den korrekt dargestellten Warrior mit Waffe und NPC. Native Building-/Prop-/Camera-Blocker-Submissions und alle geforderten vorhandenen Actorgruppen sind protokolliert. Kein zusätzlicher Dungeon-Lauf.
 
-Kein neuer vollständiger Playerklassen-/Geschlechter-Gate. Warrior-Referenzdaten bestehen im kurzen Baseline-Test. Das produktive Krieger-Haar 5001 ist ein bestätigter Blocker. Sura `run10.gr2` bleibt ungeklärt; der vorhandene separate Fix für Sura-Clips mit leeren Model-Records wurde nicht verändert. Keine pauschale Assassin-/Sura-/Shaman-/Wolfman-Freigabe.
+| Zähler | Finaler Multi-Map | Finaler manueller Client | Finaler Prewarm |
+|---|---:|---:|---:|
+| NativeGR2Reads | 933 | 1.043 | 365 |
+| IndependentPoseSamples | 30.739 | 238.430 | 29.282 |
+| GPUFrames | 25.411 | 234.590 | 27.721 |
+| GrannyFileReads / ReferencePoseSamples / ImportPoseSamples | 0 / 0 / 0 | 0 / 0 / 0 | 0 / 0 / 0 |
+| AllCPUDeformationCalls / Vertices / GPUFallbacks | 0 / 0 / 0 | 0 / 0 / 0 | 0 / 0 / 0 |
+| AnimationRuntimeFailures / SkinPreparationFailures | 0 / 0 | 0 / 0 | 0 / 0 |
+| Reader-/Asset-/Animation-/Binding-/Skin-/GPU-Ressourcen | 0 | 0 | 0 |
+| CollisionResources (alle reservierten Poolplätze) | 0 | 0 | 0 |
+| Exitcode | 0 | 0 | 0 |
 
-## 8. NPC / Mob / Boss
+Manueller syserr enthält die bekannte MarkManager-Meldung `invalid idx 0` und bestehende ProcessDamage-Diagnostik; keine neuen AssetRuntime-/Reader-/Animationsfehler. Shutdown zählt ReaderDocuments, AssetDocuments, AnimationInstances, MeshBindings, Skeletons/Clips, SkinMeshes, Remaps/Palettes, SourceTextures/Buffers, GPU-Geometrie/Paletten/StaticSkinMeshes sowie Collision-Pools. Freigabe erfolgt weiterhin nach dem World-Teardown.
 
-Bestehende Wolf-/Boss-Referenzen bestehen. Neue Produktions-Coverage scheitert an den unter Punkt 3 nachgewiesenen Dateien; eine bestandene Wolf-Fixture deckt z. B. den Setaou-Offizier nicht ab.
+**Beobachtungsgrenze:** Die zusätzlich versuchte externe Modulauflistung wurde von Windows verweigert (.NET/Tasklist ohne Modulliste, Toolhelp Fehler 5). Eine vollständige OS-Modulliste oder DLL-Suchspur wird daher **nicht als bestanden behauptet**. Der Runtime-Zero-Nachweis stützt sich auf den physisch SDK-freien Clean Build, den direkten nativen Dispatch ohne Referenzzweig, Source-/Link-/Import-/Binärprüfungen und Nullzähler der erfolgreichen realen Läufe. Es wurde keine Prozessschutz-Einstellung geändert.
 
-## 9. Mount
+### Finale F2-P-Regression / Performance
 
-Vorhandene Horse-Referenz im Parity-Test bestanden. Kein neuer Mount/Rider-Production-Smoke; Pig-Pet-Walk ist als separater produktiver NPC/Pet-Pfad betroffen.
+`build/f2p/runtime/f34-final-prewarm/`: vollständige, undropped Aufzeichnung von 4.673 Gameplay-Frames in sechs Cold-/Warm-Phasen. **In jeder Phase null GR2-Read/Decompress/Container/Parse, Animation-Decode, Clip-/Track-Binding, Skeleton/Mesh/Material-Aufbereitung und Fingerprinting.** Alle Imports gehören zum Loading; Ladezeit 2,872 s. 68 Prewarm-Anforderungen, null Fehler/Limits/Bypasses. Kein Gameplay-Frame über 50 ms.
 
-## 10. Hair / Attachments
+| Phase | Max. Frame inkl. Taktung | Max. Pose |
+|---|---:|---:|
+| Cold Idle | 22,279 ms | 0,362 ms |
+| Cold Movement | 18,488 ms | 0,276 ms |
+| Cold Combat | 18,644 ms | 0,350 ms |
+| Warm Idle | 18,940 ms | 0,142 ms |
+| Warm Movement | 18,800 ms | 0,215 ms |
+| Warm Combat | 18,629 ms | 0,143 ms |
 
-Bestehende Hair-/Weapon-Referenzdaten bestehen. Kein neuer vollständiger Near/Far/Near-, Shield- oder Armor-Smoke; aktives Easter-Hair verhindert GO.
+Warm-Palette maximal 0,057 ms; Pose/Palette klar unter 8,33 ms. Der bestehende Release-Warmup-Test bestätigt null C++-Heapallokationen im geprüften Sample/Blend/Palette/Motionwechsel-Hotpath; Debug berücksichtigt weiterhin die bekannten STL-Proxies. Keine Performanceoptimierung und kein 60/120-FPS-Versprechen; Framezeit enthält die vorhandene Taktung/Present-Wartezeit.
 
-## 11. Static World
+Der freie manuelle Ingame-Lauf ist keine vollständige Warmset-Aufzeichnung: 22 neue Clip-Aufbereitungen erscheinen in 13 über der Audit-Schwelle gespeicherten Gameplay-Displayzeilen, maximaler Game-Frame 187,08 ms. Neue Umgebungsactors/Inhalte bleiben von der kontrollierten Warmset-Garantie getrennt. Max. Game-Pose 2,0534 ms, Einzelpose 0,2223 ms; Benutzer bestätigt keinen sichtbaren Loading-Freeze. Ein pauschales Null-Decode-Versprechen für sämtliche erstmals auftauchenden Inhalte wird nicht abgeleitet.
 
-Bestehende Building-/Prop-Referenzdaten bestehen. Die fünf Haven-Rohkopien sind aktuell überlagert, ihre gepackten Ersatzdateien nativ lesbar. Kein neuer vollständiger World-/Camera-Blocker-Smoke.
+## Verbleibende sechs GR2-Rejects
 
-## 12. Character Select
+| Rohdatei unter assets | Grund / Produktionsauflösung |
+|---|---|
+| `metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_general/front_damage.gr2` | Nonfinite float; Nutzung ungeklärt, in geprüften Motlists nicht referenziert; keine willkürliche Reparatur/Freigabe |
+| `season3_eu/ymir work/zone/dungeon/haven_dungeon/skipia_boss.gr2` | Deklarierte Größe falsch; gültige native-lesbare Zone-Pack-Version überlagert die Rohkopie |
+| `season3_eu/ymir work/zone/dungeon/haven_dungeon/skipia_passc.gr2` | Deklarierte Größe falsch; gültige native-lesbare Zone-Pack-Version überlagert die Rohkopie |
+| `season3_eu/ymir work/zone/dungeon/haven_dungeon/skipia_passl.gr2` | Deklarierte Größe falsch; gültige native-lesbare Zone-Pack-Version überlagert die Rohkopie |
+| `season3_eu/ymir work/zone/dungeon/haven_dungeon/skipia_passp.gr2` | Deklarierte Größe falsch; gültige native-lesbare Zone-Pack-Version überlagert die Rohkopie |
+| `season3_eu/ymir work/zone/dungeon/haven_dungeon/skipia_passt.gr2` | Deklarierte Größe falsch; gültige native-lesbare Zone-Pack-Version überlagert die Rohkopie |
 
-Keine neue manuelle Prüfung mit einem nativen Default-Client, da der Switch gestoppt wurde. Frühere F2-P-Beobachtungen ersetzen diesen Nachweis nicht.
+Keine Behauptung von 100-%-GR2-Coverage. Detaillierte F3-B-Klassifikation bleibt in `phase-f3b-compatibility-results.json`.
 
-## 13. Collision / Pose Lifetime
+## Git-Diff / GO-NO-GO / Fortsetzung
 
-Keine Änderung an vorzeitigem Bone-Matrix-Zugriff oder am korrigierten Shutdown der Collision-Pool-Besitzer. Der vorhandene Reader-Safety-Test besteht erneut. Der Audit endet mit `AssetDocuments=0`, `GR2ReaderResources=0`. Das ist kein vollständiger neuer Client-Shutdown-Nachweis.
+Inhaltlicher Diff: 79 vorhandene Dateien geändert/entfernt, darunter 29 entfernte SDK-/Referenzdateien; acht neue Dateien (Golden-Test/-Hilfsheader, zwei Referenzdatendateien plus README, SDK-Abhängigkeitstest und zwei Audit-JSONs). Dazu gehören die native Default-/Dispatch-Auswahl, neutrale Consumer, CMake-Bereinigung, Python-Argumentregistrierung und Collision-Diagnose. Die einmalige Golden-Erzeugung wurde vor Removal lokal gesichert und ist kein neues Buildtarget mehr.
 
-## 14. Prewarm
+`git diff --check` PASS, Index unverändert, HEAD weiterhin `961401a09297a0f0d7504595681b3bf53eb7c134`. Keine Builds, Logs, PDBs, generierten Libraries oder temporären Dumps im inhaltlichen Diff. Alle Laufkopien und Buildbelege liegen in ignorierten Buildordnern. Die vorbestehenden Änderungen im Client-Repository (Redthief-Asset, `channel.inf`, Logs) bleiben unverändert. Kein Stage, Commit oder Push.
 
-F2-P-Logik unverändert: Local Player, minimale relevante Clips und erste Pose/Renderressourcen vor World Reveal; danach bekannte Umgebungsactors. `GR2WarmupTest` besteht in Release/Debug sowie im portablen Testsatz. Keine neue Prewarm-Architektur.
+**Gate A GO. Gate B GO. Gesamt-F3/4-X GO** für die hier geprüften Produktionspfade und das verfügbare Corpus. Die sechs bekannten Rohdatei-Rejects bleiben transparent; keine 100-%-Coverage behauptet. Die zusätzliche externe OS-Modulauflistung bleibt ausdrücklich nicht verfügbar, siehe Prüfgrenze oben.
 
-## 15. Performance Sanity
-
-Keine neue Performanceoptimierung oder A/B-Reihe. Historische F2-P-Werte bleiben gesichert: mit Prewarm keine Asset-Imports in den geprüften Cold-/Warm-Gameplayphasen; finale manuelle lokale Vorbereitung 237,843 ms minimale Clips und 2,027 ms erste Pose/Ressourcen. Diese historischen Messungen sind kein neues F3/4-Performance-GO. Debug-Allokationsgrenzen gelten weiterhin mit der dokumentierten STL-Proxy-Abgrenzung.
-
-## 16. Release Gate A
-
-Auditprogramm Release frisch gebaut. Bestehende kurze Baseline-Tests erneut **6/6 bestanden, 15,69 s**: StartupOptions, GR2Warmup, GR2Safety, GR2Independence, GR2Parity, AnimationRuntime.Contracts. Keine neue vollständige Production-Build-Abnahme. Belege: `build/f34/audit-release-build-final.log`, `release-baseline-tests.log`.
-
-Der erste Sandbox-Buildversuch scheiterte beim Zugriff von MSBuild auf die Windows-SDK-Registrierung. Der danach autorisierte Build außerhalb der Sandbox besteht; kein SDK- oder Renderer-Workaround im Source. Frühere externe LNK4099/LNK4075/LNK4098-Hinweise bleiben im Baseline-Bericht korrekt dokumentiert.
-
-## 17. Debug Gate A
-
-Vorhandene Baseline-Testprogramme erneut **6/6 bestanden, 52,46 s**, gleiche gezielte Auswahl; `build/f34/debug-baseline-tests.log`. Kein neuer vollständiger Debug-Clientbuild und kein bestandenes Production-Gate behauptet.
-
-## 18. GCC Gate A
-
-Vorhandener GCC-12.4/Cygwin-LP64-Testsatz erneut **14/14 bestanden, 0,43 s**; `build/f34/gcc-baseline-tests.log`. Kein neuer GCC-Code und kein portabler Client-Rendernachweis. Keine langen Suites, kein Fuzzer.
-
-## 19. Runtime Gate A
-
-Nicht durchgeführt: frischer Client ohne Reader-Schalter mit Login → Character Select → Ingame. Das ausführbare Pack-/Provider-Preflight ersetzt diesen geforderten visuellen/servergebundenen Runtime-Smoke nicht.
-
-## 20. Multi-Map Gate A
-
-Nicht durchgeführt; A1 → B1 → A1 und zusätzliche Dungeon-Abdeckung bleiben nach Behebung der Blocker erforderlich. Ein konkreter lokal konfigurierter Skipia-Spawn ist bereits als Gegenbeispiel vorhanden.
-
-## 21. Granny Counters Gate A
-
-Kein neuer Production-Default-Lauf, folglich kein vollständiger neuer Nullzählernachweis. Audit: **52 Raw-Rejects, 47 identische Packed-Rejects, SilentFallbacks=0, AssetDocuments=0, GR2ReaderResources=0**; erwarteter Entscheidungs-Exitcode **2 (NO-GO)**. Der Reference-Audit nutzt Granny absichtlich. CPU-/GPU- und gesamter Client-Shutdown werden darin nicht gemessen.
-
-## 22. Gate-A Decision
-
-**FAILED / NO-GO.** Aktive Clientpfade benötigen Semantik, die der native Reader aktuell ablehnt. Keine Default-Umstellung und kein Gate B. Vor der Fortsetzung sind native Unterstützung/Parität für aktive Multi-Root-, Namens-/Track-, PeriodicLoop/RootMotion- und problematische Mesh-/Floatfälle sowie die offenen Nutzungsentscheidungen erforderlich. Ein Granny-Fallback oder bloßes Entfernen der Validierung ist keine Lösung.
-
-## 23. Granny Dependency Audit
-
-Kein Gate-B-Finalaudit. Der unveränderte Ausgangszustand enthält weiterhin produktive Abhängigkeiten: `src/AssetRuntime/Granny/Native.h` inkludiert das SDK; Provider/AnimationAdapter/EterGrnLib enthalten SDK-Typen/-Aufrufe; `extern/library/Granny/CMakeLists.txt` importiert `granny2_static.lib`. Bestehende Tests sind Referenzkategorie B; Dokumentation C; SDK-Binaries/Headers E. Kein vollständiger Dead-Code-Kategorie-D-Nachweis.
-
-Aktueller gezielter Textscan in `src/**/*.{h,cpp}`: 1 Zeile mit `granny.h`, 195 Zeilen mit `granny_*`-Bezeichnern, 196 Zeilen mit `Granny...(`. Dies sind Regex-Zeilen, keine semantisch gezählten Runtime-Aufrufe. **Kein Zero-Audit-PASS.**
-
-## 24. Provider Removal
-
-Nicht begonnen; Gate A failed. `GrannyAssetProvider` bleibt erhalten.
-
-## 25. Adapter Removal
-
-Nicht begonnen; Granny-Animation-/Mesh-/Model-/Reference-Adapter bleiben erhalten.
-
-## 26. Include Removal
-
-Nicht begonnen; produktive SDK-Includes sind weiterhin vorhanden.
-
-## 27. Type Removal
-
-Nicht begonnen; produktive Granny-Typen sind weiterhin vorhanden.
-
-## 28. Runtime Call Removal
-
-Nicht begonnen; produktive SDK-Aufrufe sind weiterhin vorhanden.
-
-## 29. Linker Cleanup
-
-Nicht begonnen; Granny-Linkabhängigkeit bleibt erhalten.
-
-## 30. CMake Cleanup
-
-Nicht begonnen. Einzig hinzugefügt: explizites `EXCLUDE_FROM_ALL`-Audit-Testtool; der normale Client-Linkpfad bleibt unverändert. Kein Granny-freies Configure nachgewiesen.
-
-## 31. EterGrnLib Status
-
-Unverändert; noch kein Granny-freier Compat-Layer. Kein Rename.
-
-## 32. Clean Configure
-
-Nicht begonnen; `build-f34-clean` wurde nicht angelegt. Gate B ist gesperrt.
-
-## 33. Clean Release
-
-Nicht begonnen; kein Granny-freier Clean-Release-Build.
-
-## 34. Clean Debug
-
-Nicht begonnen; kein Granny-freier Clean-Debug-Build.
-
-## 35. Binary Audit
-
-Kein neuer Granny-freier Client vorhanden; daher kein finaler Import-/Dependency-Audit. Historische x64/D3D11-Architektur bleibt unverändert, ist aber keine F4-Freigabe.
-
-## 36. GCC / LP64
-
-Baseline-Testwiederholung unter Punkt 18. Kein Gate-B-Clean-Build.
-
-## 37. Golden Static Tests
-
-Vorhandene Live-Referenzparität in Release/Debug bestanden. Eigenständige SDK-freie Golden-Tests noch offen (Punkt 4).
-
-## 38. Golden Animation Tests
-
-Vorhandene Live-Referenzparität in Release/Debug bestanden. SDK-freie Golden-Samples noch offen. Keine Toleranzen angehoben.
-
-## 39. GPU Skinning
-
-GPU-Default nicht verändert. Vorhandener GR2-Parity-Test enthält GPU-Vertex-Readback und besteht. Kein neuer vollständiger Production-Nullzählerlauf.
-
-## 40. GLB Regression
-
-GlTF-Provider unverändert; portable GlTF-Provider-/Dependencytests im 14er Testsatz bestanden. Kein Gate-B-Render-Smoke.
-
-## 41. Asset Tool Regression
-
-Offline Asset Tool und Assimp unverändert. Wegen Gate-A-Stop kein neuer E2-X-Smoke und keine entsprechende PASS-Behauptung.
-
-## 42. Final Runtime Smoke
-
-Nicht begonnen; es existiert kein Granny-freier finaler Client.
-
-## 43. Final Multi-Map Smoke
-
-Nicht begonnen; Gate B nicht erreicht.
-
-## 44. Shutdown
-
-Pack-/Provider-Audit gibt Reader-/Asset-Dokumente vollständig frei. Sein Exit 2 ist die explizite NO-GO-Entscheidung, kein Crash. Historischer F2-P-Client: Exit 0 und Ressourcen 0. Finaler F3/4-Client-Shutdown nicht geprüft.
-
-## 45. Source Zero-Audit
-
-**Nicht bestanden / nicht erreicht.** Produktiver Source enthält Granny weiterhin; siehe Punkt 23. Keine gegenteilige Behauptung aus einem begrenzten Reader-Core-Audit.
-
-## 46. Runtime Zero-Audit
-
-**Nicht erreicht.** Keine Granny-freie Production-Runtime. Der native Dispatch hat nachweislich keinen Silent-Fallback; das beseitigt keine vorhandenen Granny-Link-/Referenzpfade.
-
-## 47. Remaining GR2 Unsupported Cases
-
-Unverändert 18 Unsupported- und 34 Malformed-Rohdateien. Alle 52 erneut geprüft; keine Datei umgeschrieben. Genau 5 abgelehnte physische Rohkopien werden aktuell überlagert, 27 sind aktive Blocker, 20 bleiben in der Nutzung ungeklärt. Weitere Reader-Arbeit ist für die aktive Coverage zwingend, kein optionaler F5-Schritt.
-
-## 48. F2-P Preservation
-
-Produktive Implementierung und bestehende Leistungsbelege unverändert. Startup-/Warmup-/Safety-/Animation-Vertragstests bestehen erneut. Keine neuen Aussagen zu sichtbaren Freezes, World Reveal oder beliebigen Maps ohne Runtime-Test.
-
-## 49. Git Diff / Reproduktion
-
-Änderungen ausschließlich in `tests/AssetRuntime` und `docs/assets`: ein explizites Auditprogramm mit CMake-Ziel, ein reproduzierbarer Klassifikationshelfer, Baseline-/Reject-Metadaten und dieser Bericht. Keine Änderungen in `src`, `extern`, `vendor` oder Originalassets. Builds und Rohlogs liegen ignoriert in `build/f34`; keine generierten Libraries/PDBs, SDK-Pfade oder proprietären GR2-Dateien für Git hinzugefügt. Kein Stage, Commit oder Push.
-
-`git diff --check` besteht. Sieben geänderte/neue Dateien insgesamt; `git diff --stat` allein zeigt unversionierte neue Dateien noch nicht. Vollständiger Patch einschließlich aller neuen Dateien: `build/f34/review.patch`. Python-Syntax und Konsistenz der 52 CSV-/JSON-Einträge sind geprüft. Die vorbestehende Änderung an `m2dev-client/config/channel.inf` und die dort vorhandenen Logs blieben unangetastet; die Release-EXE besitzt weiterhin denselben Baseline-Hash.
-
-Reproduktion aus dem Source-Root, mit verfügbarem Python 3 und bestehender MSVC-x64-Umgebung:
-
-```powershell
-python tests/AssetRuntime/prepare_gr2_migration_audit.py --corpus build/f2x/corpus-final/files.tsv --output build/f34
-cmake --build build-c3x/windows --config Release --target GR2MigrationAudit --parallel 8
-build-c3x/windows/tests/AssetRuntime/Release/GR2MigrationAudit.exe ../m2dev-client build/f34/pack-order.txt build/f34/inputs.tsv build/f34/packed-audit.tsv
-# Exit 2 = vorhandene gepackte Rejects; Exit 1 = Audit-/Konfigurationsfehler.
-# Exit 0 allein waere noch keine Runtime-/Nutzungs-/Gate-A-Freigabe.
-python tests/AssetRuntime/prepare_gr2_migration_audit.py --corpus build/f2x/corpus-final/files.tsv --output build/f34 --packed-audit build/f34/packed-audit.tsv
-```
-
-Der letzte Schritt verlangt für alle referenzierten Konfigurationen identische Packbytes; unbekannte aktive Nutzung wird niemals automatisch als unbenutzt gewertet. Der Generator benötigt den lokalen Rohbestand und die lokale Serverkonfiguration, kopiert diese jedoch nicht.
-
-## 50. GO / NO-GO
-
-**F3: FAILED / NO-GO. F4: NOT STARTED. F3/4-X insgesamt: NO-GO.** Der Auftrag ist bis zu seiner harten Stop-Bedingung bearbeitet; die Produktionsmigration und der vollständige Removal sind nicht abgeschlossen.
-
-## 51. Recommendation für F5-X
-
-F5-X nicht beginnen. Zuerst die belegten Gate-A-Coverage-Lücken lösen, die 20 offenen Nutzungsfälle entscheiden, echte Golden-Fixtures sichern und Gate A vollständig wiederholen. Anschließend erst das hier unverändert offene Gate B. Kein Visual Remaster, PBR, Android oder UI-FPS-Thema begonnen.
-
-## 52. Finaler Architekturstatus
-
-Aktueller produktiver Default: GR2 → Granny-Provider → bestehende Asset-/Animationspfade → GPU Skinning → Diligent D3D11. ZiiNAN GR2 Reader/Animation bleiben opt-in. GLB → GlTF Provider bleibt verfügbar. Die Zielarchitektur mit ausschließlich nativem GR2-Reader und vollständig entferntem Granny ist **noch nicht erreicht**.
+**STOP nach F3/4-X.** Empfehlung: diesen Stand abnehmen; eine Folgephase erst nach einem neuen Auftrag. Kein F5-X, SpeedTree-Umbau, PBR/Visual Remaster, Android-Fortschritt oder FPS-Menü begonnen.

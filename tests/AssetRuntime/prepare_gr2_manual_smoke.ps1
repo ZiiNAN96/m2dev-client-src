@@ -2,7 +2,8 @@ param(
     [Parameter(Mandatory=$true)][ValidatePattern('^[a-zA-Z0-9_-]+$')][string]$Name,
     [Parameter(Mandatory=$true)][string]$BuildDirectory,
     [switch]$WaitForClose,
-    [switch]$StallAudit
+    [switch]$StallAudit,
+    [switch]$ProductionDefault
 )
 $ErrorActionPreference = 'Stop'
 $source = (Resolve-Path -LiteralPath "$PSScriptRoot/../..").Path
@@ -23,6 +24,7 @@ if ((Get-FileHash -LiteralPath "$target/Metin2_Release.exe" -Algorithm SHA256).H
     throw 'Manual copy does not match the completed Release build.'
 }
 $clientArguments = @('--renderer-diagnostics', '--animation-runtime=ziinan', '--gr2-reader=ziinan')
+if ($ProductionDefault) { $clientArguments = @('--renderer-diagnostics') }
 if ($StallAudit) { $clientArguments += '--animation-stall-audit' }
 "SourceBinary=$binary`nSHA256=$hash`nArguments=$($clientArguments -join ' ')" |
     Set-Content -LiteralPath "$target/artifact.txt"

@@ -29,7 +29,6 @@ class CGrannyMesh
 		bool CreateFromAsset(const AssetRuntime::ModelHandle& model, std::size_t mesh,
 			int vertexBase, int indexBase, CGrannyMaterialPalette& palette);
 		const AssetRuntime::MeshAsset* GetAsset() const { return m_asset; }
-		bool					CreateFromGrannyMeshPointer(granny_skeleton* pgrnSkeleton, granny_mesh* pgrnMesh, int vtxBasePos, int idxBasePos, CGrannyMaterialPalette& rkMtrlPal);			
 		bool LoadIndices(void* dstBaseIndices, AssetRuntime::IndexWidth width = AssetRuntime::IndexWidth::UInt16);
 		bool					LoadPNTVertices(void* dstBaseVertices);
 		bool					NEW_LoadVertices(void* dstBaseVertices);
@@ -44,13 +43,11 @@ class CGrannyMesh
 		int						GetVertexCount() const;
 		
 		// WORK
-		int *					GetDefaultBoneIndices() const;
 		// END_OF_WORK
 
 		int						GetVertexBasePosition() const; 
 		int						GetIndexBasePosition() const;
 
-		const granny_mesh *					GetGrannyMeshPointer() const;
 		const CGrannyMesh::TTriGroupNode *	GetTriGroupNodeList(CGrannyMaterial::EType eMtrlType) const;
 
 		void					RebuildTriGroupNodeList();
@@ -59,21 +56,15 @@ class CGrannyMesh
 	protected:
 		void					Initialize();
 
-		bool					LoadMaterials(CGrannyMaterialPalette& rkMtrlPal);
-		bool					LoadTriGroupNodeList(CGrannyMaterialPalette& rkMtrlPal);
 
 	protected:
-		// Granny Mesh Data
-		granny_data_type_definition *	m_pgrnMeshType;
-		granny_mesh *			m_pgrnMesh;
+		// Mesh Data
 		
 		// WORK
-		granny_mesh_binding *	m_pgrnMeshBindingTemp;
 		// END_OF_WORK
 
-		granny_mesh_deformer *	m_pgrnMeshDeformer;
 
-		// Granny Material Data
+		// Material Data
 		std::vector<DWORD>		m_mtrlIndexVector;
 		
 		// TriGroups Data

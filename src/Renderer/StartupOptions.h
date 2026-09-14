@@ -21,26 +21,20 @@ struct StartupOptions
     PrototypeSkinningMode skinning=defaultStartupSkinningMode;
     bool skinningSelected=false;
     bool diagnostics=defaultVerboseDiagnostics;
-    AssetRuntime::AnimationRuntimeMode animationRuntime=AssetRuntime::AnimationRuntimeMode::Granny;
+    AssetRuntime::AnimationRuntimeMode animationRuntime=AssetRuntime::AnimationRuntimeMode::ZiiNAN;
     bool animationRuntimeSelected=false;
     bool animationStallAudit=false;
     bool loadWarmupAudit=false;
     bool gr2Prewarm=true,gr2PrewarmSelected=false;
-    AssetRuntime::GR2ReaderMode gr2Reader=AssetRuntime::GR2ReaderMode::Granny;
+    AssetRuntime::GR2ReaderMode gr2Reader=AssetRuntime::GR2ReaderMode::ZiiNAN;
     bool gr2ReaderSelected=false;
 
     void ParseArgument(std::wstring_view argument)
     {
         if(argument.starts_with(L"--gr2-reader=")) {
             const auto value=argument.substr(13);
-            if(value!=L"granny" && value!=L"ziinan") { valid=false; return; }
-            const auto requested=value==L"ziinan"?AssetRuntime::GR2ReaderMode::ZiiNAN:AssetRuntime::GR2ReaderMode::Granny;
-            if(gr2ReaderSelected && requested!=gr2Reader) valid=false;
-            gr2Reader=requested; gr2ReaderSelected=true;
-            if(requested==AssetRuntime::GR2ReaderMode::ZiiNAN) {
-                if(animationRuntimeSelected && animationRuntime!=AssetRuntime::AnimationRuntimeMode::ZiiNAN) valid=false;
-                animationRuntime=AssetRuntime::AnimationRuntimeMode::ZiiNAN;
-            }
+            if(value!=L"ziinan") { valid=false; return; }
+            gr2ReaderSelected=true;
             return;
         }
         if (argument == L"--animation-stall-audit") { animationStallAudit=true; return; }
@@ -54,11 +48,8 @@ struct StartupOptions
         }
         if (argument.starts_with(L"--animation-runtime=")) {
             const auto value=argument.substr(20);
-            if (value!=L"granny" && value!=L"ziinan") { valid=false; return; }
-            const auto requested=value==L"ziinan" ? AssetRuntime::AnimationRuntimeMode::ZiiNAN : AssetRuntime::AnimationRuntimeMode::Granny;
-            if(gr2Reader==AssetRuntime::GR2ReaderMode::ZiiNAN && requested!=AssetRuntime::AnimationRuntimeMode::ZiiNAN) valid=false;
-            if (animationRuntimeSelected && requested!=animationRuntime) valid=false;
-            animationRuntime=requested; animationRuntimeSelected=true; return;
+            if(value!=L"ziinan") { valid=false; return; }
+            animationRuntimeSelected=true; return;
         }
         if (argument == L"--renderer-diagnostics") { diagnostics = true; return; }
         // ZiiNAN: GPU skinning production path — old CLI spelling is an explicit compatibility alias.

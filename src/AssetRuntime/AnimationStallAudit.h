@@ -115,7 +115,7 @@ inline bool BufferDiagnostic(const char* text,std::size_t size)
 }
 inline void ImportStarted() noexcept { Record([](Stats& s) { ++s.imports; }); }
 inline void InstanceHit() noexcept { Record([](Stats& s) { ++s.instanceHits; }); }
-inline void GrannyPose() noexcept { Record([](Stats& s) { ++s.granny; }); }
+inline void ReferencePose() noexcept { Record([](Stats& s) { ++s.granny; }); }
 inline void Content(char kind, const Digest* model, const Digest* animation,
     std::size_t modelIndex, std::size_t animationIndex, std::uint64_t binding) noexcept
 {

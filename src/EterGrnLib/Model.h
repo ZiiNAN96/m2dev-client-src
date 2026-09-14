@@ -24,7 +24,6 @@ class CGrannyModel : public CReferenceObject
 		virtual ~CGrannyModel();
 
 		bool IsEmpty() const;
-		bool CreateFromGrannyModelPointer(granny_model* pgrnModel);
         bool CreateFromAsset(AssetRuntime::ModelHandle asset);
         const AssetRuntime::ModelAsset* GetAsset() const { return m_asset.Get(); }
         const AssetRuntime::ModelHandle& GetAssetHandle() const { return m_asset; }
@@ -46,7 +45,6 @@ class CGrannyModel : public CReferenceObject
         AssetRuntime::IndexWidth GetIndexWidth() const { return m_indexWidth; }
 		int GetMeshCount() const;
 		CGrannyMesh * GetMeshPointer(int iMesh);
-		granny_model * GetGrannyModelPointer();
 		const CGrannyMesh* GetMeshPointer(int iMesh) const;
 
 
@@ -58,13 +56,12 @@ class CGrannyModel : public CReferenceObject
 		const CGrannyMaterialPalette& GetMaterialPalette() const;
         bool CaptureStaticObjectSource();
         const std::shared_ptr<const Renderer::StaticObjectSource>& GetStaticObjectSource() const { return m_staticObjectSource; }
-        // ZiiNAN: Capture before Granny frees its deformable index section.
+        // ZiiNAN: Capture immutable deformable indices before GPU upload.
         bool CaptureActorSource(bool attachment = false);
         const std::shared_ptr<const Renderer::ActorModelSource>& GetActorSource() const { return m_actorSource; }
         const std::shared_ptr<const Renderer::SkinningModelData>& GetSkinningData() const { return m_skinningData; }
 
 	protected:
-		bool LoadMeshs();
 		bool LoadAssetMeshes();
 		bool LoadPNTVertices();
 		bool LoadIndices();
@@ -74,8 +71,7 @@ class CGrannyModel : public CReferenceObject
 		void AppendMeshNode(CGrannyMesh::EType eMeshType, CGrannyMaterial::EType eMtrlType, int iMesh);
 
 	protected:
-		// Granny Data
-		granny_model *			m_pgrnModel;
+		// Animation Data
 
 		// Static Data
 		CGrannyMesh *			m_meshs;

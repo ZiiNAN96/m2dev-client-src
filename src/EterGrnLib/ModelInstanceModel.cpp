@@ -1,5 +1,4 @@
 #include "StdAfx.h"
-#include "AssetRuntime/Granny/GrannyInterop.h"
 #include "ModelInstance.h"
 #include "Model.h"
 
@@ -106,9 +105,7 @@ bool CGrannyModelInstance::__CreateMeshBindingVector(CGrannyModelInstance* pkDst
     if (!destination) return false;
     m_meshBindings.reserve(m_pModel->GetMeshCount());
     for (int mesh=0; mesh<m_pModel->GetMeshCount(); ++mesh) {
-        auto binding=m_pModel->GetAssetHandle() ?
-            destination->CreateMeshBinding(m_pModel->GetAssetHandle(),mesh) :
-            AssetRuntime::GrannyInterop::CreateLegacyMeshBinding(m_pModel->GetGrannyModelPointer(),mesh,*destination);
+        auto binding=destination->CreateMeshBinding(m_pModel->GetAssetHandle(),mesh);
         if (!binding) { m_meshBindings.clear(); return false; }
         m_meshBindings.push_back(std::move(binding));
     }
@@ -149,8 +146,7 @@ void CGrannyModelInstance::__CreateModelInstance()
 	assert(m_pModel != NULL);
     assert(!m_animationInstance);
     const auto& model=m_pModel->GetAssetHandle();
-    m_animationInstance=model ? model.GetDocument()->CreateAnimationInstance(model) :
-        AssetRuntime::GrannyInterop::CreateLegacyAnimationInstance(m_pModel->GetGrannyModelPointer());
+    if(model) m_animationInstance=model.GetDocument()->CreateAnimationInstance(model);
 }
 
 void CGrannyModelInstance::__DestroyModelInstance()
@@ -253,15 +249,7 @@ bool CGrannyModelInstance::GetBoneIndexByName(const char * c_szBoneName, int * p
         *pBoneIndex = binding.bone;
         return true;
     }
-    if (!m_animationInstance) return false;
-    auto* native=AssetRuntime::GrannyInterop::GetAnimationInstance(*m_animationInstance);
-    if (!native) return false;
-	granny_skeleton * pgrnSkeleton = GrannyGetSourceSkeleton(native);
-
-	if (!GrannyFindBoneByName(pgrnSkeleton, c_szBoneName, pBoneIndex))
-		return false;
-
-	return true;
+    return false;
 }
 
 const float * CGrannyModelInstance::GetBoneMatrixPointer(int iBone) const
@@ -273,8 +261,6 @@ const float * CGrannyModelInstance::GetBoneMatrixPointer(int iBone) const
 
 const float * CGrannyModelInstance::GetCompositeBoneMatrixPointer(int iBone) const
 {
-	// NOTE : GrannyGetWorldPose4x4는 스케일 값등이 잘못나올 수 있음.. 그래니가 속도를 위해
-	//        GrannyGetWorldPose4x4에 모든 matrix 원소를 제 값으로 넣지 않음
     const auto pose=__GetCompositePose();
     return iBone>=0 && size_t(iBone)<pose.BoneCount() ? pose.values.data()+size_t(iBone)*16 : nullptr;
 }

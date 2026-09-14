@@ -68,6 +68,8 @@ public:
 };
 
 void DestroyCollisionInstanceSystem();
+// Allocated collision slots, including reusable slots. Zero after pool teardown.
+size_t GetCollisionInstanceCapacity();
 
 typedef std::vector<CStaticCollisionData> CStaticCollisionDataVector;
 

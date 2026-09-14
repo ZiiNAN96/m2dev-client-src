@@ -1,5 +1,4 @@
 #include "StdAfx.h"
-#include "AssetRuntime/Granny/GrannyInterop.h"
 #include "Model.h"
 #include "Mesh.h"
 #include "SkinningDataAdapter.h"
@@ -74,7 +73,7 @@ int CGrannyModel::GetVertexCount() const
 int CGrannyModel::GetMeshCount() const
 {
 	if (const auto* asset = GetAsset()) return static_cast<int>(asset->meshes.size());
-	return m_pgrnModel ? m_pgrnModel->MeshBindingCount : 0;
+	return 0;
 }
 
 AssetRuntime::SkinningStreamView CGrannyModel::GetSkinningView(size_t mesh) const
@@ -85,14 +84,6 @@ AssetRuntime::SkinningStreamView CGrannyModel::GetSkinningView(size_t mesh) cons
         offsetof(Renderer::SkinningVertex, weights), offsetof(Renderer::SkinningVertex, indices),
         data.meshToSourceSkeleton, data.indices};
 }
-
-granny_model* CGrannyModel::GetGrannyModelPointer()
-{
-	return m_pgrnModel;
-}
-
-
-
 
 
 bool CGrannyModel::LockVertices(void** indicies, void** vertices) const
@@ -167,124 +158,6 @@ bool CGrannyModel::LoadIndices()
 	return true;
 }
 
-bool CGrannyModel::LoadMeshs()
-{
-	assert(m_meshs == NULL);
-	assert(m_pgrnModel != NULL);
-
-	if (m_pgrnModel->MeshBindingCount <= 0)	// 메쉬가 없는 모델
-		return true;
-
-	granny_skeleton * pgrnSkeleton = m_pgrnModel->Skeleton;
-
-	int vtxRigidPos = 0;
-	int vtxDeformPos = 0;
-	int vtxPos = 0;
-	int idxPos = 0;
-
-	int diffusePNTMeshNodeCount = 0;
-	int blendPNTMeshNodeCount = 0;
-	int blendPNT2MeshNodeCount = 0;
-
-	int meshCount = GetMeshCount();
-	m_meshs = new CGrannyMesh[meshCount];
-
-	m_vertexLayout = 0;
-
-	for (int m = 0; m < meshCount; ++m)
-	{
-		CGrannyMesh& rMesh = m_meshs[m];
-		granny_mesh* pgrnMesh = m_pgrnModel->MeshBindings[m].Mesh;
-        if (m_asset && !rMesh.BindAsset(m_asset, m)) return false;
-        const auto* meshAsset = rMesh.GetAsset();
-		const int vertexCount = meshAsset ? static_cast<int>(meshAsset->vertexCount) : GrannyGetMeshVertexCount(pgrnMesh);
-		const int indexCount = meshAsset ? static_cast<int>(meshAsset->indexCount) : GrannyGetMeshIndexCount(pgrnMesh);
-		// ZiiNAN: 64-bit safety cleanup
-		if (vertexCount < 0 || indexCount < 0 ||
-			vertexCount > std::numeric_limits<int>::max() - vtxPos ||
-			indexCount > std::numeric_limits<int>::max() - idxPos)
-			return false;
-
-		if (GrannyMeshIsRigid(pgrnMesh))
-		{
-			if (vertexCount > std::numeric_limits<int>::max() - vtxRigidPos)
-				return false;
-			if (!rMesh.CreateFromGrannyMeshPointer(pgrnSkeleton, pgrnMesh, vtxRigidPos, idxPos, m_kMtrlPal))
-				return false;
-
-			vtxRigidPos += vertexCount;
-		}
-		else
-		{
-			if (vertexCount > std::numeric_limits<int>::max() - vtxDeformPos)
-				return false;
-			if (!rMesh.CreateFromGrannyMeshPointer(pgrnSkeleton, pgrnMesh, vtxDeformPos, idxPos, m_kMtrlPal))
-				return false;
-
-			vtxDeformPos += vertexCount;
-			m_canDeformPNVertices |= rMesh.CanDeformPNTVertices();
-		}
-		m_bHaveBlendThing |= rMesh.HaveBlendThing();
-
-		for (int i = 0; pgrnMesh->PrimaryVertexData->VertexType[i].Name != nullptr; ++i)
-		{
-			if ( 0 == strcmp(pgrnMesh->PrimaryVertexData->VertexType[i].Name, GrannyVertexPositionName) )
-				m_vertexLayout |= Renderer::VertexPosition;
-			else if ( 0 == strcmp(pgrnMesh->PrimaryVertexData->VertexType[i].Name, GrannyVertexNormalName) )
-				m_vertexLayout |= Renderer::VertexNormal;
-			else if ( 0 == strcmp(pgrnMesh->PrimaryVertexData->VertexType[i].Name, GrannyVertexTextureCoordinatesName"0") )
-				m_vertexLayout |= Renderer::VertexTex1;
-			else if ( 0 == strcmp(pgrnMesh->PrimaryVertexData->VertexType[i].Name, GrannyVertexTextureCoordinatesName"1") )
-				m_vertexLayout |= Renderer::VertexTex2;
-		}
-
-		vtxPos += vertexCount;
-		idxPos += indexCount;
-
-		if (rMesh.GetTriGroupNodeList(CGrannyMaterial::TYPE_DIFFUSE_PNT))
-			++diffusePNTMeshNodeCount;
-
-		if (rMesh.GetTriGroupNodeList(CGrannyMaterial::TYPE_BLEND_PNT))
-			++blendPNTMeshNodeCount;
-	}
-
-	if (diffusePNTMeshNodeCount > std::numeric_limits<int>::max() - blendPNTMeshNodeCount ||
-		diffusePNTMeshNodeCount + blendPNTMeshNodeCount > std::numeric_limits<int>::max() - blendPNT2MeshNodeCount)
-		return false;
-	m_meshNodeCapacity = diffusePNTMeshNodeCount + blendPNTMeshNodeCount + blendPNT2MeshNodeCount;
-	m_meshNodes = new TMeshNode[m_meshNodeCapacity];
-
-	for (int n = 0; n < meshCount; ++n)
-	{
-		CGrannyMesh& rMesh = m_meshs[n];
-		granny_mesh* pgrnMesh = m_pgrnModel->MeshBindings[n].Mesh;
-
-		CGrannyMesh::EType eMeshType = GrannyMeshIsRigid(pgrnMesh) ? CGrannyMesh::TYPE_RIGID : CGrannyMesh::TYPE_DEFORM;
-
-		if (rMesh.GetTriGroupNodeList(CGrannyMaterial::TYPE_DIFFUSE_PNT))
-			AppendMeshNode(eMeshType, CGrannyMaterial::TYPE_DIFFUSE_PNT, n);
-
-		if (rMesh.GetTriGroupNodeList(CGrannyMaterial::TYPE_BLEND_PNT))
-			AppendMeshNode(eMeshType, CGrannyMaterial::TYPE_BLEND_PNT, n);
-	}
-
-	// For Dungeon Block
-	if ((Renderer::VertexPosition|Renderer::VertexNormal|Renderer::VertexTex1|Renderer::VertexTex2) == m_vertexLayout)
-	{
-		for (int n = 0; n < meshCount; ++n)
-		{
-			CGrannyMesh& rMesh = m_meshs[n];
-			rMesh.SetPNT2Mesh();
-		}
-	}
-
-	m_rigidVtxCount = vtxRigidPos;
-	m_deformVtxCount = vtxDeformPos;
-
-	m_vtxCount = vtxPos;
-	m_idxCount = idxPos;
-	return true;
-}
 
 bool CGrannyModel::LoadAssetMeshes()
 {
@@ -300,8 +173,8 @@ bool CGrannyModel::LoadAssetMeshes()
         const auto& source = asset->meshes[index];
         if (source.indexCount && source.indexWidth != AssetRuntime::IndexWidth::UInt16 &&
             source.indexWidth != AssetRuntime::IndexWidth::UInt32) return false;
-        // Keep the productive Granny stream unchanged; neutral rigid assets retain their declared width.
-        if (!m_pgrnModel && source.indexWidth == AssetRuntime::IndexWidth::UInt32 &&
+        // Respect the provider's validated preferred index width.
+        if (source.indexWidth == AssetRuntime::IndexWidth::UInt32 &&
             asset->preferredIndexWidth != AssetRuntime::IndexWidth::UInt16)
             m_indexWidth = AssetRuntime::IndexWidth::UInt32;
         if (source.vertexCount > std::uint32_t(std::numeric_limits<int>::max() - vertices) ||
@@ -383,8 +256,6 @@ bool CGrannyModel::CreateFromAsset(AssetRuntime::ModelHandle asset)
 {
     if (!IsEmpty() || !asset || !asset.Get()->renderable) return false;
     m_asset = std::move(asset);
-    // Optional legacy/reference interop. All production geometry and material construction is neutral.
-    m_pgrnModel = AssetRuntime::GrannyInterop::GetModel(m_asset);
     if (!LoadAssetMeshes() || !__LoadVertices() || !LoadIndices()) { Destroy(); return false; }
     m_skinningData = SkinningDataAdapter::Extract(m_asset);
     if (!m_skinningData) { Destroy(); return false; }
@@ -399,36 +270,6 @@ bool CGrannyModel::CreateFromAsset(AssetRuntime::ModelHandle asset)
     return true;
 }
 
-bool CGrannyModel::CreateFromGrannyModelPointer(granny_model* pgrnModel)
-{
-	assert(IsEmpty());
-	if (!pgrnModel) return false;
-
-	m_pgrnModel = pgrnModel;
-
-	if (!LoadMeshs())
-		return false;
-
-	if (!__LoadVertices())
-		return false;
-
-	if (!LoadIndices())
-		return false;
-
-    // ZiiNAN: GPU skinning static mesh data
-    m_skinningData=SkinningDataAdapter::Extract(*pgrnModel, GetAsset());
-    for(size_t mesh=0;mesh<m_skinningData->status.size();++mesh) {
-        const auto status=m_skinningData->status[mesh];
-        if(status!=Renderer::SkinDataStatus::Ready && status!=Renderer::SkinDataStatus::Rigid &&
-           status!=Renderer::SkinDataStatus::Empty && Renderer::skinSidecarFailures.fetch_add(1)<16)
-            TraceError("Skinning data preparation: model=%s mesh=%zu status=%s; CPU path unchanged",
-                pgrnModel->Name?pgrnModel->Name:"",mesh,Renderer::SkinDataStatusName(status));
-    }
-
-	AddReference();
-
-	return true;
-}
 
 int CGrannyModel::GetIdxCount()
 {
@@ -464,7 +305,7 @@ void CGrannyModel::DestroyDeviceObjects()
 
 bool CGrannyModel::IsEmpty() const
 {
-	if (m_asset || m_pgrnModel)
+	if (m_asset)
 		return false;
 
 	return true;
@@ -524,7 +365,6 @@ void CGrannyModel::Initialize()
     m_actorSource.reset(); // ZiiNAN: Model-owned immutable actor indices.
 	memset(m_meshNodeLists, 0, sizeof(m_meshNodeLists));
 	
-	m_pgrnModel = NULL;
 	m_meshs = NULL;
 	m_meshNodes = NULL;
 
@@ -556,7 +396,7 @@ bool CGrannyModel::CaptureStaticObjectSource()
     void* indices = wide ? static_cast<void*>(source->indices32.data()) : static_cast<void*>(source->indices.data());
     for (int i=0; i<GetMeshCount(); ++i)
     {
-        // Same original conversion and offsets, while Granny file sections are alive.
+        // Preserve conversion and offsets while the source AssetHandle is alive.
         if (!m_meshs[i].NEW_LoadVertices(source->vertices.data()) ||
             !m_meshs[i].LoadIndices(indices, m_indexWidth)) return false;
     }

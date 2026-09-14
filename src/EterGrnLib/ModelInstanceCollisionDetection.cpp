@@ -1,5 +1,4 @@
 #include "Stdafx.h"
-#include "AssetRuntime/Granny/Native.h"
 #include "ModelInstance.h"
 #include "Model.h"
 
@@ -40,15 +39,7 @@ AssetRuntime::Bounds BoneBounds(const CGrannyModel& model, int mesh, size_t bone
         if (mesh<0 || size_t(mesh)>=asset->meshes.size() || bone>=asset->meshes[mesh].skin.boneBounds.size()) return {};
         return asset->meshes[mesh].skin.boneBounds[bone];
     }
-    // Explicit raw-reference construction is retained for the original SDK parity fixtures.
-    const auto* native=model.GetMeshPointer(mesh)->GetGrannyMeshPointer();
-    if (!native || bone>=size_t(native->BoneBindingCount)) return {};
-    const auto& source=native->BoneBindings[bone];
-    AssetRuntime::Bounds result;
-    std::memcpy(result.min.data(),source.OBBMin,sizeof(result.min));
-    std::memcpy(result.max.data(),source.OBBMax,sizeof(result.max));
-    result.valid=true;
-    return result;
+    return {};
 }
 }
 

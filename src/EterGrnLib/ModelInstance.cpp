@@ -98,7 +98,6 @@ void CGrannyModelInstance::__Initialize()
     m_ownsWorldPose = false;
 
 	// TEST
-	// m_pgrnWorldPose = NULL;
 	m_ppkSkeletonInst = NULL;
 	// END_OF_TEST
 

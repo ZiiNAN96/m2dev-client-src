@@ -1,6 +1,5 @@
 #pragma once
 
-#include "AssetRuntime/Granny/NativeTypes.h"
 #include "AssetRuntime/AssetRuntime.h"
 #include <windows.h>
 #include "Renderer/DrawStateTypes.h"
@@ -39,7 +38,6 @@ class CGrannyMaterial : public CReferenceObject
 
 		void					Destroy();
 		void					Copy(CGrannyMaterial& rkMtrl);
-		bool					IsEqual(granny_material * pgrnMaterial) const;
 		bool IsEqual(const AssetRuntime::MaterialAsset* material) const { return m_sourceAsset == material; }
 		bool					IsIn(const char* c_szImageName, int* iStage);
 		void					SetSpecularInfo(BOOL bFlag, float fPower, BYTE uSphereMapIndex);
@@ -51,7 +49,6 @@ class CGrannyMaterial : public CReferenceObject
 		void					Initialize();
 
 	public:
-		bool					CreateFromGrannyMaterialPointer(granny_material* pgrnMaterial);
 		bool CreateFromAsset(const AssetRuntime::MaterialAsset& material);
 		void					SetImagePointer(int iStage, CGraphicImage* pImage);
 
@@ -87,7 +84,6 @@ class CGrannyMaterial : public CReferenceObject
 		void					__RestoreSpecularRenderState();
 
 	protected:
-		granny_material *		m_pgrnMaterial;
 		CGraphicImage::TRef		m_roImage[2];
 		EType					m_eType;
 
@@ -122,7 +118,6 @@ class CGrannyMaterialPalette
 		void	Clear();
 		void	Copy(const CGrannyMaterialPalette& rkMtrlPalSrc);
 
-		DWORD	RegisterMaterial(granny_material* pgrnMaterial);
 		DWORD RegisterMaterial(const AssetRuntime::MaterialAsset& material);
 		void	SetMaterialImagePointer(const char* c_szMtrlName, CGraphicImage* pImage);
 		void	SetMaterialData(const char* c_szMtrlName, const SMaterialData& c_rkMaterialData);

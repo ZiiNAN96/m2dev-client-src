@@ -292,7 +292,7 @@ void SubmitStaticMapObject(CGraphicThingInstance& thing, StaticMapObjectPass pas
     } else if(!baseDrawValid) { Report(thing,"excluded: base render state"); return; }
     // RenderArea enables writes for its opaque list after the shadow receiver pass.
     if(pass==StaticMapObjectPass::Opaque) common.depthWrite=true;
-    // Validate only referenced groups: unused Granny palette entries are not draws.
+    // Validate only referenced groups: unused material palette entries are not draws.
     for(DWORD i=0;i<thing.GetLODControllerCount();++i) {
         auto* instance=thing.GetLODControllerPointer(i)->GetModelInstance();
         auto* model=instance ? instance->GetModel() : nullptr;

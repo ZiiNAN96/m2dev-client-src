@@ -33,7 +33,6 @@ void CGrannyModelInstance::DeformNoSkin(const Math::Matrix * c_pWorldMatrix)
 		return;
 
 	// DELETED
-	//m_pgrnWorldPose = m_pgrnWorldPoseReal;
 	///////////////////////////////
 	
 	if (!UpdateWorldPose()) return;

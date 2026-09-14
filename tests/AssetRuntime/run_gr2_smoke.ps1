@@ -1,7 +1,9 @@
 param(
     [Parameter(Mandatory=$true)][ValidatePattern('^[a-zA-Z0-9_-]+$')][string]$Name,
     [Parameter(Mandatory=$true)][string]$BuildDirectory,
-    [ValidateSet('granny','ziinan')][string]$AnimationRuntime = 'ziinan', [ValidateSet('granny','ziinan')][string]$GR2Reader = 'ziinan', [switch]$Visible
+    [ValidateSet('ziinan')][string]$AnimationRuntime = 'ziinan', [ValidateSet('ziinan')][string]$GR2Reader = 'ziinan', [switch]$Visible,
+    [switch]$ProductionDefault,
+    [switch]$MultiMap
 )
 $ErrorActionPreference = 'Stop'
 $source = (Resolve-Path -LiteralPath "$PSScriptRoot/../..").Path
@@ -20,6 +22,13 @@ $fixture = Get-Content -LiteralPath "$PSScriptRoot/../AnimationRuntime/runtime_e
 $fixture = $fixture.Replace('chrmgr.CreateRace(0)', '').Replace('chrmgr.SelectRace(0)', '').Replace('chrmgr.LoadLocalRaceData("msm/warrior_m.msm")', '')
 $fixture = $fixture.Replace('playersettingmodule.__LoadGameWarriorEx(0, "d:/ymir work/pc/warrior/")', 'for phase in ("INIT", "WARRIOR", "ASSASSIN", "SURA", "SHAMAN"): playersettingmodule.LoadGameData(phase)')
 $fixture = $fixture.Replace('F1-X', 'F2-X')
+$phases = if ($MultiMap) { 3 } else { 1 }
+if ($MultiMap) {
+    $fixture = $fixture.Replace('SCENES = (("a1", 44000, 27200, 0),)', 'SCENES = (("a1", 44000, 27200, 0), ("b1", 69642, 54848, 0), ("a1", 44000, 27200, 0))')
+    $fixture = $fixture.Replace('int(elapsed / 60)', 'int(elapsed / 20)').Replace('elapsed - phase * 60', 'elapsed - phase * 20')
+    $fixture = $fixture.Replace('int(seconds / 15)', 'int(seconds / 5)').Replace('int(seconds / 20)', 'int(seconds / 6)')
+    $fixture = $fixture.Replace('seconds >= 27', 'seconds >= 9').Replace('seconds >= 52', 'seconds >= 17')
+}
 Set-Content -LiteralPath "$target/test-root/root/prototype.py" -Value $fixture -Encoding utf8
 foreach ($package in Get-ChildItem -LiteralPath "$original/pack" -File) {
     if ($package.Name -ne 'root.pck') {
@@ -33,10 +42,12 @@ $hash = (Get-FileHash -LiteralPath $binary -Algorithm SHA256).Hash
 if ((Get-FileHash -LiteralPath "$target/Metin2_Release.exe" -Algorithm SHA256).Hash -ne $hash) {
     throw 'Runtime copy differs from the completed Release build.'
 }
-"SourceBinary=$binary`nSHA256=$hash`nArguments=--renderer-diagnostics --animation-runtime=$AnimationRuntime --gr2-reader=$GR2Reader`nAutomated fixture; login/window visuals are separate" |
+$clientArguments = @('--renderer-diagnostics', "--animation-runtime=$AnimationRuntime", "--gr2-reader=$GR2Reader")
+if ($ProductionDefault) { $clientArguments = @('--renderer-diagnostics') }
+"SourceBinary=$binary`nSHA256=$hash`nArguments=$($clientArguments -join ' ')`nAutomated fixture; login/window visuals are separate" |
     Set-Content -LiteralPath "$target/artifact.txt"
 $style = if ($Visible) { 'Normal' } else { 'Hidden' }
-$process = Start-Process -FilePath "$target/Metin2_Release.exe" -WorkingDirectory $target -WindowStyle $style -ArgumentList @('--renderer-diagnostics', "--animation-runtime=$AnimationRuntime", "--gr2-reader=$GR2Reader") -PassThru
+$process = Start-Process -FilePath "$target/Metin2_Release.exe" -WorkingDirectory $target -WindowStyle $style -ArgumentList $clientArguments -PassThru
 Write-Output "F2-X fresh Release PID=$($process.Id) Runtime=$target"
 $watch = [Diagnostics.Stopwatch]::StartNew()
 while (-not $process.WaitForExit(1000)) {
@@ -55,14 +66,19 @@ $process.WaitForExit()
     Tee-Object -FilePath "$target/exit.txt"
 if ($process.ExitCode -ne 0) { throw 'F2-X fixture exited with a nonzero code.' }
 $fixture = Get-Content -LiteralPath "$target/asset-runtime-smoke.log" -Raw
-if ($fixture -notmatch 'completed phases=1 frames=[1-9][0-9]*') { throw 'Rendered fixture did not complete.' }
+if ($fixture -notmatch "completed phases=$phases frames=[1-9][0-9]*") { throw 'Rendered fixture did not complete.' }
 foreach ($animation in 0..3) {
     if ($fixture -notmatch "rendered animation=$animation frames=[1-9][0-9]*") { throw "Animation stage $animation never rendered." }
 }
 foreach ($scene in @('phase=0 map=a1 mount=20104 actors=6')) {
     if (-not $fixture.Contains($scene)) { throw "Required original scene missing: $scene" }
 }
-foreach ($phase in 0..0) {
+if ($MultiMap) {
+    foreach ($scene in @('phase=1 map=b1 mount=20104 actors=6','phase=2 map=a1 mount=20104 actors=6')) {
+        if (-not $fixture.Contains($scene)) { throw "Required map transition missing: $scene" }
+    }
+}
+foreach ($phase in 0..($phases-1)) {
     foreach ($step in 0..2) {
         if ($fixture -notmatch "transition phase=$phase step=$step") { throw 'Near/far/near sequence incomplete.' }
     }
@@ -76,15 +92,24 @@ foreach ($phase in 0..0) {
     }
 }
 $startup = Get-Content -LiteralPath "$target/renderer-startup.log" -Raw
+if ($ProductionDefault) {
+    foreach ($entry in @('GR2Reader=ziinan','GR2ReaderSelection=default','AnimationRuntime=ziinan','AnimationRuntimeSelection=default')) {
+        if (-not $startup.Contains($entry)) { throw "Default selection missing: $entry" }
+    }
+}
 if (-not $startup.Contains('Skinning=gpu') -or -not $startup.Contains('SkinningSelection=default')) { throw 'Production GPU default was not observed.' }
 if (-not $startup.Contains("AnimationRuntime=$AnimationRuntime")) { throw 'Requested animation runtime was not used.' }
 $audit = Get-Content -LiteralPath "$target/source-resource-audit.log" -Raw
-foreach ($field in @('GR2ReaderResources', 'RuntimeSkeletons', 'RuntimeAnimationClips', 'IndependentAnimationInstances', 'AnimationRuntimeFailures', 'RetainedImportKeyBytes', 'SourceTextures', 'SourceBuffers', 'AssetDocuments', 'AnimationInstances', 'MeshBindings', 'SkinPreparationFailures', 'AllCPUDeformationCalls', 'AllCPUDeformationVertices', 'GPUFallbacks', 'SkinMeshes', 'BoneRemaps', 'BonePalettes', 'PrototypeGeometry', 'PrototypePalettes', 'StaticSkinMeshes')) {
+if ($ProductionDefault) {
+    foreach ($field in @('GrannyFileReads','ReferencePoseSamples','ImportPoseSamples')) {
+        if ($audit -notmatch "\b$field=0\b" -or $audit -match "\b$field=[1-9]") { throw "Production reference use: $field" }
+    }
+}
+foreach ($field in @('CollisionResources', 'GR2ReaderResources', 'RuntimeSkeletons', 'RuntimeAnimationClips', 'IndependentAnimationInstances', 'AnimationRuntimeFailures', 'RetainedImportKeyBytes', 'SourceTextures', 'SourceBuffers', 'AssetDocuments', 'AnimationInstances', 'MeshBindings', 'SkinPreparationFailures', 'AllCPUDeformationCalls', 'AllCPUDeformationVertices', 'GPUFallbacks', 'SkinMeshes', 'BoneRemaps', 'BonePalettes', 'PrototypeGeometry', 'PrototypePalettes', 'StaticSkinMeshes')) {
     $observations = [regex]::Matches($audit, "\b$field=(?<value>[0-9]+)\b")
     if ($observations.Count -ne 1 -or $observations[0].Groups['value'].Value -ne '0') { throw "Expected exactly one $field=0 in the fresh shutdown audit." }
 }
 if ($AnimationRuntime -eq 'ziinan' -and ($audit -notmatch '\bIndependentPoseSamples=[1-9][0-9]*' -or $audit -notmatch '\bReferencePoseSamples=0\b')) { throw 'Independent pose sampling / zero SDK pose sampling not proved.' }
-if ($AnimationRuntime -eq 'granny' -and ($audit -notmatch '\bReferencePoseSamples=[1-9][0-9]*' -or $audit -notmatch '\bIndependentPoseSamples=0\b')) { throw 'Normal Granny reference path was not proved.' }
 if ($audit -notmatch '\bGPUFrames=[1-9][0-9]*') { throw 'GPU skinning never rendered.' }
 $worldLog = Get-Content -LiteralPath "$target/static-object-adapter.log" -Raw
 foreach ($submission in @('static rigid diffuse', 'static camera blocker')) {
@@ -121,6 +146,5 @@ Write-Output 'PASS: isolated original-asset render/map/lifetime smoke; login, re
 
 if (-not $startup.Contains("GR2Reader=$GR2Reader")) { throw 'Requested reader was not used.' }
 if ($GR2Reader -eq 'ziinan' -and ($audit -notmatch '\bNativeGR2Reads=[1-9][0-9]*' -or $audit -notmatch '\bGrannyFileReads=0\b' -or $audit -notmatch '\bImportPoseSamples=0\b')) { throw 'Direct GR2 read with zero Granny extraction was not proved.' }
-if ($GR2Reader -eq 'granny' -and ($audit -notmatch '\bGrannyFileReads=[1-9][0-9]*' -or $audit -notmatch '\bNativeGR2Reads=0\b')) { throw 'Unchanged Granny reader was not proved.' }
 Write-Output 'PASS: F2-X reader route and zero retained reader resources.'
 

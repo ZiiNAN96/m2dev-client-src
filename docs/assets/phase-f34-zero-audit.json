@@ -1,0 +1,109 @@
+{
+  "production_files_scanned": 2678,
+  "sdk_source_hits": [],
+  "remaining_sdk_artifacts": [],
+  "generated_link_project_hits": [],
+  "allowed_historical_names_and_zero_audit_counters": {
+    "historical_CGranny_consumer_names": 569,
+    "zero_audit_counter_mentions": 3
+  },
+  "binaries": [
+    {
+      "path": "build-f34-clean/bin/Debug/Metin2_Debug.exe",
+      "sha256": "993f7b3b09c5d01fc9cdd2643acf222b96fe6125f035010215444a6d25ad55e8",
+      "amd64": true,
+      "imports": [
+        "ADVAPI32.dll",
+        "COMDLG32.dll",
+        "D3DCOMPILER_47.dll",
+        "DDRAW.dll",
+        "DINPUT8.dll",
+        "GDI32.dll",
+        "IMM32.dll",
+        "KERNEL32.dll",
+        "OLEAUT32.dll",
+        "SHELL32.dll",
+        "SHLWAPI.dll",
+        "USER32.dll",
+        "VERSION.dll",
+        "WINMM.dll",
+        "WS2_32.dll",
+        "api-ms-win-core-path-l1-1-0.dll",
+        "bcrypt.dll",
+        "d3d11.dll",
+        "dxgi.dll",
+        "ole32.dll"
+      ],
+      "forbidden_imports": [],
+      "sdk_binary_markers": []
+    },
+    {
+      "path": "build-f34-clean/bin/Release/Metin2_Release.exe",
+      "sha256": "a80c05736f21690f9215a8a84b1557bec1b3d0cba5abaf096a5fedb75b8f3683",
+      "amd64": true,
+      "imports": [
+        "ADVAPI32.dll",
+        "COMDLG32.dll",
+        "D3DCOMPILER_47.dll",
+        "DDRAW.dll",
+        "DINPUT8.dll",
+        "GDI32.dll",
+        "IMM32.dll",
+        "KERNEL32.dll",
+        "OLEAUT32.dll",
+        "SHELL32.dll",
+        "SHLWAPI.dll",
+        "USER32.dll",
+        "VERSION.dll",
+        "WINMM.dll",
+        "WS2_32.dll",
+        "api-ms-win-core-path-l1-1-0.dll",
+        "bcrypt.dll",
+        "d3d11.dll",
+        "dbghelp.dll",
+        "dxgi.dll",
+        "ole32.dll"
+      ],
+      "forbidden_imports": [],
+      "sdk_binary_markers": []
+    },
+    {
+      "path": "build-f34-clean/bin/Release/PackMaker.exe",
+      "sha256": "0dd964aa56a2cfa209de4d111720cce30c4e876bd8b8b4eac608f1c5b09ed08e",
+      "amd64": true,
+      "imports": [
+        "ADVAPI32.dll",
+        "KERNEL32.dll"
+      ],
+      "forbidden_imports": [],
+      "sdk_binary_markers": []
+    },
+    {
+      "path": "build-f34-clean/tools/AssetTool/Debug/ziinan-asset-tool.exe",
+      "sha256": "137b487b9a3b0ba042705391190d000f78ee890f1f6b7537f7fe042890480146",
+      "amd64": true,
+      "imports": [
+        "KERNEL32.dll"
+      ],
+      "forbidden_imports": [],
+      "sdk_binary_markers": []
+    },
+    {
+      "path": "build-f34-clean/tools/AssetTool/Release/ziinan-asset-tool.exe",
+      "sha256": "e17a0f9e167f7923b43c3963f9b2f7819f17813934c23686ca4dd25925002a27",
+      "amd64": true,
+      "imports": [
+        "KERNEL32.dll"
+      ],
+      "forbidden_imports": [],
+      "sdk_binary_markers": []
+    }
+  ],
+  "vendor_sources_reused_only": [
+    "DiligentCore b036337d68be2353c9950a85929acf796b9a6d50",
+    "Assimp 6.0.2",
+    "meshoptimizer 0.25"
+  ],
+  "fresh_windows_build": "build-f34-clean",
+  "no_old_CMake_cache_or_compiled_dependency_reused": true
+}

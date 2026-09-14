@@ -1,9 +1,10 @@
 param(
     [Parameter(Mandatory=$true)][ValidatePattern('^[a-zA-Z0-9_-]+$')][string]$Name,
     [string]$BuildDirectory = 'build-c3x/windows',
-    [ValidateSet('granny','ziinan')][string]$Reader = 'ziinan',
+    [ValidateSet('ziinan')][string]$Reader = 'ziinan',
     [ValidateSet('on','off')][string]$Prewarm = 'off',
-    [switch]$Manual
+    [switch]$Manual,
+    [switch]$ProductionDefault
 )
 $ErrorActionPreference = 'Stop'
 $source = (Resolve-Path -LiteralPath "$PSScriptRoot/../..").Path
@@ -31,6 +32,9 @@ if (-not $Manual) {
 $hash = (Get-FileHash -LiteralPath $binary -Algorithm SHA256).Hash
 if ((Get-FileHash -LiteralPath "$target/Metin2_Release.exe" -Algorithm SHA256).Hash -ne $hash) { throw 'Binary copy differs.' }
 $clientArguments = @('--load-warmup-audit', "--gr2-reader=$Reader", "--animation-runtime=$Reader", "--gr2-prewarm=$Prewarm")
+if ($ProductionDefault) {
+    $Reader='ziinan'; $Prewarm='on'; $clientArguments=@('--load-warmup-audit')
+}
 "SourceBinary=$binary`nSHA256=$hash`nArguments=$($clientArguments -join ' ')`nManual=$Manual" | Set-Content -LiteralPath "$target/artifact.txt"
 $style = if ($Manual) { 'Normal' } else { 'Hidden' }
 $process = Start-Process -FilePath "$target/Metin2_Release.exe" -WorkingDirectory $target -WindowStyle $style -ArgumentList $clientArguments -PassThru
@@ -44,14 +48,19 @@ while (-not $process.WaitForExit(1000)) {
 }
 "PID=$($process.Id) ExitCode=$($process.ExitCode) Seconds=$($watch.Elapsed.TotalSeconds)" | Tee-Object -FilePath "$target/exit.txt"
 if ($process.ExitCode -ne 0) { throw 'Performance client failed.' }
+if ($ProductionDefault) {
+    $startup=Get-Content -LiteralPath "$target/renderer-startup.log" -Raw
+    foreach ($entry in @('GR2Reader=ziinan','GR2ReaderSelection=default','AnimationRuntime=ziinan','AnimationRuntimeSelection=default','GR2Prewarm=1')) {
+        if (-not $startup.Contains($entry)) { throw "Default selection missing: $entry" }
+    }
+}
 $audit = Get-Content -LiteralPath "$target/source-resource-audit.log" -Raw
-foreach ($field in @('GR2ReaderResources','AssetDocuments','AnimationInstances','MeshBindings','RuntimeSkeletons','RuntimeAnimationClips',
+foreach ($field in @('CollisionResources', 'GR2ReaderResources','AssetDocuments','AnimationInstances','MeshBindings','RuntimeSkeletons','RuntimeAnimationClips',
     'IndependentAnimationInstances','AnimationRuntimeFailures','AllCPUDeformationCalls','GPUFallbacks','SkinPreparationFailures',
     'SourceTextures','SourceBuffers','SkinMeshes','BoneRemaps','BonePalettes','PrototypeGeometry','PrototypePalettes','StaticSkinMeshes')) {
     if ($audit -notmatch "\b$field=0\b") { throw "Nonzero/missing shutdown field: $field" }
 }
 if ($Reader -eq 'ziinan' -and ($audit -notmatch '\bGrannyFileReads=0\b' -or $audit -notmatch '\bNativeGR2Reads=[1-9]')) { throw 'Native route not proved.' }
-if ($Reader -eq 'granny' -and ($audit -notmatch '\bNativeGR2Reads=0\b' -or $audit -notmatch '\bGrannyFileReads=[1-9]')) { throw 'Granny route not proved.' }
 if ($Reader -eq 'ziinan' -and $Prewarm -eq 'on') {
     foreach ($field in @('NativePrewarmFailures','NativePrewarmLimited','NativeBoundClipBypasses')) {
         if ($audit -notmatch "\b$field=0\b") { throw "Incomplete prewarm: $field; inspect buffered diagnostic and resource logs." }

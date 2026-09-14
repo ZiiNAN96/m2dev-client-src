@@ -78,7 +78,7 @@ endif()
 if(M2_BUILD_WINDOWS_CLIENT)
     add_compile_definitions(UNICODE _UNICODE NOMINMAX WIN32_LEAN_AND_MEAN
         _CRT_SECURE_NO_WARNINGS WINDOWS_IGNORE_PACKING_MISMATCH
-        USE_LOD DUNGEON_WORK BUILDING_GRANNY_STATIC GRANNY_THREADED Py_NO_ENABLE_SHARED
+        USE_LOD DUNGEON_WORK Py_NO_ENABLE_SHARED
         "$<$<CONFIG:Debug>:DEBUG>" "$<$<CONFIG:RelWithDebInfo,Release>:_DISTRIBUTE>")
     include_directories("src" "extern/include" "vendor/libsodium/src/libsodium/include"
         "vendor/freetype-2.13.3/include")
