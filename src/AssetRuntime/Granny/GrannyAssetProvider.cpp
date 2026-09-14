@@ -1,12 +1,21 @@
 #include "GrannyAssetProvider.h"
 #include "GrannyInterop.h"
+#include "GrannyAnimationAdapter.h"
+#include "AssetRuntime/AnimationRuntimeMode.h"
+#include "AssetRuntime/AnimationStallAudit.h"
 #include "EterGrnLib/Deform.h"
 #include <algorithm>
 #include <cctype>
 #include <cmath>
 #include <cstring>
+#include <cstdio>
 #include <limits>
 #include <utility>
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <Windows.h>
+#include <bcrypt.h>
 
 namespace AssetRuntime
 {
@@ -15,6 +24,37 @@ namespace
 const char* Text(const char* value) { return value ? value : ""; }
 struct FileDeleter { void operator()(granny_file* file) const { if (file) GrannyFreeFile(file); } };
 using FileOwner = std::unique_ptr<granny_file, FileDeleter>;
+
+std::optional<GrannyInterop::SourceFingerprint> Fingerprint(std::span<const std::byte> bytes)
+{
+    AnimationStallAudit::WorkScope audit(AnimationStallAudit::Work::Fingerprint);
+    // ZiiNAN: Import identity survives source-document reloads, but never a
+    // content change. Only the private Windows provider uses the system hash.
+    struct HashContext {
+        BCRYPT_ALG_HANDLE algorithm{};
+        BCRYPT_HASH_HANDLE hash{};
+        std::vector<unsigned char> object;
+        ~HashContext() {
+            if (hash) BCryptDestroyHash(hash);
+            if (algorithm) BCryptCloseAlgorithmProvider(algorithm, 0);
+        }
+    } context;
+    if (BCryptOpenAlgorithmProvider(&context.algorithm, BCRYPT_SHA256_ALGORITHM, nullptr, 0) < 0)
+        return {};
+    ULONG objectBytes{}, returned{};
+    if (BCryptGetProperty(context.algorithm, BCRYPT_OBJECT_LENGTH,
+            reinterpret_cast<PUCHAR>(&objectBytes), sizeof(objectBytes), &returned, 0) < 0)
+        return {};
+    context.object.resize(objectBytes);
+    if (BCryptCreateHash(context.algorithm, &context.hash, context.object.data(), objectBytes, nullptr, 0, 0) < 0 ||
+        BCryptHashData(context.hash, reinterpret_cast<PUCHAR>(const_cast<std::byte*>(bytes.data())),
+            static_cast<ULONG>(bytes.size()), 0) < 0)
+        return {};
+    GrannyInterop::SourceFingerprint result{};
+    if (BCryptFinishHash(context.hash, result.data(), static_cast<ULONG>(result.size()), 0) < 0)
+        return {};
+    return result;
+}
 
 granny_data_type_definition dualUVType[] = {
     {GrannyReal32Member, GrannyVertexPositionName, nullptr, 3},
@@ -164,8 +204,10 @@ AnimationAsset DescribeAnimation(const granny_animation& animation)
 class GrannyDocument final : public AssetDocument
 {
 public:
-    GrannyDocument(AssetId id, FileOwner file, granny_file_info* info)
-        : AssetDocument(std::move(id)), file_(std::move(file)), info_(info) {}
+    GrannyDocument(AssetId id, FileOwner file, granny_file_info* info,
+        std::optional<GrannyInterop::SourceFingerprint> fingerprint)
+        : AssetDocument(std::move(id)), file_(std::move(file)), info_(info), fingerprint_(fingerprint) {}
+    std::optional<GrannyInterop::SourceFingerprint> ContentFingerprint() const { return fingerprint_; }
     granny_model* Model(std::size_t index) const
     {
         return index < models_.size() ? info_->Models[index] : nullptr;
@@ -322,10 +364,13 @@ public:
     }
     std::unique_ptr<PoseEvaluator> CreatePose(const ModelHandle& model) const override;
     std::unique_ptr<AnimationInstance> CreateAnimationInstance(const ModelHandle& model) const override;
+    GrannyAnimationAdapter::RuntimeImportCache& RuntimeCache() const { return runtimeImportCache_; }
 private:
     FileOwner file_;
     granny_file_info* info_{};
+    std::optional<GrannyInterop::SourceFingerprint> fingerprint_;
     bool released_{};
+    mutable GrannyAnimationAdapter::RuntimeImportCache runtimeImportCache_;
 };
 
 class GrannyMeshBinding final : public MeshBinding
@@ -384,21 +429,35 @@ private:
 class GrannyAnimationInstance final : public AnimationInstance
 {
 public:
-    explicit GrannyAnimationInstance(ModelHandle model, granny_model* legacy = nullptr) : owner_(std::move(model))
+    explicit GrannyAnimationInstance(ModelHandle model, granny_model* legacy = nullptr) : owner_(std::move(model)),
+        independent_(startupAnimationRuntime == AnimationRuntimeMode::ZiiNAN)
     {
+        if (independent_) ++liveIndependentAnimationInstances;
         const auto* native = legacy ? legacy : GrannyInterop::GetModel(owner_);
         if (!native || !native->Skeleton || native->Skeleton->BoneCount <= 0) return;
         boneCount_ = native->Skeleton->BoneCount;
         model_ = GrannyInstantiateModel(native);
+        if (independent_) {
+            std::string error;
+            runtimeSkeleton_ = GrannyAnimationAdapter::ImportSkeleton(owner_, error);
+            if (!runtimeSkeleton_) RuntimeFailure(error);
+            else {
+                runtimePose_.Prepare(boneCount_);
+                runtimeScratch_.Prepare(boneCount_);
+                runtimeModel_.resize(boneCount_);
+                runtimePalette_.resize(boneCount_);
+            }
+        }
     }
     ~GrannyAnimationInstance() override
     {
         // Controls are SDK-owned after FreeControlOnceUnused; release the model before clip handles.
         if (model_) GrannyFreeModelInstance(model_);
         if (world_) GrannyFreeWorldPose(world_);
+        if (independent_) --liveIndependentAnimationInstances;
     }
     bool Valid() const { return model_ != nullptr; }
-    bool PreparePose() override { return EnsurePose() != nullptr; }
+    bool PreparePose() override { return independent_ ? runtimeSkeleton_ && !runtimeFailed_ : EnsurePose() != nullptr; }
     granny_model_instance* NativeModel() const { return model_; }
     granny_world_pose* EnsurePose()
     {
@@ -430,7 +489,10 @@ public:
         clip_ = clip;
         control_ = GrannyPlayControlledAnimation(localTime, native, model_);
         if (!control_) return PlaybackFailure(native);
-        RetainClip(control_, clip);
+        if (!RetainClip(control_, clip)) {
+            GrannyFreeControl(control_); control_ = nullptr;
+            return AssetError::EvaluationFailed;
+        }
         GrannySetControlSpeed(control_, speed);
         GrannySetControlLoopCount(control_, loopCount);
         GrannySetControlEaseIn(control_, !first);
@@ -453,7 +515,10 @@ public:
         clip_ = clip;
         control_ = GrannyPlayControlledAnimation(localTime, native, model_);
         if (!control_) return PlaybackFailure(native);
-        RetainClip(control_, clip);
+        if (!RetainClip(control_, clip)) {
+            GrannyFreeControl(control_); control_ = nullptr;
+            return AssetError::EvaluationFailed;
+        }
         GrannySetControlSpeed(control_, speed);
         GrannySetControlLoopCount(control_, loopCount);
         GrannySetControlEaseIn(control_, false);
@@ -470,7 +535,10 @@ public:
         clip_ = other->clip_;
         control_ = GrannyPlayControlledAnimation(localTime, GrannyInterop::GetAnimation(clip_), model_);
         if (!control_) return PlaybackFailure(GrannyInterop::GetAnimation(clip_));
-        RetainClip(control_, clip_);
+        if (!RetainClip(control_, clip_)) {
+            GrannyFreeControl(control_); control_ = nullptr;
+            return AssetError::EvaluationFailed;
+        }
         GrannySetControlSpeed(control_, GrannyGetControlSpeed(other->control_));
         GrannySetControlLoopCount(control_, GrannyGetControlLoopCount(other->control_));
         GrannySetControlEaseIn(control_, true);
@@ -502,11 +570,20 @@ public:
     }
     std::span<const float> BoneWorldMatrix(BoneId bone) const override
     {
+        if (independent_) {
+            if (!runtimeReady_ || bone < 0 || static_cast<std::size_t>(bone) >= runtimeModel_.size()) return {};
+            return runtimeModel_[bone];
+        }
         if (!world_ || bone < 0 || bone >= boneCount_) return {};
         const auto* matrix = GrannyGetWorldPose4x4(world_, bone);
         return matrix ? std::span<const float>(matrix, 16) : std::span<const float>{};
     }
-    PoseView CompositePose() const override { return GrannyInterop::GetPoseView(world_); }
+    PoseView CompositePose() const override
+    {
+        if (independent_) return runtimeReady_ && !runtimePalette_.empty() ?
+            PoseView{{runtimePalette_.front().data(), runtimePalette_.size() * 16}} : PoseView{};
+        return GrannyInterop::GetPoseView(world_);
+    }
     std::unique_ptr<MeshBinding> CreateMeshBinding(const ModelHandle& source, std::size_t mesh) const override
     {
         return Bind(source, GrannyInterop::GetModel(source), mesh);
@@ -519,6 +596,7 @@ public:
     }
     PoseResult Evaluate(const PoseRequest& request) override
     {
+        if (independent_) return EvaluateIndependent(request);
         // Same shared scratch policy as the legacy model-update thread, now owned by the provider.
         struct SharedScratch {
             granny_local_pose* pose{};
@@ -538,7 +616,101 @@ public:
         return evaluator.Evaluate(request);
     }
 private:
-    struct ClipOwner { granny_control* control; AnimationHandle clip; };
+    struct ClipOwner {
+        granny_control* control;
+        AnimationHandle clip;
+        std::shared_ptr<const GrannyAnimationAdapter::ImportedAnimation> runtime;
+    };
+    struct RuntimeClipOwner {
+        AnimationHandle clip;
+        std::shared_ptr<const GrannyAnimationAdapter::ImportedAnimation> runtime;
+    };
+    void RuntimeFailure(const std::string& reason)
+    {
+        runtimeReady_ = false;
+        runtimeFailed_ = true;
+        ++animationRuntimeFailures;
+        const std::string message = "ZiiNAN Animation Runtime failed: model=" +
+            (owner_ ? owner_.GetDocument()->Id() : std::string("legacy-reference")) + " reason=" + reason;
+        if (animationRuntimeErrorSink) animationRuntimeErrorSink(message.c_str());
+        else std::fprintf(stderr, "%s\n", message.c_str());
+    }
+    PoseResult EvaluateIndependent(const PoseRequest& request)
+    {
+        AnimationStallAudit::WorkScope audit(AnimationStallAudit::Work::Pose);
+        runtimeReady_ = false;
+        if (!runtimeSkeleton_ || runtimeFailed_) return {{}, AssetError::EvaluationFailed};
+        if (!request.attachmentMatrix.empty() && request.attachmentMatrix.size() != 16) {
+            RuntimeFailure("invalid attachment matrix size"); return {{}, AssetError::InvalidInput};
+        }
+        // ZiiNAN: Animation Runtime boundary. Controls remain compatibility
+        // clocks/weights/root motion; this branch reads no native tracks/poses.
+        float accumulatedWeight = 0;
+        for (const auto& entry : clips_) {
+            if (!GrannyControlIsActive(entry.control)) continue;
+            const float weight = GrannyGetControlEffectiveWeight(entry.control);
+            if (!std::isfinite(weight) || weight < 0) { RuntimeFailure("invalid control blend weight"); return {{}, AssetError::EvaluationFailed}; }
+            if (weight == 0) continue;
+            granny_bool32 underflow = false, overflow = false;
+            GrannyGetControlLoopState(entry.control, &underflow, &overflow);
+            const auto boundary = (underflow ? 1u : 0u) | (overflow ? 2u : 0u);
+            const float localTime = GrannyGetControlClampedLocalClock(entry.control);
+            const auto* clip = entry.runtime ? entry.runtime->boundaryClips[boundary].get() : nullptr;
+            if (!clip || !AnimationRuntime::Sample(*runtimeSkeleton_, *clip, localTime,
+                    AnimationRuntime::TimeMode::Clamp, runtimeScratch_)) {
+                RuntimeFailure("independent track sampling failed"); return {{}, AssetError::EvaluationFailed};
+            }
+            for (std::size_t bone = 0; bone < runtimePose_.localTransforms.size(); ++bone) {
+                const auto& value = runtimeScratch_.localTransforms[bone];
+                auto& sum = runtimePose_.localTransforms[bone];
+                if (accumulatedWeight == 0) {
+                    for (int i = 0; i < 3; ++i) sum.translation[i] = value.translation[i] * weight;
+                    for (int i = 0; i < 4; ++i) sum.rotation[i] = value.rotation[i] * weight;
+                    for (int i = 0; i < 9; ++i) sum.scaleShear[i] = value.scaleShear[i] * weight;
+                } else {
+                    float dot = 0;
+                    for (int i = 0; i < 4; ++i) dot += sum.rotation[i] * value.rotation[i];
+                    const float quaternionWeight = dot < 0 ? -weight : weight;
+                    for (int i = 0; i < 3; ++i) sum.translation[i] += value.translation[i] * weight;
+                    for (int i = 0; i < 4; ++i) sum.rotation[i] += value.rotation[i] * quaternionWeight;
+                    for (int i = 0; i < 9; ++i) sum.scaleShear[i] += value.scaleShear[i] * weight;
+                }
+            }
+            accumulatedWeight += weight;
+        }
+        if (accumulatedWeight == 0)
+            for (std::size_t bone = 0; bone < runtimePose_.localTransforms.size(); ++bone)
+                runtimePose_.localTransforms[bone] = runtimeSkeleton_->Bones()[bone].localBind;
+        else {
+            if (!std::isfinite(accumulatedWeight)) { RuntimeFailure("invalid accumulated blend weight"); return {{}, AssetError::EvaluationFailed}; }
+            const float inverseWeight = 1.0f / accumulatedWeight;
+            for (auto& transform : runtimePose_.localTransforms) {
+                for (auto& value : transform.translation) value *= inverseWeight;
+                for (auto& value : transform.scaleShear) value *= inverseWeight;
+                double norm = 0;
+                for (float value : transform.rotation) norm += double(value) * value;
+                if (!(norm > 1e-30) || !std::isfinite(norm)) { RuntimeFailure("invalid accumulated quaternion"); return {{}, AssetError::EvaluationFailed}; }
+                const float inverseNorm = static_cast<float>(1.0 / std::sqrt(norm));
+                for (auto& value : transform.rotation) value *= inverseNorm;
+            }
+        }
+        AnimationRuntime::Matrix attachment;
+        const AnimationRuntime::Matrix* parent = nullptr;
+        if (!request.attachmentMatrix.empty()) {
+            std::copy(request.attachmentMatrix.begin(), request.attachmentMatrix.end(), attachment.begin()); parent = &attachment;
+        }
+        bool evaluated = AnimationRuntime::Evaluate(*runtimeSkeleton_, runtimePose_, runtimeModel_, parent);
+        if (evaluated) {
+            AnimationStallAudit::WorkScope paletteAudit(AnimationStallAudit::Work::Palette);
+            evaluated = AnimationRuntime::BuildPalette(*runtimeSkeleton_, runtimeModel_, runtimePalette_);
+        }
+        if (!evaluated) {
+            RuntimeFailure("independent hierarchy/palette evaluation failed"); return {{}, AssetError::EvaluationFailed};
+        }
+        runtimeReady_ = true;
+        ++independentPoseSamples;
+        return {CompositePose(), AssetError::None};
+    }
     AssetError PlaybackFailure(const granny_animation* animation) const
     {
         const auto* model = model_ ? GrannyGetSourceModel(model_) : nullptr;
@@ -548,10 +720,27 @@ private:
             return AssetError::NoMatchingTracks;
         return AssetError::EvaluationFailed;
     }
-    void RetainClip(granny_control* control, const AnimationHandle& clip)
+    bool RetainClip(granny_control* control, const AnimationHandle& clip)
     {
         CollectClipOwners();
-        clips_.push_back({control, clip});
+        std::shared_ptr<const GrannyAnimationAdapter::ImportedAnimation> runtime;
+        if (independent_) {
+            for (const auto& cached : runtimeClips_)
+                if (cached.clip.GetDocument() == clip.GetDocument() && cached.clip.Index() == clip.Index()) {
+                    runtime = cached.runtime;
+                    AnimationStallAudit::InstanceHit();
+                    break;
+                }
+            if (!runtime) {
+                std::string error;
+                runtime = GrannyAnimationAdapter::ImportAnimation(owner_, clip, runtimeSkeleton_, error);
+                if (!runtime) { RuntimeFailure(error); return false; }
+                runtimeClips_.push_back({clip, runtime});
+            }
+            runtimeFailed_ = false;
+        }
+        clips_.push_back({control, clip, std::move(runtime)});
+        return true;
     }
     void CollectClipOwners()
     {
@@ -571,6 +760,11 @@ private:
     granny_world_pose* world_{};
     granny_control* control_{};
     int boneCount_{};
+    bool independent_{}, runtimeFailed_{}, runtimeReady_{};
+    std::shared_ptr<const AnimationRuntime::RuntimeSkeleton> runtimeSkeleton_;
+    std::vector<RuntimeClipOwner> runtimeClips_;
+    AnimationRuntime::AnimationPose runtimePose_, runtimeScratch_;
+    std::vector<AnimationRuntime::Matrix> runtimeModel_, runtimePalette_;
 };
 std::unique_ptr<PoseEvaluator> GrannyDocument::CreatePose(const ModelHandle& model) const
 {
@@ -589,11 +783,12 @@ public:
     {
         if (bytes.empty() || !bytes.data() || bytes.size() > static_cast<std::size_t>(std::numeric_limits<granny_int32>::max()))
             return {{}, AssetError::InvalidInput};
+        const auto fingerprint = Fingerprint(bytes);
         FileOwner file(GrannyReadEntireFileFromMemory(static_cast<granny_int32>(bytes.size()), const_cast<std::byte*>(bytes.data())));
         if (!file) return {{}, AssetError::InvalidAsset};
         auto* info = GrannyGetFileInfo(file.get());
         if (!info) return {{}, AssetError::InvalidAsset};
-        auto document = std::make_shared<GrannyDocument>(std::move(id), std::move(file), info);
+        auto document = std::make_shared<GrannyDocument>(std::move(id), std::move(file), info, fingerprint);
         if (!document->BuildMetadata()) return {{}, AssetError::InvalidAsset};
         return {AssetHandle(std::move(document)), AssetError::None};
     }
@@ -627,6 +822,11 @@ void ConfigureGrannyDiagnostics()
 
 namespace GrannyInterop
 {
+std::optional<SourceFingerprint> GetSourceFingerprint(const std::shared_ptr<AssetDocument>& document)
+{
+    const auto* native = dynamic_cast<const GrannyDocument*>(document.get());
+    return native ? native->ContentFingerprint() : std::nullopt;
+}
 granny_model_instance* GetAnimationInstance(AnimationInstance& instance)
 {
     auto* native = dynamic_cast<GrannyAnimationInstance*>(&instance);
@@ -655,6 +855,11 @@ granny_model* GetModel(const ModelHandle& handle)
 {
     const auto* document = dynamic_cast<const GrannyDocument*>(handle.GetDocument().get());
     return document && handle ? document->Model(handle.Index()) : nullptr;
+}
+GrannyAnimationAdapter::RuntimeImportCache* GetRuntimeImportCache(const ModelHandle& handle)
+{
+    const auto* document = dynamic_cast<const GrannyDocument*>(handle.GetDocument().get());
+    return document && handle ? &document->RuntimeCache() : nullptr;
 }
 granny_animation* GetAnimation(const AnimationHandle& handle)
 {
@@ -690,8 +895,10 @@ PoseResult GrannyPoseEvaluator::Evaluate(const PoseRequest& request)
         return {{}, AssetError::EvaluationFailed};
     if (!request.attachmentMatrix.empty() && request.attachmentMatrix.size() != 16)
         return {{}, AssetError::InvalidInput};
+    AnimationStallAudit::GrannyPose();
     GrannySampleModelAnimationsAccelerated(model_, boneCount_, request.attachmentMatrix.empty() ? nullptr : request.attachmentMatrix.data(),
         scratch_, world_);
+    ++referencePoseSamples;
     return {GetPoseView(world_), AssetError::None};
 }
 }

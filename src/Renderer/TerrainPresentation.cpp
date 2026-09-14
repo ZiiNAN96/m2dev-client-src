@@ -41,6 +41,12 @@ public:
     bool Initialize(Platform::PlatformWindow& parent, uint32_t width, uint32_t height)
     {
         if (terrainRenderer || !parent.GetNativeHandle() || !width || !height) return false;
+        if (verboseDiagnostics) {
+            try {
+                std::ofstream log("renderer-failure.log", std::ios::trunc);
+                log << "Renderer failure diagnostics enabled\n";
+            } catch (...) {}
+        }
         // ZiiNAN: Platform abstraction
         m_surface = parent.CreateChildRenderSurface(width, height);
         if (!m_surface || !m_backend.Initialize({m_surface->GetNativeHandle().value, width, height})) return false;
@@ -168,7 +174,12 @@ public:
     }
     bool Present() override
     {
-        if (!m_inFrame) return false;
+        if (!m_inFrame) {
+            try {
+                if (m_diagnostics) m_diagnostics << "ERROR Present without BeginFrame frame=" << m_frame+1 << std::endl;
+            } catch (...) {}
+            return false;
+        }
         if(m_screenshot) {
             std::vector<uint8_t> rgb; uint32_t width=0,height=0;
             auto sink=std::move(m_screenshot); m_screenshot={};
@@ -186,7 +197,20 @@ public:
         m_inFrame = false;
         effectWorldFrame=false;
         worldSurfaceFrame=false;
-        if (m_terrain->Failed() || m_objects->Failed() || m_actors->Failed() || m_trees->Failed() || m_effects->Failed() || m_world->Failed() || m_ui->Failed() || m_text->Failed()) return false;
+        if (m_terrain->Failed() || m_objects->Failed() || m_actors->Failed() || m_trees->Failed() || m_effects->Failed() || m_world->Failed() || m_ui->Failed() || m_text->Failed()) {
+            // The failure frame precedes the periodic snapshot below. Preserve
+            // the subsystem identity instead of reporting every failure as terrain.
+            try {
+                if (m_diagnostics) m_diagnostics << "ERROR Present frame=" << m_frame+1
+                    << " failed_terrain=" << m_terrain->Failed() << " failed_objects=" << m_objects->Failed()
+                    << " failed_actors=" << m_actors->Failed() << " failed_trees=" << m_trees->Failed()
+                    << " failed_effects=" << m_effects->Failed() << " failed_world=" << m_world->Failed()
+                    << " failed_ui=" << m_ui->Failed() << " failed_text=" << m_text->Failed()
+                    << " actors_visible=" << m_actors->VisibleActors() << " actor_draws=" << m_actors->DrawCount()
+                    << " terrain_draws=" << m_terrain->DrawCount() << std::endl;
+            } catch (...) {}
+            return false;
+        }
         const bool visible = m_terrain->HasTerrain() || m_ui->DrawCount()!=0 || m_text->DrawCount()!=0 || m_actors->DrawCount()!=0 ||
             m_world->DrawCount(WorldPart::Dungeon)!=0 || m_world->DrawCount(WorldPart::Sky)!=0;
         if (m_diagnostics && (++m_frame % 120 == 0 || visible != m_visible))

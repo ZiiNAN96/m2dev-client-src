@@ -300,6 +300,7 @@ class CPythonNetworkStream : public CNetworkStream, public CSingleton<CPythonNet
 		void SetSelectPhase();
 		void SetLoadingPhase();
 		void SetGamePhase();
+        bool IsGamePhaseForDiagnostics() const { return m_strPhase == "Game"; }
 		void ClosePhase();
 
 		// Login Phase

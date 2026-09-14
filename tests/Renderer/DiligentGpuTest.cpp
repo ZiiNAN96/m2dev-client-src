@@ -16,10 +16,14 @@
 #include "Renderer/DiligentUIRenderer.h"
 #include "Renderer/DiligentTextRenderer.h"
 #include "Renderer/TerrainPresentation.h"
+#include "Renderer/Diagnostics.h"
 #include "Platform/PlatformWindow.h"
 #include "TerrainTextureFixtures.h"
+#include <fstream>
 #include <iostream>
+#include <iterator>
 #include <stdexcept>
+#include <string>
 typedef struct _object PyObject;
 #include "UserInterface/PythonSystem.h"
 float CCamera::CAMERA_MAX_DISTANCE=2500.0f;
@@ -198,6 +202,8 @@ int main()
         backend.Shutdown();
         // Exercise the actual game presentation owner, not only its backend.
         {
+            const bool previousDiagnostics=verboseDiagnostics;
+            verboseDiagnostics=true;
             auto presentation = CreateTerrainPresentation(platformWindow,640,480);
             Check(presentation && terrainRenderer, "presentation binds terrain bridge");
             Check(actorRenderer && !actorWorldFrame,"ZiiNAN: actor owner initialized outside a world frame");
@@ -236,11 +242,29 @@ int main()
             terrainRenderer->ReleaseTexture(texture);
             Check(textureLifetime.expired(),"presentation texture release before shutdown");
             Check(presentation->BeginFrame() && presentation->Present(),"terrain to login transition");
+            const auto readLog=[](const char* path) {
+                std::ifstream file(path);
+                return std::string(std::istreambuf_iterator<char>(file),std::istreambuf_iterator<char>());
+            };
+            Check(readLog("renderer-failure.log").find("ERROR")==std::string::npos,"successful draws do not log failures");
+            Check(presentation->BeginFrame(),"diagnostic failure frame begin");
+            terrainRenderer->BeginTerrain(screen.Matrices(),false);
+            terrainRenderer->BeginTerrain(screen.Matrices(),false); // Retain the first failure once.
+            Check(!presentation->Present(),"renderer diagnostic preserves failed present");
+            const auto failureLog=readLog("renderer-failure.log");
+            const auto firstFailure=failureLog.find("ERROR implementation=DiligentTerrainRenderer.cpp");
+            Check(firstFailure!=std::string::npos && failureLog.find("legacy terrain state mismatch")!=std::string::npos &&
+                failureLog.find("ERROR",firstFailure+1)==std::string::npos,"renderer logs first failure reason once");
+            const auto presentationLog=readLog("terrain-renderer.log");
+            Check(presentationLog.find("failed_terrain=1 failed_objects=0 failed_actors=0 failed_trees=0 failed_effects=0 failed_world=0 failed_ui=0 failed_text=0")!=std::string::npos,
+                "failed present logs exact subsystem flags before periodic snapshot");
             vb.reset(); ib.reset(); // Map handles must die before the device owner.
             presentation.reset();
+            verboseDiagnostics=previousDiagnostics;
             Check(!terrainRenderer,"presentation unbinds terrain bridge");
             Check(!actorRenderer && !actorWorldFrame,"ZiiNAN: presentation unbinds actor bridge");
             std::cout << "Textured presentation resize / suspend / resume / shutdown: PASS\n";
+            std::cout << "Renderer first failure reason / subsystem diagnostic: PASS\n";
         }
         Check(!activePresentation && !terrainRenderer && !actorRenderer && !treeRenderer &&
               !worldRenderer && !effectRenderer && !uiRenderer && !textRenderer,"all production owners released");

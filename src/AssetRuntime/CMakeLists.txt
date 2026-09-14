@@ -8,8 +8,8 @@ target_link_libraries(AssetRuntimeGlTF PUBLIC AssetRuntime PRIVATE M2FirstPartyA
 target_include_directories(AssetRuntimeGlTF SYSTEM PRIVATE "${CMAKE_SOURCE_DIR}/vendor/cgltf")
 
 if(M2_BUILD_WINDOWS_CLIENT)
-    add_library(AssetRuntimeGranny STATIC Granny/GrannyAssetProvider.cpp ../EterGrnLib/Deform.cpp)
-    target_link_libraries(AssetRuntimeGranny PUBLIC AssetRuntime PRIVATE Granny M2FirstPartyArchitectureChecks)
+    add_library(AssetRuntimeGranny STATIC Granny/GrannyAssetProvider.cpp Granny/GrannyAnimationAdapter.cpp ../EterGrnLib/Deform.cpp)
+    target_link_libraries(AssetRuntimeGranny PUBLIC AssetRuntime AnimationRuntime PRIVATE Granny bcrypt M2FirstPartyArchitectureChecks)
     target_include_directories(AssetRuntimeGranny PRIVATE "${CMAKE_SOURCE_DIR}/extern/include")
     add_library(AssetRuntimeProviders STATIC Providers.cpp)
     target_link_libraries(AssetRuntimeProviders PUBLIC AssetRuntimeGranny AssetRuntimeGlTF PRIVATE M2FirstPartyArchitectureChecks)

@@ -3,6 +3,23 @@
 int main()
 {
     using namespace Renderer;
+    if (StartupOptions{}.animationStallAudit) return 24;
+    StartupOptions stall;
+    stall.ParseArgument(L"--animation-stall-audit");
+    if (!stall.valid || !stall.animationStallAudit || stall.animationRuntimeSelected ||
+        stall.animationRuntime != AssetRuntime::AnimationRuntimeMode::Granny) return 25;
+    if (StartupOptions{}.animationRuntime!=AssetRuntime::AnimationRuntimeMode::Granny ||
+        StartupOptions{}.animationRuntimeSelected) return 20;
+    StartupOptions animation;
+    animation.ParseArgument(L"--animation-runtime=ziinan");
+    animation.ParseArgument(L"--animation-runtime=ziinan");
+    if (!animation.valid || !animation.animationRuntimeSelected ||
+        animation.animationRuntime!=AssetRuntime::AnimationRuntimeMode::ZiiNAN) return 21;
+    animation.ParseArgument(L"--animation-runtime=granny");
+    if (animation.valid) return 22;
+    for (auto value : {L"--animation-runtime=", L"--animation-runtime=auto", L"--animation-runtime=ZiiNAN"}) {
+        StartupOptions bad; bad.ParseArgument(value); if (bad.valid) return 23;
+    }
     if(StartupOptions{}.diagnostics != defaultVerboseDiagnostics) return 18;
     StartupOptions diagnostics; diagnostics.ParseArgument(L"--renderer-diagnostics");
     if(!diagnostics.valid || !diagnostics.diagnostics || diagnostics.selected || diagnostics.skinningSelected) return 19;

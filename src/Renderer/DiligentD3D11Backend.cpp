@@ -1,5 +1,6 @@
 #include "DiligentD3D11BackendInternal.h"
 #include "TerrainPresentation.h"
+#include "AssetRuntime/AnimationStallAudit.h"
 #include "Graphics/GraphicsEngineD3D11/interface/EngineFactoryD3D11.h"
 #include "Graphics/GraphicsEngine/interface/Texture.h"
 
@@ -125,7 +126,10 @@ void DiligentD3D11Backend::Present()
     if (m_impl && !m_impl->suspended && !m_impl->inFrame)
     {
         const auto start=skinningBenchmarkEnabled ? PrototypeClock::now() : PrototypeClock::time_point{};
+        AssetRuntime::AnimationStallAudit::WorkScope stallPresentWait(AssetRuntime::AnimationStallAudit::Work::PresentWait);
         m_impl->swapChain->Present(1);
+        stallPresentWait.Stop();
+        if (AssetRuntime::AnimationStallAudit::enabled) ++AssetRuntime::AnimationStallAudit::swapchainPresents;
         if(skinningBenchmarkEnabled) {
             skinningBenchmarkCurrent.presentUs+=PrototypeMicroseconds(start);
             m_impl->CollectTimings();

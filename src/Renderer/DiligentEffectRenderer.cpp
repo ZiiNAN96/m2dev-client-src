@@ -1,6 +1,7 @@
 // ZiiNAN: Diligent effect rendering integration; original CPU vertices and deterministic material binds.
 #include "DiligentEffectRenderer.h"
 #include "DiligentD3D11BackendInternal.h"
+#include "Diagnostics.h"
 #include "Graphics/GraphicsEngine/interface/Buffer.h"
 #include "Graphics/GraphicsEngine/interface/PipelineState.h"
 #include "Graphics/GraphicsEngine/interface/Shader.h"
@@ -125,12 +126,19 @@ struct DiligentEffectRenderer::Impl
     std::array<uint32_t,5> draws{};
     uint64_t vertexCount=0,bytes=0,capacity=0;
     bool failed=false;
+    // Failure-only diagnostic: retain the original sticky failure state and draw behavior.
+    void Fail(const char* reason, int line) noexcept
+    {
+        const bool first = !failed;
+        failed = true;
+        if (first) LogRendererFailure("DiligentEffectRenderer.cpp", this, reason, line);
+    }
     explicit Impl(DiligentD3D11Backend& b):backend(b) {}
 };
 DiligentEffectRenderer::DiligentEffectRenderer(DiligentD3D11Backend& b):m_impl(std::make_unique<Impl>(b)) {}
 DiligentEffectRenderer::~DiligentEffectRenderer() { Shutdown(); }
 bool DiligentEffectRenderer::Failed() const { return m_impl->failed; }
-void DiligentEffectRenderer::ReportFailure() { m_impl->failed=true; }
+void DiligentEffectRenderer::ReportFailure() { m_impl->Fail("bridge or wrapper rejected source or legacy state", __LINE__); }
 uint32_t DiligentEffectRenderer::DrawCount(EffectPart p) const { return m_impl->draws.at(uint32_t(p)); }
 uint64_t DiligentEffectRenderer::Vertices() const { return m_impl->vertexCount; }
 uint64_t DiligentEffectRenderer::UploadBytes() const { return m_impl->bytes; }
@@ -168,15 +176,15 @@ bool DiligentEffectRenderer::Initialize()
         shader.Desc.Name="Native effect texture factor alpha fog"; shader.Desc.ShaderType=SHADER_TYPE_PIXEL; shader.EntryPoint="PS";
         s.backend.m_impl->device->CreateShader(shader,&s.ps);
         return s.constants && s.vs && s.ps;
-    } catch(...) { s.failed=true; return false; }
+    } catch(...) { s.Fail("initialization exception", __LINE__); return false; }
 }
 TerrainTexturePtr DiligentEffectRenderer::UploadTexture(const TerrainTextureData& data)
 {
     // Reuse the existing decoded-image/mip contract, no effect-specific file decoder.
-    auto& s=*m_impl; const auto fail=[&]() -> TerrainTexturePtr { s.failed=true; return {}; };
-    if(!s.backend.m_impl || !data.width || !data.height || data.width>8192 || data.height>8192 || data.mips.empty()) return fail();
+    auto& s=*m_impl; const auto fail=[&](int line) -> TerrainTexturePtr { s.Fail("texture upload rejected image, mip layout or GPU resource", line); return {}; };
+    if(!s.backend.m_impl || !data.width || !data.height || data.width>8192 || data.height>8192 || data.mips.empty()) return fail(__LINE__);
     uint32_t maximum=1; for(auto d=std::max(data.width,data.height);d>1;d>>=1) ++maximum;
-    if(data.mips.size()>maximum) return fail();
+    if(data.mips.size()>maximum) return fail(__LINE__);
     TEXTURE_FORMAT format=TEX_FORMAT_UNKNOWN; uint32_t block=0,bytes=4;
     switch(data.format) {
     case TerrainTextureFormat::RGBA8: format=TEX_FORMAT_RGBA8_UNORM; break;
@@ -186,13 +194,13 @@ TerrainTexturePtr DiligentEffectRenderer::UploadTexture(const TerrainTextureData
     case TerrainTextureFormat::BC2: format=TEX_FORMAT_BC2_UNORM; block=16; break;
     case TerrainTextureFormat::BC3: format=TEX_FORMAT_BC3_UNORM; block=16; break;
     case TerrainTextureFormat::B5G5R5A1: format=TEX_FORMAT_B5G5R5A1_UNORM; bytes=2; break;
-    default:return fail();
+    default:return fail(__LINE__);
     }
     try {
         std::vector<TextureSubResData> mips; auto w=data.width,h=data.height;
         for(const auto& mip:data.mips) {
             const size_t row=block ? size_t((w+3)/4)*block : size_t(w)*bytes,rows=block ? (h+3)/4 : h;
-            if(!mip.data || mip.rowStride<row || mip.size<row || (rows-1)>(mip.size-row)/mip.rowStride) return fail();
+            if(!mip.data || mip.rowStride<row || mip.size<row || (rows-1)>(mip.size-row)/mip.rowStride) return fail(__LINE__);
             TextureSubResData sub; sub.pData=mip.data; sub.Stride=mip.rowStride; mips.push_back(sub);
             w=std::max(1u,w>>1); h=std::max(1u,h>>1);
         }
@@ -201,8 +209,8 @@ TerrainTexturePtr DiligentEffectRenderer::UploadTexture(const TerrainTextureData
         desc.Width=data.width; desc.Height=data.height; desc.MipLevels=uint32_t(mips.size());
         desc.Format=format; desc.Usage=USAGE_IMMUTABLE; desc.BindFlags=BIND_SHADER_RESOURCE;
         TextureData initial{mips.data(),desc.MipLevels}; s.backend.m_impl->device->CreateTexture(desc,&initial,&texture->image);
-        if(!texture->image) return fail(); texture->counts=s.counts; ++s.counts->textures; return texture;
-    } catch(...) { return fail(); }
+        if(!texture->image) return fail(__LINE__); texture->counts=s.counts; ++s.counts->textures; return texture;
+    } catch(...) { return fail(__LINE__); }
 }
 void DiligentEffectRenderer::Draw(const EffectVertex* vertices,uint32_t count,const TerrainTexturePtr& image,const EffectDraw& d,EffectPart part)
 {
@@ -210,10 +218,17 @@ void DiligentEffectRenderer::Draw(const EffectVertex* vertices,uint32_t count,co
     auto secondary=std::dynamic_pointer_cast<Texture>(d.secondaryTexture);
     if(!s.backend.m_impl || !s.backend.m_impl->inFrame || !s.constants || !vertices || count>UINT32_MAX/sizeof(UploadVertex) ||
        !EffectDrawValid(d,count) || uint32_t(part)>=s.draws.size() || (d.textured && !texture) ||
-       (texture && texture->counts!=s.counts) || (d.secondaryTexture && (!secondary || secondary->counts!=s.counts))) { s.failed=true; return; }
+       (texture && texture->counts!=s.counts) || (d.secondaryTexture && (!secondary || secondary->counts!=s.counts))) {
+        s.Fail(!s.backend.m_impl ? "missing effect backend" : !s.backend.m_impl->inFrame ? "effect submitted outside backend frame" :
+            !s.constants ? "missing effect constants buffer" : !vertices ? "missing effect vertices" :
+            count>UINT32_MAX/sizeof(UploadVertex) ? "effect vertex upload size overflow" : !EffectDrawValid(d,count) ? "invalid effect material or primitive state" :
+            uint32_t(part)>=s.draws.size() ? "invalid effect part" : (d.textured && !texture) ? "missing effect texture" :
+            (texture && texture->counts!=s.counts) ? "effect texture owner mismatch" : "effect secondary texture type or owner mismatch", __LINE__);
+        return;
+    }
     for(uint32_t i=0;i<count;++i) {
-        for(float f:vertices[i].position) if(!std::isfinite(f)) { s.failed=true; return; }
-        for(float f:vertices[i].uv) if(!std::isfinite(f)) { s.failed=true; return; }
+        for(float f:vertices[i].position) if(!std::isfinite(f)) { s.Fail("non-finite effect vertex position", __LINE__); return; }
+        for(float f:vertices[i].uv) if(!std::isfinite(f)) { s.Fail("non-finite effect vertex UV", __LINE__); return; }
     }
     try {
         auto& b=*s.backend.m_impl;
@@ -222,7 +237,7 @@ void DiligentEffectRenderer::Draw(const EffectVertex* vertices,uint32_t count,co
         // Original magmabublea.mse uses destination 13; original renderer readback matches INVSRCALPHA.
         // Unlike a source BOTH value, it does not override the other factor. Covered by GPU parity.
         else if(dst==13) dst=6;
-        if(dst>11) { s.failed=true; return; }
+        if(dst>11) { s.Fail("unsupported destination blend factor", __LINE__); return; }
         const uint64_t key=uint64_t(d.strip)|(uint64_t(d.blend)<<1)|(uint64_t(d.depthTest)<<2)|(uint64_t(d.depthWrite)<<3)|
             (uint64_t(d.cull)<<4)|(uint64_t(d.depthFunction)<<6)|(uint64_t(src)<<10)|(uint64_t(dst)<<14)|
             (uint64_t(d.blendOp)<<18)|(uint64_t(d.opaqueTargetAlpha)<<21)|(uint64_t(d.lines)<<22)|(uint64_t(d.scissor)<<23)|
@@ -250,9 +265,9 @@ void DiligentEffectRenderer::Draw(const EffectVertex* vertices,uint32_t count,co
             blend.BlendOp=blend.BlendOpAlpha=BLEND_OPERATION(d.blendOp);
             LayoutElement layout[]={{0,0,3,VT_FLOAT32,False,0,32},{1,0,4,VT_UINT8,True,12,32},{2,0,2,VT_FLOAT32,False,16,32},{3,0,2,VT_FLOAT32,False,24,32}};
             g.InputLayout.LayoutElements=layout; g.InputLayout.NumElements=4; info.pVS=s.vs; info.pPS=s.ps;
-            b.device->CreateGraphicsPipelineState(info,&p.state); if(!p.state) { s.failed=true; return; }
+            b.device->CreateGraphicsPipelineState(info,&p.state); if(!p.state) { s.Fail("effect pipeline creation failed", __LINE__); return; }
             for(auto stage:{SHADER_TYPE_VERTEX,SHADER_TYPE_PIXEL}) if(auto* v=p.state->GetStaticVariableByName(stage,"EffectConstants")) v->Set(s.constants);
-            p.state->CreateShaderResourceBinding(&p.bindings,true); if(!p.bindings) { s.failed=true; return; }
+            p.state->CreateShaderResourceBinding(&p.bindings,true); if(!p.bindings) { s.Fail("effect shader resource binding creation failed", __LINE__); return; }
         }
         const auto getSampler=[&](const EffectSampler& sampling) -> ISampler* {
         auto& sampler=s.samplers[sampling];
@@ -271,21 +286,21 @@ void DiligentEffectRenderer::Draw(const EffectVertex* vertices,uint32_t count,co
         return sampler;
         };
         auto* sampler=getSampler(d.sampler); auto* secondarySampler=getSampler(d.secondarySampler);
-        if(!sampler || !secondarySampler) { s.failed=true; return; }
+        if(!sampler || !secondarySampler) { s.Fail("effect sampler creation failed", __LINE__); return; }
         const uint64_t bytes=uint64_t(count)*sizeof(UploadVertex);
         if(bytes>s.capacity) {
             s.vertices.Release(); s.capacity=std::max<uint64_t>(4096,bytes);
             BufferDesc desc; desc.Name="CPU effect DISCARD upload"; desc.Size=s.capacity; desc.Usage=USAGE_DYNAMIC;
             desc.BindFlags=BIND_VERTEX_BUFFER; desc.CPUAccessFlags=CPU_ACCESS_WRITE;
-            b.device->CreateBuffer(desc,nullptr,&s.vertices); if(!s.vertices) { s.capacity=0; s.failed=true; return; }
+            b.device->CreateBuffer(desc,nullptr,&s.vertices); if(!s.vertices) { s.capacity=0; s.Fail("effect vertex buffer creation failed", __LINE__); return; }
         }
         { MapHelper<UploadVertex> mapped(b.context,s.vertices,MAP_WRITE,MAP_FLAG_DISCARD);
-          if(!mapped) { s.failed=true; return; }
+          if(!mapped) { s.Fail("effect vertex buffer map failed", __LINE__); return; }
           for(uint32_t i=0;i<count;++i) { mapped[i].base=vertices[i]; mapped[i].secondaryUV=d.secondaryUV.empty() ? vertices[i].uv : d.secondaryUV[i]; }
         }
         {
             MapHelper<Constants> mapped(b.context,s.constants,MAP_WRITE,MAP_FLAG_DISCARD);
-            if(!mapped) { s.failed=true; return; }
+            if(!mapped) { s.Fail("effect constants buffer map failed", __LINE__); return; }
             mapped->matrices=d.matrices; mapped->textureTransform=d.textureTransform; mapped->factor=d.factor;
             mapped->fogColor=d.fogColor; mapped->fogParameters=d.fogParameters;
             const auto& swap=b.swapChain->GetDesc();
@@ -321,6 +336,6 @@ void DiligentEffectRenderer::Draw(const EffectVertex* vertices,uint32_t count,co
         b.context->CommitShaderResources(p.bindings,RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
         b.context->Draw(DrawAttribs{count,DRAW_FLAG_VERIFY_ALL});
         ++s.draws[uint32_t(part)]; s.vertexCount+=count; s.bytes+=bytes;
-    } catch(...) { s.failed=true; }
+    } catch(...) { s.Fail("effect draw exception", __LINE__); }
 }
 }

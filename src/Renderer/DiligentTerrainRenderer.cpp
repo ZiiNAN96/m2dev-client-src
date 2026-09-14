@@ -1,5 +1,6 @@
 #include "DiligentTerrainRenderer.h"
 #include "DiligentD3D11BackendInternal.h"
+#include "Diagnostics.h"
 #include "Graphics/GraphicsEngine/interface/Buffer.h"
 #include "Graphics/GraphicsEngine/interface/PipelineState.h"
 #include "Graphics/GraphicsEngine/interface/Shader.h"
@@ -143,6 +144,12 @@ struct DiligentTerrainRenderer::Impl
     uint32_t texturedDraws = 0;
     uint32_t splatDraws = 0;
     std::shared_ptr<TextureCounters> textureCounters = std::make_shared<TextureCounters>();
+    // Failure-only diagnostic: retain the original sticky failure state and draw behavior.
+    void Fail(const char* reason, int line) noexcept
+    {
+        const bool first = !failed.exchange(true);
+        if (first) LogRendererFailure("DiligentTerrainRenderer.cpp", this, reason, line);
+    }
     explicit Impl(DiligentD3D11Backend& value) : backend(value) {}
 };
 DiligentTerrainRenderer::DiligentTerrainRenderer(DiligentD3D11Backend& backend) : m_impl(std::make_unique<Impl>(backend)) {}
@@ -289,7 +296,7 @@ bool DiligentTerrainRenderer::Initialize()
         }
         return true;
     }
-    catch (...) { s.failed = true; return false; }
+    catch (...) { s.Fail("initialization exception", __LINE__); return false; }
 }
 void DiligentTerrainRenderer::ResetFrame() { m_impl->hasTerrain = false; m_impl->draws = m_impl->texturedDraws = m_impl->splatDraws = 0; }
 bool DiligentTerrainRenderer::HasTerrain() const { return m_impl->hasTerrain; }
@@ -306,7 +313,7 @@ std::array<uint32_t,3> DiligentTerrainRenderer::LastTextureSize() const { return
 TerrainBufferPtr DiligentTerrainRenderer::UploadVertices(const void* data, uint32_t count, uint32_t stride)
 {
     auto& s = *m_impl;
-    if (!data || count != 289 || stride != 24 || !s.backend.m_impl) { s.failed = true; return {}; }
+    if (!data || count != 289 || stride != 24 || !s.backend.m_impl) { s.Fail("invalid terrain vertex buffer input or backend", __LINE__); return {}; }
     try
     {
         auto result = std::make_shared<GeometryBuffer>();
@@ -322,15 +329,15 @@ TerrainBufferPtr DiligentTerrainRenderer::UploadVertices(const void* data, uint3
         if (result->buffer) return result;
     }
     catch (...) {}
-    s.failed = true;
+    s.Fail("vertex buffer creation failed or threw", __LINE__);
     return {};
 }
 TerrainBufferPtr DiligentTerrainRenderer::UploadIndices(const uint16_t* data, uint32_t count)
 {
     auto& s = *m_impl;
-    if (!data || !count || !s.backend.m_impl) { s.failed = true; return {}; }
+    if (!data || !count || !s.backend.m_impl) { s.Fail("invalid terrain index input or backend", __LINE__); return {}; }
     for (uint32_t i = 0; i < count; ++i)
-        if (data[i] >= 289) { s.failed = true; return {}; }
+        if (data[i] >= 289) { s.Fail("terrain index exceeds patch vertex count", __LINE__); return {}; }
     try
     {
         auto result = std::make_shared<GeometryBuffer>();
@@ -346,18 +353,18 @@ TerrainBufferPtr DiligentTerrainRenderer::UploadIndices(const uint16_t* data, ui
         if (result->buffer) return result;
     }
     catch (...) {}
-    s.failed = true;
+    s.Fail("index buffer creation failed or threw", __LINE__);
     return {};
 }
 TerrainTexturePtr DiligentTerrainRenderer::UploadTexture(const TerrainTextureData& data)
 {
     auto& s = *m_impl;
-    const auto fail = [&]() -> TerrainTexturePtr { s.failed = true; return {}; };
+    const auto fail = [&](int line) -> TerrainTexturePtr { s.Fail("texture upload rejected image, mip layout or GPU resource", line); return {}; };
     if (!s.backend.m_impl || !s.texturedPipelines[0] || !s.texturedPipelines[1] ||
-        !data.width || !data.height || data.width > 8192 || data.height > 8192 || data.mips.empty()) return fail();
+        !data.width || !data.height || data.width > 8192 || data.height > 8192 || data.mips.empty()) return fail(__LINE__);
     uint32_t maxMips = 1;
     for (uint32_t size=std::max(data.width,data.height); size>1; size>>=1) ++maxMips;
-    if (data.mips.size() > maxMips) return fail();
+    if (data.mips.size() > maxMips) return fail(__LINE__);
     TEXTURE_FORMAT format = TEX_FORMAT_UNKNOWN;
     uint32_t blockSize = 0;
     switch (data.format)
@@ -369,7 +376,7 @@ TerrainTexturePtr DiligentTerrainRenderer::UploadTexture(const TerrainTextureDat
     case TerrainTextureFormat::BC1: format = TEX_FORMAT_BC1_UNORM; blockSize=8; break;
     case TerrainTextureFormat::BC2: format = TEX_FORMAT_BC2_UNORM; blockSize=16; break;
     case TerrainTextureFormat::BC3: format = TEX_FORMAT_BC3_UNORM; blockSize=16; break;
-    default: return fail();
+    default: return fail(__LINE__);
     }
     try
     {
@@ -381,7 +388,7 @@ TerrainTexturePtr DiligentTerrainRenderer::UploadTexture(const TerrainTextureDat
             const size_t rows = blockSize ? (height+3)/4 : height;
             // Validate without overflowing user-supplied stride/size arithmetic.
             if (!mip.data || mip.rowStride < rowBytes || mip.size < rowBytes ||
-                (rows-1) > (mip.size-rowBytes)/mip.rowStride) return fail();
+                (rows-1) > (mip.size-rowBytes)/mip.rowStride) return fail(__LINE__);
             TextureSubResData subresource;
             subresource.pData = mip.data;
             subresource.Stride = mip.rowStride;
@@ -396,16 +403,16 @@ TerrainTexturePtr DiligentTerrainRenderer::UploadTexture(const TerrainTextureDat
         desc.Usage=USAGE_IMMUTABLE; desc.BindFlags=BIND_SHADER_RESOURCE;
         TextureData initial{mips.data(),static_cast<uint32_t>(mips.size())};
         s.backend.m_impl->device->CreateTexture(desc,&initial,&resource->texture);
-        if (!resource->texture) return fail();
+        if (!resource->texture) return fail(__LINE__);
         auto* view=resource->texture->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE);
-        if (!view) return fail();
+        if (!view) return fail(__LINE__);
         resource->isAlpha=data.format==TerrainTextureFormat::Alpha8;
         for (int strip=0;!resource->isAlpha && strip<2;++strip)
         {
             s.texturedPipelines[strip]->CreateShaderResourceBinding(&resource->bindings[strip],true);
-            if (!resource->bindings[strip]) return fail();
+            if (!resource->bindings[strip]) return fail(__LINE__);
             auto* variable=resource->bindings[strip]->GetVariableByName(SHADER_TYPE_PIXEL,"TerrainTexture");
-            if (!variable) return fail();
+            if (!variable) return fail(__LINE__);
             variable->Set(view);
         }
         resource->counters=s.textureCounters;
@@ -414,7 +421,7 @@ TerrainTexturePtr DiligentTerrainRenderer::UploadTexture(const TerrainTextureDat
         s.textureCounters->lastSize={data.width,data.height,static_cast<uint32_t>(mips.size())};
         return resource;
     }
-    catch (...) { return fail(); }
+    catch (...) { return fail(__LINE__); }
 }
 void DiligentTerrainRenderer::ReleaseTexture(TerrainTexturePtr& texture)
 {
@@ -439,11 +446,12 @@ void DiligentTerrainRenderer::BeginTerrain(const TerrainMatrices& matrices, bool
 {
     auto& s = *m_impl;
     if (!statesMatch || !s.backend.m_impl || !s.backend.m_impl->inFrame || !s.camera)
-    { s.failed = true; return; }
+    { s.Fail(!statesMatch ? "legacy terrain state mismatch" : !s.backend.m_impl ? "missing terrain backend" :
+        !s.backend.m_impl->inFrame ? "terrain submitted outside backend frame" : "missing terrain camera buffer", __LINE__); return; }
     try
     {
         MapHelper<TerrainConstants> mapped(s.backend.m_impl->context, s.camera, MAP_WRITE, MAP_FLAG_DISCARD);
-        if (!mapped) { s.failed = true; return; }
+        if (!mapped) { s.Fail("terrain camera buffer map failed", __LINE__); return; }
         s.matrices = matrices;
         // Preserve original integer pixel centers on the D3D11 half-integer raster.
         // Shift clip XY by (+1/width, -1/height)*clipW; UV/world/view data stay exact.
@@ -458,7 +466,7 @@ void DiligentTerrainRenderer::BeginTerrain(const TerrainMatrices& matrices, bool
         mapped->solidColor = {0.72f,0.82f,0.38f,1};
         s.hasTerrain = true;
     }
-    catch (...) { s.failed = true; }
+    catch (...) { s.Fail("terrain camera update exception", __LINE__); }
 }
 void DiligentTerrainRenderer::DrawTerrain(const TerrainBufferPtr& vertices, const TerrainBufferPtr& indices,
                                          uint32_t count, bool strip, const TerrainTexturePtr& texture)
@@ -470,7 +478,7 @@ void DiligentTerrainRenderer::DrawTerrain(const TerrainBufferPtr& vertices, cons
     if (s.failed) return;
     if (!s.hasTerrain || !vb || !ib || vb->bind != BIND_VERTEX_BUFFER || ib->bind != BIND_INDEX_BUFFER ||
         count != ib->count || (strip ? count < 3 : count % 3 != 0) || (texture && !material))
-    { s.failed = true; return; }
+    { s.Fail("terrain geometry, texture or index count validation failed", __LINE__); return; }
     try
     {
         auto* context = s.backend.m_impl->context.RawPtr();
@@ -485,7 +493,7 @@ void DiligentTerrainRenderer::DrawTerrain(const TerrainBufferPtr& vertices, cons
         ++s.draws;
         if (material) ++s.texturedDraws;
     }
-    catch (...) { s.failed = true; }
+    catch (...) { s.Fail("terrain draw exception", __LINE__); }
 }
 
 TerrainSplatMaterialPtr DiligentTerrainRenderer::CreateSplatMaterial(const TerrainTexturePtr& color, const TerrainTexturePtr& alpha)
@@ -496,18 +504,18 @@ TerrainSplatMaterialPtr DiligentTerrainRenderer::CreateSplatMaterial(const Terra
     material->alpha=std::dynamic_pointer_cast<TextureResource>(alpha);
     if(!material->color || !material->alpha || material->color->isAlpha || !material->alpha->isAlpha ||
        material->color->counters!=s.textureCounters || material->alpha->counters!=s.textureCounters)
-    { s.failed=true; return {}; }
+    { s.Fail("splat color/alpha texture type or ownership mismatch", __LINE__); return {}; }
     try
     {
         for(int index=0;index<4;++index)
         {
-            if(!s.splatPipelines[index]) { s.failed=true; return {}; }
+            if(!s.splatPipelines[index]) { s.Fail("missing splat pipeline", __LINE__); return {}; }
             auto& binding=material->bindings[index];
             s.splatPipelines[index]->CreateShaderResourceBinding(&binding,true);
-            if(!binding) { s.failed=true; return {}; }
+            if(!binding) { s.Fail("splat shader resource binding creation failed", __LINE__); return {}; }
             auto* colorVariable=binding->GetVariableByName(SHADER_TYPE_PIXEL,"ColorTexture");
             auto* alphaVariable=binding->GetVariableByName(SHADER_TYPE_PIXEL,"AlphaTexture");
-            if(!colorVariable || !alphaVariable) { s.failed=true; return {}; }
+            if(!colorVariable || !alphaVariable) { s.Fail("missing splat texture shader variable", __LINE__); return {}; }
             colorVariable->Set(material->color->texture->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE));
             alphaVariable->Set(material->alpha->texture->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE));
         }
@@ -515,7 +523,7 @@ TerrainSplatMaterialPtr DiligentTerrainRenderer::CreateSplatMaterial(const Terra
         ++s.textureCounters->materials;
         return material;
     }
-    catch(...) { s.failed=true; return {}; }
+    catch(...) { s.Fail("splat material creation exception", __LINE__); return {}; }
 }
 
 void DiligentTerrainRenderer::ReleaseSplatMaterial(TerrainSplatMaterialPtr& material)
@@ -539,14 +547,14 @@ void DiligentTerrainRenderer::SetSplatVertices(const TerrainSplatVertex* vertice
     auto& s=*m_impl;
     s.vertexAttributes=vertices!=nullptr;
     if(!vertices && !count) return;
-    if(!vertices || count!=289 || !s.backend.m_impl || !s.dynamicVertices) { s.failed=true; return; }
+    if(!vertices || count!=289 || !s.backend.m_impl || !s.dynamicVertices) { s.Fail("splat vertex input or buffer validation failed", __LINE__); return; }
     try
     {
         MapHelper<TerrainSplatVertex> mapped(s.backend.m_impl->context,s.dynamicVertices,MAP_WRITE,MAP_FLAG_DISCARD);
-        if(!mapped) { s.failed=true; return; }
+        if(!mapped) { s.Fail("splat vertex buffer map failed", __LINE__); return; }
         memcpy(mapped,vertices,count*sizeof(*vertices));
     }
-    catch(...) { s.failed=true; }
+    catch(...) { s.Fail("splat vertex upload exception", __LINE__); }
 }
 
 void DiligentTerrainRenderer::DrawSplat(const TerrainBufferPtr& vertices, const TerrainBufferPtr& indices,
@@ -561,7 +569,16 @@ void DiligentTerrainRenderer::DrawSplat(const TerrainBufferPtr& vertices, const 
        ib->bind!=BIND_INDEX_BUFFER || count!=ib->count || (strip ? count<3 : count%3!=0) ||
        params.alphaReference < -1 || params.alphaReference>255 || params.vertexUV!=s.vertexAttributes ||
        (params.fog==TerrainFog::Linear && params.fogStart>=params.fogEnd))
-    { s.failed=true; return; }
+    {
+        s.Fail(!s.hasTerrain ? "splat submitted without terrain camera" : !s.backend.m_impl ? "missing splat backend" :
+            !s.backend.m_impl->inFrame ? "splat submitted outside backend frame" : !material ? "missing splat material" :
+            material->counters!=s.textureCounters ? "splat material owner mismatch" : (!vb || !ib) ? "missing splat geometry" :
+            (vb->bind!=BIND_VERTEX_BUFFER || ib->bind!=BIND_INDEX_BUFFER) ? "splat geometry bind type mismatch" :
+            (count!=ib->count || (strip ? count<3 : count%3!=0)) ? "splat index count mismatch" :
+            (params.alphaReference < -1 || params.alphaReference>255) ? "splat alpha reference out of range" :
+            params.vertexUV!=s.vertexAttributes ? "splat vertex UV state mismatch" : "splat linear fog start is not before end", __LINE__);
+        return;
+    }
     try
     {
         const auto setSampler=[&](const TerrainSampling& sampling, TerrainSampling& previous,
@@ -589,11 +606,11 @@ void DiligentTerrainRenderer::DrawSplat(const TerrainBufferPtr& vertices, const 
         };
         if(!setSampler(params.colorSampling,material->colorSampling,material->colorSampler,"ColorSampler") ||
            !setSampler(params.alphaSampling,material->alphaSampling,material->alphaSampler,"AlphaSampler"))
-        { s.failed=true; return; }
+        { s.Fail("splat sampler creation or shader variable lookup failed", __LINE__); return; }
         auto* context=s.backend.m_impl->context.RawPtr();
         {
             MapHelper<SplatConstants> constants(context,s.splatConstants,MAP_WRITE,MAP_FLAG_DISCARD);
-            if(!constants) { s.failed=true; return; }
+            if(!constants) { s.Fail("splat constants buffer map failed", __LINE__); return; }
             constants->matrices=s.matrices;
             constants->colorTransform=params.colorTransform; constants->alphaTransform=params.alphaTransform;
             constants->textureFactor=params.textureFactor; constants->fogColor=params.fogColor;
@@ -611,23 +628,23 @@ void DiligentTerrainRenderer::DrawSplat(const TerrainBufferPtr& vertices, const 
         context->DrawIndexed(DrawIndexedAttribs{count,VT_UINT16,DRAW_FLAG_VERIFY_ALL});
         ++s.draws; ++s.texturedDraws; ++s.splatDraws;
     }
-    catch(...) { s.failed=true; }
+    catch(...) { s.Fail("splat draw exception", __LINE__); }
 }
 
 void DiligentTerrainRenderer::DrawTerrainSolid(const TerrainBufferPtr& vertices, const TerrainBufferPtr& indices,
     uint32_t count, bool strip, const std::array<float,4>& color)
 {
     auto& s=*m_impl;
-    if(!s.hasTerrain || !s.backend.m_impl || !s.backend.m_impl->inFrame) { s.failed=true; return; }
+    if(!s.hasTerrain || !s.backend.m_impl || !s.backend.m_impl->inFrame) { s.Fail("solid terrain draw outside terrain frame", __LINE__); return; }
     try
     {
         {
             MapHelper<TerrainConstants> constants(s.backend.m_impl->context,s.camera,MAP_WRITE,MAP_FLAG_DISCARD);
-            if(!constants) { s.failed=true; return; }
+            if(!constants) { s.Fail("solid terrain constants buffer map failed", __LINE__); return; }
             constants->matrices=s.matrices; constants->textureTransform={}; constants->solidColor=color;
         }
         DrawTerrain(vertices,indices,count,strip);
     }
-    catch(...) { s.failed=true; }
+    catch(...) { s.Fail("solid terrain draw exception", __LINE__); }
 }
 }

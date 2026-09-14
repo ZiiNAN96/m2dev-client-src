@@ -3,6 +3,7 @@
 #include <string_view>
 #include "GpuSkinningPrototype.h"
 #include "Diagnostics.h"
+#include "AssetRuntime/AnimationRuntimeMode.h"
 
 namespace Renderer
 {
@@ -19,9 +20,20 @@ struct StartupOptions
     PrototypeSkinningMode skinning=defaultStartupSkinningMode;
     bool skinningSelected=false;
     bool diagnostics=defaultVerboseDiagnostics;
+    AssetRuntime::AnimationRuntimeMode animationRuntime=AssetRuntime::AnimationRuntimeMode::Granny;
+    bool animationRuntimeSelected=false;
+    bool animationStallAudit=false;
 
     void ParseArgument(std::wstring_view argument)
     {
+        if (argument == L"--animation-stall-audit") { animationStallAudit=true; return; }
+        if (argument.starts_with(L"--animation-runtime=")) {
+            const auto value=argument.substr(20);
+            if (value!=L"granny" && value!=L"ziinan") { valid=false; return; }
+            const auto requested=value==L"ziinan" ? AssetRuntime::AnimationRuntimeMode::ZiiNAN : AssetRuntime::AnimationRuntimeMode::Granny;
+            if (animationRuntimeSelected && requested!=animationRuntime) valid=false;
+            animationRuntime=requested; animationRuntimeSelected=true; return;
+        }
         if (argument == L"--renderer-diagnostics") { diagnostics = true; return; }
         // ZiiNAN: GPU skinning production path — old CLI spelling is an explicit compatibility alias.
         if(argument.starts_with(L"--skinning=")) {

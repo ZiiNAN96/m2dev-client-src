@@ -10,6 +10,7 @@
 #include "PythonCharacterManager.h"
 #include "Renderer/ActorRenderData.h"
 #include "Renderer/SkinningBenchmark.h"
+#include "Renderer/AnimationStallFrame.h"
 #include "Renderer/TreeRenderData.h"
 #include "Renderer/WorldRenderData.h"
 #include "Renderer/UIRenderData.h"
@@ -282,6 +283,9 @@ void CPythonApplication::UpdateGame()
 
 bool CPythonApplication::Process()
 {
+    Renderer::AnimationStallFrame stallFrame(
+        AssetRuntime::AnimationStallAudit::enabled && m_pyNetworkStream.IsGamePhaseForDiagnostics(),
+        m_isMinimizedWnd != 0, m_isActivateWnd != 0);
     // ZiiNAN: GPU skinning production path — no timers or capture in ordinary sessions.
     Renderer::SkinningBenchmarkProcessScope benchmarkProcess;
 	ELTimer_SetFrameMSec();
@@ -325,6 +329,7 @@ bool CPythonApplication::Process()
 	s_uiNextFrameTime += uiFrameTime;	//17 - 1ÃÊ´ç 60fps±âÁØ.
 
 	DWORD updatestart = ELTimer_GetMSec();
+    AssetRuntime::AnimationStallAudit::WorkScope stallUpdate(AssetRuntime::AnimationStallAudit::Work::Update);
 #ifdef __PERFORMANCE_CHECK__
 	DWORD dwUpdateTime2=ELTimer_GetMSec();
 #endif
@@ -376,6 +381,7 @@ bool CPythonApplication::Process()
 	DWORD dwUpdateTime9=ELTimer_GetMSec();
 #endif
 	OnUIUpdate();
+    stallUpdate.Stop();
 
 #ifdef __PERFORMANCE_CHECK__		
 	DWORD dwUpdateTime10=ELTimer_GetMSec();
@@ -467,6 +473,7 @@ bool CPythonApplication::Process()
 
 		if (canRender) [[likely]]
 		{
+            AssetRuntime::AnimationStallAudit::WorkScope stallSubmission(AssetRuntime::AnimationStallAudit::Work::Submission);
 			// RestoreLostDevice
 			CCullingManager::Instance().Update();
 			if (m_terrainPresentation) [[likely]] {
@@ -491,6 +498,8 @@ bool CPythonApplication::Process()
 				m_pyGraphic.End();
 
 				//DWORD t1 = ELTimer_GetMSec();
+                stallSubmission.Stop();
+                AssetRuntime::AnimationStallAudit::WorkScope stallPresentation(AssetRuntime::AnimationStallAudit::Work::Presentation);
 				if (m_terrainPresentation && !m_terrainPresentation->Present())
 				{
 					TraceError("Diligent terrain rendering failed (resource, camera or legacy state mismatch)");
@@ -499,6 +508,8 @@ bool CPythonApplication::Process()
 					return false;
 				}
 				//DWORD t2 = ELTimer_GetMSec();
+                stallPresentation.Stop();
+                stallFrame.Presented();
 
 
 				DWORD dwRenderEndTime = ELTimer_GetMSec();
@@ -568,6 +579,7 @@ bool CPythonApplication::Process()
 	if (rest > 0 && !bCurrentLateUpdate )
 	{
 		s_uiLoad -= rest;	// ½® ½Ã°£Àº ·Îµå¿¡¼­ »«´Ù..
+        AssetRuntime::AnimationStallAudit::WorkScope stallSleep(AssetRuntime::AnimationStallAudit::Work::Sleep);
 		Platform::Time::SleepMilliseconds(static_cast<std::uint32_t>(rest));
 	}	
 

@@ -2,6 +2,7 @@
 #include "GpuSkinningShader.h"
 #include "ActorRenderData.h"
 #include "DiligentD3D11BackendInternal.h"
+#include "Diagnostics.h"
 #include "Graphics/GraphicsEngine/interface/Buffer.h"
 #include "Graphics/GraphicsEngine/interface/PipelineState.h"
 #include "Graphics/GraphicsEngine/interface/Shader.h"
@@ -170,6 +171,13 @@ struct DiligentStaticObjectRenderer::Impl
     std::vector<std::weak_ptr<SkinPoseBuffer>> skinPoses;
     uint32_t draws=0;
     bool failed=false;
+    // Failure-only diagnostic: retain the original sticky failure state and draw behavior.
+    void Fail(const char* reason, int line) noexcept
+    {
+        const bool first = !failed;
+        failed = true;
+        if (first) LogRendererFailure("DiligentStaticObjectRenderer.cpp", this, reason, line);
+    }
     explicit Impl(DiligentD3D11Backend& b):backend(b) {}
 };
 DiligentStaticObjectRenderer::DiligentStaticObjectRenderer(DiligentD3D11Backend& b):m_impl(std::make_unique<Impl>(b)) {}
@@ -247,7 +255,7 @@ Output SkinningVS(float3 position:ATTRIB0, float3 normal:ATTRIB1, float2 uv:ATTR
                 if(auto* variable=pipeline->GetStaticVariableByName(stage,"ObjectConstants")) variable->Set(s.constants);
         }
         return true;
-    } catch(...) { s.failed=true; return false; }
+    } catch(...) { s.Fail("initialization exception", __LINE__); return false; }
 }
 StaticObjectGeometryPtr DiligentStaticObjectRenderer::UploadGeometry(const StaticObjectSource& data)
 { return CreateGeometry(data,false); }
@@ -333,17 +341,17 @@ StaticObjectGeometryPtr DiligentStaticObjectRenderer::UploadDynamicGeometry(cons
 StaticObjectGeometryPtr DiligentStaticObjectRenderer::CreateGeometry(const StaticObjectSource& data, bool dynamic)
 {
     auto& s=*m_impl;
-    const auto fail=[&]() -> StaticObjectGeometryPtr { s.failed=true; return {}; };
+    const auto fail=[&](int line) -> StaticObjectGeometryPtr { s.Fail("geometry upload rejected source or GPU buffer", line); return {}; };
     const bool wide=!data.indices32.empty();
     const auto indexCount=wide ? data.indices32.size() : data.indices.size();
     const auto indexStride=wide ? sizeof(uint32_t) : sizeof(uint16_t);
     if(!s.backend.m_impl || data.vertices.empty() || !indexCount || (wide && !data.indices.empty()) ||
         data.vertices.size()>std::numeric_limits<uint32_t>::max()/32 ||
-       indexCount>std::numeric_limits<uint32_t>::max()/indexStride) return fail();
-    for(const auto& vertex:data.vertices) for(float v:vertex) if(!std::isfinite(v)) return fail();
+       indexCount>std::numeric_limits<uint32_t>::max()/indexStride) return fail(__LINE__);
+    for(const auto& vertex:data.vertices) for(float v:vertex) if(!std::isfinite(v)) return fail(__LINE__);
     // Indices are mesh-local; exact base/range is validated at submission.
-    for(auto index:data.indices) if(index>=data.vertices.size()) return fail();
-    for(auto index:data.indices32) if(index>=data.vertices.size()) return fail();
+    for(auto index:data.indices) if(index>=data.vertices.size()) return fail(__LINE__);
+    for(auto index:data.indices32) if(index>=data.vertices.size()) return fail(__LINE__);
     try {
         auto result=std::make_shared<Geometry>();
         BufferDesc desc;
@@ -357,13 +365,13 @@ StaticObjectGeometryPtr DiligentStaticObjectRenderer::CreateGeometry(const Stati
         desc.Usage=USAGE_IMMUTABLE; desc.CPUAccessFlags=CPU_ACCESS_NONE;
         initial={wide ? static_cast<const void*>(data.indices32.data()) : static_cast<const void*>(data.indices.data()),desc.Size};
         s.backend.m_impl->device->CreateBuffer(desc,&initial,&result->indices);
-        if(!result->vertices || !result->indices) return fail();
+        if(!result->vertices || !result->indices) return fail(__LINE__);
         result->vertexCount=static_cast<uint32_t>(data.vertices.size()); result->validationIndices=data.indices;
         result->validationIndices32=data.indices32; result->indexType=wide ? VT_UINT32 : VT_UINT16;
         result->dynamic=dynamic;
         result->counters=s.counters; ++s.counters->geometry;
         return result;
-    } catch(...) { return fail(); }
+    } catch(...) { return fail(__LINE__); }
 }
 // ZiiNAN: No skinning here; upload the already deformed position/normal/UV bytes.
 bool DiligentStaticObjectRenderer::UpdateDynamicVertices(const StaticObjectGeometryPtr& geometry, const std::vector<StaticObjectVertex>& vertices)
@@ -371,24 +379,24 @@ bool DiligentStaticObjectRenderer::UpdateDynamicVertices(const StaticObjectGeome
     auto& s=*m_impl;
     auto mesh=std::dynamic_pointer_cast<Geometry>(geometry);
     if(!s.backend.m_impl || !s.backend.m_impl->inFrame || !mesh || !mesh->dynamic ||
-       mesh->counters!=s.counters || vertices.size()!=mesh->vertexCount) { s.failed=true; return false; }
+       mesh->counters!=s.counters || vertices.size()!=mesh->vertexCount) { s.Fail("dynamic mesh, owner, vertex count or frame mismatch", __LINE__); return false; }
     for(const auto& vertex:vertices) for(float value:vertex)
-        if(!std::isfinite(value)) { s.failed=true; return false; }
+        if(!std::isfinite(value)) { s.Fail("non-finite dynamic vertex attribute", __LINE__); return false; }
     try {
         MapHelper<StaticObjectVertex> mapped(s.backend.m_impl->context,mesh->vertices,MAP_WRITE,MAP_FLAG_DISCARD);
-        if(!mapped) { s.failed=true; return false; }
+        if(!mapped) { s.Fail("dynamic vertex buffer map failed", __LINE__); return false; }
         memcpy(mapped,vertices.data(),vertices.size()*sizeof(StaticObjectVertex));
         return true;
-    } catch(...) { s.failed=true; return false; }
+    } catch(...) { s.Fail("dynamic vertex upload exception", __LINE__); return false; }
 }
 TerrainTexturePtr DiligentStaticObjectRenderer::UploadTexture(const TerrainTextureData& data)
 {
     auto& s=*m_impl;
-    const auto fail=[&]() -> TerrainTexturePtr { s.failed=true; return {}; };
-    if(!s.backend.m_impl || !data.width || !data.height || data.width>8192 || data.height>8192 || data.mips.empty()) return fail();
+    const auto fail=[&](int line) -> TerrainTexturePtr { s.Fail("texture upload rejected image, mip layout or GPU resource", line); return {}; };
+    if(!s.backend.m_impl || !data.width || !data.height || data.width>8192 || data.height>8192 || data.mips.empty()) return fail(__LINE__);
     uint32_t maxMips=1;
     for(uint32_t dim=std::max(data.width,data.height);dim>1;dim>>=1) ++maxMips;
-    if(data.mips.size()>maxMips) return fail();
+    if(data.mips.size()>maxMips) return fail(__LINE__);
     TEXTURE_FORMAT format=TEX_FORMAT_UNKNOWN; uint32_t block=0,pixelBytes=4;
     switch(data.format) {
     case TerrainTextureFormat::RGBA8: format=TEX_FORMAT_RGBA8_UNORM; break;
@@ -398,7 +406,7 @@ TerrainTexturePtr DiligentStaticObjectRenderer::UploadTexture(const TerrainTextu
     case TerrainTextureFormat::BC2: format=TEX_FORMAT_BC2_UNORM; block=16; break;
     case TerrainTextureFormat::BC3: format=TEX_FORMAT_BC3_UNORM; block=16; break;
     case TerrainTextureFormat::B5G5R5A1: format=TEX_FORMAT_B5G5R5A1_UNORM; pixelBytes=2; break;
-    default: return fail();
+    default: return fail(__LINE__);
     }
     try {
         std::vector<TextureSubResData> mips;
@@ -406,7 +414,7 @@ TerrainTexturePtr DiligentStaticObjectRenderer::UploadTexture(const TerrainTextu
         for(const auto& mip:data.mips) {
             const size_t row=block ? size_t((w+3)/4)*block : size_t(w)*pixelBytes;
             const size_t rows=block ? (h+3)/4 : h;
-            if(!mip.data || mip.rowStride<row || mip.size<row || (rows-1)>(mip.size-row)/mip.rowStride) return fail();
+            if(!mip.data || mip.rowStride<row || mip.size<row || (rows-1)>(mip.size-row)/mip.rowStride) return fail(__LINE__);
             TextureSubResData sub; sub.pData=mip.data; sub.Stride=mip.rowStride; mips.push_back(sub);
             w=std::max(1u,w>>1); h=std::max(1u,h>>1);
         }
@@ -417,10 +425,10 @@ TerrainTexturePtr DiligentStaticObjectRenderer::UploadTexture(const TerrainTextu
         desc.Format=format; desc.Usage=USAGE_IMMUTABLE; desc.BindFlags=BIND_SHADER_RESOURCE;
         TextureData initial{mips.data(),desc.MipLevels};
         s.backend.m_impl->device->CreateTexture(desc,&initial,&result->texture);
-        if(!result->texture) return fail();
+        if(!result->texture) return fail(__LINE__);
         result->counters=s.counters; ++s.counters->textures;
         return result;
-    } catch(...) { return fail(); }
+    } catch(...) { return fail(__LINE__); }
 }
 void DiligentStaticObjectRenderer::Draw(const StaticObjectGeometryPtr& geometry,const TerrainTexturePtr& texture,const StaticObjectDraw& draw)
 {
@@ -442,11 +450,27 @@ void DiligentStaticObjectRenderer::Draw(const StaticObjectGeometryPtr& geometry,
        !draw.indexCount || draw.indexCount%3 || draw.firstIndex>mesh->IndexCount() ||
        draw.indexCount>mesh->IndexCount()-draw.firstIndex || !draw.vertexCount ||
        draw.baseVertex>mesh->vertexCount || draw.vertexCount>mesh->vertexCount-draw.baseVertex ||
-       static_cast<uint32_t>(draw.fog)>3) { s.failed=true; return; }
+       static_cast<uint32_t>(draw.fog)>3) {
+        // Refine the existing failed guard only; successful draws do no diagnostic work.
+        s.Fail(!s.backend.m_impl ? "missing mesh backend" : !s.backend.m_impl->inFrame ? "mesh submitted outside backend frame" :
+            !mesh ? "missing mesh geometry" : !image ? "missing mesh diffuse texture" : !cameraImage ? "missing mesh camera texture" :
+            mesh->counters!=s.counters ? "mesh geometry owner mismatch" : image->counters!=s.counters ? "mesh diffuse texture owner mismatch" :
+            cameraImage->counters!=s.counters ? "mesh camera texture owner mismatch" : cull>=3 ? "invalid mesh cull mode" :
+            !s.pipelines[variant] ? "missing mesh pipeline" : draw.alphaReference>255 ? "mesh alpha reference out of range" :
+            static_cast<uint32_t>(draw.alphaTest)>2 ? "invalid mesh alpha test" : static_cast<uint32_t>(draw.actorStage)>3 ? "invalid actor material stage" :
+            (draw.cameraAlpha && draw.sphereMap) ? "simultaneous actor camera alpha and sphere map" :
+            (draw.actorStage==ActorMaterialStage::Specular && !draw.sphereMap) ? "specular actor without sphere map" :
+            (!draw.indexCount || draw.indexCount%3) ? "invalid mesh triangle index count" :
+            (draw.firstIndex>mesh->IndexCount() || draw.indexCount>mesh->IndexCount()-draw.firstIndex) ? "mesh index draw range exceeds geometry" :
+            !draw.vertexCount ? "zero mesh draw vertices" :
+            (draw.baseVertex>mesh->vertexCount || draw.vertexCount>mesh->vertexCount-draw.baseVertex) ? "mesh vertex draw range exceeds geometry" :
+            "invalid mesh fog mode", __LINE__);
+        return;
+    }
     if((rigid && !mesh->skin->rigidVertices) ||
-       (skin && draw.vertexCount>mesh->skin->deformCount-draw.baseVertex)) { s.failed=true; return; }
+       (skin && draw.vertexCount>mesh->skin->deformCount-draw.baseVertex)) { s.Fail("rigid/deform vertex range or rigid buffer mismatch", __LINE__); return; }
     for(size_t i=draw.firstIndex;i<size_t(draw.firstIndex)+draw.indexCount;++i)
-        if(mesh->IndexAt(i)>=draw.vertexCount) { s.failed=true; return; }
+        if(mesh->IndexAt(i)>=draw.vertexCount) { s.Fail("mesh-local index exceeds draw vertex count", __LINE__); return; }
     try {
         auto& b=*s.backend.m_impl;
         if(!image->sampler || !(image->sampling==draw.sampling) || image->anisotropic!=draw.anisotropic || image->maxAnisotropy!=draw.maxAnisotropy) {
@@ -463,7 +487,7 @@ void DiligentStaticObjectRenderer::Draw(const StaticObjectGeometryPtr& geometry,
             sampler.AddressV=draw.sampling.wrapV ? TEXTURE_ADDRESS_WRAP : TEXTURE_ADDRESS_CLAMP;
             if(!draw.sampling.useMips) sampler.MaxLOD=0;
             b.device->CreateSampler(sampler,&image->sampler);
-            if(!image->sampler) { s.failed=true; return; }
+            if(!image->sampler) { s.Fail("diffuse sampler creation failed", __LINE__); return; }
             image->sampling=draw.sampling;
             image->anisotropic=draw.anisotropic; image->maxAnisotropy=draw.maxAnisotropy;
             for(auto& binding:image->bindings) binding.Release();
@@ -483,7 +507,7 @@ void DiligentStaticObjectRenderer::Draw(const StaticObjectGeometryPtr& geometry,
             sampler.AddressV=draw.cameraAlphaSampling.wrapV ? TEXTURE_ADDRESS_WRAP : TEXTURE_ADDRESS_CLAMP;
             if(!draw.cameraAlphaSampling.useMips) sampler.MaxLOD=0;
             image->cameraSampler.Release(); b.device->CreateSampler(sampler,&image->cameraSampler);
-            if(!image->cameraSampler) { s.failed=true; return; }
+            if(!image->cameraSampler) { s.Fail("camera sampler creation failed", __LINE__); return; }
             image->cameraImage=cameraImage; image->cameraSampling=draw.cameraAlphaSampling;
             image->cameraAnisotropic=draw.cameraAlphaAnisotropic; image->cameraMaxAnisotropy=draw.cameraAlphaMaxAnisotropy;
             for(auto& binding:image->bindings) binding.Release();
@@ -493,7 +517,7 @@ void DiligentStaticObjectRenderer::Draw(const StaticObjectGeometryPtr& geometry,
         auto& binding=skin ? skinBinding : image->bindings[materialVariant];
         if(!binding) {
             s.pipelines[variant]->CreateShaderResourceBinding(&binding,true);
-            if(!binding) { s.failed=true; return; }
+            if(!binding) { s.Fail("mesh shader resource binding creation failed", __LINE__); return; }
             binding->GetVariableByName(SHADER_TYPE_PIXEL,"DiffuseTexture")->Set(image->texture->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE));
             binding->GetVariableByName(SHADER_TYPE_PIXEL,"ObjectSampler")->Set(image->sampler);
             binding->GetVariableByName(SHADER_TYPE_PIXEL,"CameraAlphaTexture")->Set(cameraImage->texture->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE));
@@ -502,7 +526,7 @@ void DiligentStaticObjectRenderer::Draw(const StaticObjectGeometryPtr& geometry,
         }
         {
             MapHelper<Constants> mapped(b.context,s.constants,MAP_WRITE,MAP_FLAG_DISCARD);
-            if(!mapped) { s.failed=true; return; }
+            if(!mapped) { s.Fail("mesh constants buffer map failed", __LINE__); return; }
             mapped->matrices=draw.matrices; mapped->normal=draw.normalTransform;
             const auto& extent=b.swapChain->GetDesc();
             const auto viewportWidth=draw.viewport[2] ? draw.viewport[2] : extent.Width;
@@ -535,7 +559,7 @@ void DiligentStaticObjectRenderer::Draw(const StaticObjectGeometryPtr& geometry,
         attributes.FirstIndexLocation=draw.firstIndex;
         attributes.BaseVertex=draw.baseVertex-(rigid ? mesh->skin->deformCount : 0);
         b.context->DrawIndexed(attributes); ++s.draws;
-    } catch(...) { s.failed=true; }
+    } catch(...) { s.Fail("mesh draw exception", __LINE__); }
 }
 void DiligentStaticObjectRenderer::ReleaseBindings()
 {

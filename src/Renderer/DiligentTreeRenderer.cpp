@@ -1,6 +1,7 @@
 // ZiiNAN: Diligent SpeedTree rendering integration; translate only the native static-color/leaf-table pipeline.
 #include "DiligentTreeRenderer.h"
 #include "DiligentD3D11BackendInternal.h"
+#include "Diagnostics.h"
 #include "Graphics/GraphicsEngine/interface/Buffer.h"
 #include "Graphics/GraphicsEngine/interface/PipelineState.h"
 #include "Graphics/GraphicsEngine/interface/Shader.h"
@@ -110,12 +111,19 @@ struct DiligentTreeRenderer::Impl
     std::array<uint32_t,4> draws{};
     uint64_t vertices=0,indices=0;
     bool failed=false;
+    // Failure-only diagnostic: retain the original sticky failure state and draw behavior.
+    void Fail(const char* reason, int line) noexcept
+    {
+        const bool first = !failed;
+        failed = true;
+        if (first) LogRendererFailure("DiligentTreeRenderer.cpp", this, reason, line);
+    }
     explicit Impl(DiligentD3D11Backend& b):backend(b) {}
 };
 DiligentTreeRenderer::DiligentTreeRenderer(DiligentD3D11Backend& b):m_impl(std::make_unique<Impl>(b)) {}
 DiligentTreeRenderer::~DiligentTreeRenderer()=default;
 bool DiligentTreeRenderer::Failed() const { return m_impl->failed; }
-void DiligentTreeRenderer::ReportFailure() { m_impl->failed=true; }
+void DiligentTreeRenderer::ReportFailure() { m_impl->Fail("bridge rejected tree source or legacy state", __LINE__); }
 uint32_t DiligentTreeRenderer::VisibleInstances() const { return uint32_t(m_impl->instances.size()); }
 uint32_t DiligentTreeRenderer::DrawCount(TreePart p) const { return m_impl->draws[uint32_t(p)]; }
 uint64_t DiligentTreeRenderer::Vertices() const { return m_impl->vertices; }
@@ -144,15 +152,15 @@ bool DiligentTreeRenderer::Initialize()
         shader.Desc.Name="Native SpeedTree texture stages/alpha/fog"; shader.Desc.ShaderType=SHADER_TYPE_PIXEL; shader.EntryPoint="PS";
         device->CreateShader(shader,&s.ps);
         return s.constants && s.vs && s.ps;
-    } catch(...) { s.failed=true; return false; }
+    } catch(...) { s.Fail("initialization exception", __LINE__); return false; }
 }
 TreeGeometryPtr DiligentTreeRenderer::UploadGeometry(const TreeSource& data,bool dynamic)
 {
     auto& s=*m_impl;
-    const auto fail=[&]() -> TreeGeometryPtr { s.failed=true; return {}; };
+    const auto fail=[&](int line) -> TreeGeometryPtr { s.Fail("geometry upload rejected source or GPU buffer", line); return {}; };
     if(!s.backend.m_impl || data.vertices.empty() || data.vertices.size()>UINT32_MAX/sizeof(TreeVertex) ||
-       data.indices.size()>UINT32_MAX/2 || !ValidVertices(data.vertices)) return fail();
-    for(auto index:data.indices) if(index>=data.vertices.size()) return fail();
+       data.indices.size()>UINT32_MAX/2 || !ValidVertices(data.vertices)) return fail(__LINE__);
+    for(auto index:data.indices) if(index>=data.vertices.size()) return fail(__LINE__);
     try {
         auto mesh=std::make_shared<Geometry>();
         BufferDesc desc; desc.Name="Original SpeedTree vertices"; desc.Size=data.vertices.size()*sizeof(TreeVertex);
@@ -164,31 +172,31 @@ TreeGeometryPtr DiligentTreeRenderer::UploadGeometry(const TreeSource& data,bool
             desc.Name="Original SpeedTree uint16 strips"; desc.Size=data.indices.size()*2;
             desc.Usage=USAGE_IMMUTABLE; desc.BindFlags=BIND_INDEX_BUFFER; desc.CPUAccessFlags=CPU_ACCESS_NONE;
             initial={data.indices.data(),desc.Size}; s.backend.m_impl->device->CreateBuffer(desc,&initial,&mesh->indices);
-            if(!mesh->indices) return fail();
+            if(!mesh->indices) return fail(__LINE__);
         }
-        if(!mesh->vertices) return fail();
+        if(!mesh->vertices) return fail(__LINE__);
         mesh->vertexCount=uint32_t(data.vertices.size()); mesh->validationIndices=data.indices; mesh->dynamic=dynamic;
         mesh->counts=s.counts; ++s.counts->geometry; return mesh;
-    } catch(...) { return fail(); }
+    } catch(...) { return fail(__LINE__); }
 }
 bool DiligentTreeRenderer::UpdateVertices(const TreeGeometryPtr& geometry,const std::vector<TreeVertex>& vertices)
 {
     auto& s=*m_impl; auto mesh=std::dynamic_pointer_cast<Geometry>(geometry);
     if(!s.backend.m_impl || !s.backend.m_impl->inFrame || !mesh || !mesh->dynamic || mesh->counts!=s.counts ||
-       vertices.size()!=mesh->vertexCount || !ValidVertices(vertices)) { s.failed=true; return false; }
+       vertices.size()!=mesh->vertexCount || !ValidVertices(vertices)) { s.Fail("tree dynamic geometry, owner, frame or vertex validation failed", __LINE__); return false; }
     try {
         MapHelper<TreeVertex> mapped(s.backend.m_impl->context,mesh->vertices,MAP_WRITE,MAP_FLAG_DISCARD);
-        if(!mapped) { s.failed=true; return false; }
+        if(!mapped) { s.Fail("tree vertex buffer map failed", __LINE__); return false; }
         memcpy(mapped,vertices.data(),vertices.size()*sizeof(TreeVertex)); return true;
-    } catch(...) { s.failed=true; return false; }
+    } catch(...) { s.Fail("tree vertex upload exception", __LINE__); return false; }
 }
 TerrainTexturePtr DiligentTreeRenderer::UploadTexture(const TerrainTextureData& data)
 {
     auto& s=*m_impl;
-    const auto fail=[&]() -> TerrainTexturePtr { s.failed=true; return {}; };
-    if(!s.backend.m_impl || !data.width || !data.height || data.width>8192 || data.height>8192 || data.mips.empty()) return fail();
+    const auto fail=[&](int line) -> TerrainTexturePtr { s.Fail("texture upload rejected image, mip layout or GPU resource", line); return {}; };
+    if(!s.backend.m_impl || !data.width || !data.height || data.width>8192 || data.height>8192 || data.mips.empty()) return fail(__LINE__);
     uint32_t maximum=1; for(auto d=std::max(data.width,data.height);d>1;d>>=1) ++maximum;
-    if(data.mips.size()>maximum) return fail();
+    if(data.mips.size()>maximum) return fail(__LINE__);
     TEXTURE_FORMAT format=TEX_FORMAT_UNKNOWN; uint32_t block=0,bytes=4;
     switch(data.format) {
     case TerrainTextureFormat::RGBA8: format=TEX_FORMAT_RGBA8_UNORM; break;
@@ -198,13 +206,13 @@ TerrainTexturePtr DiligentTreeRenderer::UploadTexture(const TerrainTextureData& 
     case TerrainTextureFormat::BC2: format=TEX_FORMAT_BC2_UNORM; block=16; break;
     case TerrainTextureFormat::BC3: format=TEX_FORMAT_BC3_UNORM; block=16; break;
     case TerrainTextureFormat::B5G5R5A1: format=TEX_FORMAT_B5G5R5A1_UNORM; bytes=2; break;
-    default: return fail();
+    default: return fail(__LINE__);
     }
     try {
         std::vector<TextureSubResData> mips; auto w=data.width,h=data.height;
         for(const auto& mip:data.mips) {
             const size_t row=block ? size_t((w+3)/4)*block : size_t(w)*bytes, rows=block ? (h+3)/4 : h;
-            if(!mip.data || mip.rowStride<row || mip.size<row || (rows-1)>(mip.size-row)/mip.rowStride) return fail();
+            if(!mip.data || mip.rowStride<row || mip.size<row || (rows-1)>(mip.size-row)/mip.rowStride) return fail(__LINE__);
             TextureSubResData sub; sub.pData=mip.data; sub.Stride=mip.rowStride; mips.push_back(sub);
             w=std::max(1u,w>>1); h=std::max(1u,h>>1);
         }
@@ -213,9 +221,9 @@ TerrainTexturePtr DiligentTreeRenderer::UploadTexture(const TerrainTextureData& 
         desc.Width=data.width; desc.Height=data.height; desc.MipLevels=uint32_t(mips.size());
         desc.Format=format; desc.Usage=USAGE_IMMUTABLE; desc.BindFlags=BIND_SHADER_RESOURCE;
         TextureData initial{mips.data(),desc.MipLevels}; s.backend.m_impl->device->CreateTexture(desc,&initial,&image->image);
-        if(!image->image) return fail();
+        if(!image->image) return fail(__LINE__);
         image->counts=s.counts; ++s.counts->textures; return image;
-    } catch(...) { return fail(); }
+    } catch(...) { return fail(__LINE__); }
 }
 void DiligentTreeRenderer::Draw(const void* instance,const TreeGeometryPtr& geometry,const TerrainTexturePtr& texture,
                                const TerrainTexturePtr& second,const TreeDraw& draw)
@@ -226,10 +234,10 @@ void DiligentTreeRenderer::Draw(const void* instance,const TreeGeometryPtr& geom
        mesh->counts!=s.counts || image->counts!=s.counts || other->counts!=s.counts ||
        draw.cull>2 || draw.depthFunction<1 || draw.depthFunction>8 || draw.alphaReference>255 || draw.fog>4 ||
        draw.stage1>2 || (draw.stage1 && !second) || uint32_t(draw.part)>3 || !draw.count ||
-       (draw.strip && draw.count<3) || (!draw.strip && draw.count%3)) { s.failed=true; return; }
+       (draw.strip && draw.count<3) || (!draw.strip && draw.count%3)) { s.Fail("tree geometry, texture, owner or draw state validation failed", __LINE__); return; }
     const auto available=mesh->indices ? mesh->validationIndices.size() : mesh->vertexCount;
-    if(draw.first>available || draw.count>available-draw.first) { s.failed=true; return; }
-    for(const auto& sample:draw.samplers) if(sample.maxAnisotropy<1 || sample.maxAnisotropy>16) { s.failed=true; return; }
+    if(draw.first>available || draw.count>available-draw.first) { s.Fail("tree draw range exceeds geometry", __LINE__); return; }
+    for(const auto& sample:draw.samplers) if(sample.maxAnisotropy<1 || sample.maxAnisotropy>16) { s.Fail("tree sampler anisotropy out of range", __LINE__); return; }
     try {
         auto& b=*s.backend.m_impl;
         const uint32_t key=draw.cull|(uint32_t(draw.blend)<<2)|(uint32_t(draw.depthWrite)<<3)|
@@ -256,11 +264,11 @@ void DiligentTreeRenderer::Draw(const void* instance,const TreeGeometryPtr& geom
                 {2,0,2,VT_FLOAT32,False,16,40},{3,0,2,VT_FLOAT32,False,24,40},{4,0,2,VT_FLOAT32,False,32,40}};
             g.InputLayout.LayoutElements=layout; g.InputLayout.NumElements=5; info.pVS=s.vs; info.pPS=s.ps;
             b.device->CreateGraphicsPipelineState(info,&pipeline.state);
-            if(!pipeline.state) { s.failed=true; return; }
+            if(!pipeline.state) { s.Fail("tree pipeline creation failed", __LINE__); return; }
             for(auto stage:{SHADER_TYPE_VERTEX,SHADER_TYPE_PIXEL})
                 if(auto* variable=pipeline.state->GetStaticVariableByName(stage,"TreeConstants")) variable->Set(s.constants);
             pipeline.state->CreateShaderResourceBinding(&pipeline.bindings,true);
-            if(!pipeline.bindings) { s.failed=true; return; }
+            if(!pipeline.bindings) { s.Fail("tree shader resource binding creation failed", __LINE__); return; }
         }
         RefCntAutoPtr<ISampler> bound[2];
         for(unsigned i=0;i<2;++i) {
@@ -275,7 +283,7 @@ void DiligentTreeRenderer::Draw(const void* instance,const TreeGeometryPtr& geom
                 desc.AddressV=sample.sampling.wrapV ? TEXTURE_ADDRESS_WRAP : TEXTURE_ADDRESS_CLAMP;
                 if(!sample.sampling.useMips) desc.MaxLOD=0;
                 b.device->CreateSampler(desc,&sampler);
-                if(!sampler) { s.failed=true; return; }
+                if(!sampler) { s.Fail("tree sampler creation failed", __LINE__); return; }
             }
             bound[i]=sampler;
         }
@@ -287,7 +295,7 @@ void DiligentTreeRenderer::Draw(const void* instance,const TreeGeometryPtr& geom
         binding->GetVariableByName(SHADER_TYPE_PIXEL,"SecondSampler")->Set(bound[1]);
         {
             MapHelper<Constants> mapped(b.context,s.constants,MAP_WRITE,MAP_FLAG_DISCARD);
-            if(!mapped) { s.failed=true; return; }
+            if(!mapped) { s.Fail("tree constants buffer map failed", __LINE__); return; }
             mapped->matrices=draw.matrices; mapped->native=draw.legacyConstants; mapped->textureTransform=draw.textureTransform;
             mapped->fogColor=draw.fogColor; mapped->fogParameters=draw.fogParameters;
             mapped->modes={uint32_t(draw.part),draw.fog,draw.stage1,uint32_t(draw.cameraCoordinates)};
@@ -305,6 +313,6 @@ void DiligentTreeRenderer::Draw(const void* instance,const TreeGeometryPtr& geom
         } else { DrawAttribs attributes{draw.count,DRAW_FLAG_VERIFY_ALL}; attributes.StartVertexLocation=draw.first; b.context->Draw(attributes); }
         s.vertices+=mesh->indices ? mesh->vertexCount : draw.count;
         s.instances.insert(instance); ++s.draws[uint32_t(draw.part)];
-    } catch(...) { s.failed=true; }
+    } catch(...) { s.Fail("tree draw exception", __LINE__); }
 }
 }

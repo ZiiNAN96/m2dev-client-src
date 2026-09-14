@@ -9,6 +9,8 @@
 #include "Version.h"
 #include "Renderer/RendererBootstrap.h"
 #include "Renderer/SkinningBenchmark.h"
+#include "AnimationRuntime/AnimationRuntime.h"
+#include "AssetRuntime/AnimationStallAudit.h"
 #include "Platform/PlatformTime.h"
 #include "Platform/PlatformFilesystem.h"
 #include <shellapi.h>
@@ -315,16 +317,22 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	if (!rendererOptions.valid)
 	{
         rendererLog << "ERROR: Invalid/conflicting renderer selection; no fallback. ExitCode=2" << std::endl;
-		MessageBoxW(nullptr, L"Unsupported or conflicting renderer/skinning selection. Use --renderer=d3d11 and --skinning=gpu (default) or --skinning=cpu.",
+		MessageBoxW(nullptr, L"Unsupported or conflicting selection. Use --renderer=d3d11, --skinning=gpu or cpu, and --animation-runtime=granny (default) or ziinan.",
 		            L"Invalid renderer selection", MB_OK | MB_ICONERROR);
 		return 2;
 	}
     // ZiiNAN: GPU skinning production path
     Renderer::startupSkinningMode=rendererOptions.skinning;
+    AssetRuntime::startupAnimationRuntime=rendererOptions.animationRuntime;
+    if (rendererOptions.animationStallAudit) AssetRuntime::AnimationStallAudit::Enable();
+    AssetRuntime::animationRuntimeErrorSink=[](const char* message) { TraceError("%s", message); };
     Renderer::verboseDiagnostics=rendererOptions.diagnostics;
     rendererLog << "VerboseDiagnostics=" << Renderer::verboseDiagnostics << std::endl;
     rendererLog << "Skinning=" << (rendererOptions.skinning==Renderer::PrototypeSkinningMode::CPU ? "cpu" : "gpu") << std::endl;
     rendererLog << "SkinningSelection=" << (rendererOptions.skinningSelected ? "explicit" : "default") << std::endl;
+    rendererLog << "AnimationRuntime=" << (rendererOptions.animationRuntime==AssetRuntime::AnimationRuntimeMode::ZiiNAN ? "ziinan" : "granny") << std::endl;
+    rendererLog << "AnimationRuntimeSelection=" << (rendererOptions.animationRuntimeSelected ? "explicit" : "default") << std::endl;
+    rendererLog << "AnimationStallAudit=" << rendererOptions.animationStallAudit << std::endl;
     // ZiiNAN: Production renderer selection is logged once, before any game/device setup.
     rendererLog << "Renderer: " << "Diligent D3D11" << std::endl;
     rendererLog << "Selection=" << (rendererOptions.selected ? "explicit" : "default")
@@ -343,6 +351,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     // ZiiNAN: Backend-neutral graphics resource ownership
     const int result = Main(hInstance, lpCmdLine, rendererOptions.backend);
+    AssetRuntime::AnimationStallAudit::Write();
+    AssetRuntime::ClearAnimationRuntimeCaches();
     std::ofstream resourceLog;
     if(Renderer::verboseDiagnostics) resourceLog.open("source-resource-audit.log",std::ios::trunc);
     Renderer::WriteSourceResourceAudit(resourceLog);
@@ -353,6 +363,22 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     resourceLog << "AssetDocuments=" << AssetRuntime::liveDocuments
         << " AnimationInstances=" << AssetRuntime::liveAnimationInstances
         << " MeshBindings=" << AssetRuntime::liveMeshBindings << '\n';
+    resourceLog << "IndependentAnimationInstances=" << AssetRuntime::liveIndependentAnimationInstances
+        << " IndependentPoseSamples=" << AssetRuntime::independentPoseSamples
+        << " ReferencePoseSamples=" << AssetRuntime::referencePoseSamples
+        << " AnimationRuntimeFailures=" << AssetRuntime::animationRuntimeFailures << '\n';
+    resourceLog << "ImportPoseSamples=" << AssetRuntime::importPoseSamples
+        << " ImportedAnimationClips=" << AssetRuntime::importedAnimationClips
+        << " ImportedBindingWarnings=" << AssetRuntime::importedBindingWarnings << '\n';
+    resourceLog << "ImportTotalMicroseconds=" << AssetRuntime::importTotalMicroseconds
+        << " ImportPeakMicroseconds=" << AssetRuntime::importPeakMicroseconds << '\n';
+    resourceLog << "RetainedImportKeyBytes=" << AssetRuntime::retainedImportKeyBytes
+        << " PeakRetainedImportKeyBytes=" << AssetRuntime::peakRetainedImportKeyBytes
+        << " ImportCacheHits=" << AssetRuntime::importCacheHits
+        << " ImportCacheEvictions=" << AssetRuntime::importCacheEvictions << '\n';
+    const auto animationObjects=AnimationRuntime::GetLifetimeCounts();
+    resourceLog << "RuntimeSkeletons=" << animationObjects.skeletons
+        << " RuntimeAnimationClips=" << animationObjects.clips << '\n';
     resourceLog << "PrototypeGeometry=" << Renderer::livePrototypeGeometry << " PrototypePalettes=" << Renderer::livePrototypePalettes
         << " GPUFrames=" << Renderer::prototypeFrames << " BoneBufferWrittenBytes=" << Renderer::prototypeBoneBytes
         << " PrepareUs=" << Renderer::prototypePrepareUs << " CPUReferenceFrames=" << Renderer::prototypeCpuFrames

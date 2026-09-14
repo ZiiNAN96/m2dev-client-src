@@ -1,12 +1,18 @@
 #pragma once
 #include "AssetRuntime/AssetRuntime.h"
 #include "Native.h"
+#include <optional>
+
+namespace AssetRuntime::GrannyAnimationAdapter { struct RuntimeImportCache; }
 
 namespace AssetRuntime::GrannyInterop
 {
+using SourceFingerprint = std::array<std::uint8_t, 32>;
+std::optional<SourceFingerprint> GetSourceFingerprint(const std::shared_ptr<AssetDocument>& document);
 // Explicit temporary interop for EterGrnLib's retained upload, mixer, deformer and binding code.
 // Every returned pointer is borrowed from the supplied owning handle.
 granny_model* GetModel(const ModelHandle& handle);
+GrannyAnimationAdapter::RuntimeImportCache* GetRuntimeImportCache(const ModelHandle& handle);
 granny_animation* GetAnimation(const AnimationHandle& handle);
 granny_mesh* GetMesh(const ModelHandle& handle, std::size_t mesh);
 PoseView GetPoseView(const granny_world_pose* pose);
