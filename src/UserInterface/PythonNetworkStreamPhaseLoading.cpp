@@ -83,6 +83,8 @@ void CPythonNetworkStream::LoadingPhase()
 
 void CPythonNetworkStream::SetLoadingPhase()
 {
+    m_isStartGame=FALSE;
+    m_waitForLocalPlayer=m_enterGameSentDuringLoading=false;
 	if ("Loading"!=m_strPhase)
 		m_phaseLeaveFunc.Run();
 
@@ -198,6 +200,7 @@ void CPythonNetworkStream::StartGame()
 
 bool CPythonNetworkStream::SendEnterGame()
 {
+    if(m_enterGameSentDuringLoading) return true;
 	TPacketCGEnterFrontGame EnterFrontGamePacket;
 
 	EnterFrontGamePacket.header = CG::ENTERGAME;
@@ -207,5 +210,6 @@ bool CPythonNetworkStream::SendEnterGame()
 		return false;
 
 	__SendInternalBuffer();
+    if(m_waitForLocalPlayer) m_enterGameSentDuringLoading=true;
 	return true;
 }

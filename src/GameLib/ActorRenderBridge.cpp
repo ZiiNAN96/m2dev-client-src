@@ -22,6 +22,17 @@ namespace
 {
 using namespace Renderer;
 std::ofstream diagnostics;
+TerrainTexturePtr LoadActorTexture(ActorInstanceData& data,const std::string& name,ActorPart part,ActorCategory category)
+{
+    if(name.empty()) return {};
+    auto& texture=data.textures[name];
+    if(!texture) {
+        texture=LoadStaticObjectTextureFile(name.c_str(),*actorRenderer);
+        if(texture && part!=ActorPart::Body) actorRenderer->TrackAttachmentTexture(texture);
+        if(texture && category==ActorCategory::Mount) actorRenderer->TrackMountTexture(texture);
+    }
+    return texture;
+}
 // ZiiNAN: Bounded, read-only evidence for rejected native states, never per-frame logging.
 struct ActorStateDiagnostic : CGraphicBase
 {
@@ -111,14 +122,7 @@ void Submit(void* context, const void* nativeInstance, ActorPart part, const Act
     ApplyAssetMaterial(materialAsset,draw);
     // OneTexture's opacity pass uses the same native stage-0 image, not a synthetic second mask.
     auto load=[&](const std::string& name) -> TerrainTexturePtr {
-        if(name.empty()) return {};
-        auto& texture=data.textures[name];
-        if(!texture) {
-            texture=LoadStaticObjectTextureFile(name.c_str(),*actorRenderer);
-            if(texture && part!=ActorPart::Body) actorRenderer->TrackAttachmentTexture(texture);
-            if(texture && category==ActorCategory::Mount) actorRenderer->TrackMountTexture(texture);
-        }
-        return texture;
+        return LoadActorTexture(data,name,part,category);
     };
     const auto texture=materialAsset.explicitRenderState && material.GetImagePointer(0) ?
         material.GetImagePointer(0)->GetAssetTexture(*actorRenderer) : load(materialAsset.textures[0]);
@@ -156,6 +160,36 @@ void Submit(void* context, const void* nativeInstance, ActorPart part, const Act
 }
 }
 // ZiiNAN: Diligent actor attachment rendering
+bool PrepareAnimatedActorResources(CActorInstance& actor)
+{
+    using namespace Renderer;
+    const auto parts=GetAnimatedActorParts(actor);
+    if(!parts.instances[uint32_t(ActorPart::Body)]) return false;
+    for(auto part:{ActorPart::Body,ActorPart::Hair,ActorPart::Weapon,ActorPart::WeaponLeft}) {
+        if(!parts.instances[uint32_t(part)]) continue;
+        auto* instance=actor.GetLODControllerPointer(uint32_t(part))->GetModelInstance();
+        auto& data=instance->GetActorRenderData();
+        const auto& source=instance->GetModel()->GetActorSource();
+        if(!data.ready || !source) return false;
+        if(startupSkinningMode==PrototypeSkinningMode::GPUPrototype && source->deformVertexCount && !data.gpuPrototype)
+            return false;
+        if(!data.geometry) data.geometry=actorRenderer->CreateGeometry(*source,part,parts.category);
+        if(!data.geometry) return false;
+        auto& palette=instance->GetStaticObjectMaterialPalette();
+        for(uint32_t materialIndex=0;materialIndex<palette.GetMaterialCount();++materialIndex) {
+            auto& material=palette.GetMaterialRef(materialIndex);
+            const auto& asset=material.GetAsset();
+            const auto texture=asset.explicitRenderState && material.GetImagePointer(0) ?
+                material.GetImagePointer(0)->GetAssetTexture(*actorRenderer) :
+                LoadActorTexture(data,asset.textures[0],part,parts.category);
+            if(!texture) return false;
+            if(const auto* sphere=material.IsSpecularEnabled() ? material.GetSphereMapImage() : nullptr)
+                if(!LoadActorTexture(data,sphere->GetFileName(),part,parts.category)) return false;
+        }
+    }
+    return true;
+}
+
 Renderer::ActorInstanceSet GetAnimatedActorParts(CActorInstance& actor)
 {
     using namespace Renderer;

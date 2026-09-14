@@ -1,4 +1,5 @@
 #include "GR2Reader.h"
+#include "AssetRuntime/AnimationStallAudit.h"
 #include <algorithm>
 
 namespace AssetRuntime::GR2
@@ -45,6 +46,7 @@ Contents Read(const File& f)
         ModelAsset model; ModelData data; model.name=t.Text(source,"Name");
         data.initialPlacement=ReadTransform(f,t.Field(source,"InitialPlacement"));
         if(auto skeleton=t.Child(source,"Skeleton")) {
+            AnimationStallAudit::WorkScope skeletonAudit(AnimationStallAudit::Work::Skeleton);
             model.skeleton=ReadSkeleton(t,skeleton);
             std::vector<AnimationRuntime::SkeletonBone> bones;
             for(const auto& b:model.skeleton->bones) bones.push_back({b.name,b.parentIndex,RuntimeTransform(b.localBind),b.inverseBind});

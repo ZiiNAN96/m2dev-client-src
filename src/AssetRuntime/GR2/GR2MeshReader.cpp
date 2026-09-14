@@ -1,4 +1,5 @@
 #include "GR2Reader.h"
+#include "AssetRuntime/AnimationStallAudit.h"
 #include <algorithm>
 #include <numeric>
 
@@ -14,6 +15,7 @@ template<std::size_t N> std::array<float,N> Floats(Types& t,Object object,std::s
 }
 MeshData ReadMesh(Types& t,Object source,MeshAsset& mesh,ModelAsset& model,std::map<Ref,std::uint32_t>& materials,Contents& contents)
 {
+    AnimationStallAudit::WorkScope audit(AnimationStallAudit::Work::Mesh);
     MeshData data; mesh.name=t.Text(source,"Name"); mesh.twoSided=mesh.name.starts_with("2x");
     if(!t.Array(source,"MorphTargets").empty()) Unsupported("mesh morph targets");
     const auto vertices=t.Array(t.Child(source,"PrimaryVertexData"),"Vertices");

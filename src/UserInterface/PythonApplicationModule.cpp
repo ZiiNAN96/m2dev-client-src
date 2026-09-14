@@ -6,11 +6,21 @@
 #include "EterBase/tea.h"
 #include "Renderer/SkinningBenchmark.h"
 #include "Platform/PlatformTime.h"
+#include "AssetRuntime/AnimationStallAudit.h"
 
 #include <stb_image.h>
 #include <utf8.h>
 
 extern Math::Color g_fSpecularColor;
+static PyObject* appLoadWarmupPhase(PyObject*,PyObject* args)
+{
+    int phase;
+    if(!AssetRuntime::AnimationStallAudit::fullCapture || !PyTuple_GetInteger(args,0,&phase) || phase<0 || phase>7)
+        return Py_BuildException("Load/warmup capture required; phase must be 0..7");
+    AssetRuntime::AnimationStallAudit::capturePhase=phase;
+    AssetRuntime::AnimationStallAudit::explicitPhase=true;
+    return Py_BuildNone();
+}
 // ZiiNAN: GPU skinning production path — private benchmark fixture opts in explicitly.
 static PyObject* appStartSkinningBenchmark(PyObject*,PyObject*)
 {
@@ -1213,6 +1223,7 @@ void initapp()
 		{ "UpdateGame",					appUpdateGame,					METH_VARARGS },
 		{ "RenderGame",					appRenderGame,					METH_VARARGS },
         { "StartSkinningBenchmark",appStartSkinningBenchmark,METH_NOARGS },
+        { "LoadWarmupPhase",appLoadWarmupPhase,METH_VARARGS },
         { "SkinningBenchmarkStage",appSkinningBenchmarkStage,METH_VARARGS },
 		{ "Loop",						appLoop,						METH_VARARGS },
 		{ "Create",						appCreate,						METH_VARARGS },

@@ -283,6 +283,11 @@ void CPythonApplication::UpdateGame()
 
 bool CPythonApplication::Process()
 {
+    if(AssetRuntime::AnimationStallAudit::fullCapture && !AssetRuntime::AnimationStallAudit::explicitPhase) {
+        auto* actor=m_kChrMgr.GetMainInstancePtr();
+        AssetRuntime::AnimationStallAudit::capturePhase=!m_pyNetworkStream.IsGamePhaseForDiagnostics()?0:
+            actor && actor->IsAttacking()?3:actor && actor->IsWalking()?2:1;
+    }
     Renderer::AnimationStallFrame stallFrame(
         AssetRuntime::AnimationStallAudit::enabled && m_pyNetworkStream.IsGamePhaseForDiagnostics(),
         m_isMinimizedWnd != 0, m_isActivateWnd != 0);
@@ -491,6 +496,7 @@ bool CPythonApplication::Process()
 				}
 				m_pyGraphic.SetInterfaceRenderState();
 
+				m_pyNetworkStream.PrepareGamePhase();
 				OnUIRender();
 				OnMouseRender();
 				/////////////////////
@@ -1051,8 +1057,6 @@ void CPythonApplication::Destroy()
 
 	CPythonSystem::Instance().SaveConfig();
 
-	DestroyCollisionInstanceSystem();
-
 	m_pySystem.SaveInterfaceStatus();
 
 	m_pyEventManager.Destroy();	
@@ -1072,6 +1076,10 @@ void CPythonApplication::Destroy()
 
 	m_kEftMgr.Destroy();
 	m_LightManager.Destroy();
+
+    // A cancelled native prewarm can leave the map owned by LoadingWindow,
+    // without GameWindow::Close. Release owners before the collision pool.
+    DestroyCollisionInstanceSystem();
 
 	// Game Thread Pool
 	CGameThreadPool::Instance().Destroy();

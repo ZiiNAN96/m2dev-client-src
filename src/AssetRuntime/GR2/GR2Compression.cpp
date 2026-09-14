@@ -3,6 +3,7 @@
 // LICENSE-Boost.txt. ZiiNAN changes: checked spans, explicit little-endian
 // parameters, offset-based output, bounded models and malformed-stream errors.
 #include "GR2File.h"
+#include "AssetRuntime/AnimationStallAudit.h"
 #include <algorithm>
 #include <numeric>
 
@@ -139,6 +140,7 @@ void DecodeBlock(std::span<const std::byte> header, Decoder& decoder,
 }
 std::vector<std::byte> Decompress(const Section& section, std::span<const std::byte> bytes)
 {
+    AnimationStallAudit::WorkScope audit(AnimationStallAudit::Work::Decompress,section.compression!=0 && section.expanded!=0);
     if(section.compression!=0 && section.compression!=2)
         throw Error(Failure::UnsupportedCompression,"unsupported compression "+std::to_string(section.compression));
     Require(section.expanded<=MaximumExpandedBytes && bytes.size()==section.compressed,"section allocation/size limit");

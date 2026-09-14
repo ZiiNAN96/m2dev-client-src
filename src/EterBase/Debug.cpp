@@ -10,6 +10,7 @@
 #include "Timer.h"
 #include <filesystem>
 #include <utf8.h>
+#include "AssetRuntime/AnimationStallAudit.h"
 
 const DWORD DEBUG_STRING_MAX_LEN = 1024;
 
@@ -158,6 +159,7 @@ class CLogFile : public CSingleton<CLogFile>
 
         void Write(const char* c_pszMsg)
         {
+            if(AssetRuntime::AnimationStallAudit::BufferDiagnostic(c_pszMsg,c_pszMsg?strlen(c_pszMsg):0)) return;
             if (!m_fp)
                 return;
 
@@ -251,6 +253,7 @@ class CExtraLogFile
 
         void Write(const char* c_pszMsg)
         {
+            if(AssetRuntime::AnimationStallAudit::BufferDiagnostic(c_pszMsg,c_pszMsg?strlen(c_pszMsg):0)) return;
             if (!m_fp)
                 return;
 
@@ -488,6 +491,7 @@ static struct TSyserrBuffer
 
     void Write(const char* msg, size_t len)
     {
+        if(AssetRuntime::AnimationStallAudit::BufferDiagnostic(msg,len)) return;
         if (pos + len >= BUFFER_SIZE - 1)
             Flush();
 

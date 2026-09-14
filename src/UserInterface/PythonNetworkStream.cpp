@@ -3,6 +3,9 @@
 #include "PythonNetworkStream.h"
 #include "Packet.h"
 #include "NetworkActorManager.h"
+#include "PythonCharacterManager.h"
+#include "AssetRuntime/GR2ReaderMode.h"
+#include "AssetRuntime/AnimationStallAudit.h"
 
 #include "GuildMarkDownloader.h"
 #include "GuildMarkUploader.h"
@@ -465,7 +468,14 @@ bool CPythonNetworkStream::OnProcess()
 	if (m_isStartGame)
 	{
 		m_isStartGame = FALSE;
-		PyCallClassMemberFunc(m_poHandler, "SetGamePhase", Py_BuildValue("()"));
+        if(AssetRuntime::startupGR2Reader==AssetRuntime::GR2ReaderMode::ZiiNAN && AssetRuntime::nativeGR2Prewarm) {
+            // Request the actor packets while Python still displays LoadingWindow.
+            // GameWindow::Open sends ENTERGAME too; SendEnterGame suppresses that duplicate.
+            m_waitForLocalPlayer=true;
+            if(!SendEnterGame()) { Disconnect(); ClosePhase(); return true; }
+        } else {
+            PyCallClassMemberFunc(m_poHandler, "SetGamePhase", Py_BuildValue("()"));
+        }
 	}
 
 	m_rokNetActorMgr->Update();
@@ -478,10 +488,34 @@ bool CPythonNetworkStream::OnProcess()
 	return true;
 }
 
+void CPythonNetworkStream::PrepareGamePhase()
+{
+    // Called after BeginFrame: the existing GPU preparation requires an active
+    // renderer frame. LoadingWindow remains visible throughout the work.
+    if(m_waitForLocalPlayer && IsOnline() && m_strPhase=="Game") {
+        auto& characters=CPythonCharacterManager::Instance();
+        auto* player=characters.GetMainInstancePtr();
+        // The server may publish the local actor after its GAME phase packet.
+        if(player && player->GetVirtualID()==GetMainActorVID()) {
+            const bool ready=characters.PrewarmVisibleActors(true);
+            m_waitForLocalPlayer=false;
+            if(!ready) {
+                TraceError("Local player preparation failed; keeping world hidden and returning to login");
+                Disconnect(); ClosePhase(); return;
+            }
+            AssetRuntime::AnimationStallAudit::LocalPlayerScope release("scene_release",true);
+            PyCallClassMemberFunc(m_poHandler, "SetGamePhase", Py_BuildValue("()"));
+        }
+    }
+
+}
+
 
 // Set
 void CPythonNetworkStream::SetOffLinePhase()
 {
+    m_isStartGame=FALSE;
+    m_waitForLocalPlayer=m_enterGameSentDuringLoading=false;
 	if ("OffLine" != m_strPhase)
 		m_phaseLeaveFunc.Run();
 

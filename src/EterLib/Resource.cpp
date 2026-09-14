@@ -6,6 +6,7 @@
 
 #include "Resource.h"
 #include "ResourceManager.h"
+#include "AssetRuntime/AnimationStallAudit.h"
 
 #include <limits>
 
@@ -50,7 +51,11 @@ void CResource::Load()
 
 	//Tracenf("Load %s", c_szFileName);
 
-	if (CPackManager::Instance().GetFile(c_szFileName, file))
+    AssetRuntime::AnimationStallAudit::WorkScope readAudit(AssetRuntime::AnimationStallAudit::Work::GR2Read,
+        std::string_view(c_szFileName).ends_with(".gr2"));
+    const bool found=CPackManager::Instance().GetFile(c_szFileName, file);
+    readAudit.Stop();
+	if (found)
 	{
 		m_dwLoadCostMiliiSecond = ELTimer_GetMSec() - dwStart;
 		//Tracef("CResource::Load %s (%d bytes) in %d ms\n", c_szFileName, file.Size(), m_dwLoadCostMiliiSecond);
@@ -92,7 +97,11 @@ void CResource::Reload()
 	Tracef("CResource::Reload %s\n", GetFileName());
 
 	TPackFile	file;
-	if (CPackManager::Instance().GetFile(GetFileName(), file))
+    AssetRuntime::AnimationStallAudit::WorkScope readAudit(AssetRuntime::AnimationStallAudit::Work::GR2Read,
+        std::string_view(GetFileName()).ends_with(".gr2"));
+    const bool found=CPackManager::Instance().GetFile(GetFileName(), file);
+    readAudit.Stop();
+	if (found)
 	{
 		if (file.size() > static_cast<size_t>(std::numeric_limits<int>::max()))
 		{

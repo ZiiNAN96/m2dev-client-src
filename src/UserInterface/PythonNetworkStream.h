@@ -90,6 +90,7 @@ class CPythonNetworkStream : public CNetworkStream, public CSingleton<CPythonNet
 		bool SendSpecial(int nLen, void * pvBuf);
 
 		void StartGame();
+        void PrepareGamePhase();
 		void Warp(LONG lGlobalX, LONG lGlobalY);
 		
 		void NotifyHack(const char* c_szMsg);		
@@ -300,7 +301,7 @@ class CPythonNetworkStream : public CNetworkStream, public CSingleton<CPythonNet
 		void SetSelectPhase();
 		void SetLoadingPhase();
 		void SetGamePhase();
-        bool IsGamePhaseForDiagnostics() const { return m_strPhase == "Game"; }
+        bool IsGamePhaseForDiagnostics() const { return m_strPhase == "Game" && !m_waitForLocalPlayer; }
 		void ClosePhase();
 
 		// Login Phase
@@ -668,6 +669,8 @@ class CPythonNetworkStream : public CNetworkStream, public CSingleton<CPythonNet
 		DWORD m_dwMainActorSkillGroup;
 		BOOL m_isGameOnline;
 		BOOL m_isStartGame;
+        bool m_waitForLocalPlayer = false;
+        bool m_enterGameSentDuringLoading = false;
 
 		DWORD m_dwGuildID;
 		DWORD m_dwEmpireID;

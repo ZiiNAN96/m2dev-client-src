@@ -412,6 +412,13 @@ void CPythonNetworkStream::__LeaveGamePhase()
 
 void CPythonNetworkStream::SetGamePhase()
 {
+    // ENTERGAME publishes the initial actor batch before the server's GAME
+    // packet. Native entry keeps LoadingWindow open and finishes preparation
+    // in PrepareGamePhase, inside an active GPU frame. Keep the legacy hook
+    // for entries that do not use that deferred transition.
+    if ("Loading"==m_strPhase && !m_waitForLocalPlayer)
+        CPythonCharacterManager::Instance().PrewarmVisibleActors();
+
 	if ("Game"!=m_strPhase)
 		m_phaseLeaveFunc.Run();
 

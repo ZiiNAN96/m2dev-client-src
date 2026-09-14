@@ -326,16 +326,20 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     Renderer::startupSkinningMode=rendererOptions.skinning;
     AssetRuntime::startupAnimationRuntime=rendererOptions.animationRuntime;
     AssetRuntime::startupGR2Reader=rendererOptions.gr2Reader;
+    AssetRuntime::nativeGR2Prewarm=rendererOptions.gr2Prewarm;
     rendererLog << "GR2Reader=" << (rendererOptions.gr2Reader==AssetRuntime::GR2ReaderMode::ZiiNAN ? "ziinan" : "granny") << std::endl;
-    if (rendererOptions.animationStallAudit) AssetRuntime::AnimationStallAudit::Enable();
+    if (rendererOptions.animationStallAudit || rendererOptions.loadWarmupAudit)
+        AssetRuntime::AnimationStallAudit::Enable(rendererOptions.loadWarmupAudit);
     AssetRuntime::animationRuntimeErrorSink=[](const char* message) { TraceError("%s", message); };
-    Renderer::verboseDiagnostics=rendererOptions.diagnostics;
+    Renderer::verboseDiagnostics=rendererOptions.diagnostics && !rendererOptions.loadWarmupAudit;
     rendererLog << "VerboseDiagnostics=" << Renderer::verboseDiagnostics << std::endl;
     rendererLog << "Skinning=" << (rendererOptions.skinning==Renderer::PrototypeSkinningMode::CPU ? "cpu" : "gpu") << std::endl;
     rendererLog << "SkinningSelection=" << (rendererOptions.skinningSelected ? "explicit" : "default") << std::endl;
     rendererLog << "AnimationRuntime=" << (rendererOptions.animationRuntime==AssetRuntime::AnimationRuntimeMode::ZiiNAN ? "ziinan" : "granny") << std::endl;
     rendererLog << "AnimationRuntimeSelection=" << (rendererOptions.animationRuntimeSelected ? "explicit" : "default") << std::endl;
     rendererLog << "AnimationStallAudit=" << rendererOptions.animationStallAudit << std::endl;
+    rendererLog << "LoadWarmupAudit=" << rendererOptions.loadWarmupAudit << std::endl;
+    rendererLog << "GR2Prewarm=" << rendererOptions.gr2Prewarm << std::endl;
     // ZiiNAN: Production renderer selection is logged once, before any game/device setup.
     rendererLog << "Renderer: " << "Diligent D3D11" << std::endl;
     rendererLog << "Selection=" << (rendererOptions.selected ? "explicit" : "default")
@@ -357,7 +361,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     AssetRuntime::AnimationStallAudit::Write();
     AssetRuntime::ClearAnimationRuntimeCaches();
     std::ofstream resourceLog;
-    if(Renderer::verboseDiagnostics) resourceLog.open("source-resource-audit.log",std::ios::trunc);
+    if(Renderer::verboseDiagnostics || rendererOptions.loadWarmupAudit) resourceLog.open("source-resource-audit.log",std::ios::trunc);
     Renderer::WriteSourceResourceAudit(resourceLog);
     // ZiiNAN: GPU skinning production path — summary only; per-frame CSV is opt-in.
     Renderer::WriteSkinningBenchmark();
@@ -372,6 +376,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     resourceLog << "NativeAnimationDecodes=" << AssetRuntime::GR2::nativeAnimationDecodes
         << " NativeBoundClipHits=" << AssetRuntime::GR2::boundClipHits
         << " NativeBoundClipBypasses=" << AssetRuntime::GR2::boundClipBypasses << '\n';
+    resourceLog << "NativePrewarmRequests=" << AssetRuntime::GR2::prewarmRequests
+        << " NativePrewarmFailures=" << AssetRuntime::GR2::prewarmFailures
+        << " NativePrewarmLimited=" << AssetRuntime::GR2::prewarmLimited << '\n';
     resourceLog << "IndependentAnimationInstances=" << AssetRuntime::liveIndependentAnimationInstances
         << " IndependentPoseSamples=" << AssetRuntime::independentPoseSamples
         << " ReferencePoseSamples=" << AssetRuntime::referencePoseSamples

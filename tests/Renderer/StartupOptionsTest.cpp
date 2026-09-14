@@ -45,6 +45,11 @@ int main()
         StartupOptions bad; bad.ParseArgument(value); if(bad.valid) return 13;
     }
     StartupOptions defaults;
+    StartupOptions audit;
+    audit.ParseArgument(L"--load-warmup-audit"); audit.ParseArgument(L"--gr2-prewarm=off");
+    if(!audit.valid || !audit.loadWarmupAudit || audit.gr2Prewarm || audit.gr2Reader!=AssetRuntime::GR2ReaderMode::Granny) return 20;
+    audit.ParseArgument(L"--gr2-prewarm=on"); if(audit.valid) return 21;
+    StartupOptions invalidPrewarm; invalidPrewarm.ParseArgument(L"--gr2-prewarm=invalid"); if(invalidPrewarm.valid) return 22;
     defaults.ParseArgument(L"--existing-client-option");
     if(!defaults.valid || defaults.selected || defaults.backend!=BackendKind::DiligentD3D11) return 1;
     defaults.ParseArgument(L"--renderer-smoke-test");

@@ -473,6 +473,7 @@ class CInstanceBase
 
 		void					Transform();
 		void					Deform();
+        bool PrepareInitialRenderData();
 		void					Render();
 		void					RenderTrace();
 		void					RenderToShadowMap();

@@ -5,11 +5,75 @@
 #include "RaceData.h"
 #include "SpeedTreeLib/SpeedTreeForestRenderer.h"
 #include "SpeedTreeLib/SpeedTreeWrapper.h"
+#include "AssetRuntime/GR2/GR2AssetProvider.h"
 
 enum
 {
 	MAIN_RACE_MAX_NUM = 8,
 };
+
+bool CActorInstance::PrewarmMotions(std::size_t decodeStart,DWORD deadline,bool localPlayer)
+{
+    using namespace AssetRuntime;
+    if(m_modelThingSetVector.empty()) return !localPlayer;
+    // Only already-owned body/LOD documents and registered common motions.
+    // Hair shares the body pose; rigid weapons have no independent clip binding.
+    const std::array<WORD,2> modes{static_cast<WORD>(GetMotionMode()),CRaceMotionData::MODE_GENERAL};
+    CRaceData::TComboData* combo=nullptr;
+    WORD normalAttack=CRaceMotionData::NAME_NORMAL_ATTACK;
+    if(localPlayer && m_pkCurRaceData) {
+        m_pkCurRaceData->GetComboDataPointer(modes[0],__GetCurrentComboType(),&combo);
+        // Players register combo attacks rather than the NPC normal-attack map.
+        if(!m_pkCurRaceData->GetNormalAttackIndex(modes[0],&normalAttack) && combo && !combo->ComboIndexVector.empty())
+            normalAttack=static_cast<WORD>(combo->ComboIndexVector.front());
+    }
+    if(localPlayer) {
+        if(!m_pkCurRaceData) return false;
+        for(WORD index:{WORD(CRaceMotionData::NAME_WAIT),WORD(CRaceMotionData::NAME_WALK),WORD(CRaceMotionData::NAME_RUN),normalAttack}) {
+            MOTION_KEY key{};
+            if(!m_pkCurRaceData->GetMotionKey(modes[0],index,&key)) return false;
+            const auto found=m_roMotionThingMap.find(key);
+            if(found==m_roMotionThingMap.end() || !found->second || found->second->IsNull()) return false;
+        }
+    }
+    for(std::size_t modeIndex=0;modeIndex<modes.size();++modeIndex) {
+        if(localPlayer && modeIndex) break;
+        if(modeIndex && modes[0]==modes[1]) continue;
+        for(const auto& [key,motionRef]:m_roMotionThingMap) {
+            const auto index=GET_MOTION_INDEX(key);
+            const bool minimal=index==CRaceMotionData::NAME_WAIT || index==CRaceMotionData::NAME_WALK ||
+                index==CRaceMotionData::NAME_RUN || index==normalAttack ||
+                (combo && std::find(combo->ComboIndexVector.begin(),combo->ComboIndexVector.end(),index)!=combo->ComboIndexVector.end());
+            const bool common=localPlayer ? minimal : (index>=CRaceMotionData::NAME_WAIT && index<=CRaceMotionData::NAME_COMBO_ATTACK_8) ||
+                index==CRaceMotionData::NAME_SPAWN || index==CRaceMotionData::NAME_STOP ||
+                (!IsPC() && index>=CRaceMotionData::NAME_SPECIAL_1 && index<=CRaceMotionData::NAME_SPECIAL_6);
+            if(!common || !motionRef || motionRef->IsNull()) continue;
+            WORD mode=modes[modeIndex];
+            if(localPlayer) {
+                MOTION_KEY resolved{};
+                if(!m_pkCurRaceData->GetMotionKey(modes[0],index,&resolved)) return false;
+                mode=GET_MOTION_MODE(resolved);
+            }
+            if(GET_MOTION_MODE(key)!=mode) continue;
+            // Match the normal ActorInstance control: locomotion loops, combat
+            // and reactions play once. Do not synthesize unused looping attacks.
+            const unsigned boundaryMask=index<=CRaceMotionData::NAME_RUN?8u:1u;
+            const auto& clips=motionRef->GetPointer()->GetAsset();
+            if(!clips.AnimationCount()) continue;
+            for(auto* modelRef:m_modelThingSetVector[0].m_pLODThingRefVector) {
+                if(!modelRef || modelRef->IsNull()) continue;
+                const auto& models=modelRef->GetPointer()->GetAsset();
+                for(std::size_t model=0;model<models.ModelCount();++model) {
+                    if(GR2::nativeAnimationDecodes.load()-decodeStart>=512 || static_cast<std::int32_t>(deadline-ELTimer_GetMSec())<=0)
+                        return false;
+                    const auto result=PrepareGR2Animation(models.Model(model),clips.Animation(0),boundaryMask);
+                    if(result!=AssetError::None && result!=AssetError::NoMatchingTracks) return false;
+                }
+            }
+        }
+    }
+    return !m_pkHorse || m_pkHorse->PrewarmMotions(decodeStart,deadline);
+}
 
 void CActorInstance::INSTANCEBASE_Deform()
 {

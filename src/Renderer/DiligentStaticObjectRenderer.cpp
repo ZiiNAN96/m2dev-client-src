@@ -1,5 +1,6 @@
 #include "DiligentStaticObjectRenderer.h"
 #include "GpuSkinningShader.h"
+#include "AssetRuntime/AnimationStallAudit.h"
 #include "ActorRenderData.h"
 #include "DiligentD3D11BackendInternal.h"
 #include "Diagnostics.h"
@@ -274,6 +275,7 @@ bool DiligentStaticObjectRenderer::PreparePrototype(StaticObjectGeometryPtr& geo
     try {
         auto* device=s.backend.m_impl->device.RawPtr();
         if(!mesh) {
+            AssetRuntime::AnimationStallAudit::WorkScope createAudit(AssetRuntime::AnimationStallAudit::Work::GPUCreate);
             std::erase_if(s.skinMeshes,[](const auto& entry){ return entry.expired(); });
             std::erase_if(s.skinPoses,[](const auto& entry){ return entry.expired(); });
             std::shared_ptr<SkinMeshBuffers> shared;
@@ -324,6 +326,7 @@ bool DiligentStaticObjectRenderer::PreparePrototype(StaticObjectGeometryPtr& geo
             mesh->counters=s.counters; ++s.counters->geometry;
         }
         if(mesh->pose->revision!=palette.revision || !mesh->pose->revision) {
+            AssetRuntime::AnimationStallAudit::WorkScope uploadAudit(AssetRuntime::AnimationStallAudit::Work::GPUUpload);
             MapHelper<SkinningMatrix> mapped(s.backend.m_impl->context,mesh->pose->buffer,MAP_WRITE,MAP_FLAG_DISCARD);
             if(!mapped) return false;
             memset(mapped,0,gpuPrototypeBufferBones*sizeof(SkinningMatrix));
@@ -340,6 +343,7 @@ StaticObjectGeometryPtr DiligentStaticObjectRenderer::UploadDynamicGeometry(cons
 { return CreateGeometry(data,true); }
 StaticObjectGeometryPtr DiligentStaticObjectRenderer::CreateGeometry(const StaticObjectSource& data, bool dynamic)
 {
+    AssetRuntime::AnimationStallAudit::WorkScope createAudit(AssetRuntime::AnimationStallAudit::Work::GPUCreate);
     auto& s=*m_impl;
     const auto fail=[&](int line) -> StaticObjectGeometryPtr { s.Fail("geometry upload rejected source or GPU buffer", line); return {}; };
     const bool wide=!data.indices32.empty();

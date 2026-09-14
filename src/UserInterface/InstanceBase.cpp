@@ -11,6 +11,7 @@
 #include "EterLib/DrawState.h"
 #include "GameLib/ItemManager.h"
 #include "GameLib/ActorRenderBridge.h" // ZiiNAN: Diligent mount actor rendering
+#include "AssetRuntime/AnimationStallAudit.h"
 
 BOOL HAIR_COLOR_ENABLE=FALSE;
 BOOL USE_ARMOR_SPECULAR=FALSE;
@@ -719,11 +720,15 @@ bool CInstanceBase::__FindRaceType(DWORD dwRace, BYTE* pbType)
 
 bool CInstanceBase::Create(const SCreateData& c_rkCreateData)
 {
+    using AssetRuntime::AnimationStallAudit::LocalPlayerScope;
+    LocalPlayerScope spawn("create",c_rkCreateData.m_isMain);
+    LocalPlayerScope model("race_model",c_rkCreateData.m_isMain);
 	SetInstanceType(c_rkCreateData.m_bType);
 
 
 	if (!SetRace(c_rkCreateData.m_dwRace))
 		return false;
+    model.Stop();
 
 	SetVirtualID(c_rkCreateData.m_dwVID);
 
@@ -748,12 +753,15 @@ bool CInstanceBase::Create(const SCreateData& c_rkCreateData)
 	if (0 != c_rkCreateData.m_dwMountVnum)
 		MountHorse(c_rkCreateData.m_dwMountVnum);
 
-	SetArmor(c_rkCreateData.m_dwArmor);
+    {
+        LocalPlayerScope armor("body_armor",c_rkCreateData.m_isMain);
+        SetArmor(c_rkCreateData.m_dwArmor);
+    }
 
 	if (IsPC())
 	{
-		SetHair(c_rkCreateData.m_dwHair);
-		SetWeapon(c_rkCreateData.m_dwWeapon);
+        { LocalPlayerScope hair("hair",c_rkCreateData.m_isMain); SetHair(c_rkCreateData.m_dwHair); }
+        { LocalPlayerScope weapon("weapon",c_rkCreateData.m_isMain); SetWeapon(c_rkCreateData.m_dwWeapon); }
 	}
 
 	__Create_SetName(c_rkCreateData);
@@ -1948,6 +1956,19 @@ void CInstanceBase::Transform()
 	m_GraphicThingInstance.INSTANCEBASE_Transform();
 }
 
+
+bool CInstanceBase::PrepareInitialRenderData()
+{
+    // The same scoped GPU path as character select, without drawing a world or
+    // relying on a camera frustum that has not yet been set by GameWindow.
+    Renderer::ActorPreviewScope preview(true);
+    Renderer::ActorMountScope mountScope(MakeAnimatedMountPair(m_GraphicThingInstance,m_kHorse.GetActorPtr()));
+    Transform();
+    m_kHorse.Deform();
+    m_GraphicThingInstance.INSTANCEBASE_Deform();
+    return PrepareAnimatedActorResources(m_GraphicThingInstance) &&
+        (!m_kHorse.GetActorPtr() || PrepareAnimatedActorResources(*m_kHorse.GetActorPtr()));
+}
 
 void CInstanceBase::Deform()
 {

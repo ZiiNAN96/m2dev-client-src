@@ -41,6 +41,7 @@ class CPythonCharacterManager : public CSingleton<CPythonCharacterManager>, publ
 		void ClearMainInstance();
 		bool SetMainInstance(DWORD dwVID);
 		CInstanceBase* GetMainInstancePtr();
+        bool PrewarmVisibleActors(bool prepareLocalPlayer=false);
 
 		void								SCRIPT_SetAffect(DWORD dwVID, DWORD eAffect, BOOL isVisible);
 		void								SetEmoticon(DWORD dwVID, DWORD eEmoticon);

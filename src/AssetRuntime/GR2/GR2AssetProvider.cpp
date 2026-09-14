@@ -105,7 +105,11 @@ public:
         } else for(std::size_t i=0;i<pose_.localTransforms.size();++i) pose_.localTransforms[i]=skeleton_->Bones()[i].localBind;
         AR::Matrix parent;
         if(!request.attachmentMatrix.empty()) std::copy(request.attachmentMatrix.begin(),request.attachmentMatrix.end(),parent.begin());
-        if(!AR::Evaluate(*skeleton_,pose_,model_,request.attachmentMatrix.empty()?nullptr:&parent) || !AR::BuildPalette(*skeleton_,model_,palette_)) return {{},AssetError::EvaluationFailed};
+        if(!AR::Evaluate(*skeleton_,pose_,model_,request.attachmentMatrix.empty()?nullptr:&parent)) return {{},AssetError::EvaluationFailed};
+        {
+            AnimationStallAudit::WorkScope paletteAudit(AnimationStallAudit::Work::Palette);
+            if(!AR::BuildPalette(*skeleton_,model_,palette_)) return {{},AssetError::EvaluationFailed};
+        }
         ++independentPoseSamples; ready_=true; return {CompositePose(),AssetError::None};
     }
 private:
@@ -128,6 +132,7 @@ public:
     }
     ~Document() override { --GR2::liveReaderDocuments; }
     const GR2::AnimationData* Clip(std::size_t index) const { return index<clips_.size()?&clips_[index]:nullptr; }
+    const AR::RuntimeSkeleton* Skeleton(std::size_t index) const { return index<data_.size()?data_[index].skeleton.get():nullptr; }
     std::shared_ptr<const AR::RuntimeAnimationClip> BoundClip(std::size_t index,const AR::RuntimeSkeleton& skeleton,
         std::string_view modelName,unsigned boundary,std::string& error) const
     {
@@ -247,11 +252,37 @@ public:
         try {
             AnimationStallAudit::WorkScope audit(AnimationStallAudit::Work::Import);
             ++GR2::nativeFileReads;
-            GR2::File file(bytes); auto content=GR2::Read(file);
+            AnimationStallAudit::WorkScope containerAudit(AnimationStallAudit::Work::Container);
+            GR2::File file(bytes); containerAudit.Stop();
+            AnimationStallAudit::WorkScope parseAudit(AnimationStallAudit::Work::Parse);
+            auto content=GR2::Read(file); parseAudit.Stop();
             return {AssetHandle(std::make_shared<Document>(std::move(id),std::move(content))),AssetError::None};
         } catch(const std::exception& error) { return {{},AssetError::InvalidAsset,"GR2 reader: "+std::string(error.what())}; }
     }
 };
 }
 AssetProvider& GetGR2AssetProvider() { static Provider provider; return provider; }
+AssetError PrepareGR2Animation(const ModelHandle& model,const AnimationHandle& animation,unsigned boundaryMask)
+{
+    if(!model || !animation || !boundaryMask || boundaryMask>15) return AssetError::InvalidInput;
+    const auto* modelDocument=dynamic_cast<const Document*>(model.GetDocument().get());
+    const auto* animationDocument=dynamic_cast<const Document*>(animation.GetDocument().get());
+    if(!modelDocument || !animationDocument) return AssetError::ProviderMismatch;
+    const auto* skeleton=modelDocument->Skeleton(model.Index());
+    const auto* source=animationDocument->Clip(animation.Index());
+    if(!source || !skeleton) return AssetError::NoMatchingTracks;
+    const auto group=std::find_if(source->groups.begin(),source->groups.end(),[&](const auto& g){return g.name==model.Get()->name;});
+    if(group==source->groups.end() || std::none_of(group->tracks.begin(),group->tracks.end(),[&](const auto& t){return skeleton->FindBone(t.name)>=0;}))
+        return AssetError::NoMatchingTracks;
+    ++GR2::prewarmRequests;
+    for(unsigned boundary=0;boundary<4;++boundary) if(boundaryMask&(1u<<boundary)) {
+        std::string error;
+        if(!animationDocument->BoundClip(animation.Index(),*skeleton,model.Get()->name,boundary,error)) {
+            ++GR2::prewarmFailures;
+            if(animationRuntimeErrorSink) animationRuntimeErrorSink(("GR2 prewarm: "+error+" boundary="+std::to_string(boundary)+" file="+animationDocument->Id()).c_str());
+            return AssetError::EvaluationFailed;
+        }
+    }
+    return AssetError::None;
+}
 }

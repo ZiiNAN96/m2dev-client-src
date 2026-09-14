@@ -4,6 +4,13 @@
 #include "InstanceBase.h"
 #include "GameLib/RaceManager.h"
 
+static PyObject* chrmgrPrewarmVisibleActors(PyObject*,PyObject* args)
+{
+    int prepareLocalPlayer=0;
+    if(!PyArg_ParseTuple(args,"|p",&prepareLocalPlayer)) return nullptr;
+    return Py_BuildValue("i",CPythonCharacterManager::Instance().PrewarmVisibleActors(prepareLocalPlayer!=0)?1:0);
+}
+
 //////////////////////////////////////////////////////////////////////////
 // RaceData 관련 시작
 //////////////////////////////////////////////////////////////////////////
@@ -15,7 +22,11 @@ PyObject * chrmgrSetEmpireNameMode(PyObject* poSelf, PyObject* poArgs)
 		return Py_BadArgument();
 
 	CInstanceBase::SetEmpireNameMode(iEnable ? true : false);
-	CPythonCharacterManager::Instance().RefreshAllPCTextTail();
+    // Native entry can create mobs/NPCs before GameWindow selects the palette.
+    // The mode changes their colors too, so refresh every existing name.
+    auto& characters=CPythonCharacterManager::Instance();
+    for(auto it=characters.CharacterInstanceBegin();it!=characters.CharacterInstanceEnd();++it)
+        (*it)->RefreshTextTail();
 
 	return Py_BuildNone();
 }
@@ -725,6 +736,7 @@ void initchrmgr()
 	{
 		// RaceData 관련		
 		{ "SetEmpireNameMode",			chrmgrSetEmpireNameMode,				METH_VARARGS },
+        { "PrewarmVisibleActors",chrmgrPrewarmVisibleActors,METH_NOARGS },
 		{ "GetVIDInfo",					chrmgrGetVIDInfo,						METH_VARARGS },
 		{ "GetPickedVID",				chrmgrGetPickedVID,						METH_VARARGS },
 		{ "SetShapeModel",				chrmgrSetShapeModel,					METH_VARARGS },

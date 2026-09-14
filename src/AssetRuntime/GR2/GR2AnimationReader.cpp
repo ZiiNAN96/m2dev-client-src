@@ -154,7 +154,9 @@ std::shared_ptr<const AnimationRuntime::RuntimeAnimationClip> BindAnimation(cons
         const auto& group=*selected;
         std::vector<AnimationRuntime::AnimationTrack> tracks; std::size_t keys=0;
         for(const auto& source:group.tracks) {
-            const auto bone=skeleton.FindBone(source.name); if(bone<0) continue;
+            const auto bone=[&]{ AnimationStallAudit::WorkScope mapping(AnimationStallAudit::Work::ClipBind); return skeleton.FindBone(source.name); }();
+            if(bone<0) continue;
+            AnimationStallAudit::WorkScope decode(AnimationStallAudit::Work::AnimationDecode);
             AnimationRuntime::AnimationTrack track; track.targetBone=static_cast<std::uint32_t>(bone);
             track.translation=ConvertCurve<3>(source.translation,metadata.duration,keys,boundary);
             track.rotation=ConvertCurve<4>(source.rotation,metadata.duration,keys,boundary);
@@ -163,6 +165,7 @@ std::shared_ptr<const AnimationRuntime::RuntimeAnimationClip> BindAnimation(cons
         }
         Require(!tracks.empty(),"no matching animation tracks");
         auto clip=std::make_shared<AnimationRuntime::RuntimeAnimationClip>();
+        AnimationStallAudit::WorkScope binding(AnimationStallAudit::Work::ClipBind);
         if(!clip->Initialize(metadata.name,metadata.duration,true,std::move(tracks),skeleton,error)) return {};
         return clip;
     } catch(const std::exception& failure) { error=failure.what(); return {}; }

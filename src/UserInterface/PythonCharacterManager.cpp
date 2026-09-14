@@ -7,6 +7,45 @@
 #include "packet.h"
 
 #include "EterLib/Camera.h"
+#include "AssetRuntime/GR2/GR2AssetProvider.h"
+#include "AssetRuntime/GR2ReaderMode.h"
+#include "AssetRuntime/AnimationStallAudit.h"
+#include <set>
+#include <tuple>
+
+bool CPythonCharacterManager::PrewarmVisibleActors(bool prepareLocalPlayer)
+{
+    using namespace AssetRuntime;
+    if(startupGR2Reader!=GR2ReaderMode::ZiiNAN || !nativeGR2Prewarm) return true;
+    if(AnimationStallAudit::fullCapture && !AnimationStallAudit::explicitPhase) AnimationStallAudit::capturePhase=0;
+    AnimationStallAudit::WorkScope audit(AnimationStallAudit::Work::Prewarm);
+    const auto decodeStart=GR2::nativeAnimationDecodes.load();
+    const DWORD deadline=ELTimer_GetMSec()+10000;
+    auto* localPlayer=GetMainInstancePtr();
+    if(prepareLocalPlayer && !localPlayer) return false;
+    std::set<std::tuple<DWORD,DWORD,int,DWORD>> prepared;
+    const auto prepare=[&](CInstanceBase* instance) {
+        if(!instance) return true;
+        auto& actor=instance->GetGraphicThingInstanceRef();
+        const auto key=std::make_tuple(instance->GetRace(),instance->GetShape(),actor.GetMotionMode(),actor.GetMountRace());
+        if(prepared.contains(key)) return true;
+        if(prepared.size()>=32) return false;
+        prepared.insert(key);
+        const bool local=instance==localPlayer;
+        AnimationStallAudit::LocalPlayerScope timing("minimal_clips",local);
+        return actor.PrewarmMotions(decodeStart,deadline,local);
+    };
+    bool complete=prepare(localPlayer);
+    if(complete && prepareLocalPlayer) {
+        AnimationStallAudit::LocalPlayerScope timing("initial_pose_resources",true);
+        complete=localPlayer->PrepareInitialRenderData();
+    }
+    const bool localReady=complete;
+    for(const auto& [id,instance]:m_kAliveInstMap) if(complete) complete=prepare(instance);
+    if(!complete) ++GR2::prewarmLimited;
+    // An optional surrounding-actor budget must not reject a ready local player.
+    return prepareLocalPlayer ? localReady : complete;
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Frame Process

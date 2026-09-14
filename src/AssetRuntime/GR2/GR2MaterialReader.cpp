@@ -1,4 +1,5 @@
 #include "GR2Reader.h"
+#include "AssetRuntime/AnimationStallAudit.h"
 #include <algorithm>
 
 namespace AssetRuntime::GR2
@@ -22,6 +23,7 @@ std::string Texture(Types& t,Object material,std::string_view usage) { std::set<
 }
 MaterialAsset ReadMaterial(Types& t,Object source)
 {
+    AnimationStallAudit::WorkScope audit(AnimationStallAudit::Work::Material);
     MaterialAsset result; if(!source) return result;
     result.name=t.Text(source,"Name"); result.hasMatchingTextures=true;
     result.matchingTextures={Texture(t,source,"Diffuse Color"),Texture(t,source,"Opacity")};

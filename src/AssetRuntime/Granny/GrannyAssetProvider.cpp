@@ -893,6 +893,7 @@ bool CopyWorldPose(const granny_world_pose* pose, std::span<Matrix4> destination
 }
 PoseResult GrannyPoseEvaluator::Evaluate(const PoseRequest& request)
 {
+    AnimationStallAudit::WorkScope audit(AnimationStallAudit::Work::ReferencePose);
     if (!model_ || !scratch_ || !world_ || boneCount_ <= 0 || GrannyGetWorldPoseBoneCount(world_) < boneCount_)
         return {{}, AssetError::EvaluationFailed};
     if (!request.attachmentMatrix.empty() && request.attachmentMatrix.size() != 16)

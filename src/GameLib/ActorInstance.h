@@ -255,6 +255,7 @@ class CActorInstance : public IActorInstance, public IFlyTargetableObject
 		void SetComboType(WORD wComboType);
 
 		DWORD GetRace();
+		DWORD GetMountRace() const { return m_pkHorse ? m_pkHorse->GetRace() : 0; }
 		DWORD GetVirtualID();
 
 		UINT GetActorType() const;
@@ -299,6 +300,7 @@ class CActorInstance : public IActorInstance, public IFlyTargetableObject
 		// Motion Queueing System
 		void SetMotionMode(int iMotionMode); // FIXME : 모드의 시간차 적용이 가능하게끔 한다.
 		int GetMotionMode();
+        bool PrewarmMotions(std::size_t decodeStart,DWORD deadline,bool localPlayer=false);
 		void SetLoopMotion(DWORD dwMotion, float fBlendTime = 0.1f, float fSpeedRatio=1.0f);
 		bool InterceptOnceMotion(DWORD dwMotion, float fBlendTime = 0.1f, UINT uSkill=0, float fSpeedRatio=1.0f);
 		bool InterceptLoopMotion(DWORD dwMotion, float fBlendTime = 0.1f);

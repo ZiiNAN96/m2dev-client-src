@@ -24,6 +24,8 @@ struct StartupOptions
     AssetRuntime::AnimationRuntimeMode animationRuntime=AssetRuntime::AnimationRuntimeMode::Granny;
     bool animationRuntimeSelected=false;
     bool animationStallAudit=false;
+    bool loadWarmupAudit=false;
+    bool gr2Prewarm=true,gr2PrewarmSelected=false;
     AssetRuntime::GR2ReaderMode gr2Reader=AssetRuntime::GR2ReaderMode::Granny;
     bool gr2ReaderSelected=false;
 
@@ -42,6 +44,14 @@ struct StartupOptions
             return;
         }
         if (argument == L"--animation-stall-audit") { animationStallAudit=true; return; }
+        if (argument == L"--load-warmup-audit") { loadWarmupAudit=true; return; }
+        if (argument.starts_with(L"--gr2-prewarm=")) {
+            const auto value=argument.substr(14);
+            if(value!=L"on" && value!=L"off") { valid=false; return; }
+            const bool requested=value==L"on";
+            if(gr2PrewarmSelected && gr2Prewarm!=requested) valid=false;
+            gr2Prewarm=requested; gr2PrewarmSelected=true; return;
+        }
         if (argument.starts_with(L"--animation-runtime=")) {
             const auto value=argument.substr(20);
             if (value!=L"granny" && value!=L"ziinan") { valid=false; return; }
