@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "AssetRuntime/Granny/GrannyAssetProvider.h"
 #include "Renderer/ResourceData.h"
 #include "EterLib/SourceResourceAudit.h"
 #include "PythonApplication.h"
@@ -349,6 +350,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     Renderer::WriteSkinningBenchmark();
     resourceLog << "AllCPUDeformationCalls=" << Renderer::skinningCpuCalls << " AllCPUDeformationVertices=" << Renderer::skinningCpuVertices
         << " GPUFallbacks=" << Renderer::skinningFallbacks << '\n';
+    resourceLog << "AssetDocuments=" << AssetRuntime::liveDocuments
+        << " AnimationInstances=" << AssetRuntime::liveAnimationInstances
+        << " MeshBindings=" << AssetRuntime::liveMeshBindings << '\n';
     resourceLog << "PrototypeGeometry=" << Renderer::livePrototypeGeometry << " PrototypePalettes=" << Renderer::livePrototypePalettes
         << " GPUFrames=" << Renderer::prototypeFrames << " BoneBufferWrittenBytes=" << Renderer::prototypeBoneBytes
         << " PrepareUs=" << Renderer::prototypePrepareUs << " CPUReferenceFrames=" << Renderer::prototypeCpuFrames
@@ -363,19 +367,11 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	return result;
 }
 
-static void GrannyError(granny_log_message_type Type, granny_log_message_origin Origin, char const* File, granny_int32x Line, char const* Message, void* UserData)
-{
-	TraceError("GRANNY: %s", Message);
-}
-
 int Setup(LPSTR lpCmdLine)
 {
 	// ZiiNAN: Platform abstraction
 	if (!Platform::Time::BeginTimerPeriod()) return 0;
 
-	granny_log_callback Callback;
-	Callback.Function = nullptr;
-	Callback.UserData = 0;
-	GrannySetLogCallback(&Callback);
+    AssetRuntime::ConfigureGrannyDiagnostics();
 	return 1;
 }

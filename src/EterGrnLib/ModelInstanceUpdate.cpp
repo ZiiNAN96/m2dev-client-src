@@ -8,7 +8,7 @@
 
 void CGrannyModelInstance::Update(DWORD dwAniFPS)
 {		
-	if (!dwAniFPS)
+	if (!dwAniFPS || !m_animationInstance)
 		return;
 
 	const DWORD c_dwCurUpdateFrame = (DWORD) (GetLocalTime() * static_cast<float>(ANIFPS_MAX));
@@ -18,10 +18,10 @@ void CGrannyModelInstance::Update(DWORD dwAniFPS)
 
 	m_dwOldUpdateFrame=c_dwCurUpdateFrame;
 
-	GrannyFreeCompletedModelControls(m_pgrnModelInstance); //Black screen fix
+    m_animationInstance->FreeCompletedControls();
 
 	//DWORD t1=timeGetTime();
-	GrannySetModelClock(m_pgrnModelInstance, GetLocalTime());	
+    m_animationInstance->SetClock(GetLocalTime());
 	//DWORD t2=timeGetTime();
 
 #ifdef __PERFORMANCE_CHECKER__
@@ -46,12 +46,12 @@ void CGrannyModelInstance::UpdateLocalTime(float fElapsedTime)
 
 void CGrannyModelInstance::UpdateTransform(Math::Matrix * pMatrix, float fSecondsElapsed)
 {
-	if (!m_pgrnModelInstance)
+	if (!m_animationInstance)
 	{
 		TraceError("CGrannyModelIstance::UpdateTransform - m_pgrnModelInstance = NULL");
 		return;
 	}
-	GrannyUpdateModelMatrix(m_pgrnModelInstance, fSecondsElapsed, (const float *) pMatrix, (float *) pMatrix, false);
+    m_animationInstance->UpdateTransform(fSecondsElapsed,std::span<float,16>(reinterpret_cast<float*>(pMatrix),16));
 	//Tracef("%f %f %f",pMatrix->_41,pMatrix->_42,pMatrix->_43);
 	
 }
@@ -71,7 +71,7 @@ void CGrannyModelInstance::Deform(const Math::Matrix * c_pWorldMatrix)
 	//m_pgrnWorldPose = m_pgrnWorldPoseReal;
 	/////////////////////////////////////////////
 	
-	UpdateWorldPose();
+	if (!UpdateWorldPose()) return;
 	if (!UpdateWorldMatrices(c_pWorldMatrix)) return;
 
     // ZiiNAN: GPU skinning actor coverage
@@ -94,7 +94,7 @@ void CGrannyModelInstance::Deform(const Math::Matrix * c_pWorldMatrix)
         ++Renderer::skinningFallbacks;
         if(m_actorRenderData.reports.insert("GPU prototype CPU fallback").second)
             TraceError("GPU skinning CPU fallback: model=%s part=%u status=%s palette=%s remaps=%zu; original CPU deformation",
-                m_pModel->GetGrannyModelPointer()->Name,static_cast<unsigned>(part),Renderer::SkinDataStatusName(m_skinningStatus),
+                m_pModel->GetAsset() ? m_pModel->GetAsset()->name.c_str() : "legacy-reference",static_cast<unsigned>(part),Renderer::SkinDataStatusName(m_skinningStatus),
                 palette ? "present" : "unavailable",m_skinningRemaps.size());
     }
     if(m_actorRenderData.gpuPrototype) {
@@ -116,7 +116,7 @@ void CGrannyModelInstance::Deform(const Math::Matrix * c_pWorldMatrix)
 		if (rkDeformableVertexBuffer.LockRange(m_pModel->GetDeformVertexCount(), (void **)&pntVertices))
 		{
             const auto skinStart=reference ? Renderer::PrototypeClock::now() : Renderer::PrototypeClock::time_point{};
-			DeformPNTVertices(pntVertices);
+            if (!DeformPNTVertices(pntVertices)) { rkDeformableVertexBuffer.Unlock(); return; }
             if(reference) {
                 Renderer::prototypeCpuSkinUs+=Renderer::PrototypeMicroseconds(skinStart);
                 ++Renderer::prototypeCpuFrames;
@@ -145,53 +145,16 @@ void CGrannyModelInstance::Deform(const Math::Matrix * c_pWorldMatrix)
 	}	
 }
 
-//////////////////////////////////////////////////////
-class CGrannyLocalPose
-{
-	public:
-		CGrannyLocalPose()
-		{
-			m_pgrnLocalPose = NULL;
-			m_boneCount = 0;
-		}
-
-		virtual ~CGrannyLocalPose()
-		{
-			if (m_pgrnLocalPose)
-				GrannyFreeLocalPose(m_pgrnLocalPose);
-		}
-
-		granny_local_pose * Get(int boneCount)
-		{
-			if (m_pgrnLocalPose)
-			{
-				if (m_boneCount >= boneCount)
-					return m_pgrnLocalPose;
-
-				GrannyFreeLocalPose(m_pgrnLocalPose);
-			}
-
-			m_boneCount = boneCount;
-			m_pgrnLocalPose = GrannyNewLocalPose(m_boneCount);
-			return m_pgrnLocalPose;
-		}
-
-	private:
-		granny_local_pose *	m_pgrnLocalPose;
-		int					m_boneCount;
-};
-//////////////////////////////////////////////////////
-
 void CGrannyModelInstance::UpdateSkeleton(const Math::Matrix * c_pWorldMatrix, float /*fLocalTime*/)
 {	
 	// DELETED
 	//m_pgrnWorldPose = m_pgrnWorldPoseReal;
 	///////////////////////////////////////////
-	UpdateWorldPose();
+	if (!UpdateWorldPose()) return;
 	UpdateWorldMatrices(c_pWorldMatrix);
 }
 
-void CGrannyModelInstance::UpdateWorldPose()
+bool CGrannyModelInstance::UpdateWorldPose()
 {
 	// WEP	= m_iParentBoneIndex != 0 -> UpdateWorldPose(O)
 	// LOD	= UpdateWorldPose(O)
@@ -199,24 +162,27 @@ void CGrannyModelInstance::UpdateWorldPose()
 
 	if (m_ppkSkeletonInst)
 		if (*m_ppkSkeletonInst!=this)
-			return;
+			return *m_ppkSkeletonInst != nullptr;
 	
-	static CGrannyLocalPose s_SharedLocalPose;
-
-	granny_skeleton * pgrnSkeleton = GrannyGetSourceSkeleton(m_pgrnModelInstance);
-	granny_local_pose * pgrnLocalPose = s_SharedLocalPose.Get(pgrnSkeleton->BoneCount);	
+    if (!m_animationInstance) return false;
 
 	const float * pAttachBoneMatrix = (mc_pParentInstance) ? mc_pParentInstance->GetBoneMatrixPointer(m_iParentBoneIndex) : NULL;
 
-	GrannySampleModelAnimationsAccelerated(m_pgrnModelInstance, pgrnSkeleton->BoneCount, pAttachBoneMatrix, pgrnLocalPose, __GetWorldPosePtr());
+    const auto evaluated = AssetRuntime::EvaluatePose(*m_animationInstance,
+        {pAttachBoneMatrix ? std::span<const float>(pAttachBoneMatrix, 16) : std::span<const float>{}});
+    if (evaluated.error != AssetRuntime::AssetError::None) {
+        if (m_skinningPalette) m_skinningPalette->ready = false;
+        m_actorRenderData.ready = false;
+        return false;
+    }
     // ZiiNAN: GPU skinning static mesh data
     __CaptureSkinningPose();
 	/*
 	GrannySampleModelAnimations(m_pgrnModelInstance, 0, pgrnSkeleton->BoneCount, pgrnLocalPose);
 	GrannyBuildWorldPose(pgrnSkeleton, 0, pgrnSkeleton->BoneCount, pgrnLocalPose, pAttachBoneMatrix, m_pgrnWorldPose);
 	*/
-	GrannyFreeCompletedModelControls(m_pgrnModelInstance);	
-
+    m_animationInstance->FreeCompletedControls();
+    return true;
 }
 
 bool CGrannyModelInstance::UpdateWorldMatrices(const Math::Matrix* c_pWorldMatrix)
@@ -232,8 +198,8 @@ bool CGrannyModelInstance::UpdateWorldMatrices(const Math::Matrix* c_pWorldMatri
 	
 	int meshCount = m_pModel->GetMeshCount();
 	
-	granny_matrix_4x4 * pgrnMatCompositeBuffer = GrannyGetWorldPoseComposite4x4Array(__GetWorldPosePtr());
-	Math::Matrix * boneMatrices = (Math::Matrix *) pgrnMatCompositeBuffer;
+    const auto pose=__GetCompositePose();
+    if (!pose.Valid()) return false;
 
 	for (int i = 0; i < meshCount; ++i)
 	{
@@ -242,7 +208,7 @@ bool CGrannyModelInstance::UpdateWorldMatrices(const Math::Matrix* c_pWorldMatri
 		const CGrannyMesh * pMesh = m_pModel->GetMeshPointer(i);
 
 		// WORK
-		int * boneIndices = __GetMeshBoneIndices(i);
+		const int * boneIndices = __GetMeshBoneIndices(i);
 		// END_OF_WORK
 
 		if (pMesh->CanDeformPNTVertices())
@@ -251,8 +217,12 @@ bool CGrannyModelInstance::UpdateWorldMatrices(const Math::Matrix* c_pWorldMatri
 		}
 		else
 		{
+			if (!boneIndices || i>=m_meshBindings.size() || m_meshBindings[i]->BoneIndices().empty()) return false;
 			int iBone = *boneIndices;
-			Math::MatrixMultiply(&rWorldMatrix, &boneMatrices[iBone], c_pWorldMatrix);
+            if (iBone<0 || size_t(iBone)>=pose.BoneCount()) return false;
+            Math::Matrix boneMatrix;
+            std::memcpy(&boneMatrix,pose.values.data()+size_t(iBone)*16,sizeof(boneMatrix));
+			Math::MatrixMultiply(&rWorldMatrix, &boneMatrix, c_pWorldMatrix);
 		}
 	}
 
@@ -262,12 +232,12 @@ bool CGrannyModelInstance::UpdateWorldMatrices(const Math::Matrix* c_pWorldMatri
     return true;
 }
 
-void CGrannyModelInstance::DeformPNTVertices(void * pvDest)
+bool CGrannyModelInstance::DeformPNTVertices(void * pvDest)
 {
 	assert(m_pModel != NULL);
 	assert(m_pModel->CanDeformPNTVertices());
 
 	// WORK
-	m_pModel->DeformPNTVertices(pvDest, (Math::Matrix *) GrannyGetWorldPoseComposite4x4Array(__GetWorldPosePtr()), m_vct_pgrnMeshBinding);
+    return m_pModel->DeformPNTVertices(pvDest,__GetCompositePose(),m_meshBindings);
 	// END_OF_WORK
 }

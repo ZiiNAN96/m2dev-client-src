@@ -1,0 +1,10 @@
+add_library(AssetRuntime STATIC AssetRuntime.cpp)
+target_include_directories(AssetRuntime PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/..")
+target_compile_features(AssetRuntime PUBLIC cxx_std_20)
+target_link_libraries(AssetRuntime PRIVATE M2FirstPartyArchitectureChecks)
+
+if(M2_BUILD_WINDOWS_CLIENT)
+    add_library(AssetRuntimeGranny STATIC Granny/GrannyAssetProvider.cpp ../EterGrnLib/Deform.cpp)
+    target_link_libraries(AssetRuntimeGranny PUBLIC AssetRuntime PRIVATE Granny M2FirstPartyArchitectureChecks)
+    target_include_directories(AssetRuntimeGranny PRIVATE "${CMAKE_SOURCE_DIR}/extern/include")
+endif()

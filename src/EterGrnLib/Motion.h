@@ -1,4 +1,6 @@
 #pragma once
+#include "AssetRuntime/Granny/NativeTypes.h"
+#include "AssetRuntime/AssetRuntime.h"
 
 class CGrannyMotion
 {
@@ -10,6 +12,9 @@ class CGrannyMotion
 
 		void				Destroy();
 		bool				BindGrannyAnimation(granny_animation* pgrnAni);
+        bool BindAsset(AssetRuntime::AnimationHandle asset);
+        const AssetRuntime::AnimationAsset* GetAsset() const { return m_asset.Get(); }
+        const AssetRuntime::AnimationHandle& GetAssetHandle() const { return m_asset; }
 
 		granny_animation *	GetGrannyAnimationPointer() const;
 
@@ -21,5 +26,6 @@ class CGrannyMotion
 		void				Initialize();
 
 	protected:
+		AssetRuntime::AnimationHandle m_asset;
 		granny_animation *	m_pgrnAni;
 };

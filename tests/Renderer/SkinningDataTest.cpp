@@ -1,4 +1,5 @@
 #include "EterGrnLib/SkinningDataAdapter.h"
+#include "AssetRuntime/Granny/Native.h"
 #include "EterGrnLib/Deform.h"
 #include <filesystem>
 #include <iostream>

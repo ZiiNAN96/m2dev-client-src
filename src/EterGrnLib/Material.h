@@ -1,6 +1,7 @@
 #pragma once
 
-#include <granny.h>
+#include "AssetRuntime/Granny/NativeTypes.h"
+#include "AssetRuntime/AssetRuntime.h"
 #include <windows.h>
 #include "Renderer/DrawStateTypes.h"
 
@@ -39,6 +40,7 @@ class CGrannyMaterial : public CReferenceObject
 		void					Destroy();
 		void					Copy(CGrannyMaterial& rkMtrl);
 		bool					IsEqual(granny_material * pgrnMaterial) const;
+		bool IsEqual(const AssetRuntime::MaterialAsset* material) const { return m_sourceAsset == material; }
 		bool					IsIn(const char* c_szImageName, int* iStage);
 		void					SetSpecularInfo(BOOL bFlag, float fPower, BYTE uSphereMapIndex);
 
@@ -50,6 +52,7 @@ class CGrannyMaterial : public CReferenceObject
 
 	public:
 		bool					CreateFromGrannyMaterialPointer(granny_material* pgrnMaterial);
+		bool CreateFromAsset(const AssetRuntime::MaterialAsset& material);
 		void					SetImagePointer(int iStage, CGraphicImage* pImage);
 
 		CGrannyMaterial::EType	GetType() const;		
@@ -60,6 +63,7 @@ class CGrannyMaterial : public CReferenceObject
 
 
         TextureBinding GetTextureBinding(int stage) const;
+        const AssetRuntime::MaterialAsset& GetAsset() const { return m_asset; }
 
 		// MR-12: Fix specular isolation issue
 		float					GetSpecularPower() const;
@@ -98,6 +102,9 @@ class CGrannyMaterial : public CReferenceObject
 		void (CGrannyMaterial::*m_pfnRestoreRenderState)();
 
 	private:
+		AssetRuntime::MaterialAsset m_asset;
+		const AssetRuntime::MaterialAsset* m_sourceAsset{};
+
 		enum
 		{
 			SPHEREMAP_NUM = 10,
@@ -115,6 +122,7 @@ class CGrannyMaterialPalette
 		void	Copy(const CGrannyMaterialPalette& rkMtrlPalSrc);
 
 		DWORD	RegisterMaterial(granny_material* pgrnMaterial);
+		DWORD RegisterMaterial(const AssetRuntime::MaterialAsset& material);
 		void	SetMaterialImagePointer(const char* c_szMtrlName, CGraphicImage* pImage);
 		void	SetMaterialData(const char* c_szMtrlName, const SMaterialData& c_rkMaterialData);
 		void	SetSpecularInfo(const char* c_szMtrlName, BOOL bEnable, float fPower);

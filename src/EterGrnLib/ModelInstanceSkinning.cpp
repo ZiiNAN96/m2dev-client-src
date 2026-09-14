@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "AssetRuntime/Granny/GrannyInterop.h"
 #include "ModelInstance.h"
 #include "SkinningDataAdapter.h"
 #include "EterBase/Debug.h"
@@ -27,35 +28,29 @@ bool CGrannyModelInstance::__RefreshLinkedLodBinding()
         m_linkedLodBindingDestination=destination;
         return true;
     }
-    struct Bindings {
-        std::vector<granny_mesh_binding*> values;
-        ~Bindings() { for(auto* binding:values) if(binding) GrannyFreeMeshBinding(binding); }
-    } next;
+    std::vector<std::unique_ptr<AssetRuntime::MeshBinding>> next;
     try {
-        const auto* source=m_pModel->GetGrannyModelPointer();
-        const auto* target=owner->m_pModel->GetGrannyModelPointer();
         const auto& data=*m_pModel->GetSkinningData();
-        if(!source || !target || !source->Skeleton || !target->Skeleton ||
-           source->MeshBindingCount!=data.meshes.size()) return fail();
-        next.values.resize(source->MeshBindingCount,nullptr);
+        if(!owner->m_animationInstance || m_pModel->GetMeshCount()!=data.meshes.size()) return fail();
+        next.resize(data.meshes.size());
         std::vector<std::shared_ptr<const Renderer::BoneRemap>> remaps;
         if(data.HasSkinnedMeshes()) remaps.resize(data.meshes.size());
-        for(size_t m=0;m<next.values.size();++m) {
-            auto* binding=GrannyNewMeshBinding(source->MeshBindings[m].Mesh,source->Skeleton,target->Skeleton);
-            next.values[m]=binding;
+        for(size_t m=0;m<next.size();++m) {
+            auto binding=m_pModel->GetAssetHandle() ?
+                owner->m_animationInstance->CreateMeshBinding(m_pModel->GetAssetHandle(),m) :
+                AssetRuntime::GrannyInterop::CreateLegacyMeshBinding(m_pModel->GetGrannyModelPointer(),m,*owner->m_animationInstance);
             if(!binding) return fail();
-            const auto count=GrannyGetMeshBindingBoneCount(binding);
-            const auto* indices=GrannyGetMeshBindingToBoneIndices(binding);
-            if(count<0 || (count && !indices)) return fail();
-            for(int b=0;b<count;++b)
-                if(indices[b]<0 || size_t(indices[b])>=destination->names.size()) return fail();
+            const auto indices=binding->BoneIndices();
+            for(const auto bone:indices)
+                if(bone<0 || size_t(bone)>=destination->names.size()) return fail();
             if(data.meshes[m]) {
                 Renderer::SkinDataStatus status;
-                remaps[m]=SkinningDataAdapter::ExtractRemap(*data.meshes[m],binding,destination,status);
+                remaps[m]=SkinningDataAdapter::ExtractRemap(*data.meshes[m],indices,destination,status);
                 if(status!=Renderer::SkinDataStatus::Ready) return fail();
             }
+            next[m]=std::move(binding);
         }
-        m_vct_pgrnMeshBinding.swap(next.values);
+        m_meshBindings.swap(next);
         m_skinningRemaps=std::move(remaps);
         m_skinningBindingDestination=data.HasSkinnedMeshes() ? destination : nullptr;
         m_linkedLodBindingDestination=destination;
@@ -89,7 +84,7 @@ void CGrannyModelInstance::__PrepareSkinningBindings()
         for(size_t mesh=0;mesh<source.meshes.size();++mesh) if(source.meshes[mesh]) {
             Renderer::SkinDataStatus status;
             m_skinningRemaps[mesh]=SkinningDataAdapter::ExtractRemap(*source.meshes[mesh],
-                mesh<m_vct_pgrnMeshBinding.size()?m_vct_pgrnMeshBinding[mesh]:nullptr,destination,status);
+                mesh<m_meshBindings.size() && m_meshBindings[mesh] ? m_meshBindings[mesh]->BoneIndices() : std::span<const int32_t>{},destination,status);
             if(status!=Renderer::SkinDataStatus::Ready) m_skinningStatus=status;
         }
         m_skinningBindingDestination=destination;
@@ -98,7 +93,7 @@ void CGrannyModelInstance::__PrepareSkinningBindings()
         m_skinningIssueReported=true;
         if(Renderer::skinSidecarFailures.fetch_add(1)<16)
             TraceError("Skinning binding preparation: model=%s status=%s; CPU path unchanged",
-                m_pModel->GetGrannyModelPointer()->Name,Renderer::SkinDataStatusName(m_skinningStatus));
+                m_pModel->GetAsset() ? m_pModel->GetAsset()->name.c_str() : "legacy-reference",Renderer::SkinDataStatusName(m_skinningStatus));
     }
 }
 
@@ -106,12 +101,13 @@ void CGrannyModelInstance::__CaptureSkinningPose()
 {
     if(!m_pModel || !m_pModel->GetSkinningData() || !m_pModel->GetSkinningData()->HasSkinnedMeshes()) return;
     if(!m_skinningPalette) m_skinningPalette=std::make_shared<Renderer::BonePalette>();
-    const auto status=SkinningDataAdapter::CapturePose(*m_skinningPalette,m_pModel->GetSkinningData()->skeleton,m_pgrnWorldPoseReal);
+    const auto status=SkinningDataAdapter::CapturePose(*m_skinningPalette,m_pModel->GetSkinningData()->skeleton,
+        m_ownsWorldPose && m_animationInstance ? m_animationInstance->CompositePose() : AssetRuntime::PoseView{});
     if(status!=Renderer::SkinDataStatus::Ready && !m_skinningIssueReported) {
         m_skinningIssueReported=true;
         if(Renderer::skinSidecarFailures.fetch_add(1)<16)
             TraceError("Skinning palette preparation: model=%s status=%s; CPU path unchanged",
-                m_pModel->GetGrannyModelPointer()->Name,Renderer::SkinDataStatusName(status));
+                m_pModel->GetAsset() ? m_pModel->GetAsset()->name.c_str() : "legacy-reference",Renderer::SkinDataStatusName(status));
     }
 }
 

@@ -61,11 +61,11 @@ void CWeaponTrace::Update(float fReachScale)
 
 	if (m_isPlaying && m_fz>=0.0001f)
 	{
-		Math::Matrix * pMatrix;
-		if (m_pInstance->GetCompositeBoneMatrix(m_dwModelInstanceIndex, m_iBoneIndex, &pMatrix))
+		Math::Matrix * pMatrix = nullptr;
+		Math::Matrix * pBoneMat = nullptr;
+		if (m_pInstance->GetCompositeBoneMatrix(m_dwModelInstanceIndex, m_iBoneIndex, &pMatrix) &&
+			m_pInstance->GetBoneMatrix(m_dwModelInstanceIndex, m_iBoneIndex, &pBoneMat))
 		{
-			Math::Matrix * pBoneMat;
-			m_pInstance->GetBoneMatrix(m_dwModelInstanceIndex, m_iBoneIndex, &pBoneMat);
 			Math::Matrix mat = *pMatrix;
 			mat._41 = pBoneMat->_41;
 			mat._42 = pBoneMat->_42;
@@ -372,6 +372,8 @@ void CWeaponTrace::SetTexture(const char * c_szFileName)
 
 bool CWeaponTrace::SetWeaponInstance(CGraphicThingInstance * pInstance, DWORD dwModelIndex, const char * c_szBoneName)
 {
+	if (!pInstance)
+		return false;
 	pInstance->Update();
 	pInstance->DeformNoSkin();
 
@@ -379,13 +381,14 @@ bool CWeaponTrace::SetWeaponInstance(CGraphicThingInstance * pInstance, DWORD dw
 	Math::Vector3 v3Max;
 	if (!pInstance->GetBoundBox(dwModelIndex, &v3Min, &v3Max))
 		return false;
+	Math::Matrix * pmat = nullptr;
+	if (!pInstance->GetBoneMatrix(dwModelIndex, 0, &pmat))
+		return false;
 
 	m_iBoneIndex = 0;
 	m_dwModelInstanceIndex = dwModelIndex;
 
 	m_pInstance = pInstance;
-	Math::Matrix * pmat;
-	pInstance->GetBoneMatrix(dwModelIndex, 0, &pmat);
 	Math::Vector3 v3Bone(pmat->_41,pmat->_42,pmat->_43);
 
 	const auto vv1 = (v3Bone - v3Min);

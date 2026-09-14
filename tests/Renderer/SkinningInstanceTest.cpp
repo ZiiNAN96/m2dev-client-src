@@ -1,4 +1,5 @@
 #include "EterGrnLib/StdAfx.h"
+#include "AssetRuntime/Granny/Native.h"
 #include "EterGrnLib/ModelInstance.h"
 #include "EterLib/ResourceManager.h"
 #include "EterLib/Camera.h"
@@ -9,6 +10,57 @@
 
 float CCamera::CAMERA_MAX_DISTANCE=2500.f;
 static void Check(bool ok,const char* message) { if(!ok) throw std::runtime_error(message); }
+static void CheckMaterialRuntimeOverrides(CResourceManager& resources)
+{
+    const char* firstPath = "d:/ymir work/d1x/material_original.dds";
+    const char* secondPath = "locale/d1x/material_override.dds";
+    const auto cacheKey = [](const char* path) {
+        std::string key(path);
+        std::replace(key.begin(), key.end(), '/', '\\');
+        return CResource::StringToType(key.c_str());
+    };
+    auto* first = static_cast<CGraphicImage*>(resources.InsertResourcePointer(
+        cacheKey(firstPath), new CGraphicImage(firstPath)));
+    auto* second = static_cast<CGraphicImage*>(resources.InsertResourcePointer(
+        cacheKey(secondPath), new CGraphicImage(secondPath)));
+    // This test verifies resource identity/ownership; image decoding is covered by GPU fixtures.
+    first->AddReferenceOnly();
+    second->AddReferenceOnly();
+    AssetRuntime::MaterialAsset source;
+    source.name = "override-fixture";
+    source.textures[0] = firstPath;
+    source.matchingTextures[0] = firstPath;
+    source.hasMatchingTextures = true;
+    {
+        CGrannyMaterial original, copy, legacyEmpty;
+        Check(legacyEmpty.CreateFromGrannyMaterialPointer(nullptr), "Empty legacy material stays valid");
+        Check(original.CreateFromAsset(source), "Neutral source material constructs production palette entry");
+        original.SetImagePointer(0, first);
+        original.SetSpecularInfo(TRUE, 0.35f, 1);
+        Check(original.GetAsset().textures[0] == first->GetFileName(), "Runtime material uses resolved resource path");
+        Check(original.GetAsset().specular && original.GetAsset().specularPower == 0.35f &&
+            original.GetAsset().sphereMapIndex == 1, "Runtime material tracks live specular override");
+        copy.Copy(original);
+        Check(copy.GetAsset().textures[0] == first->GetFileName(), "Copied material preserves texture metadata");
+        Check(copy.GetAsset().specular == copy.IsSpecularEnabled() &&
+            copy.GetAsset().specularPower == copy.GetSpecularPower(), "Copied metadata preserves actual legacy state");
+        copy.SetImagePointer(0, second);
+        copy.SetSpecularInfo(TRUE, 0.8f, 0);
+        Check(copy.GetAsset().textures[0] == second->GetFileName() &&
+            original.GetAsset().textures[0] == first->GetFileName(), "Palette texture override does not mutate source metadata");
+        int matchedStage = -1;
+        Check(copy.IsIn(firstPath, &matchedStage) && matchedStage == 0 && !copy.IsIn(secondPath, &matchedStage),
+            "Override matching keeps original source texture identity");
+        Check(copy.GetAsset().specularPower == 0.8f && original.GetAsset().specularPower == 0.35f,
+            "Palette specular override stays instance-specific");
+        copy.SetImagePointer(0, nullptr);
+        copy.SetSpecularInfo(FALSE, 0.0f, 0);
+        Check(copy.GetAsset().textures[0].empty() && !copy.GetAsset().specular,
+            "Removing overrides clears cached material fields");
+    }
+    first->Release();
+    second->Release();
+}
 struct NativeAsset
 {
     granny_file* file{};
@@ -58,6 +110,7 @@ int main(int argc,char** argv)
     try {
         Check(argc==2,"Real asset root required");
         CPackManager packs; CResourceManager resources;
+        CheckMaterialRuntimeOverrides(resources);
         // Geometry/lifetime test: image factories intentionally absent; world fixture tests real textures separately.
         {
             std::string base=std::string(argv[1])+"/PC/ymir work/pc/warrior/";
@@ -102,6 +155,8 @@ int main(int argc,char** argv)
             Check(Renderer::liveBonePalettes==0 && Renderer::liveBoneRemaps==0,"No instance/remap resources after Clear");
             std::cout<<"PASS native shape/hair phases="<<phases<<" sharing, CPU parity, equivalent/incompatible/restored LOD, mount, Clear\n";
         }
+        // Material fixtures follow the normal deferred-resource shutdown order.
+        resources.DestroyDeletingList();
         resources.Destroy();
         Check(Renderer::skinSidecarFailures==1,"Exactly one deliberate incompatible-LOD diagnostic, no other failures");
         Check(Renderer::liveSkinMeshes==0 && Renderer::liveBoneRemaps==0 && Renderer::liveBonePalettes==0,"No B2 resources after model unload");

@@ -2,147 +2,55 @@
 #include "ModelInstance.h"
 #include "Model.h"
 
-void CGrannyModelInstance::CopyMotion(CGrannyModelInstance * pModelInstance, bool bIsFreeSourceControl)
+namespace {
+const char* ModelPath(const CGrannyModel* model)
 {
-	if (!pModelInstance->IsMotionPlaying())
-		return;
+    return model && model->GetAssetHandle() ? model->GetAssetHandle().GetDocument()->Id().c_str() : "legacy-reference";
+}
+const char* ClipPath(const CGrannyMotion* motion)
+{
+    return motion && motion->GetAssetHandle() ? motion->GetAssetHandle().GetDocument()->Id().c_str() : "legacy-reference";
+}
+bool UnexpectedMotionError(AssetRuntime::AssetError result)
+{
+    return result != AssetRuntime::AssetError::None && result != AssetRuntime::AssetError::NoMatchingTracks;
+}
+}
 
-	if (m_pgrnCtrl)
-		GrannyFreeControl(m_pgrnCtrl);
-
-	float localTime = GetLocalTime();
-	m_pgrnAni = pModelInstance->m_pgrnAni;
-	m_pgrnCtrl = GrannyPlayControlledAnimation(localTime, m_pgrnAni, m_pgrnModelInstance);
-
-	if (!m_pgrnCtrl)
-		return;
-
-	GrannySetControlSpeed(m_pgrnCtrl, GrannyGetControlSpeed(pModelInstance->m_pgrnCtrl));
-	GrannySetControlLoopCount(m_pgrnCtrl, GrannyGetControlLoopCount(pModelInstance->m_pgrnCtrl));
-
-	GrannySetControlEaseIn(m_pgrnCtrl, true);
-	GrannySetControlEaseOut(m_pgrnCtrl, false);
-
-	GrannySetControlRawLocalClock(m_pgrnCtrl, GrannyGetControlRawLocalClock(pModelInstance->m_pgrnCtrl));
-
-	GrannyFreeControlOnceUnused(m_pgrnCtrl);
-
-	if (bIsFreeSourceControl)
-	{
-		GrannyFreeControl(pModelInstance->m_pgrnCtrl);
-		pModelInstance->m_pgrnCtrl = NULL;
-	}
+void CGrannyModelInstance::CopyMotion(CGrannyModelInstance* source, bool freeSource)
+{
+    if (!source || !source->IsMotionPlaying() || !m_animationInstance || !source->m_animationInstance) return;
+    const auto result = m_animationInstance->CopyMotionFrom(*source->m_animationInstance, GetLocalTime(), freeSource);
+    if (UnexpectedMotionError(result))
+        TraceError("Asset Runtime motion copy failed: %s model=%s sourceModel=%s",
+            AssetRuntime::ErrorName(result), ModelPath(m_pModel), ModelPath(source->m_pModel));
 }
 
 bool CGrannyModelInstance::IsMotionPlaying()
 {
-	if (!m_pgrnCtrl)
-		return false;
-
-	if (GrannyControlIsComplete(m_pgrnCtrl))
-		return false;
-
-	return true;
+    return m_animationInstance && m_animationInstance->IsPlaying();
 }
 
-void CGrannyModelInstance::SetMotionPointer(const CGrannyMotion * pMotion, float blendTime, int loopCount, float speedRatio)
+void CGrannyModelInstance::SetMotionPointer(const CGrannyMotion* motion, float blendTime, int loopCount, float speedRatio)
 {
-	// TEST
-	if (!m_pgrnWorldPoseReal)
-		return;
-	// END_OF_TEST
-
-	granny_model_instance * pgrnModelInstance = m_pgrnModelInstance;
-	if (!pgrnModelInstance)
-		return;
-
-	float localTime = GetLocalTime();
-
-	bool isFirst=false;
-	if (m_pgrnCtrl)
-	{
-		//float durationLeft = GrannyGetControlDurationLeft(m_pgrnCtrl);
-		//float easeOutTime = (blendTime < durationLeft) ? blendTime : durationLeft;
-		//float oldCtrlFinishTime = GrannyEaseControlOut(m_pgrnCtrl, blendTime); //easeOutTime);
-		GrannySetControlEaseOutCurve(m_pgrnCtrl, localTime, localTime + blendTime, 1.0f, 1.0f, 0.0f, 0.0f);
-
-		GrannySetControlEaseIn(m_pgrnCtrl, false);
-		GrannySetControlEaseOut(m_pgrnCtrl, true);
-
-		//Tracef("easeOut %f\n", easeOutTime);
-		GrannyCompleteControlAt(m_pgrnCtrl, localTime + blendTime);
-		//GrannyCompleteControlAt(m_pgrnCtrl, oldCtrlFinishTime);
-		//GrannyCompleteControlAt(m_pgrnCtrl, localTime);
-		GrannyFreeControlIfComplete(m_pgrnCtrl);
-	}
-	else
-	{
-		isFirst=true;
-	}
-
-	m_pgrnAni = pMotion->GetGrannyAnimationPointer();
-	m_pgrnCtrl = GrannyPlayControlledAnimation(localTime, m_pgrnAni, pgrnModelInstance);
-	if (!m_pgrnCtrl)
-		return;
-
-	GrannySetControlSpeed(m_pgrnCtrl, speedRatio);
-	GrannySetControlLoopCount(m_pgrnCtrl, loopCount);
-
-	if (isFirst)
-	{
-		GrannySetControlEaseIn(m_pgrnCtrl, false);
-		GrannySetControlEaseOut(m_pgrnCtrl, false);
-	}
-	else
-	{
-		GrannySetControlEaseIn(m_pgrnCtrl, true);
-		GrannySetControlEaseOut(m_pgrnCtrl, false);
-		if (blendTime > 0.0f)
-			GrannySetControlEaseInCurve(m_pgrnCtrl, localTime, localTime + blendTime, 0.0f, 0.0f, 1.0f, 1.0f);
-	}
-
-	//GrannyEaseControlIn(m_pgrnCtrl, blendTime, false);
-	GrannyFreeControlOnceUnused(m_pgrnCtrl);
-	//Tracef("easeIn %f\n", blendTime);
+    if (!m_ownsWorldPose || !m_animationInstance || !motion) return;
+    const auto result = m_animationInstance->SetMotion(motion->GetAssetHandle(), GetLocalTime(), blendTime, loopCount, speedRatio);
+    if (UnexpectedMotionError(result))
+        TraceError("Asset Runtime motion start failed: %s model=%s clip=%s",
+            AssetRuntime::ErrorName(result), ModelPath(m_pModel), ClipPath(motion));
 }
 
-void CGrannyModelInstance::ChangeMotionPointer(const CGrannyMotion* pMotion, int loopCount, float speedRatio)
+void CGrannyModelInstance::ChangeMotionPointer(const CGrannyMotion* motion, int loopCount, float speedRatio)
 {
-	granny_model_instance * pgrnModelInstance = m_pgrnModelInstance;
-	if (!pgrnModelInstance)
-		return;
-
-	// 보간 되는 앞부분을 스킵 하기 위해 LocalTime 을 어느 정도 무시한다. - [levites]
-	float fSkipTime = 0.3f;
-	float localTime = GetLocalTime() - fSkipTime;
-
-	if (m_pgrnCtrl)
-	{
-		GrannySetControlEaseIn(m_pgrnCtrl, false);
-		GrannySetControlEaseOut(m_pgrnCtrl, false);
-		GrannyCompleteControlAt(m_pgrnCtrl, localTime);
-		GrannyFreeControlIfComplete(m_pgrnCtrl);
-	}
-
-	m_pgrnAni = pMotion->GetGrannyAnimationPointer();
-	m_pgrnCtrl = GrannyPlayControlledAnimation(localTime, m_pgrnAni, pgrnModelInstance);
-	if (!m_pgrnCtrl)
-		return;
-
-	GrannySetControlSpeed(m_pgrnCtrl, speedRatio);
-	GrannySetControlLoopCount(m_pgrnCtrl, loopCount);
-	GrannySetControlEaseIn(m_pgrnCtrl, false);
-	GrannySetControlEaseOut(m_pgrnCtrl, false);
-
-	GrannyFreeControlOnceUnused(m_pgrnCtrl);
+    if (!m_animationInstance || !motion) return;
+    // Preserve the existing 0.3-second interpolation skip.
+    const auto result = m_animationInstance->ChangeMotion(motion->GetAssetHandle(), GetLocalTime() - 0.3f, loopCount, speedRatio);
+    if (UnexpectedMotionError(result))
+        TraceError("Asset Runtime motion change failed: %s model=%s clip=%s",
+            AssetRuntime::ErrorName(result), ModelPath(m_pModel), ClipPath(motion));
 }
 
 void CGrannyModelInstance::SetMotionAtEnd()
-{	
-	if (!m_pgrnCtrl)
-		return;
-
-	//Tracef("%f\n", endingTime);
-	float endingTime = GrannyGetControlLocalDuration(m_pgrnCtrl);
-	GrannySetControlRawLocalClock(m_pgrnCtrl, endingTime);
+{
+    if (m_animationInstance) m_animationInstance->SetMotionAtEnd();
 }

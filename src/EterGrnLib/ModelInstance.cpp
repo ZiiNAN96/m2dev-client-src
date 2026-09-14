@@ -94,11 +94,8 @@ void CGrannyModelInstance::__Initialize()
 	mc_pParentInstance = NULL;
 	m_iParentBoneIndex = 0;
 
-	m_pgrnModelInstance = NULL;	
-
-	// WORK
-	m_pgrnWorldPoseReal = NULL;	
-	// END_OF_WORK
+    m_animationInstance.reset();
+    m_ownsWorldPose = false;
 
 	// TEST
 	// m_pgrnWorldPose = NULL;
@@ -106,8 +103,6 @@ void CGrannyModelInstance::__Initialize()
 	// END_OF_TEST
 
 	m_meshMatrices = NULL;
-	m_pgrnCtrl = NULL;
-	m_pgrnAni = NULL;
 
 	// MR-12: Fix specular isolation issue
 	material_data_ = {};

@@ -76,6 +76,11 @@ void Submit(void* context, const void* nativeInstance, ActorPart part, const Act
     if(part!=ActorPart::Body && (!body || !body->GetActorRenderData().ready ||
         body->GetActorRenderData().capturedFrame!=actorFrameSerial)) return;
     auto* model=instance->GetModel(); auto& data=instance->GetActorRenderData();
+    const auto* asset=model->GetAsset();
+    if(!asset || native.mesh>=asset->meshes.size()) {
+        Report(actor,*instance,"ERROR: missing Asset Runtime mesh"); return;
+    }
+    const auto& mesh=asset->meshes[native.mesh];
     // ZiiNAN: Diligent mount actor rendering
     const auto category=RenderCategory(actor);
     if(category==ActorCategory::Mount || category==ActorCategory::MountedPlayer) {
@@ -101,10 +106,10 @@ void Submit(void* context, const void* nativeInstance, ActorPart part, const Act
     auto& palette=instance->GetStaticObjectMaterialPalette();
     if(native.material>=palette.GetMaterialCount()) { Report(actor,*instance,"ERROR: actor material index"); return; }
     auto& material=palette.GetMaterialRef(native.material);
+    const auto& materialAsset=material.GetAsset();
     // OneTexture's opacity pass uses the same native stage-0 image, not a synthetic second mask.
-    auto load=[&](CGraphicImage* image) -> TerrainTexturePtr {
-        if(!image) return {};
-        const std::string name=image->GetFileName();
+    auto load=[&](const std::string& name) -> TerrainTexturePtr {
+        if(name.empty()) return {};
         auto& texture=data.textures[name];
         if(!texture) {
             texture=LoadStaticObjectTextureFile(name.c_str(),*actorRenderer);
@@ -113,10 +118,11 @@ void Submit(void* context, const void* nativeInstance, ActorPart part, const Act
         }
         return texture;
     };
-    const auto texture=load(material.GetImagePointer(0));
+    const auto texture=load(materialAsset.textures[0]);
     if(!texture) { Report(actor,*instance,"ERROR: actor diffuse texture upload"); return; }
     if(draw.actorStage==ActorMaterialStage::Specular) {
-        draw.sphereMap=load(material.GetSphereMapImage());
+        const auto* sphere=material.GetSphereMapImage();
+        draw.sphereMap=sphere ? load(sphere->GetFileName()) : TerrainTexturePtr{};
         if(!draw.sphereMap) { Report(actor,*instance,"excluded: missing native sphere map"); return; }
     }
     const auto* world=instance->GetStaticObjectWorldMatrix(native.mesh);
@@ -127,7 +133,7 @@ void Submit(void* context, const void* nativeInstance, ActorPart part, const Act
     if(!Math::MatrixInverse(&normal,nullptr,&normal)) { Report(actor,*instance,"excluded: singular actor matrix"); return; }
     Math::MatrixTranspose(&normal,&normal); memcpy(draw.normalTransform.data(),&normal,64);
     draw.baseVertex=native.baseVertex+(native.rigid ? source->deformVertexCount : 0);
-    draw.vertexCount=native.vertexCount; draw.firstIndex=native.firstIndex; draw.indexCount=native.indexCount;
+    draw.vertexCount=mesh.vertexCount; draw.firstIndex=native.firstIndex; draw.indexCount=native.indexCount;
     if(!data.geometry) data.geometry=actorRenderer->CreateGeometry(*source,part,category);
     if(!data.geometry) { Report(actor,*instance,"ERROR: actor geometry upload"); return; }
     if(!data.gpuPrototype && !source->IsRigid() && data.uploadedRevision!=data.revision) {
@@ -143,7 +149,7 @@ void Submit(void* context, const void* nativeInstance, ActorPart part, const Act
         " alpha_test="+std::to_string(uint32_t(draw.alphaTest))+" blend="+std::to_string(draw.blend)+
         " rigid="+std::to_string(native.rigid)+" mesh="+std::to_string(native.mesh)+
         " cull="+std::to_string(uint32_t(draw.cull))+" depth_write="+std::to_string(draw.depthWrite)+
-        " texture="+material.GetImagePointer(0)->GetFileName());
+        " texture="+materialAsset.textures[0]);
 }
 }
 // ZiiNAN: Diligent actor attachment rendering

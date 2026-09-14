@@ -1,4 +1,5 @@
 #include "Stdafx.h"
+#include "AssetRuntime/Granny/Native.h"
 #include "ModelInstance.h"
 #include "Model.h"
 
@@ -32,113 +33,70 @@ void CGrannyModelInstance::MakeBoundBox(TBoundBox* pBoundBox,
 	vtMax->z = std::max(vtMax->z, pBoundBox->ez);
 }
 
-bool CGrannyModelInstance::Intersect(const Math::Matrix * c_pMatrix,
-									 float * /*pu*/, float * /*pv*/, float * pt)
+namespace {
+AssetRuntime::Bounds BoneBounds(const CGrannyModel& model, int mesh, size_t bone)
 {
-	if (!m_pgrnModelInstance)
-		return false;
-
-	float u, v, t;
-	bool ret = false;
-	*pt = 100000000.0f;
-
-	float max = 10000000.0f;
-	Math::Vector3 vtMin, vtMax;
-	vtMin.x = vtMin.y = vtMin.z = max;
-	vtMax.x = vtMax.y = vtMax.z = -max;
-
-	static stl_stack_pool<TBoundBox> s_boundBoxPool(1024);
-	s_boundBoxPool.clear();
-
-	int meshCount = m_pModel->GetMeshCount();
-
-	for (int m = 0; m < meshCount; ++m)
-	{
-		//const CGrannyMesh * pMesh = m_pModel->GetMeshPointer(m);
-		const granny_mesh * pgrnMesh = m_pModel->GetGrannyModelPointer()->MeshBindings[m].Mesh;
-
-		for (int b = 0; b < pgrnMesh->BoneBindingCount; ++b)
-		{
-			const granny_bone_binding& rgrnBoneBinding = pgrnMesh->BoneBindings[b];
-
-			TBoundBox * pBoundBox = s_boundBoxPool.alloc();
-
-			// WORK
-			float * Transform = GrannyGetWorldPose4x4(__GetWorldPosePtr(), __GetMeshBoneIndices(m)[b]);
-			// END_OF_WORK
-
-			MakeBoundBox(pBoundBox,
-						 Transform,
-						 rgrnBoneBinding.OBBMin,
-						 rgrnBoneBinding.OBBMax,
-						 &vtMin,
-						 &vtMax);
-
-			pBoundBox->meshIndex = m;
-			pBoundBox->boneIndex = b;
-		}
-	}
-
-	if (!IntersectCube(c_pMatrix,
-					   vtMin.x, vtMin.y, vtMin.z,
-					   vtMax.x, vtMax.y, vtMax.z,
-					   ms_vtPickRayOrig, ms_vtPickRayDir,
-					   &u, &v, &t))
-	{
-		return ret;
-	}
-
-	return true;
-
+    if (const auto* asset=model.GetAsset()) {
+        if (mesh<0 || size_t(mesh)>=asset->meshes.size() || bone>=asset->meshes[mesh].skin.boneBounds.size()) return {};
+        return asset->meshes[mesh].skin.boneBounds[bone];
+    }
+    // Explicit raw-reference construction is retained for the original SDK parity fixtures.
+    const auto* native=model.GetMeshPointer(mesh)->GetGrannyMeshPointer();
+    if (!native || bone>=size_t(native->BoneBindingCount)) return {};
+    const auto& source=native->BoneBindings[bone];
+    AssetRuntime::Bounds result;
+    std::memcpy(result.min.data(),source.OBBMin,sizeof(result.min));
+    std::memcpy(result.max.data(),source.OBBMax,sizeof(result.max));
+    result.valid=true;
+    return result;
+}
 }
 
-#include "EterBase/Timer.h"
-
-void CGrannyModelInstance::GetBoundBox(Math::Vector3* vtMin, Math::Vector3* vtMax)
+bool CGrannyModelInstance::Intersect(const Math::Matrix* matrix, float*, float*, float* distance)
 {
-	if (!m_pgrnModelInstance)
-		return;
-
-	TBoundBox BoundBox;
-
-	vtMin->x = vtMin->y = vtMin->z = +100000.0f;
-	vtMax->x = vtMax->y = vtMax->z = -100000.0f;
-
-	int meshCount = m_pModel->GetMeshCount();
-	for (int m = 0; m < meshCount; ++m)
-	{
-		//const CGrannyMesh* pMesh = m_pModel->GetMeshPointer(m);
-		const granny_mesh* pgrnMesh = m_pModel->GetGrannyModelPointer()->MeshBindings[m].Mesh;
-
-		// WORK
-		int* boneIndices = __GetMeshBoneIndices(m);
-		// END_OF_WORK
-		for (int b = 0; b < pgrnMesh->BoneBindingCount; ++b)
-		{
-			const granny_bone_binding& rgrnBoneBinding = pgrnMesh->BoneBindings[b];
-
-			MakeBoundBox(&BoundBox,
-						 GrannyGetWorldPose4x4(__GetWorldPosePtr(), boneIndices[b]),
-						 rgrnBoneBinding.OBBMin, rgrnBoneBinding.OBBMax, vtMin, vtMax);
-		}
-	}
+    if (!m_animationInstance || !distance) return false;
+    float u,v,t;
+    *distance=100000000.0f;
+    Math::Vector3 minimum(10000000.0f,10000000.0f,10000000.0f);
+    Math::Vector3 maximum(-10000000.0f,-10000000.0f,-10000000.0f);
+    TBoundBox box;
+    for (size_t mesh=0;mesh<m_meshBindings.size();++mesh) {
+        const auto indices=m_meshBindings[mesh]->BoneIndices();
+        for(size_t bone=0;bone<indices.size();++bone) {
+            const auto bounds=BoneBounds(*m_pModel,static_cast<int>(mesh),bone);
+            const auto* transform=GetBoneMatrixPointer(indices[bone]);
+            if (!bounds.valid || !transform) return false;
+            MakeBoundBox(&box,transform,bounds.min.data(),bounds.max.data(),&minimum,&maximum);
+        }
+    }
+    return IntersectCube(matrix,minimum.x,minimum.y,minimum.z,maximum.x,maximum.y,maximum.z,
+        ms_vtPickRayOrig,ms_vtPickRayDir,&u,&v,&t);
 }
 
-bool CGrannyModelInstance::GetMeshMatrixPointer(int iMesh, const Math::Matrix ** c_ppMatrix) const
+void CGrannyModelInstance::GetBoundBox(Math::Vector3* minimum, Math::Vector3* maximum)
 {
-	if (!m_pgrnModelInstance)
-		return false;
-
-	int meshCount = m_pModel->GetMeshCount();
-
-	if (meshCount <= 0)
-		return false;
-
-	// WORK
-	//const CGrannyMesh * pMesh = m_pModel->GetMeshPointer(iMesh);
-	*c_ppMatrix = (Math::Matrix *)GrannyGetWorldPose4x4(__GetWorldPosePtr(), __GetMeshBoneIndices(iMesh)[0]);
-	// END_OF_WORK
-
-	return true;
+    if (!m_animationInstance || !minimum || !maximum) return;
+    TBoundBox box;
+    minimum->x=minimum->y=minimum->z=100000.0f;
+    maximum->x=maximum->y=maximum->z=-100000.0f;
+    for (size_t mesh=0;mesh<m_meshBindings.size();++mesh) {
+        const auto indices=m_meshBindings[mesh]->BoneIndices();
+        for(size_t bone=0;bone<indices.size();++bone) {
+            const auto bounds=BoneBounds(*m_pModel,static_cast<int>(mesh),bone);
+            const auto* transform=GetBoneMatrixPointer(indices[bone]);
+            if (!bounds.valid || !transform) continue;
+            MakeBoundBox(&box,transform,bounds.min.data(),bounds.max.data(),minimum,maximum);
+        }
+    }
 }
 
+bool CGrannyModelInstance::GetMeshMatrixPointer(int mesh,const Math::Matrix** matrix) const
+{
+    if (!m_animationInstance || !matrix || mesh<0 || size_t(mesh)>=m_meshBindings.size()) return false;
+    const auto indices=m_meshBindings[mesh]->BoneIndices();
+    if (indices.empty()) return false;
+    const auto* values=GetBoneMatrixPointer(indices[0]);
+    if (!values) return false;
+    *matrix=reinterpret_cast<const Math::Matrix*>(values);
+    return true;
+}

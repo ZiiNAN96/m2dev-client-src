@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "AssetRuntime/Granny/Native.h"
 #include "Util.h"
 
 

@@ -256,6 +256,13 @@ void CGrannyLODController::AddModel(CGraphicThing * pThing, int iSrcModel, CGran
 		pModelInstance->SetLinkedModelPointer(pModel, m_pkSharedDeformableVertexBuffer, NULL);
 	}
 
+    if (pModelInstance->IsEmpty()) {
+        TraceError("Asset Runtime instance preparation failed: %s model=%d", pThing->GetFileName(), iSrcModel);
+        CGrannyModelInstance::Delete(pModelInstance);
+        pThing->Release();
+        return;
+    }
+
 	// END_OF_WORK
 	
 	if (!m_pCurrentModelInstance)

@@ -1,8 +1,11 @@
 #include "StdAfx.h"
 #include "Mesh.h"
+#include "AssetRuntime/Granny/LegacyVertexTypes.h"
+#include "AssetRuntime/Granny/GrannyInterop.h"
 #include "Model.h"
 #include "Material.h"
 #include "Deform.h"
+#include <limits>
 
 granny_data_type_definition GrannyPNT3322VertexType[5] =
 {
@@ -13,74 +16,122 @@ granny_data_type_definition GrannyPNT3322VertexType[5] =
 	{GrannyEndMember}
 };
 
-void CGrannyMesh::LoadIndices(void * dstBaseIndices)
+bool CGrannyMesh::BindAsset(const AssetRuntime::ModelHandle& model, std::size_t mesh)
 {
-	const granny_mesh * pgrnMesh = GetGrannyMeshPointer();
+    m_runtimeBound = true;
+    m_document = nullptr;
+    m_asset = nullptr;
+    const auto* asset = model.Get();
+    if (!asset || mesh >= asset->meshes.size()) return false;
+    m_document = model.GetDocument().get();
+    m_asset = &asset->meshes[mesh];
+    m_assetModel = model.Index();
+    m_assetMesh = mesh;
+    return true;
+}
 
+bool CGrannyMesh::CreateFromAsset(const AssetRuntime::ModelHandle& model, std::size_t mesh,
+    int vertexBase, int indexBase, CGrannyMaterialPalette& palette)
+{
+    if (!IsEmpty() || vertexBase < 0 || indexBase < 0 || !BindAsset(model, mesh)) return false;
+    if (m_asset->topology != AssetRuntime::PrimitiveTopology::TriangleList ||
+        m_asset->deformation == AssetRuntime::Deformation::Mixed) return false;
+    m_vtxBasePos = vertexBase;
+    m_idxBasePos = indexBase;
+    // Optional reference-only/native debug interop; metadata and upload require no native pointer.
+    m_pgrnMesh = AssetRuntime::GrannyInterop::GetMesh(model, mesh);
+    m_canDeformPNTVertex = m_asset->deformation == AssetRuntime::Deformation::Skinned;
+    m_isTwoSide = m_asset->twoSided;
+    const auto& materials = model.Get()->materials;
+    for (const auto index : m_asset->materialBindings) {
+        if (index >= materials.size()) return false;
+        const auto slot = palette.RegisterMaterial(materials[index]);
+        m_mtrlIndexVector.push_back(slot);
+        m_bHaveBlendThing |= palette.GetMaterialRef(slot).GetType() == CGrannyMaterial::TYPE_BLEND_PNT;
+    }
+    if (m_mtrlIndexVector.empty() || m_asset->materialGroups.empty()) return true;
+    if (m_asset->materialGroups.size() > std::size_t(std::numeric_limits<int>::max())) return false;
+    m_triGroupNodes = new TTriGroupNode[m_asset->materialGroups.size()];
+    for (std::size_t group = 0; group < m_asset->materialGroups.size(); ++group) {
+        const auto& source = m_asset->materialGroups[group];
+        if (source.firstIndex > m_asset->indexCount || source.indexCount > m_asset->indexCount - source.firstIndex ||
+            source.indexCount % 3 != 0 || source.firstIndex > std::uint32_t(std::numeric_limits<int>::max() - indexBase)) return false;
+        auto& node = m_triGroupNodes[group];
+        node.idxPos = indexBase + static_cast<int>(source.firstIndex);
+        node.triCount = static_cast<int>(source.indexCount / 3);
+        node.mtrlIndex = source.materialIndex < m_mtrlIndexVector.size() ? m_mtrlIndexVector[source.materialIndex] : 0;
+        if (node.mtrlIndex >= palette.GetMaterialCount()) return false;
+        const auto type = palette.GetMaterialRef(node.mtrlIndex).GetType();
+        node.pNextTriGroupNode = m_triGroupNodeLists[type];
+        m_triGroupNodeLists[type] = &node;
+    }
+    return true;
+}
+
+bool CGrannyMesh::LoadIndices(void * dstBaseIndices)
+{
+    if (m_runtimeBound) {
+        if (!m_document || !m_asset) return false;
+        if (!m_asset->indexCount) return true;
+        if (!dstBaseIndices) return false;
+        static_assert(sizeof(TIndex) == 2 || sizeof(TIndex) == 4);
+        const auto width = sizeof(TIndex) == 2 ? AssetRuntime::IndexWidth::UInt16 : AssetRuntime::IndexWidth::UInt32;
+        TIndex* dstIndices = static_cast<TIndex*>(dstBaseIndices) + m_idxBasePos;
+        const auto error = m_document->CopyIndices(m_assetModel, m_assetMesh, width,
+            {reinterpret_cast<std::byte*>(dstIndices), std::size_t(m_asset->indexCount) * sizeof(TIndex)});
+        if (error != AssetRuntime::AssetError::None)
+            TraceError("Asset Runtime index upload: mesh=%zu error=%s", m_assetMesh, AssetRuntime::ErrorName(error));
+        return error == AssetRuntime::AssetError::None;
+    }
+
+	const granny_mesh * pgrnMesh = GetGrannyMeshPointer();
 	TIndex * dstIndices = ((TIndex *)dstBaseIndices) + m_idxBasePos;
 	GrannyCopyMeshIndices(pgrnMesh, sizeof(TIndex), dstIndices);
+	return true;
 }
 
-void CGrannyMesh::LoadPNTVertices(void * dstBaseVertices)
+bool CGrannyMesh::LoadPNTVertices(void * dstBaseVertices)
 {
+    if (m_runtimeBound) {
+        if (!m_document || !m_asset) return false;
+        if (m_asset->deformation != AssetRuntime::Deformation::Rigid || !m_asset->vertexCount) return true;
+        if (!dstBaseVertices) return false;
+        // Preserve the existing base-vertex arithmetic, including the legacy UV2 path.
+        TPNTVertex* dstVertices = static_cast<TPNTVertex*>(dstBaseVertices) + m_vtxBasePos;
+        const auto error = m_document->CopyVertices(m_assetModel, m_assetMesh, m_uploadLayout,
+            {reinterpret_cast<std::byte*>(dstVertices), std::size_t(m_asset->vertexCount) * AssetRuntime::VertexStride(m_uploadLayout)});
+        if (error != AssetRuntime::AssetError::None)
+            TraceError("Asset Runtime vertex upload: mesh=%zu error=%s", m_assetMesh, AssetRuntime::ErrorName(error));
+        return error == AssetRuntime::AssetError::None;
+    }
+
 	const granny_mesh * pgrnMesh = GetGrannyMeshPointer();
 
 	if (!GrannyMeshIsRigid(pgrnMesh))
-		return;
+		return true;
 
 	TPNTVertex * dstVertices = ((TPNTVertex *)dstBaseVertices) + m_vtxBasePos;
 	GrannyCopyMeshVertices(pgrnMesh, m_pgrnMeshType, dstVertices);
+	return true;
 }
 
-void CGrannyMesh::NEW_LoadVertices(void * dstBaseVertices)
+bool CGrannyMesh::NEW_LoadVertices(void * dstBaseVertices)
 {
-	const granny_mesh * pgrnMesh = GetGrannyMeshPointer();
-	
-	if (!GrannyMeshIsRigid(pgrnMesh))
-		return;
-	
-	TPNTVertex * dstVertices = ((TPNTVertex *)dstBaseVertices) + m_vtxBasePos;
-	GrannyCopyMeshVertices(pgrnMesh, m_pgrnMeshType, dstVertices);
+	return LoadPNTVertices(dstBaseVertices);
 }
 
-void CGrannyMesh::DeformPNTVertices(void* dstBaseVertices, Math::Matrix* boneMatrices, granny_mesh_binding* pgrnMeshBinding) const
+bool CGrannyMesh::DeformPNTVertices(void* dstBaseVertices, AssetRuntime::PoseView pose, AssetRuntime::MeshBinding& binding) const
 {
-	assert(dstBaseVertices != NULL);
-	assert(boneMatrices != NULL);
-	assert(m_pgrnMeshDeformer != NULL);
-
-	const granny_mesh* pgrnMesh = GetGrannyMeshPointer();
-
-	TPNTVertex* srcVertices = (TPNTVertex*)GrannyGetMeshVertices(pgrnMesh);
-	TPNTVertex* dstVertices = ((TPNTVertex*)dstBaseVertices) + m_vtxBasePos;
-
-	int vtxCount = GrannyGetMeshVertexCount(pgrnMesh);
-
-	// WORK
-	granny_int32x* boneIndices = (granny_int32x*)GrannyGetMeshBindingToBoneIndices(pgrnMeshBinding);
-	// END_OF_WORK
-
-	extern bool CPU_HAS_SSE2;
-	if (CPU_HAS_SSE2) {
-		DeformPWNT3432toGrannyPNGBT33332(
-			vtxCount,
-			srcVertices,
-			dstVertices,
-			boneIndices,
-			(granny_matrix_4x4 const*)boneMatrices,
-			sizeof(granny_pwnt3432_vertex),
-			sizeof(granny_pnt332_vertex)
-		);
-	}
-	else {
-		GrannyDeformVertices(
-			m_pgrnMeshDeformer,
-			boneIndices,
-			(float*)boneMatrices,
-			vtxCount,
-			srcVertices,
-			dstVertices);
-	}
+    const int count = GetVertexCount();
+    if (!count) return true;
+    if (!dstBaseVertices || !pose.Valid() || count < 0) return false;
+    auto* destination = static_cast<TPNTVertex*>(dstBaseVertices) + m_vtxBasePos;
+    extern bool CPU_HAS_SSE2;
+    const auto error = binding.DeformVertices(
+        {reinterpret_cast<std::byte*>(destination), std::size_t(count) * sizeof(TPNTVertex)}, pose.values, CPU_HAS_SSE2);
+    if (error != AssetRuntime::AssetError::None)
+        TraceError("Asset Runtime CPU deformation: mesh=%zu error=%s", m_assetMesh, AssetRuntime::ErrorName(error));
+    return error == AssetRuntime::AssetError::None;
 }
 
 bool CGrannyMesh::CanDeformPNTVertices() const
@@ -100,6 +151,7 @@ const CGrannyMesh::TTriGroupNode * CGrannyMesh::GetTriGroupNodeList(CGrannyMater
 
 int CGrannyMesh::GetVertexCount() const
 {
+	if (m_asset) return static_cast<int>(m_asset->vertexCount);
 	assert(m_pgrnMesh!=NULL);
 	return GrannyGetMeshVertexCount(m_pgrnMesh);
 }
@@ -117,13 +169,13 @@ int CGrannyMesh::GetIndexBasePosition() const
 // WORK
 int * CGrannyMesh::GetDefaultBoneIndices() const
 {
-	return (int*)GrannyGetMeshBindingToBoneIndices(m_pgrnMeshBindingTemp);
+    return m_pgrnMeshBindingTemp ? (int*)GrannyGetMeshBindingToBoneIndices(m_pgrnMeshBindingTemp) : nullptr;
 }
 // END_OF_WORK
 
 bool CGrannyMesh::IsEmpty() const
 {
-	if (m_pgrnMesh)
+	if (m_asset || m_pgrnMesh)
 		return false;
 
 	return true;
@@ -247,6 +299,7 @@ bool CGrannyMesh::IsTwoSide() const
 void CGrannyMesh::SetPNT2Mesh()
 {
 	m_pgrnMeshType = GrannyPNT3322VertexType;
+	m_uploadLayout = AssetRuntime::VertexLayout::PositionNormalUV2;
 }
 
 void CGrannyMesh::Destroy()
@@ -269,6 +322,11 @@ void CGrannyMesh::Destroy()
 
 void CGrannyMesh::Initialize()
 {
+	m_document = nullptr;
+	m_asset = nullptr;
+	m_assetModel = m_assetMesh = 0;
+	m_runtimeBound = false;
+	m_uploadLayout = AssetRuntime::VertexLayout::PositionNormalUV;
 	for (int r = 0; r < CGrannyMaterial::TYPE_MAX_NUM; ++r)
 		m_triGroupNodeLists[r] = NULL;
 

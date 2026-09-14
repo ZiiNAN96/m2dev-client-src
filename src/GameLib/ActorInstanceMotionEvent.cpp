@@ -136,7 +136,8 @@ void CActorInstance::ProcessMotionEventEffectEvent(const CRaceMotionData::TMotio
 			if (FindBoneIndex(dwPartIndex, c_pEffectData->strAttachingBoneName.c_str(), &iBoneIndex))
 			{
 				Math::Matrix * pBoneMat;
-				GetBoneMatrix(dwPartIndex, iBoneIndex, &pBoneMat);
+				if (!GetBoneMatrix(dwPartIndex, iBoneIndex, &pBoneMat))
+					return;
 
 				Math::Matrix matLocalPosition;
 				Math::MatrixTranslation(&matLocalPosition, c_pEffectData->v3EffectPosition.x, c_pEffectData->v3EffectPosition.y, c_pEffectData->v3EffectPosition.z);

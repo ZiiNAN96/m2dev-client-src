@@ -2,16 +2,6 @@
 
 #include "Material.h"
 
-extern granny_data_type_definition GrannyPNT3322VertexType[5];
-
-struct granny_pnt3322_vertex
-{
-    granny_real32 Position[3];
-    granny_real32 Normal[3];
-    granny_real32 UV0[2];
-    granny_real32 UV1[2];
-};
-
 class CGrannyMesh
 {
 	public:
@@ -35,15 +25,19 @@ class CGrannyMesh
 		virtual ~CGrannyMesh();
 
 		bool					IsEmpty() const;
+		bool BindAsset(const AssetRuntime::ModelHandle& model, std::size_t mesh);
+		bool CreateFromAsset(const AssetRuntime::ModelHandle& model, std::size_t mesh,
+			int vertexBase, int indexBase, CGrannyMaterialPalette& palette);
+		const AssetRuntime::MeshAsset* GetAsset() const { return m_asset; }
 		bool					CreateFromGrannyMeshPointer(granny_skeleton* pgrnSkeleton, granny_mesh* pgrnMesh, int vtxBasePos, int idxBasePos, CGrannyMaterialPalette& rkMtrlPal);			
-		void					LoadIndices(void* dstBaseIndices);
- 		void					LoadPNTVertices(void* dstBaseVertices);
-		void					NEW_LoadVertices(void* dstBaseVertices);
+		bool					LoadIndices(void* dstBaseIndices);
+		bool					LoadPNTVertices(void* dstBaseVertices);
+		bool					NEW_LoadVertices(void* dstBaseVertices);
 		void					Destroy();
 
 		void					SetPNT2Mesh();
 
-		void					DeformPNTVertices(void* dstBaseVertices, Math::Matrix* boneMatrices, granny_mesh_binding* pgrnMeshBinding) const;
+		bool DeformPNTVertices(void* dstBaseVertices, AssetRuntime::PoseView pose, AssetRuntime::MeshBinding& binding) const;
 		bool					CanDeformPNTVertices() const;
 		bool					IsTwoSide() const;
 
@@ -92,6 +86,12 @@ class CGrannyMesh
 		bool					m_canDeformPNTVertex;
 		bool					m_isTwoSide;
 	private:
+		// Borrowed from the owning CGrannyModel handle, which is released after its meshes.
+		const AssetRuntime::AssetDocument* m_document{};
+		const AssetRuntime::MeshAsset* m_asset{};
+		std::size_t m_assetModel{}, m_assetMesh{};
+		bool m_runtimeBound{};
+		AssetRuntime::VertexLayout m_uploadLayout{AssetRuntime::VertexLayout::PositionNormalUV};
 		bool						m_bHaveBlendThing;
 	public:
 		bool						HaveBlendThing() { return m_bHaveBlendThing; }

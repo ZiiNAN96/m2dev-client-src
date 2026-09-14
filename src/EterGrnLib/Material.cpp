@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "AssetRuntime/Granny/Native.h"
 #include "Material.h"
 #include "Mesh.h"
 #include "Eterbase/Filename.h"
@@ -52,9 +53,16 @@ void CGrannyMaterial::RestoreRenderState()
 void CGrannyMaterial::Copy(CGrannyMaterial& rkMtrl)
 {
 	m_pgrnMaterial = rkMtrl.m_pgrnMaterial;
+	m_sourceAsset = rkMtrl.m_sourceAsset;
 	m_roImage[0] =  rkMtrl.m_roImage[0];
 	m_roImage[1] =  rkMtrl.m_roImage[1];
-    m_eType = rkMtrl.m_eType;	
+    m_eType = rkMtrl.m_eType;
+    m_asset = rkMtrl.m_asset;
+    // Preserve the legacy copy semantics: culling/specular stay with this instance.
+    m_asset.culling = m_bTwoSideRender ? AssetRuntime::Culling::None : AssetRuntime::Culling::Clockwise;
+    m_asset.specular = m_bSpecularEnable != FALSE;
+    m_asset.specularPower = m_fSpecularPower;
+    m_asset.sphereMapIndex = m_bSphereMapIndex;
 }
 
 CGrannyMaterial::CGrannyMaterial()
@@ -78,12 +86,25 @@ void CGrannyMaterial::SetImagePointer(int iStage, CGraphicImage* pImage)
 {	
 	assert(iStage<2 && "CGrannyMaterial::SetImagePointer");
 	m_roImage[iStage]=pImage;
+    m_asset.textures[iStage] = pImage ? pImage->GetFileName() : "";
 }
 
 bool CGrannyMaterial::IsIn(const char* c_szImageName, int* piStage)
 {
+	if (!c_szImageName || !piStage) return false;
 	std::string strImageName = c_szImageName;
 	CFileNameHelper::StringPath(strImageName);
+	if (m_sourceAsset) {
+        const auto& sourceTextures = m_sourceAsset->hasMatchingTextures ? m_sourceAsset->matchingTextures : m_sourceAsset->textures;
+        for (int stage = 0; stage < 2; ++stage) {
+            if (sourceTextures[stage].empty()) continue;
+            std::string sourceName = sourceTextures[stage];
+            CFileNameHelper::StringPath(sourceName);
+            if (sourceName == strImageName) { *piStage = stage; return true; }
+        }
+        return false;
+    }
+    if (!m_pgrnMaterial) return false;
 
 	granny_texture * pgrnDiffuseTexture = GrannyGetMaterialTextureByType(m_pgrnMaterial, GrannyDiffuseColorTexture);
 	if (pgrnDiffuseTexture)
@@ -116,7 +137,10 @@ void CGrannyMaterial::SetSpecularInfo(BOOL bFlag, float fPower, BYTE uSphereMapI
 {
 	m_fSpecularPower = fPower;
 	m_bSphereMapIndex = uSphereMapIndex;
-	m_bSpecularEnable = bFlag;	
+	m_bSpecularEnable = bFlag;
+    m_asset.specular = bFlag != FALSE;
+    m_asset.specularPower = fPower;
+    m_asset.sphereMapIndex = uSphereMapIndex;
 
 	if (bFlag)
 	{
@@ -218,6 +242,7 @@ CGraphicImage* CGrannyMaterial::__GetImagePointer(const char* fileName)
 
 bool CGrannyMaterial::CreateFromGrannyMaterialPointer(granny_material * pgrnMaterial)
 {
+	m_sourceAsset = nullptr;
 	m_pgrnMaterial = pgrnMaterial;
 
 	granny_texture * pgrnDiffuseTexture = NULL;
@@ -266,11 +291,44 @@ bool CGrannyMaterial::CreateFromGrannyMaterialPointer(granny_material * pgrnMate
 	else
 		m_eType = TYPE_DIFFUSE_PNT;
 
+    // ZiiNAN: Asset Runtime boundary
+    // Resolve once with the existing resource cache; overrides update only their changed field.
+    m_asset.name = pgrnMaterial && pgrnMaterial->Name ? pgrnMaterial->Name : "";
+    for (int stage = 0; stage < 2; ++stage) {
+        const auto* image = GetImagePointer(stage);
+        m_asset.textures[stage] = image ? image->GetFileName() : "";
+    }
+    m_asset.stage = m_eType == TYPE_BLEND_PNT ? AssetRuntime::MaterialStage::DiffuseOpacity : AssetRuntime::MaterialStage::Diffuse;
+    m_asset.blending = m_eType == TYPE_BLEND_PNT;
+    m_asset.culling = m_bTwoSideRender ? AssetRuntime::Culling::None : AssetRuntime::Culling::Clockwise;
+
 	return true;
+}
+
+bool CGrannyMaterial::CreateFromAsset(const AssetRuntime::MaterialAsset& material)
+{
+    m_pgrnMaterial = nullptr;
+    m_sourceAsset = &material;
+    m_asset = material;
+    m_bTwoSideRender = material.culling == AssetRuntime::Culling::None;
+    for (int stage = 0; stage < 2; ++stage) {
+        m_roImage[stage] = material.textures[stage].empty() ? nullptr : __GetImagePointer(material.textures[stage].c_str());
+        const auto* image = GetImagePointer(stage);
+        m_asset.textures[stage] = image ? image->GetFileName() : "";
+    }
+    // Existing palette classification follows successfully resolved opacity resources.
+    m_eType = m_roImage[1].IsNull() ? TYPE_DIFFUSE_PNT : TYPE_BLEND_PNT;
+    m_asset.stage = m_eType == TYPE_BLEND_PNT ? AssetRuntime::MaterialStage::DiffuseOpacity : AssetRuntime::MaterialStage::Diffuse;
+    m_asset.blending = m_eType == TYPE_BLEND_PNT;
+    SetSpecularInfo(material.specular ? TRUE : FALSE, material.specularPower, material.sphereMapIndex);
+    return true;
 }
 
 void CGrannyMaterial::Initialize()
 {
+	m_sourceAsset = nullptr;
+	m_pgrnMaterial = nullptr;
+	m_eType = TYPE_DIFFUSE_PNT;
 	m_roImage[0] = NULL;
 	m_roImage[1] = NULL;
 
@@ -506,5 +564,15 @@ DWORD CGrannyMaterialPalette::RegisterMaterial(granny_material* pgrnMaterial)
 DWORD CGrannyMaterialPalette::GetMaterialCount() const
 {
 	return m_mtrlVector.size();
+}
+
+DWORD CGrannyMaterialPalette::RegisterMaterial(const AssetRuntime::MaterialAsset& material)
+{
+    for (DWORD index = 0; index < m_mtrlVector.size(); ++index)
+        if (m_mtrlVector[index]->IsEqual(&material)) return index;
+    auto* translated = new CGrannyMaterial;
+    translated->CreateFromAsset(material);
+    m_mtrlVector.push_back(translated);
+    return static_cast<DWORD>(m_mtrlVector.size() - 1);
 }
 

@@ -7,6 +7,7 @@
 #include "Renderer/StaticObjectRenderData.h"
 #include "Renderer/ActorRenderData.h" // ZiiNAN: Optional actor index snapshot.
 #include "Renderer/SkinningData.h"
+#include "AssetRuntime/AssetRuntime.h"
 
 class CGrannyModel : public CReferenceObject
 {
@@ -24,6 +25,10 @@ class CGrannyModel : public CReferenceObject
 
 		bool IsEmpty() const;
 		bool CreateFromGrannyModelPointer(granny_model* pgrnModel);
+        bool CreateFromAsset(AssetRuntime::ModelHandle asset);
+        const AssetRuntime::ModelAsset* GetAsset() const { return m_asset.Get(); }
+        const AssetRuntime::ModelHandle& GetAssetHandle() const { return m_asset; }
+        AssetRuntime::SkinningStreamView GetSkinningView(size_t mesh) const;
 		bool CreateDeviceObjects();
 		void DestroyDeviceObjects();
 		void Destroy();
@@ -34,7 +39,8 @@ class CGrannyModel : public CReferenceObject
 		int GetVertexCount() const;
 
 		bool CanDeformPNTVertices() const;
-		void DeformPNTVertices(void* dstBaseVertices, Math::Matrix* boneMatrices, const std::vector<granny_mesh_binding*>& c_rvct_pgrnMeshBinding) const;
+		bool DeformPNTVertices(void* dstBaseVertices, AssetRuntime::PoseView pose,
+			const std::vector<std::unique_ptr<AssetRuntime::MeshBinding>>& bindings) const;
 
 		int GetIdxCount();
 		int GetMeshCount() const;
@@ -49,15 +55,16 @@ class CGrannyModel : public CReferenceObject
 		void UnlockVertices() const;
 
 		const CGrannyMaterialPalette& GetMaterialPalette() const;
-        void CaptureStaticObjectSource();
+        bool CaptureStaticObjectSource();
         const std::shared_ptr<const Renderer::StaticObjectSource>& GetStaticObjectSource() const { return m_staticObjectSource; }
         // ZiiNAN: Capture before Granny frees its deformable index section.
-        void CaptureActorSource(bool attachment = false);
+        bool CaptureActorSource(bool attachment = false);
         const std::shared_ptr<const Renderer::ActorModelSource>& GetActorSource() const { return m_actorSource; }
         const std::shared_ptr<const Renderer::SkinningModelData>& GetSkinningData() const { return m_skinningData; }
 
 	protected:
-		bool LoadMeshs();		
+		bool LoadMeshs();
+		bool LoadAssetMeshes();
 		bool LoadPNTVertices();
 		bool LoadIndices();
 		void Initialize();
@@ -90,6 +97,7 @@ class CGrannyModel : public CReferenceObject
 		
 		CGrannyMaterialPalette	m_kMtrlPal;
 	private:
+        AssetRuntime::ModelHandle m_asset;
 		bool					m_bHaveBlendThing;
         std::shared_ptr<const Renderer::StaticObjectSource> m_staticObjectSource;
         std::shared_ptr<const Renderer::ActorModelSource> m_actorSource; // ZiiNAN: No bones or animation copies.

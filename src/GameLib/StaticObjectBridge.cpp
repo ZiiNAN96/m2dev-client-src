@@ -298,12 +298,14 @@ void SubmitStaticMapObject(CGraphicThingInstance& thing, StaticMapObjectPass pas
         if(!model || (!model->GetStaticObjectSource() && !(pass==StaticMapObjectPass::GroundItem &&
             model->GetActorSource() && model->GetActorSource()->IsRigid()))) { Report(thing,"excluded: no static PNT source"); return; }
         auto& palette=instance->GetStaticObjectMaterialPalette();
+        if(!model->GetAsset()) { Report(thing,"ERROR: missing Asset Runtime model"); return; }
         for(auto* node=model->GetMeshNodeList(CGrannyMesh::TYPE_RIGID,CGrannyMaterial::TYPE_DIFFUSE_PNT);node;node=node->pNextMeshNode)
         for(auto* group=node->pMesh->GetTriGroupNodeList(CGrannyMaterial::TYPE_DIFFUSE_PNT);group;group=group->pNextTriGroupNode) {
             if(group->mtrlIndex>=palette.GetMaterialCount()) { Report(thing,"excluded: invalid material index"); return; }
             auto& material=palette.GetMaterialRef(group->mtrlIndex);
-            if(material.GetType()!=CGrannyMaterial::TYPE_DIFFUSE_PNT || material.IsSpecularEnabled() ||
-               !material.GetImagePointer(0) || material.GetImagePointer(1)) { Report(thing,"excluded: material outside diffuse contract"); return; }
+            const auto& description=material.GetAsset();
+            if(description.stage!=AssetRuntime::MaterialStage::Diffuse || material.IsSpecularEnabled() ||
+               description.textures[0].empty() || !description.textures[1].empty()) { Report(thing,"excluded: material outside diffuse contract"); return; }
             const auto binding=material.GetTextureBinding(0);
             if (binding.source) {
                 const auto format=binding.source->desc.format;
@@ -337,6 +339,9 @@ void SubmitStaticMapObject(CGraphicThingInstance& thing, StaticMapObjectPass pas
         }
         auto& palette=instance->GetStaticObjectMaterialPalette();
         for(auto* node=model->GetMeshNodeList(CGrannyMesh::TYPE_RIGID,CGrannyMaterial::TYPE_DIFFUSE_PNT);node;node=node->pNextMeshNode) {
+            const auto& meshes=model->GetAsset()->meshes;
+            if(node->iMesh<0 || size_t(node->iMesh)>=meshes.size()) { Report(thing,"ERROR: invalid Asset Runtime mesh"); return; }
+            const auto& mesh=meshes[node->iMesh];
             const Math::Matrix* world=instance->GetStaticObjectWorldMatrix(node->iMesh);
             if(!world) { renderer->UploadGeometry({}); Report(thing,"ERROR: missing mesh matrix"); return; }
             auto draw=common;
@@ -345,14 +350,14 @@ void SubmitStaticMapObject(CGraphicThingInstance& thing, StaticMapObjectPass pas
             normal=(*world)*view;
             if(!Math::MatrixInverse(&normal,nullptr,&normal)) { Report(thing,"excluded: singular transform"); return; }
             Math::MatrixTranspose(&normal,&normal); memcpy(draw.normalTransform.data(),&normal,64);
-            draw.baseVertex=node->pMesh->GetVertexBasePosition(); draw.vertexCount=node->pMesh->GetVertexCount();
+            draw.baseVertex=node->pMesh->GetVertexBasePosition(); draw.vertexCount=mesh.vertexCount;
             for(auto* group=node->pMesh->GetTriGroupNodeList(CGrannyMaterial::TYPE_DIFFUSE_PNT);group;group=group->pNextTriGroupNode) {
                 auto& material=palette.GetMaterialRef(group->mtrlIndex);
-                const std::string name=material.GetImagePointer(0)->GetFileName();
+                const auto& name=material.GetAsset().textures[0];
                 auto& texture=resource.textures[name];
                 if(!texture) texture=LoadStaticObjectTextureFile(name.c_str(),*renderer);
                 if(!texture) { Report(thing,"ERROR: texture upload"); return; }
-                draw.cull=material.IsTwoSided() ? StaticObjectCull::None : common.cull;
+                draw.cull=material.GetAsset().culling==AssetRuntime::Culling::None ? StaticObjectCull::None : common.cull;
                 draw.firstIndex=group->idxPos; draw.indexCount=group->triCount*3;
                 renderer->Draw(resource.geometry,texture,draw);
             }

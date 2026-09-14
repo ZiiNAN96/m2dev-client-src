@@ -45,7 +45,6 @@ target_link_libraries(UserInterface
 	
 	M2Platform
 	M2PlatformWindowsFeatures
-	Granny
 	SpeedTree
 	Python
 	

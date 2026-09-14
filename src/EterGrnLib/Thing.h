@@ -2,6 +2,7 @@
 
 #include "Model.h"
 #include "Motion.h"
+#include "AssetRuntime/AssetRuntime.h"
 
 class CGraphicThing : public CResource
 {
@@ -28,6 +29,7 @@ class CGraphicThing : public CResource
 
         // ZiiNAN: Diligent actor attachment rendering
         void MarkActorAttachment() { m_actorAttachment=true; }
+        const AssetRuntime::AssetHandle& GetAsset() const { return m_asset; }
 
 	protected:
 		void					Initialize();
@@ -42,11 +44,8 @@ class CGraphicThing : public CResource
 		bool					OnIsType(TType type);
 
 	protected:
-		granny_file *			m_pgrnFile;
+        AssetRuntime::AssetHandle m_asset;
         bool m_actorAttachment=false;
-		granny_file_info *		m_pgrnFileInfo;
-
-		granny_animation *		m_pgrnAni;
 
 		CGrannyModel *			m_models;
 		CGrannyMotion *			m_motions;

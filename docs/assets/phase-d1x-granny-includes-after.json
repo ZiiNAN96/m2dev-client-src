@@ -1,0 +1,914 @@
+{
+  "capturedUtc": "2026-09-14T11:03:27.3460785Z",
+  "scope": "All owned src/, tests/, android/, buildtool/, .github/, root/vendor CMake and Granny imported-target configuration; vendor/SDK content excluded and separately enumerated",
+  "headerDefinition": "All owned .h/.hpp/.hxx/.inl files, including legacy internal/PCH headers; public API counts separately audited after introduction",
+  "directDefinition": "Physical include directive naming granny.h or granny2*, not transitive EterGrnLib includes",
+  "directSdkCounts": {
+    "total": 1,
+    "publicHeaders": 1,
+    "renderer": 0,
+    "gameActor": 0,
+    "worldStatic": 0
+  },
+  "legacyAdapterIncludeCounts": {
+    "total": 27,
+    "publicHeaders": 11,
+    "renderer": 0,
+    "gameActor": 7,
+    "worldStatic": 5
+  },
+  "privateNativeEntryIncludeCount": 13,
+  "runtimePublicDirectSdkIncludes": 0,
+  "measurementNote": "Physical SDK include count is not transitive include reachability. Native.h is adapter-private, not public AssetRuntime API. Historical publicHeaders means all owned headers including private headers.",
+  "includes": [
+    {
+      "file": "src/AssetRuntime/Granny/GrannyAssetProvider.cpp",
+      "line": 3,
+      "include": "EterGrnLib/Deform.h",
+      "kind": "Legacy adapter direct",
+      "group": "Other",
+      "header": false
+    },
+    {
+      "file": "src/AssetRuntime/Granny/GrannyInterop.h",
+      "line": 3,
+      "include": "Native.h",
+      "kind": "Private adapter native entry",
+      "group": "Other",
+      "header": true
+    },
+    {
+      "file": "src/AssetRuntime/Granny/LegacyVertexTypes.h",
+      "line": 2,
+      "include": "Native.h",
+      "kind": "Private adapter native entry",
+      "group": "Other",
+      "header": true
+    },
+    {
+      "file": "src/AssetRuntime/Granny/Native.h",
+      "line": 10,
+      "include": "granny.h",
+      "kind": "SDK direct",
+      "group": "Other",
+      "header": true
+    },
+    {
+      "file": "src/EterGrnLib/Deform.h",
+      "line": 2,
+      "include": "AssetRuntime/Granny/Native.h",
+      "kind": "Private adapter native entry",
+      "group": "LegacyAdapter",
+      "header": true
+    },
+    {
+      "file": "src/EterGrnLib/Material.cpp",
+      "line": 2,
+      "include": "AssetRuntime/Granny/Native.h",
+      "kind": "Private adapter native entry",
+      "group": "LegacyAdapter",
+      "header": false
+    },
+    {
+      "file": "src/EterGrnLib/ModelInstanceCollisionDetection.cpp",
+      "line": 2,
+      "include": "AssetRuntime/Granny/Native.h",
+      "kind": "Private adapter native entry",
+      "group": "LegacyAdapter",
+      "header": false
+    },
+    {
+      "file": "src/EterGrnLib/Motion.cpp",
+      "line": 2,
+      "include": "AssetRuntime/Granny/Native.h",
+      "kind": "Private adapter native entry",
+      "group": "LegacyAdapter",
+      "header": false
+    },
+    {
+      "file": "src/EterGrnLib/SkinningDataAdapter.cpp",
+      "line": 3,
+      "include": "AssetRuntime/Granny/Native.h",
+      "kind": "Private adapter native entry",
+      "group": "LegacyAdapter",
+      "header": false
+    },
+    {
+      "file": "src/EterGrnLib/Util.cpp",
+      "line": 2,
+      "include": "AssetRuntime/Granny/Native.h",
+      "kind": "Private adapter native entry",
+      "group": "LegacyAdapter",
+      "header": false
+    },
+    {
+      "file": "src/EterPythonLib/PythonGraphic.h",
+      "line": 8,
+      "include": "EterGrnLib/ThingInstance.h",
+      "kind": "Legacy adapter direct",
+      "group": "Other",
+      "header": true
+    },
+    {
+      "file": "src/GameLib/ActorInstanceData.cpp",
+      "line": 8,
+      "include": "EterGrnLib/util.h",
+      "kind": "Legacy adapter direct",
+      "group": "GameActor",
+      "header": false
+    },
+    {
+      "file": "src/GameLib/ActorInstanceInterface.h",
+      "line": 3,
+      "include": "EterGrnLib/ThingInstance.h",
+      "kind": "Legacy adapter direct",
+      "group": "GameActor",
+      "header": true
+    },
+    {
+      "file": "src/GameLib/Area.h",
+      "line": 4,
+      "include": "EterGrnLib/ThingInstance.h",
+      "kind": "Legacy adapter direct",
+      "group": "WorldStatic",
+      "header": true
+    },
+    {
+      "file": "src/GameLib/DungeonBlock.h",
+      "line": 5,
+      "include": "EterGrnLib/ModelInstance.h",
+      "kind": "Legacy adapter direct",
+      "group": "WorldStatic",
+      "header": true
+    },
+    {
+      "file": "src/GameLib/DungeonBlock.h",
+      "line": 6,
+      "include": "EterGrnLib/Thing.h",
+      "kind": "Legacy adapter direct",
+      "group": "WorldStatic",
+      "header": true
+    },
+    {
+      "file": "src/GameLib/ItemData.h",
+      "line": 7,
+      "include": "EterGrnLib/Thing.h",
+      "kind": "Legacy adapter direct",
+      "group": "GameActor",
+      "header": true
+    },
+    {
+      "file": "src/GameLib/RaceData.h",
+      "line": 3,
+      "include": "EterGrnLib/Thing.h",
+      "kind": "Legacy adapter direct",
+      "group": "GameActor",
+      "header": true
+    },
+    {
+      "file": "src/GameLib/StaticObjectBridge.cpp",
+      "line": 4,
+      "include": "EterGrnLib/ThingInstance.h",
+      "kind": "Legacy adapter direct",
+      "group": "WorldStatic",
+      "header": false
+    },
+    {
+      "file": "src/GameLib/WeaponTrace.h",
+      "line": 4,
+      "include": "EterGrnLib/ThingInstance.h",
+      "kind": "Legacy adapter direct",
+      "group": "GameActor",
+      "header": true
+    },
+    {
+      "file": "src/PRTerrainLib/StdAfx.h",
+      "line": 19,
+      "include": "EterGrnLib/StdAfx.h",
+      "kind": "Legacy adapter direct",
+      "group": "WorldStatic",
+      "header": true
+    },
+    {
+      "file": "src/ScriptLib/Resource.cpp",
+      "line": 8,
+      "include": "EterGrnLib/Thing.h",
+      "kind": "Legacy adapter direct",
+      "group": "Other",
+      "header": false
+    },
+    {
+      "file": "src/ScriptLib/Resource.cpp",
+      "line": 9,
+      "include": "EterGrnLib/ThingInstance.h",
+      "kind": "Legacy adapter direct",
+      "group": "Other",
+      "header": false
+    },
+    {
+      "file": "src/ScriptLib/StdAfx.h",
+      "line": 4,
+      "include": "EterGrnLib/StdAfx.h",
+      "kind": "Legacy adapter direct",
+      "group": "Other",
+      "header": true
+    },
+    {
+      "file": "src/UserInterface/PythonApplication.cpp",
+      "line": 6,
+      "include": "EterGrnLib/Material.h",
+      "kind": "Legacy adapter direct",
+      "group": "GameActor",
+      "header": false
+    },
+    {
+      "file": "src/UserInterface/PythonItem.h",
+      "line": 7,
+      "include": "EterGrnLib/ThingInstance.h",
+      "kind": "Legacy adapter direct",
+      "group": "GameActor",
+      "header": true
+    },
+    {
+      "file": "tests/AssetRuntime/ConsumerTest.cpp",
+      "line": 2,
+      "include": "EterGrnLib/StdAfx.h",
+      "kind": "Legacy adapter direct",
+      "group": "ToolTest",
+      "header": false
+    },
+    {
+      "file": "tests/AssetRuntime/ConsumerTest.cpp",
+      "line": 3,
+      "include": "EterGrnLib/ModelInstance.h",
+      "kind": "Legacy adapter direct",
+      "group": "ToolTest",
+      "header": false
+    },
+    {
+      "file": "tests/AssetRuntime/GrannyParityTest.cpp",
+      "line": 4,
+      "include": "AssetRuntime/Granny/Native.h",
+      "kind": "Private adapter native entry",
+      "group": "ToolTest",
+      "header": false
+    },
+    {
+      "file": "tests/Renderer/SkinningCoverageTest.cpp",
+      "line": 2,
+      "include": "EterGrnLib/StdAfx.h",
+      "kind": "Legacy adapter direct",
+      "group": "ToolTest",
+      "header": false
+    },
+    {
+      "file": "tests/Renderer/SkinningCoverageTest.cpp",
+      "line": 3,
+      "include": "AssetRuntime/Granny/Native.h",
+      "kind": "Private adapter native entry",
+      "group": "ToolTest",
+      "header": false
+    },
+    {
+      "file": "tests/Renderer/SkinningCoverageTest.cpp",
+      "line": 4,
+      "include": "EterGrnLib/ModelInstance.h",
+      "kind": "Legacy adapter direct",
+      "group": "ToolTest",
+      "header": false
+    },
+    {
+      "file": "tests/Renderer/SkinningDataTest.cpp",
+      "line": 1,
+      "include": "EterGrnLib/SkinningDataAdapter.h",
+      "kind": "Legacy adapter direct",
+      "group": "ToolTest",
+      "header": false
+    },
+    {
+      "file": "tests/Renderer/SkinningDataTest.cpp",
+      "line": 2,
+      "include": "AssetRuntime/Granny/Native.h",
+      "kind": "Private adapter native entry",
+      "group": "ToolTest",
+      "header": false
+    },
+    {
+      "file": "tests/Renderer/SkinningDataTest.cpp",
+      "line": 3,
+      "include": "EterGrnLib/Deform.h",
+      "kind": "Legacy adapter direct",
+      "group": "ToolTest",
+      "header": false
+    },
+    {
+      "file": "tests/Renderer/SkinningInstanceTest.cpp",
+      "line": 1,
+      "include": "EterGrnLib/StdAfx.h",
+      "kind": "Legacy adapter direct",
+      "group": "ToolTest",
+      "header": false
+    },
+    {
+      "file": "tests/Renderer/SkinningInstanceTest.cpp",
+      "line": 2,
+      "include": "AssetRuntime/Granny/Native.h",
+      "kind": "Private adapter native entry",
+      "group": "ToolTest",
+      "header": false
+    },
+    {
+      "file": "tests/Renderer/SkinningInstanceTest.cpp",
+      "line": 3,
+      "include": "EterGrnLib/ModelInstance.h",
+      "kind": "Legacy adapter direct",
+      "group": "ToolTest",
+      "header": false
+    },
+    {
+      "file": "tests/Renderer/SkinningPrototypeTest.cpp",
+      "line": 1,
+      "include": "EterGrnLib/StdAfx.h",
+      "kind": "Legacy adapter direct",
+      "group": "ToolTest",
+      "header": false
+    },
+    {
+      "file": "tests/Renderer/SkinningPrototypeTest.cpp",
+      "line": 2,
+      "include": "AssetRuntime/Granny/Native.h",
+      "kind": "Private adapter native entry",
+      "group": "ToolTest",
+      "header": false
+    },
+    {
+      "file": "tests/Renderer/SkinningPrototypeTest.cpp",
+      "line": 3,
+      "include": "EterGrnLib/ModelInstance.h",
+      "kind": "Legacy adapter direct",
+      "group": "ToolTest",
+      "header": false
+    }
+  ],
+  "dependencyFileCount": 77,
+  "dependencyLineCount": 1198,
+  "files": [
+    {
+      "file": "android/README.md",
+      "group": "Other",
+      "matchLines": 1,
+      "sha256": "74dfed1ed65fc350f64859570d60775ff670bab5fa9046b0e9ca13fafd822b91",
+      "purpose": "Legacy model resource/instance API consumption or dependency declaration"
+    },
+    {
+      "file": "buildtool/PlatformTargetAudit.cmake",
+      "group": "Other",
+      "matchLines": 1,
+      "sha256": "cce71f79bed0bc85fcfc252b34837244a4dd876e4fd7241699fe9f2b9213a2d9",
+      "purpose": "Build linkage, source-target ownership or platform boundary configuration"
+    },
+    {
+      "file": "CMakeLists.txt",
+      "group": "Other",
+      "matchLines": 1,
+      "sha256": "c2c8058cd0be3e7130037f19fc309e2ff7ace5fd2965cb7268307aafd703ef95",
+      "purpose": "Build linkage, source-target ownership or platform boundary configuration"
+    },
+    {
+      "file": "extern/library/Granny/CMakeLists.txt",
+      "group": "Other",
+      "matchLines": 3,
+      "sha256": "8bcb126a80fd0d6a9cb8e15d70e7ec706d2f5c06eb911997bccf198577dfb9d7",
+      "purpose": "Build linkage, source-target ownership or platform boundary configuration"
+    },
+    {
+      "file": "src/AssetRuntime/CMakeLists.txt",
+      "group": "Other",
+      "matchLines": 2,
+      "sha256": "cc8ec541ebc4524755ed5815972757c0e539e2fbcb5e4d2a18d5bb4add168e7c",
+      "purpose": "Runtime/build boundary reference"
+    },
+    {
+      "file": "src/AssetRuntime/Granny/GrannyAssetProvider.cpp",
+      "group": "Other",
+      "matchLines": 208,
+      "sha256": "78912d6762d43f3369343113501cf0d03eca74aefc52ca896939c9a35571a8a6",
+      "purpose": "Private format adapter: native file, metadata, sessions, controls, bindings or CPU fallback"
+    },
+    {
+      "file": "src/AssetRuntime/Granny/GrannyInterop.h",
+      "group": "Other",
+      "matchLines": 18,
+      "sha256": "f7f1935732d713e7a332a6a8bb34265af71a7244c2d6df43cb5be2b7434c4cf0",
+      "purpose": "Private format adapter: native file, metadata, sessions, controls, bindings or CPU fallback"
+    },
+    {
+      "file": "src/AssetRuntime/Granny/LegacyVertexTypes.h",
+      "group": "Other",
+      "matchLines": 6,
+      "sha256": "a429736bf6cfd01a976dd6d85072a53b794ca11a6f10c37dc6c2f6b835ffda53",
+      "purpose": "Private format adapter: native file, metadata, sessions, controls, bindings or CPU fallback"
+    },
+    {
+      "file": "src/AssetRuntime/Granny/Native.h",
+      "group": "Other",
+      "matchLines": 6,
+      "sha256": "7fe683311d1f7dffc98b3c94ca93f2b900438d0993aa4bd3e13d96d6890b8a5c",
+      "purpose": "Private format adapter: native file, metadata, sessions, controls, bindings or CPU fallback"
+    },
+    {
+      "file": "src/AssetRuntime/Granny/NativeTypes.h",
+      "group": "Other",
+      "matchLines": 15,
+      "sha256": "95f273683152782bc328c98be29e3aa38d1bce00990605643ea0d51521818035",
+      "purpose": "Private format adapter: native file, metadata, sessions, controls, bindings or CPU fallback"
+    },
+    {
+      "file": "src/CMakeLists.txt",
+      "group": "Other",
+      "matchLines": 1,
+      "sha256": "0f8039499b9cdb4e28c22c9454b41b07e272239a026c8896e86a95b80f63aec5",
+      "purpose": "Build linkage, source-target ownership or platform boundary configuration"
+    },
+    {
+      "file": "src/EterGrnLib/CMakeLists.txt",
+      "group": "LegacyAdapter",
+      "matchLines": 3,
+      "sha256": "6e1b04252de35af749d697c242d8d639c99b7256a93c5a563c6972f3f7f6f352",
+      "purpose": "Build linkage, source-target ownership or platform boundary configuration"
+    },
+    {
+      "file": "src/EterGrnLib/Deform.cpp",
+      "group": "LegacyAdapter",
+      "matchLines": 26,
+      "sha256": "c73674782ada9d554237f1522605aba3bfcbcbff66fab14e2fd34545b1fc9de7",
+      "purpose": "Native CPU reference/fallback SSE deformer; mathematics remains unchanged"
+    },
+    {
+      "file": "src/EterGrnLib/Deform.h",
+      "group": "LegacyAdapter",
+      "matchLines": 4,
+      "sha256": "41866ffbfa56dd3eba27ae5d2c3f7a10a8023a6a5481f2868293c773a7cd3558",
+      "purpose": "Native CPU reference/fallback SSE deformer; mathematics remains unchanged"
+    },
+    {
+      "file": "src/EterGrnLib/LODController.cpp",
+      "group": "LegacyAdapter",
+      "matchLines": 67,
+      "sha256": "b758d470599b1f8a401bf04f9fded679cd0849471f5d71ea857be8b60a8106fe",
+      "purpose": "Actor LOD swapping and linked skeleton/Hair remap preservation"
+    },
+    {
+      "file": "src/EterGrnLib/LODController.h",
+      "group": "LegacyAdapter",
+      "matchLines": 37,
+      "sha256": "00b7c191bda878cba23c72afd3ef0974d95a414c51666b1e53839b2a537e2fbf",
+      "purpose": "Actor LOD swapping and linked skeleton/Hair remap preservation"
+    },
+    {
+      "file": "src/EterGrnLib/Material.cpp",
+      "group": "LegacyAdapter",
+      "matchLines": 76,
+      "sha256": "2e2ba4804a45161ec9d94f19af9b90ee3a39fc60955b16d87d088878267ab0bb",
+      "purpose": "Legacy material/texture translation and render stage classification"
+    },
+    {
+      "file": "src/EterGrnLib/Material.h",
+      "group": "LegacyAdapter",
+      "matchLines": 19,
+      "sha256": "5e60538efe56dd2c9d4c9d3d72fe1f773a4e48c55a4c6b1b499db623c9722341",
+      "purpose": "Legacy material/texture translation and render stage classification"
+    },
+    {
+      "file": "src/EterGrnLib/Mesh.cpp",
+      "group": "LegacyAdapter",
+      "matchLines": 59,
+      "sha256": "7516692acba13f7a6726be17a9e3de11a31a76daefd1814c756dbecdab37b446",
+      "purpose": "Mesh metadata, groups, index/vertex conversion, bindings and native deformers"
+    },
+    {
+      "file": "src/EterGrnLib/Mesh.h",
+      "group": "LegacyAdapter",
+      "matchLines": 17,
+      "sha256": "f62800987eb50dda87b2a25c81d7c2eb2e0a50ff23dfba4fedca76ff9cbb5002",
+      "purpose": "Mesh metadata, groups, index/vertex conversion, bindings and native deformers"
+    },
+    {
+      "file": "src/EterGrnLib/Model.cpp",
+      "group": "LegacyAdapter",
+      "matchLines": 70,
+      "sha256": "b9328f16642d600c0ea9a9454a06a3de047c4e35a0facf0650d38b4d036d7ca8",
+      "purpose": "Model geometry aggregation, source capture, rigid/skinned buffers and CPU fallback"
+    },
+    {
+      "file": "src/EterGrnLib/Model.h",
+      "group": "LegacyAdapter",
+      "matchLines": 17,
+      "sha256": "3e43504d22da339613c6a20984937bd79648ecc1d7d3798a006f33df24b18548",
+      "purpose": "Model geometry aggregation, source capture, rigid/skinned buffers and CPU fallback"
+    },
+    {
+      "file": "src/EterGrnLib/ModelInstance.cpp",
+      "group": "LegacyAdapter",
+      "matchLines": 19,
+      "sha256": "c81dd88bf04efeb0a8cb9bedeb7a4ea0fc26b69ecffdfd9134eaa6c056cef0f1",
+      "purpose": "Legacy instance API, model/skeleton/animation ownership and device lifecycle"
+    },
+    {
+      "file": "src/EterGrnLib/ModelInstance.h",
+      "group": "LegacyAdapter",
+      "matchLines": 27,
+      "sha256": "281b7f843426960f70510ede34c169517ed3b544bdf915142de1d0ba8eacc8c4",
+      "purpose": "Legacy instance API, model/skeleton/animation ownership and device lifecycle"
+    },
+    {
+      "file": "src/EterGrnLib/ModelInstanceCollisionDetection.cpp",
+      "group": "LegacyAdapter",
+      "matchLines": 6,
+      "sha256": "6da3dde10be465978fda80ea495de1bee02638606de34a66c4e9cbb4a1b09d6e",
+      "purpose": "Bone/mesh matrix collision and bounds queries"
+    },
+    {
+      "file": "src/EterGrnLib/ModelInstanceModel.cpp",
+      "group": "LegacyAdapter",
+      "matchLines": 36,
+      "sha256": "cd2282f4bf058abd3ba297030b8e8a957eb0df6e436d5804cf8eec4d578c5bbd",
+      "purpose": "Model instance ownership, skeleton links, mesh bindings and remap lifetime"
+    },
+    {
+      "file": "src/EterGrnLib/ModelInstanceMotion.cpp",
+      "group": "LegacyAdapter",
+      "matchLines": 7,
+      "sha256": "3c8471e9faaccb338fe07f468f070207e9816fca47cd7344073d3f785687b6ec",
+      "purpose": "Existing Granny animation control/mixing and clip playback"
+    },
+    {
+      "file": "src/EterGrnLib/ModelInstanceRender.cpp",
+      "group": "LegacyAdapter",
+      "matchLines": 34,
+      "sha256": "16399802f5570d110ed791d4d65672ce7e7a2efd32416ac67915ccee45636d24",
+      "purpose": "Existing render dispatch and cached actor buffers/materials"
+    },
+    {
+      "file": "src/EterGrnLib/ModelInstanceSkinning.cpp",
+      "group": "LegacyAdapter",
+      "matchLines": 6,
+      "sha256": "e705d4b75b40202c82a4f188a1cdf5968ce38631d071cb3079ac8877f5fb4364",
+      "purpose": "Phase-B skeleton/vertex/remap/palette extraction and GPU handoff"
+    },
+    {
+      "file": "src/EterGrnLib/ModelInstanceUpdate.cpp",
+      "group": "LegacyAdapter",
+      "matchLines": 13,
+      "sha256": "e1836678aa6148ee1f4121454ce8ea62f11226d3b10a6d165df54e6d3f176487",
+      "purpose": "Existing local/world pose evaluation, attachment transform and skin deformation"
+    },
+    {
+      "file": "src/EterGrnLib/Motion.cpp",
+      "group": "LegacyAdapter",
+      "matchLines": 15,
+      "sha256": "100fd10fa5a3ab4ca57f0863e818662bf5cba889cb1663e1118d4284af7bc28d",
+      "purpose": "Animation metadata and playback reference"
+    },
+    {
+      "file": "src/EterGrnLib/Motion.h",
+      "group": "LegacyAdapter",
+      "matchLines": 7,
+      "sha256": "6d4a6b405a3d59ad0406ec7e69be014c54403e0c74cb94d3c306c2a90fe6cb04",
+      "purpose": "Animation metadata and playback reference"
+    },
+    {
+      "file": "src/EterGrnLib/SkinningDataAdapter.cpp",
+      "group": "LegacyAdapter",
+      "matchLines": 26,
+      "sha256": "06ee7729a7738949a66418b280dd1204ee9edf8b0e3dd2960e5a4c477a674e38",
+      "purpose": "Phase-B skeleton/vertex/remap/palette extraction and GPU handoff"
+    },
+    {
+      "file": "src/EterGrnLib/SkinningDataAdapter.h",
+      "group": "LegacyAdapter",
+      "matchLines": 4,
+      "sha256": "6ce063d9afba2be6083af5ca4618cbdf1b5665c779fa5f783c4dd65775bed493",
+      "purpose": "Phase-B skeleton/vertex/remap/palette extraction and GPU handoff"
+    },
+    {
+      "file": "src/EterGrnLib/StdAfx.h",
+      "group": "LegacyAdapter",
+      "matchLines": 1,
+      "sha256": "f120f5c41b5d486f2bc3f21e71aca97a978f5218378ed10e1bc36991b2ebf1ea",
+      "purpose": "Precompiled/header transitive dependency root"
+    },
+    {
+      "file": "src/EterGrnLib/Thing.cpp",
+      "group": "LegacyAdapter",
+      "matchLines": 5,
+      "sha256": "ed78980ca02fc9793371dee6cb0770f477fd99c8b9290e3e6ab2fb1168450f17",
+      "purpose": "Resource-backed GR2 loading, section lifetime and model/motion construction"
+    },
+    {
+      "file": "src/EterGrnLib/Thing.h",
+      "group": "LegacyAdapter",
+      "matchLines": 4,
+      "sha256": "edbf58d3217087f0c782b063e28583864b95c4f31ff92a23d3f677b712c05ccd",
+      "purpose": "Resource-backed GR2 loading, section lifetime and model/motion construction"
+    },
+    {
+      "file": "src/EterGrnLib/ThingInstance.cpp",
+      "group": "LegacyAdapter",
+      "matchLines": 46,
+      "sha256": "d297d24226e509e2aa462d949392ae1746338f254a99a87c6e1bbdaa8447dbf6",
+      "purpose": "Graphic actor/world instance dispatch, attachment and LOD resource access"
+    },
+    {
+      "file": "src/EterGrnLib/ThingInstance.h",
+      "group": "LegacyAdapter",
+      "matchLines": 3,
+      "sha256": "02d795d9bc971bc0f2339e545bd507316bb541544575d510ff6855b618b3a44e",
+      "purpose": "Graphic actor/world instance dispatch, attachment and LOD resource access"
+    },
+    {
+      "file": "src/EterGrnLib/Util.cpp",
+      "group": "LegacyAdapter",
+      "matchLines": 3,
+      "sha256": "66405dfaa604df9a2344b2b2cf030be3ca67f3eed9acdbb7b8ab4c8a16d9e71e",
+      "purpose": "Legacy rigid/deformable mesh helper"
+    },
+    {
+      "file": "src/EterGrnLib/Util.h",
+      "group": "LegacyAdapter",
+      "matchLines": 4,
+      "sha256": "3d6317158d35b59cc5b791316b1d3d0db6adce36c9c595a1c2238127c67f098b",
+      "purpose": "Legacy rigid/deformable mesh helper"
+    },
+    {
+      "file": "src/EterPythonLib/PythonGraphic.h",
+      "group": "Other",
+      "matchLines": 1,
+      "sha256": "63951233cd12978ce8de62be4316ddb55ef73a4e3041b5344a1ec07ce96780b3",
+      "purpose": "Legacy model resource/instance API consumption or dependency declaration"
+    },
+    {
+      "file": "src/GameLib/ActorInstance.h",
+      "group": "GameActor",
+      "matchLines": 1,
+      "sha256": "191ebc06f53e9cf35b71799bd1e030255c4533b62f476ffb4e0f6dc7c5b3f141",
+      "purpose": "Legacy model resource/instance API consumption or dependency declaration"
+    },
+    {
+      "file": "src/GameLib/ActorInstanceCollisionDetection.cpp",
+      "group": "GameActor",
+      "matchLines": 5,
+      "sha256": "9f001608e5b05e6233c76f9511f5ca1576527809fc489152b0c06512fad0e5b6",
+      "purpose": "Actor collision attachment matrices and model instance access"
+    },
+    {
+      "file": "src/GameLib/ActorInstanceData.cpp",
+      "group": "GameActor",
+      "matchLines": 1,
+      "sha256": "22e64d87dc8a8c6c92168d368ada0288fa0fcd8e22186cd22d0e09dfab0ed842",
+      "purpose": "Legacy util header dependency in actor data construction"
+    },
+    {
+      "file": "src/GameLib/ActorInstanceInterface.h",
+      "group": "GameActor",
+      "matchLines": 1,
+      "sha256": "a3c75e85550a29a7f9404e31dcf47c4c64b5303ab6fe6b489d2ea3f30557ef5b",
+      "purpose": "Legacy model resource/instance API consumption or dependency declaration"
+    },
+    {
+      "file": "src/GameLib/ActorInstanceMotion.cpp",
+      "group": "GameActor",
+      "matchLines": 1,
+      "sha256": "819cbafd927a59e0797fbb0ca6799b243995c5c4808acd4873f23bae1ef8c7b2",
+      "purpose": "Actor clip duration lookup"
+    },
+    {
+      "file": "src/GameLib/ActorRenderBridge.cpp",
+      "group": "GameActor",
+      "matchLines": 1,
+      "sha256": "3d9ab6f6f9a7a38d734bf38578e36e3ac7e515b49290f1a4fccccb9b81380a14",
+      "purpose": "Existing render dispatch and cached actor buffers/materials"
+    },
+    {
+      "file": "src/GameLib/Area.h",
+      "group": "WorldStatic",
+      "matchLines": 2,
+      "sha256": "a7bce0c3926f1b0b944c2031303a97f3698764281cdfcd8614e818d0a0a75108",
+      "purpose": "Legacy model resource/instance API consumption or dependency declaration"
+    },
+    {
+      "file": "src/GameLib/DungeonBlock.cpp",
+      "group": "WorldStatic",
+      "matchLines": 6,
+      "sha256": "f14350402e1a09cdc1983af351f9857e4a36cbca7a7a527c2dcbc5a62911de7c",
+      "purpose": "Static dungeon model rendering through legacy instance subclasses"
+    },
+    {
+      "file": "src/GameLib/DungeonBlock.h",
+      "group": "WorldStatic",
+      "matchLines": 2,
+      "sha256": "49b563b26417b96c0be1b4130e57892d9c663dfc4ee2756ad641764e45041681",
+      "purpose": "Static dungeon model rendering through legacy instance subclasses"
+    },
+    {
+      "file": "src/GameLib/ItemData.h",
+      "group": "GameActor",
+      "matchLines": 1,
+      "sha256": "472077731550ba78e8cd86d31d2ad448e3a29a11c56abb8c8358d2ee58269c28",
+      "purpose": "Legacy model resource/instance API consumption or dependency declaration"
+    },
+    {
+      "file": "src/GameLib/RaceData.h",
+      "group": "GameActor",
+      "matchLines": 1,
+      "sha256": "546579ff0854f8a1fc2d5c3287ae31d1643ec1912ac1a2663b6cc00305b3f7c1",
+      "purpose": "Legacy model resource/instance API consumption or dependency declaration"
+    },
+    {
+      "file": "src/GameLib/StaticObjectBridge.cpp",
+      "group": "WorldStatic",
+      "matchLines": 8,
+      "sha256": "79e99e74486382aa94acacc12552c136b3f026fca1d0c3a040cd0ba0a18dfc19",
+      "purpose": "Static world buffers/materials, camera blockers and cached mesh/model handles"
+    },
+    {
+      "file": "src/GameLib/WeaponTrace.h",
+      "group": "GameActor",
+      "matchLines": 1,
+      "sha256": "e93f34aaa9a5eda295026523e1c17d029acae51fad7e146f50a7784c5737ca41",
+      "purpose": "Legacy model resource/instance API consumption or dependency declaration"
+    },
+    {
+      "file": "src/PRTerrainLib/StdAfx.h",
+      "group": "WorldStatic",
+      "matchLines": 1,
+      "sha256": "6e98962aba5fe0bc10a4ea132fc5d1f679361e84973e95c67e3e52b1e8b0c036",
+      "purpose": "Precompiled/header transitive dependency root"
+    },
+    {
+      "file": "src/Renderer/ActorRenderData.h",
+      "group": "Renderer",
+      "matchLines": 1,
+      "sha256": "88f2c1fe5c6028c800cf71e817a03efa97bac570045da252292972a7522cc696",
+      "purpose": "Legacy model resource/instance API consumption or dependency declaration"
+    },
+    {
+      "file": "src/ScriptLib/Resource.cpp",
+      "group": "Other",
+      "matchLines": 3,
+      "sha256": "b48cc41b425f88a787bf6f9c02fe540957df36139faf41fc869e65c07840d9aa",
+      "purpose": "Legacy model resource/instance API consumption or dependency declaration"
+    },
+    {
+      "file": "src/ScriptLib/StdAfx.h",
+      "group": "Other",
+      "matchLines": 1,
+      "sha256": "caa0fb8b30a4a7941ec1fc874ce047d96c48fe90f9ae60561d95dee19847b2c5",
+      "purpose": "Precompiled/header transitive dependency root"
+    },
+    {
+      "file": "src/UserInterface/CMakeLists.txt",
+      "group": "GameActor",
+      "matchLines": 1,
+      "sha256": "30a765949678b63ba1033e2987e4374ed939c77e3b6265ce5b7d138ad3c7328a",
+      "purpose": "Build linkage, source-target ownership or platform boundary configuration"
+    },
+    {
+      "file": "src/UserInterface/InstanceBase.cpp",
+      "group": "GameActor",
+      "matchLines": 1,
+      "sha256": "74b99ae06289c152d607e40064342051aad30371657ba0c4307fb42803e065ec",
+      "purpose": "Legacy model resource/instance API consumption or dependency declaration"
+    },
+    {
+      "file": "src/UserInterface/PythonApplication.cpp",
+      "group": "GameActor",
+      "matchLines": 12,
+      "sha256": "ca2e89367cdda2b186c57e4aac465f9bc502b2abc281a134f05358e4a7f55bff",
+      "purpose": "Application deform-buffer, LOD, sphere-map and model pool lifecycle"
+    },
+    {
+      "file": "src/UserInterface/PythonItem.h",
+      "group": "GameActor",
+      "matchLines": 1,
+      "sha256": "c3c480ed2141fc82563e9bda68d98ba257f707372b53d503a6c40860059fc3ca",
+      "purpose": "Legacy model resource/instance API consumption or dependency declaration"
+    },
+    {
+      "file": "src/UserInterface/UserInterface.cpp",
+      "group": "GameActor",
+      "matchLines": 1,
+      "sha256": "7e2c50f42cf81871bd5e6ca96aa08efd0a32e27c7739b6a9b5ac63619d75fe70",
+      "purpose": "Granny runtime logging callback registration at startup"
+    },
+    {
+      "file": "tests/AssetRuntime/CMakeLists.txt",
+      "group": "ToolTest",
+      "matchLines": 4,
+      "sha256": "17ae8c1fc001f30cd4c670e1bcf62ae5facb28ceb451dc930e84b12db908d70b",
+      "purpose": "Runtime contract/parity/consumer substitution or boundary test"
+    },
+    {
+      "file": "tests/AssetRuntime/ConsumerTest.cpp",
+      "group": "ToolTest",
+      "matchLines": 5,
+      "sha256": "1ae293b9198093ffaa49aa9bce4f40b0a695ee8a46f58f706351ca0f09f935be",
+      "purpose": "Runtime contract/parity/consumer substitution or boundary test"
+    },
+    {
+      "file": "tests/AssetRuntime/GrannyParityTest.cpp",
+      "group": "ToolTest",
+      "matchLines": 102,
+      "sha256": "eff334fd6015f9f41a475af2bd77a8a616fc3ab7c8891831412346bc117b8379",
+      "purpose": "Runtime contract/parity/consumer substitution or boundary test"
+    },
+    {
+      "file": "tests/AssetRuntime/PublicHeaderLeakTest.cmake",
+      "group": "ToolTest",
+      "matchLines": 2,
+      "sha256": "8d96665402c0001d6c9f58ee6c30de58f5cfd66fc05bb14a670d51c3b02ac62f",
+      "purpose": "Runtime contract/parity/consumer substitution or boundary test"
+    },
+    {
+      "file": "tests/Renderer/animated_actor_smoke.py",
+      "group": "ToolTest",
+      "matchLines": 1,
+      "sha256": "44ca41af1a6296f0871f2e7d9dc181f500fe336cac1f6c34e868d7c211a4f40b",
+      "purpose": "Test/audit-only reference or parity/coverage instrumentation"
+    },
+    {
+      "file": "tests/Renderer/audit_d3d9.ps1",
+      "group": "ToolTest",
+      "matchLines": 3,
+      "sha256": "119b44ccfe6253358fbe47135e5ff58921bcaec1cb721cf7346d178725c88203",
+      "purpose": "Test/audit-only reference or parity/coverage instrumentation"
+    },
+    {
+      "file": "tests/Renderer/AuditResources.ps1",
+      "group": "ToolTest",
+      "matchLines": 3,
+      "sha256": "08684ba7a6eeededee518294c2712e0be6f05f7ef74571428091ffc2a6843d7b",
+      "purpose": "Test/audit-only reference or parity/coverage instrumentation"
+    },
+    {
+      "file": "tests/Renderer/CMakeLists.txt",
+      "group": "ToolTest",
+      "matchLines": 1,
+      "sha256": "fd11be7a9057397ecb01e0a70098eeb6bdda270130f089aa04712db2b81c1b94",
+      "purpose": "Build linkage, source-target ownership or platform boundary configuration"
+    },
+    {
+      "file": "tests/Renderer/SkinningBenchmarkTest.cpp",
+      "group": "ToolTest",
+      "matchLines": 2,
+      "sha256": "c63da9467a5325bb89493434749eb9bc08f4dee5b29f723e84b7337a49d17c17",
+      "purpose": "Test/audit-only reference or parity/coverage instrumentation"
+    },
+    {
+      "file": "tests/Renderer/SkinningCoverageTest.cpp",
+      "group": "ToolTest",
+      "matchLines": 19,
+      "sha256": "0bb85406cdfcc0be95caa6d82e9e662c0096322f536dcce8ad350e4ba8a2adeb",
+      "purpose": "Test/audit-only reference or parity/coverage instrumentation"
+    },
+    {
+      "file": "tests/Renderer/SkinningDataTest.cpp",
+      "group": "ToolTest",
+      "matchLines": 48,
+      "sha256": "ae713b1a04b9548daf8d0d4381212c7cee13e9c02ca57f002f54e4f2435531d6",
+      "purpose": "Test/audit-only reference or parity/coverage instrumentation"
+    },
+    {
+      "file": "tests/Renderer/SkinningInstanceTest.cpp",
+      "group": "ToolTest",
+      "matchLines": 12,
+      "sha256": "74ec71afe516f904afd3d0509453f5aeda134b5d1ed59337942a41c865d29323",
+      "purpose": "Test/audit-only reference or parity/coverage instrumentation"
+    },
+    {
+      "file": "tests/Renderer/SkinningPrototypeTest.cpp",
+      "group": "ToolTest",
+      "matchLines": 19,
+      "sha256": "1aa4c88453bb597d5a17e00083fd0a2eb2bf44c7fe24713926d87d032cf1c27a",
+      "purpose": "Test/audit-only reference or parity/coverage instrumentation"
+    }
+  ],
+  "sdkFiles": [
+    "extern/include/granny.h",
+    "extern/include/granny2_spu_samplemodel.h",
+    "extern/library/Granny/granny2_static.lib",
+    "extern/library/Granny/CMakeLists.txt"
+  ],
+  "categoryKey": {
+    "A": "Asset Loading",
+    "B": "Mesh Geometry",
+    "C": "Materials",
+    "D": "Skeleton",
+    "E": "Animation",
+    "F": "Pose Evaluation",
+    "G": "Skinning",
+    "H": "Attachment/Bone Binding",
+    "I": "Static World",
+    "J": "Tool/Test only"
+  }
+}

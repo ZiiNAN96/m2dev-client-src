@@ -143,24 +143,25 @@ class CGrannyModelInstance : public CGraphicCollisionObject
 		bool	__CreateMeshBindingVector(CGrannyModelInstance* pkDstModelInst);
 		void	__DestroyMeshBindingVector();
 		
-		int*	__GetMeshBoneIndices(unsigned int iMeshBinding) const;		
+		const int* __GetMeshBoneIndices(unsigned int iMeshBinding) const;
 
 		bool	__IsDeformableVertexBuffer();
 		void	__SetSharedDeformableVertexBuffer(CGraphicVertexBuffer* pkSharedDeformableVertexBuffer);
 		
 		CGraphicVertexBuffer&	__GetDeformableVertexBufferRef();
 		
-		granny_world_pose* __GetWorldPosePtr() const;
+        AssetRuntime::AnimationInstance* __GetPoseOwner() const;
+        AssetRuntime::PoseView __GetCompositePose() const;
 		// END_OF_WORK
 
 
 		// Update & Render
-		void	UpdateWorldPose();
+		bool	UpdateWorldPose();
         void __PrepareSkinningBindings();
         bool __RefreshLinkedLodBinding();
         void __CaptureSkinningPose();
 		bool	UpdateWorldMatrices(const Math::Matrix * c_pWorldMatrix);
-		void	DeformPNTVertices(void * pvDest);
+		bool	DeformPNTVertices(void * pvDest);
 
 		void	RenderMeshNodeListWithOneTexture(CGrannyMesh::EType eMeshType, CGrannyMaterial::EType eMtrlType);
 		void	RenderMeshNodeListWithTwoTexture(CGrannyMesh::EType eMeshType, CGrannyMaterial::EType eMtrlType);
@@ -171,12 +172,7 @@ class CGrannyModelInstance : public CGraphicCollisionObject
 		CGrannyModel *					m_pModel;
 
 		// Granny Data
-		granny_model_instance *			m_pgrnModelInstance;
-
-		//granny_world_pose *				m_pgrnWorldPose;		// 현재 월드 포즈 포인터
-
-		granny_control *				m_pgrnCtrl;
-		granny_animation *				m_pgrnAni;
+        std::unique_ptr<AssetRuntime::AnimationInstance> m_animationInstance;
 
 		// Meshes' Transform Data
 		Math::Matrix *					m_meshMatrices;
@@ -203,8 +199,8 @@ class CGrannyModelInstance : public CGraphicCollisionObject
         bool m_skinningIssueReported=false;
 
 		// WORK
-		granny_world_pose*					m_pgrnWorldPoseReal;	// 실제 메모리는 여기에 할당
-		std::vector<granny_mesh_binding*>	m_vct_pgrnMeshBinding;		
+        bool m_ownsWorldPose = false;
+        std::vector<std::unique_ptr<AssetRuntime::MeshBinding>> m_meshBindings;
 
 		// Dynamic Vertex Buffer
 		CGraphicVertexBuffer*			m_pkSharedDeformableVertexBuffer;

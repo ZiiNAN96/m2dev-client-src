@@ -1,5 +1,6 @@
 // ZiiNAN: GPU skinning actor coverage
 #include "EterGrnLib/StdAfx.h"
+#include "AssetRuntime/Granny/Native.h"
 #include "EterGrnLib/ModelInstance.h"
 #include "EterLib/ResourceManager.h"
 #include "EterLib/Camera.h"

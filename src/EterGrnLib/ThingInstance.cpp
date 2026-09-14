@@ -328,7 +328,8 @@ void CGraphicThingInstance::DetachModelInstance(int iDstModelInstance, CGraphicT
 
 bool CGraphicThingInstance::GetBonePosition(int iModelIndex, int iBoneIndex, float * pfx, float * pfy, float * pfz)
 {
-	assert(CheckModelInstanceIndex(iModelIndex));
+	if (!CheckModelInstanceIndex(iModelIndex) || !pfx || !pfy || !pfz)
+		return false;
 
 	CGrannyModelInstance * pModelInstance = m_LODControllerVector[iModelIndex]->GetModelInstance();
 
@@ -336,6 +337,8 @@ bool CGraphicThingInstance::GetBonePosition(int iModelIndex, int iBoneIndex, flo
 		return false;
 
 	const float * pfMatrix = pModelInstance->GetBoneMatrixPointer(iBoneIndex);
+	if (!pfMatrix)
+		return false;
 
 	*pfx = pfMatrix[12];
 	*pfy = pfMatrix[13];
@@ -388,7 +391,7 @@ bool CGraphicThingInstance::SetModelInstance(int iDstModelInstance, int iSrcMode
 
 		pController->AddModel(rModelThingSet.m_pLODThingRefVector[i]->GetPointer(), iSrcModel, pSkelController);
 	}
-	return true;
+	return pController->isModelInstance() != FALSE;
 }
 
 void CGraphicThingInstance::SetMaterialImagePointer(UINT ePart, const char* c_szImageName, CGraphicImage* pImage)
@@ -637,6 +640,9 @@ BOOL CGraphicThingInstance::GetBoneMatrix(DWORD dwModelInstanceIndex, DWORD dwBo
 
 BOOL CGraphicThingInstance::GetCompositeBoneMatrix(DWORD dwModelInstanceIndex, DWORD dwBoneIndex, Math::Matrix ** ppMatrix)
 {
+	if (!ppMatrix)
+		return FALSE;
+	*ppMatrix = nullptr;
 	if (!CheckModelInstanceIndex(dwModelInstanceIndex))
 		return FALSE;
 
@@ -648,8 +654,7 @@ BOOL CGraphicThingInstance::GetCompositeBoneMatrix(DWORD dwModelInstanceIndex, D
 	}
 	
 	*ppMatrix = (Math::Matrix *)pModelInstance->GetCompositeBoneMatrixPointer(dwBoneIndex);
-
-	return TRUE;
+	return *ppMatrix != nullptr;
 }
 
 void CGraphicThingInstance::UpdateTransform(Math::Matrix * pMatrix, float fSecondsElapsed, int iModelInstanceIndex)

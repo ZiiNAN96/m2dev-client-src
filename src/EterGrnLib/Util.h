@@ -1,4 +1,5 @@
 #pragma once
+#include "AssetRuntime/Granny/NativeTypes.h"
 
 // bool GrannyMeshGetTextureAnimation(granny_mesh* pgrnMesh, float* puVelocity, float* pvVelocity);
 // bool GrannyMeshIsTextureAnimation(granny_mesh* pgrnMesh);

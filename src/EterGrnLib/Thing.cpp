@@ -2,245 +2,147 @@
 #include "Eterbase/Debug.h"
 #include "Thing.h"
 #include "ThingInstance.h"
+#include "AssetRuntime/Granny/GrannyAssetProvider.h"
 
-CGraphicThing::CGraphicThing(const char* c_szFileName) : CResource(c_szFileName)
+CGraphicThing::CGraphicThing(const char* fileName) : CResource(fileName)
 {
-	Initialize();	
+    Initialize();
 }
 
 CGraphicThing::~CGraphicThing()
 {
-	//OnClear();
-	Clear();
+    Clear();
 }
 
 void CGraphicThing::Initialize()
 {
-	m_pgrnFile = NULL;
-	m_pgrnFileInfo = NULL;
-	m_pgrnAni = NULL;
-
-	m_models = NULL;
-	m_motions = NULL;
+    m_asset = {};
+    m_models = nullptr;
+    m_motions = nullptr;
 }
 
 void CGraphicThing::OnClear()
 {
-	if (m_motions)
-		delete [] m_motions;
-
-	if (m_models)
-		delete [] m_models;
-
-	if (m_pgrnFile)
-		GrannyFreeFile(m_pgrnFile);
-
-	Initialize();
+    // ZiiNAN: Asset Runtime boundary - release users before their document owner.
+    delete[] m_motions;
+    delete[] m_models;
+    Initialize();
 }
 
 CGraphicThing::TType CGraphicThing::Type()
 {
-	static TType s_type = StringToType("CGraphicThing");
-	return s_type;
+    static TType type = StringToType("CGraphicThing");
+    return type;
 }
 
 bool CGraphicThing::OnIsEmpty() const
 {
-	return m_pgrnFile ? false : true;
+    return !m_asset;
 }
 
 bool CGraphicThing::OnIsType(TType type)
 {
-	if (CGraphicThing::Type() == type)
-		return true;
-
-	return CResource::OnIsType(type);
+    return type == CGraphicThing::Type() || CResource::OnIsType(type);
 }
 
 bool CGraphicThing::CreateDeviceObjects()
 {
-	if (!m_pgrnFileInfo)
-		return true;
-	
-	for (int m = 0; m < m_pgrnFileInfo->ModelCount; ++m)
-	{
-		CGrannyModel & rModel = m_models[m];
-		rModel.CreateDeviceObjects();
-	}
-
-	return true;
+    for (int i = 0; i < GetModelCount(); ++i)
+        if (!m_models[i].CreateDeviceObjects()) return false;
+    return true;
 }
 
 void CGraphicThing::DestroyDeviceObjects()
 {
-	if (!m_pgrnFileInfo)
-		return;
-
-	for (int m = 0; m < m_pgrnFileInfo->ModelCount; ++m)
-	{
-		CGrannyModel & rModel = m_models[m];
-		rModel.DestroyDeviceObjects();
-	}
+    for (int i = 0; i < GetModelCount(); ++i)
+        m_models[i].DestroyDeviceObjects();
 }
 
-bool CGraphicThing::CheckModelIndex(int iModel) const
+bool CGraphicThing::CheckModelIndex(int index) const
 {
-	if (!m_pgrnFileInfo)
-	{
-		Tracef("m_pgrnFileInfo == NULL: %s\n", GetFileName());
-		return false;
-	}
-
-	assert(m_pgrnFileInfo != NULL);
-
-	if (iModel < 0)
-		return false;
-
-	if (iModel >= m_pgrnFileInfo->ModelCount)
-		return false;
-
-	return true;
+    return index >= 0 && index < GetModelCount();
 }
 
-bool CGraphicThing::CheckMotionIndex(int iMotion) const
+bool CGraphicThing::CheckMotionIndex(int index) const
 {
-	// Temporary
-	if (!m_pgrnFileInfo)
-		return false;
-	// Temporary
-
-	assert(m_pgrnFileInfo != NULL);
-
-	if (iMotion < 0)
-		return false;
-	
-	if (iMotion >= m_pgrnFileInfo->AnimationCount)
-		return false;
-
-	return true;
+    return index >= 0 && index < GetMotionCount();
 }
 
-CGrannyModel * CGraphicThing::GetModelPointer(int iModel)
-{	
-	assert(CheckModelIndex(iModel));
-	assert(m_models != NULL);
-	return m_models + iModel;
-}
-
-CGrannyMotion * CGraphicThing::GetMotionPointer(int iMotion)
+CGrannyModel* CGraphicThing::GetModelPointer(int index)
 {
-	assert(CheckMotionIndex(iMotion));
+    return CheckModelIndex(index) && m_models ? m_models + index : nullptr;
+}
 
-	if (iMotion >= m_pgrnFileInfo->AnimationCount)
-		return NULL;
-
-	assert(m_motions != NULL);
-	return (m_motions + iMotion);
+CGrannyMotion* CGraphicThing::GetMotionPointer(int index)
+{
+    return CheckMotionIndex(index) && m_motions ? m_motions + index : nullptr;
 }
 
 int CGraphicThing::GetModelCount() const
 {
-	if (!m_pgrnFileInfo)
-		return 0;
-
-	return (m_pgrnFileInfo->ModelCount);
+    return static_cast<int>(m_asset.ModelCount());
 }
 
 int CGraphicThing::GetMotionCount() const
 {
-	if (!m_pgrnFileInfo)
-		return 0;
-
-	return (m_pgrnFileInfo->AnimationCount);
+    return static_cast<int>(m_asset.AnimationCount());
 }
 
-bool CGraphicThing::OnLoad(int iSize, const void * c_pvBuf)
+bool CGraphicThing::OnLoad(int size, const void* bytes)
 {
-	if (!c_pvBuf)
-		return false;
-
-	m_pgrnFile = GrannyReadEntireFileFromMemory(iSize, (void *) c_pvBuf);
-
-	if (!m_pgrnFile)
-		return false;
-
-    m_pgrnFileInfo = GrannyGetFileInfo(m_pgrnFile);
-
-	if (!m_pgrnFileInfo)
-		return false;
-
-	LoadModels();
-	LoadMotions();
-	return true;
+    if (!bytes || size <= 0) return false;
+    auto loaded = AssetRuntime::LoadModel(GetFileNameString(),
+        {static_cast<const std::byte*>(bytes), static_cast<size_t>(size)},
+        AssetRuntime::GetGrannyAssetProvider());
+    if (!loaded) {
+        TraceError("Asset Runtime load failed: %s", GetFileName());
+        return false;
+    }
+    m_asset = std::move(loaded.asset);
+    if (!LoadModels() || !LoadMotions()) {
+        TraceError("Asset Runtime legacy adapter preparation failed: %s", GetFileName());
+        OnClear();
+        return false;
+    }
+    m_asset.ReleaseUploadData();
+    return true;
 }
 
-// SUPPORT_LOCAL_TEXTURE
+// Existing resource manager and local-texture path convention remain authoritative.
 static std::string gs_modelLocalPath;
-
 const std::string& GetModelLocalPath()
 {
-	return gs_modelLocalPath;
+    return gs_modelLocalPath;
 }
-// END_OF_SUPPORT_LOCAL_TEXTURE
 
 bool CGraphicThing::LoadModels()
 {
-	assert(m_pgrnFile != NULL);
-	assert(m_models == NULL);
-	
-	if (m_pgrnFileInfo->ModelCount <= 0)
-		return false;	
-
-	// SUPPORT_LOCAL_TEXTURE
-	const std::string& fileName = GetFileNameString();
-
-	//char localPath[256] = "";
-	if (fileName.length() > 2 && fileName[1] != ':')
-	{				
-		int sepPos = fileName.rfind('\\');
-		gs_modelLocalPath.assign(fileName, 0, sepPos+1);
-	}
-	// END_OF_SUPPORT_LOCAL_TEXTURE
-
-	int modelCount = m_pgrnFileInfo->ModelCount;
-
-	m_models = new CGrannyModel[modelCount];
-
-	for (int m = 0; m < modelCount; ++m)
-	{
-		CGrannyModel & rModel = m_models[m];
-		granny_model * pgrnModel = m_pgrnFileInfo->Models[m];
-
-		if (!rModel.CreateFromGrannyModelPointer(pgrnModel))
-			return false;
-        if (Renderer::staticObjectLoadDepth && m_pgrnFileInfo->AnimationCount == 0)
-            rModel.CaptureStaticObjectSource();
-        // ZiiNAN: Preserve only original actor indices before the existing section frees.
-        rModel.CaptureActorSource(m_actorAttachment);
-	}
-
-	GrannyFreeFileSection(m_pgrnFile, GrannyStandardRigidVertexSection);
-	GrannyFreeFileSection(m_pgrnFile, GrannyStandardRigidIndexSection);
-	GrannyFreeFileSection(m_pgrnFile, GrannyStandardDeformableIndexSection);
-	GrannyFreeFileSection(m_pgrnFile, GrannyStandardTextureSection);
-	return true;
+    assert(m_asset && !m_models);
+    const auto& fileName = GetFileNameString();
+    if (fileName.length() > 2 && fileName[1] != ':') {
+        const auto separator = fileName.rfind('\\');
+        gs_modelLocalPath.assign(fileName, 0,
+            separator == std::string::npos ? 0 : separator + 1);
+    }
+    const int count = GetModelCount();
+    if (!count) return true; // Animation-only documents are valid.
+    m_models = new CGrannyModel[count];
+    for (int i = 0; i < count; ++i) {
+        auto& model = m_models[i];
+        if (!model.CreateFromAsset(m_asset.Model(i))) return false;
+        if (Renderer::staticObjectLoadDepth && !GetMotionCount() && !model.CaptureStaticObjectSource()) return false;
+        if (!model.CaptureActorSource(m_actorAttachment)) return false;
+    }
+    return true;
 }
 
 bool CGraphicThing::LoadMotions()
 {
-	assert(m_pgrnFile != NULL);
-	assert(m_motions == NULL);
-
-	if (m_pgrnFileInfo->AnimationCount <= 0)
-		return false;
-	
-	int motionCount = m_pgrnFileInfo->AnimationCount;
-
-	m_motions = new CGrannyMotion[motionCount];
-	
-	for (int m = 0; m < motionCount; ++m)
-		if (!m_motions[m].BindGrannyAnimation(m_pgrnFileInfo->Animations[m]))
-			return false;
-
-	return true;
+    assert(m_asset && !m_motions);
+    const int count = GetMotionCount();
+    if (!count) return true;
+    m_motions = new CGrannyMotion[count];
+    for (int i = 0; i < count; ++i)
+        if (!m_motions[i].BindAsset(m_asset.Animation(i))) return false;
+    return true;
 }

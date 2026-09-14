@@ -8,22 +8,22 @@
 
 #include "Eterlib/GrpScreen.h"
 
-void Granny_RenderBoxBones(const granny_skeleton* pkGrnSkeleton, const granny_world_pose* pkGrnWorldPose, const Math::Matrix& matBase)
+void RenderAssetBones(CGrannyModelInstance& instance, const Math::Matrix& base)
 {
-	Math::Matrix matWorld;
-	CScreen screen;	
-	for (int iBone = 0; iBone != pkGrnSkeleton->BoneCount; ++iBone)
-	{
-		const granny_bone& rkGrnBone = pkGrnSkeleton->Bones[iBone];				
-		const Math::Matrix* c_matBone=(const Math::Matrix*)GrannyGetWorldPose4x4(pkGrnWorldPose, iBone);
-		
-		Math::MatrixMultiply(&matWorld, c_matBone, &matBase);
-		
-		DRAWSTATE.SetTransform(Renderer::MatrixWorld, &matWorld);
-		screen.RenderBox3d(-5.0f, -5.0f, -5.0f, 5.0f, 5.0f, 5.0f);
-	}
+    const auto* model=instance.GetModel();
+    const auto& data=model->GetSkinningData();
+    if (!data || !data->skeleton) return;
+    CScreen screen;
+    for (size_t bone=0;bone<data->skeleton->names.size();++bone) {
+        const auto* values=instance.GetBoneMatrixPointer(static_cast<int>(bone));
+        if (!values) continue;
+        Math::Matrix local,world;
+        std::memcpy(&local,values,sizeof(local));
+        Math::MatrixMultiply(&world,&local,&base);
+        DRAWSTATE.SetTransform(Renderer::MatrixWorld,&world);
+        screen.RenderBox3d(-5.0f,-5.0f,-5.0f,5.0f,5.0f,5.0f);
+    }
 }
-
 #endif
 
 
@@ -36,7 +36,7 @@ void CGrannyModelInstance::DeformNoSkin(const Math::Matrix * c_pWorldMatrix)
 	//m_pgrnWorldPose = m_pgrnWorldPoseReal;
 	///////////////////////////////
 	
-	UpdateWorldPose();
+	if (!UpdateWorldPose()) return;
 	UpdateWorldMatrices(c_pWorldMatrix);
 }
 
@@ -53,9 +53,9 @@ void CGrannyModelInstance::RenderWithOneTexture()
 		return;
 
 #ifdef _TEST
-	Granny_RenderBoxBones(GrannyGetSourceSkeleton(m_pgrnModelInstance), m_pgrnWorldPose, TEST_matWorld);
+	RenderAssetBones(*this, TEST_matWorld);
 	if (GetAsyncKeyState('P'))
-		Tracef("render %p", static_cast<void*>(m_pgrnModelInstance));
+		Tracef("render %p", static_cast<void*>(m_animationInstance.get()));
 	return;
 #endif
 

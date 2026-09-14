@@ -1,4 +1,5 @@
 #include "EterGrnLib/StdAfx.h"
+#include "AssetRuntime/Granny/Native.h"
 #include "EterGrnLib/ModelInstance.h"
 #include "EterLib/ResourceManager.h"
 #include "EterLib/TerrainTextureLoader.h"

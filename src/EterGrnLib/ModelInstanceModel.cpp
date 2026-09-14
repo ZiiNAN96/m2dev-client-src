@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "AssetRuntime/Granny/GrannyInterop.h"
 #include "ModelInstance.h"
 #include "Model.h"
 
@@ -40,6 +41,7 @@ void CGrannyModelInstance::SetLinkedModelPointer(CGrannyModel* pkModel, CGraphic
 		m_pModel->Release();
 
 	m_pModel = pkModel;
+	if (!m_pModel) return;
 
 	m_pModel->AddReference();
 	
@@ -49,6 +51,7 @@ void CGrannyModelInstance::SetLinkedModelPointer(CGrannyModel* pkModel, CGraphic
 		__CreateDynamicVertexBuffer();
 
 	__CreateModelInstance();
+	if (!m_animationInstance) { Clear(); return; }
 	
 	// WORK
 	if (ppkSkeletonInst && *ppkSkeletonInst)
@@ -57,12 +60,13 @@ void CGrannyModelInstance::SetLinkedModelPointer(CGrannyModel* pkModel, CGraphic
         if(refreshLinkedLodBinding && (*ppkSkeletonInst)->m_pModel->GetSkinningData())
             m_linkedLodBindingDestination=(*ppkSkeletonInst)->m_pModel->GetSkinningData()->skeleton;
 		__CreateWorldPose(*ppkSkeletonInst);			
-		__CreateMeshBindingVector(*ppkSkeletonInst);
+		if (!__CreateMeshBindingVector(*ppkSkeletonInst)) { Clear(); return; }
 	}
 	else
 	{
-		__CreateWorldPose(NULL);			
-		__CreateMeshBindingVector(NULL);
+		__CreateWorldPose(NULL);
+        if (!m_ownsWorldPose) { Clear(); return; }
+		if (!__CreateMeshBindingVector(NULL)) { Clear(); return; }
 	}
 	// END_OF_WORK	
 
@@ -74,44 +78,40 @@ void CGrannyModelInstance::SetLinkedModelPointer(CGrannyModel* pkModel, CGraphic
 }
 
 // WORK
-granny_world_pose* CGrannyModelInstance::__GetWorldPosePtr() const
+AssetRuntime::AnimationInstance* CGrannyModelInstance::__GetPoseOwner() const
 {
-	if (m_pgrnWorldPoseReal)
-		return m_pgrnWorldPoseReal;
+    if (m_ownsWorldPose) return m_animationInstance.get();
 	
 	if (m_ppkSkeletonInst && *m_ppkSkeletonInst)
-		return (*m_ppkSkeletonInst)->m_pgrnWorldPoseReal;
-
-	assert(m_ppkSkeletonInst!=NULL && "__GetWorldPosePtr - NO HAVE SKELETON");		
-	return NULL;	
+		return (*m_ppkSkeletonInst)->m_animationInstance.get();
+    return nullptr;
 }
 
-int* CGrannyModelInstance::__GetMeshBoneIndices(unsigned int iMeshBinding) const
+AssetRuntime::PoseView CGrannyModelInstance::__GetCompositePose() const
 {
-	assert(iMeshBinding<m_vct_pgrnMeshBinding.size());
-	return (int*)GrannyGetMeshBindingToBoneIndices(m_vct_pgrnMeshBinding[iMeshBinding]);
+    const auto* owner=__GetPoseOwner();
+    return owner ? owner->CompositePose() : AssetRuntime::PoseView{};
+}
+
+const int* CGrannyModelInstance::__GetMeshBoneIndices(unsigned int index) const
+{
+    return index<m_meshBindings.size() && m_meshBindings[index] ? m_meshBindings[index]->BoneIndices().data() : nullptr;
 }
 
 bool CGrannyModelInstance::__CreateMeshBindingVector(CGrannyModelInstance* pkDstModelInst)
 {
-	assert(m_vct_pgrnMeshBinding.empty());
-
-	if (!m_pModel)
-		return false;	
-	
-	granny_model* pgrnModel = m_pModel->GetGrannyModelPointer();
-	if (!pgrnModel)
-		return false;
-
-	granny_skeleton* pgrnDstSkeleton = pgrnModel->Skeleton;
-	if (pkDstModelInst && pkDstModelInst->m_pModel && pkDstModelInst->m_pModel->GetGrannyModelPointer())
-		pgrnDstSkeleton = pkDstModelInst->m_pModel->GetGrannyModelPointer()->Skeleton;
-	
-	m_vct_pgrnMeshBinding.reserve(pgrnModel->MeshBindingCount);
-
-	granny_int32 iMeshBinding;
-	for (iMeshBinding = 0; iMeshBinding != pgrnModel->MeshBindingCount; ++iMeshBinding)
-		m_vct_pgrnMeshBinding.push_back(GrannyNewMeshBinding(pgrnModel->MeshBindings[iMeshBinding].Mesh, pgrnModel->Skeleton, pgrnDstSkeleton));
+    assert(m_meshBindings.empty());
+    if (!m_pModel) return false;
+    auto* destination=pkDstModelInst ? pkDstModelInst->m_animationInstance.get() : m_animationInstance.get();
+    if (!destination) return false;
+    m_meshBindings.reserve(m_pModel->GetMeshCount());
+    for (int mesh=0; mesh<m_pModel->GetMeshCount(); ++mesh) {
+        auto binding=m_pModel->GetAssetHandle() ?
+            destination->CreateMeshBinding(m_pModel->GetAssetHandle(),mesh) :
+            AssetRuntime::GrannyInterop::CreateLegacyMeshBinding(m_pModel->GetGrannyModelPointer(),mesh,*destination);
+        if (!binding) { m_meshBindings.clear(); return false; }
+        m_meshBindings.push_back(std::move(binding));
+    }
 
     __PrepareSkinningBindings();
 
@@ -120,8 +120,7 @@ bool CGrannyModelInstance::__CreateMeshBindingVector(CGrannyModelInstance* pkDst
 
 void CGrannyModelInstance::__DestroyMeshBindingVector()
 {
-	std::for_each(m_vct_pgrnMeshBinding.begin(), m_vct_pgrnMeshBinding.end(), GrannyFreeMeshBinding);
-	m_vct_pgrnMeshBinding.clear();		
+    m_meshBindings.clear();
 }
 
 // END_OF_WORK
@@ -129,46 +128,34 @@ void CGrannyModelInstance::__DestroyMeshBindingVector()
 
 void CGrannyModelInstance::__CreateWorldPose(CGrannyModelInstance* pkSkeletonInst)
 {
-	assert(m_pgrnModelInstance != NULL);
-	assert(m_pgrnWorldPoseReal == NULL);
+    assert(m_animationInstance);
+    assert(!m_ownsWorldPose);
 
 	// WORK
 	if (pkSkeletonInst)
 		return;	
 	// END_OF_WORK
 
-	granny_skeleton * pgrnSkeleton = GrannyGetSourceSkeleton(m_pgrnModelInstance);		
-
-	// WORK
-	m_pgrnWorldPoseReal = GrannyNewWorldPose(pgrnSkeleton->BoneCount);	
-	// END_OF_WORK
+    m_ownsWorldPose=m_animationInstance->PreparePose();
 }
 
 void CGrannyModelInstance::__DestroyWorldPose()
 {
-	if (!m_pgrnWorldPoseReal)
-		return;
-
-	GrannyFreeWorldPose(m_pgrnWorldPoseReal);
-	m_pgrnWorldPoseReal = NULL;	
+    m_ownsWorldPose=false;
 }
 
 void CGrannyModelInstance::__CreateModelInstance()
 {	
 	assert(m_pModel != NULL);
-	assert(m_pgrnModelInstance == NULL);
-
-	const granny_model * pgrnModel = m_pModel->GetGrannyModelPointer();	
-	m_pgrnModelInstance = GrannyInstantiateModel(pgrnModel);
+    assert(!m_animationInstance);
+    const auto& model=m_pModel->GetAssetHandle();
+    m_animationInstance=model ? model.GetDocument()->CreateAnimationInstance(model) :
+        AssetRuntime::GrannyInterop::CreateLegacyAnimationInstance(m_pModel->GetGrannyModelPointer());
 }
 
 void CGrannyModelInstance::__DestroyModelInstance()
 {
-	if (!m_pgrnModelInstance) 
-		return;
-
-	GrannyFreeModelInstance(m_pgrnModelInstance);
-	m_pgrnModelInstance = NULL;
+    m_animationInstance.reset();
 }
 
 void CGrannyModelInstance::__CreateMeshMatrices()
@@ -258,9 +245,18 @@ void CGrannyModelInstance::__DestroyDynamicVertexBuffer()
 
 bool CGrannyModelInstance::GetBoneIndexByName(const char * c_szBoneName, int * pBoneIndex) const
 {
-	assert(m_pgrnModelInstance != NULL);
-
-	granny_skeleton * pgrnSkeleton = GrannyGetSourceSkeleton(m_pgrnModelInstance);
+	if (!m_pModel || !c_szBoneName || !pBoneIndex) return false;
+    if (const auto* asset = m_pModel->GetAsset()) {
+        if (!asset->skeleton) return false;
+        const auto binding = AssetRuntime::ResolveAttachment(*asset->skeleton, c_szBoneName);
+        if (!binding) return false;
+        *pBoneIndex = binding.bone;
+        return true;
+    }
+    if (!m_animationInstance) return false;
+    auto* native=AssetRuntime::GrannyInterop::GetAnimationInstance(*m_animationInstance);
+    if (!native) return false;
+	granny_skeleton * pgrnSkeleton = GrannyGetSourceSkeleton(native);
 
 	if (!GrannyFindBoneByName(pgrnSkeleton, c_szBoneName, pBoneIndex))
 		return false;
@@ -270,21 +266,17 @@ bool CGrannyModelInstance::GetBoneIndexByName(const char * c_szBoneName, int * p
 
 const float * CGrannyModelInstance::GetBoneMatrixPointer(int iBone) const
 {
-	const float* bones = GrannyGetWorldPose4x4(__GetWorldPosePtr(), iBone);
-	if (!bones)
-	{
-		granny_model* pModel = m_pModel->GetGrannyModelPointer();		
-		//TraceError("GrannyModelInstance(%s).GetBoneMatrixPointer(boneIndex(%d)).NOT_FOUND_BONE", pModel->Name, iBone);
-		return NULL;
-	}
-	return bones;
+    const auto* owner=__GetPoseOwner();
+    const auto matrix=owner ? owner->BoneWorldMatrix(iBone) : std::span<const float>{};
+    return matrix.size()==16 ? matrix.data() : nullptr;
 }
 
 const float * CGrannyModelInstance::GetCompositeBoneMatrixPointer(int iBone) const
 {
 	// NOTE : GrannyGetWorldPose4x4는 스케일 값등이 잘못나올 수 있음.. 그래니가 속도를 위해
 	//        GrannyGetWorldPose4x4에 모든 matrix 원소를 제 값으로 넣지 않음
-	return GrannyGetWorldPoseComposite4x4(__GetWorldPosePtr(), iBone);
+    const auto pose=__GetCompositePose();
+    return iBone>=0 && size_t(iBone)<pose.BoneCount() ? pose.values.data()+size_t(iBone)*16 : nullptr;
 }
 
 void CGrannyModelInstance::ReloadTexture()
