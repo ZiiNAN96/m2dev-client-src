@@ -1,6 +1,8 @@
-#include "stdafx.h"
-#include "MovieMan.h"
-#include "PythonApplication.h"
+#include "UserInterface/StdAfx.h"
+#include "Win32MoviePlayer.h"
+#include "UserInterface/MovieMan.h"
+#include <dshow.h>
+#include "UserInterface/PythonApplication.h"
 
 // 2007-08-19, nuclei
 // add following files to the [Project Settings-Linker-Input]
@@ -32,7 +34,7 @@
 #define TUTORIAL_1				"TutorialMovie\\Tutorial1.mpg"
 #define TUTORIAL_2				"TutorialMovie\\Tutorial2.mpg"
 
-void CMovieMan::ClearToBlack()
+void Win32MoviePlayer::ClearToBlack()
 {
 	PAINTSTRUCT ps;
 	HDC dc;
@@ -40,7 +42,7 @@ void CMovieMan::ClearToBlack()
 	//
 	// Get the repaint DC and then fill the window with black.
 	//
-	HWND window =  CPythonApplication::Instance().GetWindowHandle();//CFFClientApp::GetInstance()->GetMainWindow();
+	HWND window = static_cast<HWND>(CPythonApplication::Instance().GetNativeHandle().value);
 	InvalidateRect( window, NULL, FALSE );
 	dc = BeginPaint( window, &ps );
 
@@ -49,7 +51,7 @@ void CMovieMan::ClearToBlack()
 	EndPaint( window, &ps );
 }
 
-void CMovieMan::FillRect( RECT& fillRect, DWORD fillColor )
+void Win32MoviePlayer::FillRect( RECT& fillRect, DWORD fillColor )
 {
 	assert(m_pPrimarySurface);
 
@@ -69,7 +71,7 @@ void CMovieMan::FillRect( RECT& fillRect, DWORD fillColor )
 	}
 }
 
-inline void CMovieMan::GDIFillRect( RECT& fillRect, DWORD fillColor )
+inline void Win32MoviePlayer::GDIFillRect( RECT& fillRect, DWORD fillColor )
 {
 	HBRUSH fillBrush = CreateSolidBrush(
 		RGB((fillColor >> 16) & 255, (fillColor >> 8) & 255, fillColor & 255)
@@ -85,7 +87,7 @@ inline void CMovieMan::GDIFillRect( RECT& fillRect, DWORD fillColor )
 //----------------------------------------------------------------------------------------------------
 // 특정 서피스를 GDI로 바탕화면에 뿌린다
 //
-inline void CMovieMan::GDIBlt(IDirectDrawSurface *pSrcSurface, RECT *pDestRect)
+inline void Win32MoviePlayer::GDIBlt(IDirectDrawSurface *pSrcSurface, RECT *pDestRect)
 {
 	HDC surfaceDC;
 	HDC desktopDC = GetDC(0);
@@ -98,18 +100,18 @@ inline void CMovieMan::GDIBlt(IDirectDrawSurface *pSrcSurface, RECT *pDestRect)
 	ReleaseDC(0, desktopDC);
 }
 
-void CMovieMan::PlayLogo(const char *pcszName)
+void Win32MoviePlayer::PlayLogo(const char *pcszName)
 {
 	PlayMovie(pcszName);
 }
 
-void CMovieMan::PlayIntro()
+void Win32MoviePlayer::PlayIntro()
 {
 	// 인트로 영상은 키보드 입력이나 마우스 클릭으로 스킵 가능
 	PlayMovie( INTRO_FILE, MOVIEMAN_SKIPPABLE_YES, MOVIEMAN_POSTEFFECT_FADEOUT, 0xFFFFFF );
 }
 
-BOOL CMovieMan::PlayTutorial(LONG nIdx)
+BOOL Win32MoviePlayer::PlayTutorial(LONG nIdx)
 {
 	BOOL bRet = FALSE;
 	ClearToBlack();
@@ -127,9 +129,9 @@ BOOL CMovieMan::PlayTutorial(LONG nIdx)
 	return bRet;
 }
 
-BOOL CMovieMan::PlayMovie( const char *cpFileName, const bool bSkipAllowed, const int nPostEffectID, const DWORD dwPostEffectData )
+BOOL Win32MoviePlayer::PlayMovie( const char *cpFileName, const bool bSkipAllowed, const int nPostEffectID, const DWORD dwPostEffectData )
 {
-	HWND hWnd = CPythonApplication::Instance().GetWindowHandle();
+	HWND hWnd = static_cast<HWND>(CPythonApplication::Instance().GetNativeHandle().value);
 
 	IDirectDraw *pDD = NULL;
 	DirectDrawCreate(NULL, &pDD, NULL);
@@ -239,9 +241,9 @@ BOOL CMovieMan::PlayMovie( const char *cpFileName, const bool bSkipAllowed, cons
 //----------------------------------------------------------------------------------------------------
 // 메인 윈도우의 Screen 좌표를 반환
 //
-void CMovieMan::GetWindowRect(RECT& windowRect)
+void Win32MoviePlayer::GetWindowRect(RECT& windowRect)
 {
-	HWND hWnd = CPythonApplication::Instance().GetWindowHandle();
+	HWND hWnd = static_cast<HWND>(CPythonApplication::Instance().GetNativeHandle().value);
 	POINT p;
 
 	//
@@ -263,7 +265,7 @@ void CMovieMan::GetWindowRect(RECT& windowRect)
 //----------------------------------------------------------------------------------------------------
 // 메인 윈도우에 동영상을 꽉채우는 RECT 반환(가로/세로 비율 유지)
 //
-void CMovieMan::CalcMovieRect(int srcWidth, int srcHeight, RECT& movieRect)
+void Win32MoviePlayer::CalcMovieRect(int srcWidth, int srcHeight, RECT& movieRect)
 {
 	RECT windowRect;
 	GetWindowRect(windowRect);
@@ -292,7 +294,7 @@ void CMovieMan::CalcMovieRect(int srcWidth, int srcHeight, RECT& movieRect)
 //----------------------------------------------------------------------------------------------------
 // 화면 위에서 동영상이 아닌 검은색 영역, 항상 2개의 RECT로 표현 가능
 //
-void CMovieMan::CalcBackgroundRect(const RECT& movieRect, RECT& upperRect, RECT& lowerRect)
+void Win32MoviePlayer::CalcBackgroundRect(const RECT& movieRect, RECT& upperRect, RECT& lowerRect)
 {
 	RECT windowRect;
 	GetWindowRect(windowRect);
@@ -314,7 +316,7 @@ void CMovieMan::CalcBackgroundRect(const RECT& movieRect, RECT& upperRect, RECT&
 //----------------------------------------------------------------------------------------------------
 // 특정 서피스에 Blocking으로 동영상을 그린다
 //
-HRESULT CMovieMan::RenderStreamToSurface(IDirectDrawSurface *pSurface, IDirectDrawMediaStream *pDDStream, IMultiMediaStream *pMMStream, bool bSkipAllowed, int nPostEffectID, DWORD dwPostEffectData)
+HRESULT Win32MoviePlayer::RenderStreamToSurface(IDirectDrawSurface *pSurface, IDirectDrawMediaStream *pDDStream, IMultiMediaStream *pMMStream, bool bSkipAllowed, int nPostEffectID, DWORD dwPostEffectData)
 {    
 	#define KEY_DOWN(vk)	(GetAsyncKeyState(vk) & 0x8000)
 
@@ -362,7 +364,7 @@ HRESULT CMovieMan::RenderStreamToSurface(IDirectDrawSurface *pSurface, IDirectDr
 	return hr;
 }
 
-HRESULT CMovieMan::RenderFileToMMStream(const char *cpFilename, IMultiMediaStream **ppMMStream, IDirectDraw *pDD)
+HRESULT Win32MoviePlayer::RenderFileToMMStream(const char *cpFilename, IMultiMediaStream **ppMMStream, IDirectDraw *pDD)
 {
 	IAMMultiMediaStream *pAMStream;
 	HRESULT hr = CoCreateInstance(CLSID_AMMultiMediaStream, NULL, CLSCTX_INPROC_SERVER, IID_IAMMultiMediaStream, (void **) &pAMStream);
@@ -427,7 +429,7 @@ HRESULT CMovieMan::RenderFileToMMStream(const char *cpFilename, IMultiMediaStrea
 //----------------------------------------------------------------------------------------------------
 // 특정색으로 화면이 밝아지거나 어두워짐
 //
-HRESULT CMovieMan::RenderPostEffectFadeOut(IDirectDrawSurface *pSurface, int fadeOutDuration, DWORD fadeOutColor)
+HRESULT Win32MoviePlayer::RenderPostEffectFadeOut(IDirectDrawSurface *pSurface, int fadeOutDuration, DWORD fadeOutColor)
 {
 	// Lock 걸기 위해 초기화
 	DDSURFACEDESC lockedSurfaceDesc;
@@ -515,7 +517,7 @@ HRESULT CMovieMan::RenderPostEffectFadeOut(IDirectDrawSurface *pSurface, int fad
 //----------------------------------------------------------------------------------------------------
 // MPEG-1 비디오 파일을 외부 코덱 간섭없이 렌더링하는 함수
 //
-HRESULT CMovieMan::BuildFilterGraphManually(
+HRESULT Win32MoviePlayer::BuildFilterGraphManually(
 	WCHAR* wpFilename, 
 	IAMMultiMediaStream *pAMStream, 
 	const GUID FAR clsidSplitter, 
@@ -657,7 +659,7 @@ HRESULT CMovieMan::BuildFilterGraphManually(
 }
 
 //#ifdef _DEBUG
-//HRESULT	CMovieMan::AddToRot(IGraphBuilder* pGraphBuilder, DWORD *pdwRegister)
+//HRESULT	Win32MoviePlayer::AddToRot(IGraphBuilder* pGraphBuilder, DWORD *pdwRegister)
 //{
 //	assert(pGraphBuilder);
 //
@@ -679,7 +681,7 @@ HRESULT CMovieMan::BuildFilterGraphManually(
 //	return hr;
 //}
 //
-//void CMovieMan::RemoveFromRot(DWORD pdwRegister)
+//void Win32MoviePlayer::RemoveFromRot(DWORD pdwRegister)
 //{
 //	IRunningObjectTable *pROT;
 //	if (SUCCEEDED(GetRunningObjectTable(0, &pROT))) {
@@ -688,3 +690,11 @@ HRESULT CMovieMan::BuildFilterGraphManually(
 //	}
 //}
 //#endif
+
+// ZiiNAN: Platform abstraction
+CMovieMan::CMovieMan() : m_player(std::make_unique<Win32MoviePlayer>()) {}
+CMovieMan::~CMovieMan() = default;
+void CMovieMan::ClearToBlack() { m_player->ClearToBlack(); }
+void CMovieMan::PlayLogo(const char* name) { m_player->PlayLogo(name); }
+void CMovieMan::PlayIntro() { m_player->PlayIntro(); }
+int CMovieMan::PlayTutorial(long index) { return m_player->PlayTutorial(index); }

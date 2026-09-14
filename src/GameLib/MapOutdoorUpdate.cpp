@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "EterLib/Camera.h"
+#include "Platform/PlatformTime.h"
 #include "PRTerrainLib/StdAfx.h"
 
 #include "MapOutdoor.h"
@@ -219,12 +220,12 @@ void CMapOutdoor::__UpdateArea(Math::Vector3& v3Player)
 void CMapOutdoor::__Game_UpdateArea(Math::Vector3& v3Player)
 {
 #ifdef __PERFORMANCE_CHECKER__
-	DWORD t1=timeGetTime();
+	DWORD t1=Platform::Time::TickMilliseconds();
 #endif
 	m_PCBlockerVector.clear();	
 	m_ShadowReceiverVector.clear();
 #ifdef __PERFORMANCE_CHECKER__
-	DWORD t2=timeGetTime();
+	DWORD t2=Platform::Time::TickMilliseconds();
 #endif
 	CCameraManager& rCmrMgr=CCameraManager::Instance();
 	CCamera * pCamera = rCmrMgr.GetCurrentCamera();
@@ -251,24 +252,24 @@ void CMapOutdoor::__Game_UpdateArea(Math::Vector3& v3Player)
 	}
 	*/
 #ifdef __PERFORMANCE_CHECKER__
-	DWORD t3=timeGetTime();
+	DWORD t3=Platform::Time::TickMilliseconds();
 #endif
 	__CollectShadowReceiver(v3Player, v3Light);
 #ifdef __PERFORMANCE_CHECKER__
-	DWORD t4=timeGetTime();
+	DWORD t4=Platform::Time::TickMilliseconds();
 #endif
 	__CollectCollisionPCBlocker(v3Eye, v3Player, fDistance);
 #ifdef __PERFORMANCE_CHECKER__
-	DWORD t5=timeGetTime();
+	DWORD t5=Platform::Time::TickMilliseconds();
 #endif
 	__CollectCollisionShadowReceiver(v3Player, v3Light);
 #ifdef __PERFORMANCE_CHECKER__
-	DWORD t6=timeGetTime();
+	DWORD t6=Platform::Time::TickMilliseconds();
 #endif
 	__UpdateAroundAreaList();
 
 #ifdef __PERFORMANCE_CHECKER__
-	DWORD t7=timeGetTime();
+	DWORD t7=Platform::Time::TickMilliseconds();
 	{
 		static FILE* fp=fopen("perf_area_update.txt", "w");
 
@@ -290,21 +291,21 @@ void CMapOutdoor::__Game_UpdateArea(Math::Vector3& v3Player)
 void CMapOutdoor::__UpdateAroundAreaList()
 {
 #ifdef __PERFORMANCE_CHECKER__
-	DWORD ft1=timeGetTime();
+	DWORD ft1=Platform::Time::TickMilliseconds();
 #endif
 	DWORD at[AROUND_AREA_NUM];
 	for (int i = 0; i < AROUND_AREA_NUM; ++i)
 	{
-		DWORD t1=timeGetTime();
+		DWORD t1=Platform::Time::TickMilliseconds();
 		CArea * pArea;
 		if (GetAreaPointer(i, &pArea))
 			pArea->Update();
-		DWORD t2=timeGetTime();
+		DWORD t2=Platform::Time::TickMilliseconds();
 
 		at[i]=t2-t1;
 	}	
 #ifdef __PERFORMANCE_CHECKER__
-	DWORD ft2=timeGetTime();
+	DWORD ft2=Platform::Time::TickMilliseconds();
 	if (ft2-ft1>5)
 	{
 		for (int i=0; i<AROUND_AREA_NUM; ++i)
@@ -607,7 +608,7 @@ void CMapOutdoor::__CollectCollisionPCBlocker(Math::Vector3& v3Eye, Math::Vector
 		++pkDSI;
 	}
 #ifdef __PERFORMANCE_CHECKER__
-	DWORD t3=timeGetTime();	
+	DWORD t3=Platform::Time::TickMilliseconds();
 #endif
 	CCullingManager & rkCullingMgr = CCullingManager::Instance();
 
@@ -615,7 +616,7 @@ void CMapOutdoor::__CollectCollisionPCBlocker(Math::Vector3& v3Eye, Math::Vector
 	RangeTester<PCBlocker_SInstanceList> kPCBlockerRangeTester(&kPCBlockerList);
 	rkCullingMgr.RangeTest(v3dRayStart, fDistance, &kPCBlockerRangeTester);
 #ifdef __PERFORMANCE_CHECKER__
- 	DWORD t4=timeGetTime();
+	DWORD t4=Platform::Time::TickMilliseconds();
 #endif
 
 	if (!kPCBlockerList.IsEmpty())

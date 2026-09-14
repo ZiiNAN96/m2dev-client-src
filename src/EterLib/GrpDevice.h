@@ -2,6 +2,7 @@
 
 #include "GrpBase.h"
 #include "DrawState.h"
+#include "Platform/NativeTypes.h"
 
 #include <map>
 
@@ -16,7 +17,7 @@ public:
 
 
 	void			Destroy();
-	int				Create(HWND hWnd, int hres, int vres, bool Windowed = true, int bit = 32, int ReflashRate = 0);
+	int				Create(Platform::NativeWindowHandle window, int hres, int vres, bool Windowed = true, int bit = 32, int ReflashRate = 0);
 
 
 

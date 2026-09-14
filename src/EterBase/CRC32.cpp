@@ -56,7 +56,7 @@ static unsigned long CRCTable[256] =
 #define DO8(buf, i)     DO4(buf, i); DO4(buf, i + 4);
 #define DO16(buf, i)    DO8(buf, i); DO8(buf, i + 8);
 
-DWORD GetCRC32(const char * buf, size_t len)
+std::uint32_t GetCRC32(const char * buf, size_t len)
 {
     DWORD crc = 0xffffffff;
 
@@ -95,7 +95,7 @@ DWORD GetCRC32(const char * buf, size_t len)
 #define DO8CI(buf, i)   DO4CI(buf, i); DO4CI(buf, i + 4);
 #define DO16CI(buf, i)  DO8CI(buf, i); DO8CI(buf, i + 8);
 
-DWORD GetCaseCRC32(const char * buf, size_t len)
+std::uint32_t GetCaseCRC32(const char * buf, size_t len)
 {
     DWORD crc = 0xffffffff;
 
@@ -125,7 +125,7 @@ DWORD GetCaseCRC32(const char * buf, size_t len)
     return crc;
 }
 
-DWORD GetHFILECRC32(HANDLE hFile)
+static DWORD GetHFILECRC32(HANDLE hFile)
 {
 	DWORD dwRetCRC32=0;
 
@@ -163,7 +163,7 @@ DWORD GetHFILECRC32(HANDLE hFile)
 	return dwRetCRC32;
 }
 
-DWORD GetFileCRC32(const wchar_t* c_szFileName)
+std::uint32_t GetFileCRC32(const wchar_t* c_szFileName)
 {
 	if (!c_szFileName || !*c_szFileName)
 		return 0;
@@ -177,7 +177,7 @@ DWORD GetFileCRC32(const wchar_t* c_szFileName)
 	return dwRetCRC32;
 }
 
-DWORD GetFileCRC32(const char* fileUtf8)
+std::uint32_t GetFileCRC32(const char* fileUtf8)
 {
 	if (!fileUtf8 || !*fileUtf8)
 		return 0;
@@ -186,7 +186,7 @@ DWORD GetFileCRC32(const char* fileUtf8)
 	return GetFileCRC32(wFile.c_str());
 }
 
-DWORD GetFileSize(const char* c_szFileName)
+std::uint32_t GetFileSize(const char* c_szFileName)
 {
 	if (!c_szFileName || !*c_szFileName)
 		return 0;

@@ -17,9 +17,8 @@
 
 #include "Renderer/DrawStateTypes.h"
 
-#define DIRECTINPUT_VERSION 0x0800
-
-#include <dinput.h>
+#include "EterBase/StdAfx.h"
+#include "EterBase/Debug.h"
 
 #pragma warning ( disable : 4201 )
 #include <mmsystem.h>
@@ -31,8 +30,6 @@
 #include <direct.h>
 #include <malloc.h>
 
-#include "EterBase/StdAfx.h"
-#include "EterBase/Debug.h"
 #include "EterLocale/CodePageId.h"
 
 #include "UserInterface/Locale_inc.h"

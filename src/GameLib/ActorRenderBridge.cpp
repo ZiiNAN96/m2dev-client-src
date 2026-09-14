@@ -5,6 +5,7 @@
 #include "StaticObjectBridge.h"
 #include "EterLib/StaticObjectTextureLoader.h"
 #include "EterLib/DrawState.h"
+#include "Renderer/Diagnostics.h"
 #include <fstream>
 
 // ZiiNAN: Diligent mount actor rendering
@@ -52,6 +53,7 @@ struct ActorStateDiagnostic : CGraphicBase
 };
 void Report(CActorInstance& actor, CGrannyModelInstance& instance, const std::string& status)
 {
+    if(!verboseDiagnostics) return;
     if(!instance.GetActorRenderData().reports.insert(status).second) return;
     if(!diagnostics.is_open()) diagnostics.open("actor-renderer.log",std::ios::trunc);
     if(status.find("excluded: actor render state")==0) ActorStateDiagnostic::Write(diagnostics);

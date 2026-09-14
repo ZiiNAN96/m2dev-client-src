@@ -15,7 +15,7 @@ int main()
     HWND window=CreateWindowW(L"STATIC",L"CPU draw state isolation test",WS_OVERLAPPEDWINDOW,0,0,320,240,nullptr,nullptr,GetModuleHandleW(nullptr),nullptr);
     try {
         CGraphicDevice graphics; CScreen screen;
-        Check(window && graphics.Create(window,320,240)==CGraphicDevice::CREATE_OK,"device-free CPU context");
+        Check(window && graphics.Create({window},320,240)==CGraphicDevice::CREATE_OK,"device-free CPU context");
         Check(screen.Begin(),"CPU frame");
         DRAWSTATE.SetRenderState(Renderer::StateAlphaBlendEnable,FALSE);
         DRAWSTATE.SetRenderState(Renderer::StateCullMode,Renderer::CullNone);

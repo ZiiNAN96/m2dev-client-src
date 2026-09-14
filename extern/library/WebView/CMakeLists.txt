@@ -1,3 +1,7 @@
+# ZiiNAN: Platform abstraction
+if(NOT WIN32)
+    return()
+endif()
 add_library(WebView STATIC IMPORTED GLOBAL)
 
 set_target_properties(WebView PROPERTIES

@@ -1,10 +1,13 @@
 #pragma once
 
+#include <windows.h>
+#include <objbase.h>
 #include <imm.h>
 
 #pragma comment(lib, "imm32.lib")
 
 #include "DIMM.h"
+#include "Platform/PlatformDynamicLibrary.h"
 
 #include <vector>
 #include <string>
@@ -197,8 +200,8 @@ class CIME
 		static wchar_t ms_szKeyboardLayout[KL_NAMELENGTH+1];
 		static OSVERSIONINFOW ms_stOSVI;
 
-		static HINSTANCE ms_hImm32Dll;
-		static HINSTANCE ms_hCurrentImeDll;
+		static Platform::DynamicLibrary ms_imm32Library;
+		static Platform::DynamicLibrary ms_currentImeLibrary;
 		static DWORD ms_dwImeState;
 
 		static DWORD ms_adwId[2];

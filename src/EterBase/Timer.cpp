@@ -1,39 +1,26 @@
 #include "StdAfx.h"
 #include "Timer.h"
+#include "Platform/PlatformTime.h"
 
-static LARGE_INTEGER gs_liTickCountPerSec;
-static DWORD gs_dwBaseTime=0;
-static DWORD gs_dwServerTime=0;
-static DWORD gs_dwClientTime=0;
-static DWORD gs_dwFrameTime=0;
+static std::uint32_t gs_dwBaseTime=0;
+static std::uint32_t gs_dwServerTime=0;
+static std::uint32_t gs_dwClientTime=0;
+static std::uint32_t gs_dwFrameTime=0;
 
-#pragma comment(lib, "winmm.lib")
-
-BOOL ELTimer_Init()
+bool ELTimer_Init()
 {	
-	/*
-	gs_liTickCountPerSec.QuadPart=0;
-
-	if (!QueryPerformanceFrequency(&gs_liTickCountPerSec))
-		return 0;
-
-	LARGE_INTEGER liTickCount;
-	QueryPerformanceCounter(&liTickCount);
-	gs_dwBaseTime= (liTickCount.QuadPart*1000  / gs_liTickCountPerSec.QuadPart);	
-	*/
-	gs_dwBaseTime = timeGetTime();
-	return 1;
+	(void)Platform::Time::Initialize();
+	gs_dwBaseTime = Platform::Time::TickMilliseconds();
+	return true;
 }
 
-DWORD ELTimer_GetMSec()
+std::uint32_t ELTimer_GetMSec()
 {
-	//assert(gs_dwBaseTime!=0 && "ELTimer_Init 를 먼저 실행하세요");
-	//LARGE_INTEGER liTickCount;
-	//QueryPerformanceCounter(&liTickCount);
-	return timeGetTime() - gs_dwBaseTime; //(liTickCount.QuadPart*1000  / gs_liTickCountPerSec.QuadPart)-gs_dwBaseTime;		
+	// Preserve the engine's existing wrapping multimedia-timer domain.
+	return Platform::Time::TickMilliseconds() - gs_dwBaseTime;
 }
 
-VOID	ELTimer_SetServerMSec(DWORD dwServerTime)
+void ELTimer_SetServerMSec(std::uint32_t dwServerTime)
 {
 	NANOBEGIN
 	if (0 != dwServerTime) // nanomite를 위한 더미 if
@@ -44,23 +31,23 @@ VOID	ELTimer_SetServerMSec(DWORD dwServerTime)
 	NANOEND
 }
 
-DWORD	ELTimer_GetServerMSec()
+std::uint32_t ELTimer_GetServerMSec()
 {
 	return CTimer::instance().GetCurrentMillisecond() - gs_dwClientTime + gs_dwServerTime;
 	//return ELTimer_GetMSec() - gs_dwClientTime + gs_dwServerTime;
 }
 
-DWORD	ELTimer_GetFrameMSec()
+std::uint32_t ELTimer_GetFrameMSec()
 {
 	return gs_dwFrameTime;
 }
 
-DWORD	ELTimer_GetServerFrameMSec()
+std::uint32_t ELTimer_GetServerFrameMSec()
 {
 	return ELTimer_GetFrameMSec() - gs_dwClientTime + gs_dwServerTime;
 }
 
-VOID	ELTimer_SetFrameMSec()
+void ELTimer_SetFrameMSec()
 {
 	gs_dwFrameTime = ELTimer_GetMSec();
 }
@@ -106,7 +93,7 @@ void CTimer::Advance()
 	}
 	else
 	{
-		DWORD currentTime = ELTimer_GetMSec();
+		std::uint32_t currentTime = ELTimer_GetMSec();
 
 		if (m_dwCurrentTime == 0)
 			m_dwCurrentTime = currentTime;
@@ -129,7 +116,7 @@ float CTimer::GetCurrentSecond()
 	return m_fCurrentTime;
 }
 
-DWORD CTimer::GetCurrentMillisecond()
+std::uint32_t CTimer::GetCurrentMillisecond()
 {
 	if (m_bUseRealTime)
 		return ELTimer_GetMSec();
@@ -142,7 +129,7 @@ float CTimer::GetElapsedSecond()
 	return GetElapsedMilliecond() / 1000.0f;
 }
 
-DWORD CTimer::GetElapsedMilliecond()
+std::uint32_t CTimer::GetElapsedMilliecond()
 {
 	if (!m_bUseRealTime)
 		return 16 + (m_index & 1);

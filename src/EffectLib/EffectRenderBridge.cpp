@@ -6,6 +6,7 @@
 #include "EterLib/DrawState.h"
 #include "EterLib/GrpImage.h"
 #include "EterLib/StaticObjectTextureLoader.h"
+#include "Renderer/Diagnostics.h"
 #include <fstream>
 #include <set>
 
@@ -30,6 +31,7 @@ void Frame()
 void Report(const std::string& reason,bool error)
 {
     if(error && effectRenderer) effectRenderer->ReportFailure();
+    if(!verboseDiagnostics) return;
     const std::string key=std::string(asset ? asset : "trail")+" "+reason;
     if(reported.size()>=256 || !reported.insert(key).second) return;
     if(!diagnostics.is_open()) diagnostics.open("effect-renderer.log",std::ios::trunc);

@@ -2,6 +2,7 @@
 #include "StdAfx.h"
 #include "EterLib/DrawStateView.h"
 #include "TextRenderBridge.h"
+#include "Renderer/Diagnostics.h"
 #include "GrpFontTexture.h"
 #include "MaterialStateSnapshot.h"
 #include "DrawState.h"
@@ -15,6 +16,7 @@ namespace
 void Failure(const std::string& message)
 {
     Renderer::textRenderer->ReportFailure();
+    if(!Renderer::verboseDiagnostics) return;
     static std::set<std::string> reported;
     static std::ofstream log("text-renderer.log",std::ios::trunc);
     if(reported.size()<32 && reported.insert(message).second) log<<message<<std::endl;

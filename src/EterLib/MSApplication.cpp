@@ -1,56 +1,35 @@
 #include "StdAfx.h"
-#include "MsApplication.h"
+#include "MSApplication.h"
 
-CMSApplication::CMSApplication()
-{
-}
+#include <windows.h>
 
-CMSApplication::~CMSApplication()
-{
-//	for (TWindowClassSet::iterator i=ms_stWCSet.begin(); i!=ms_stWCSet.end(); ++i)
-//		UnregisterClass(*i, ms_hInstance);
-}
+CMSApplication::CMSApplication() = default;
+CMSApplication::~CMSApplication() = default;
 
-void CMSApplication::Initialize(HINSTANCE hInstance)
+void CMSApplication::Initialize(void* instance)
 {
-	ms_hInstance = hInstance;
+    m_platformWindow.SetInstance(instance);
 }
 
 void CMSApplication::MessageLoop()
 {
-	while (MessageProcess());
+    while (true)
+    {
+        const auto result = PollEvents();
+        if (result == Platform::PollResult::Quit)
+            return;
+        if (result == Platform::PollResult::Idle)
+            m_platformWindow.WaitForEvents();
+    }
 }
 
-bool CMSApplication::IsMessage()
+Platform::PollResult CMSApplication::PollEvents() { return m_platformWindow.PollEvents(); }
+bool CMSApplication::IsMessage() { return m_platformWindow.HasPendingEvents(); }
+bool CMSApplication::MessageProcess() { return PollEvents() != Platform::PollResult::Quit; }
+
+std::intptr_t CMSApplication::WindowProcedure(const Platform::NativeMessage& message)
 {
-	MSG msg;
-
-	if (!PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE))
-		return false;
-
-	return true;
-}
-
-bool CMSApplication::MessageProcess()
-{
-	MSG msg;
-
-	if (!GetMessage(&msg, NULL, 0, 0))
-		return false;
-
-	TranslateMessage(&msg);
-	DispatchMessage(&msg);
-	return true;
-}
-
-LRESULT CMSApplication::WindowProcedure(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lParam)
-{
-	switch (uiMsg)
-	{
-		case WM_CLOSE:
-			PostQuitMessage(0);
-			break;
-	}
-
-	return CMSWindow::WindowProcedure(hWnd, uiMsg, wParam, lParam);
+    if (message.id == WM_CLOSE)
+        m_platformWindow.RequestQuit(0);
+    return CMSWindow::WindowProcedure(message);
 }

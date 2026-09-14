@@ -79,15 +79,14 @@ void CPythonApplication::OnMouseMove(int x, int y)
 		{
 			x = Point.x;
 			y = Point.y;
-			ClientToScreen(m_hWnd, &Point);
-
-			SetCursorPos(Point.x, Point.y);
+			Platform::Point cursorPoint{static_cast<int>(Point.x), static_cast<int>(Point.y)};
+			if (GetPlatformWindow().ClientToScreen(cursorPoint))
+				GetPlatformWindow().SetCursorScreenPosition(cursorPoint);
 
 		}
 	}
 	
-	RECT rcWnd;
-	GetClientRect(&rcWnd);
+	const auto rcWnd = GetClientRect();
 	
 	UI::CWindowManager& rkWndMgr=UI::CWindowManager::Instance();
 	rkWndMgr.SetResolution(rcWnd.right-rcWnd.left, rcWnd.bottom-rcWnd.top);

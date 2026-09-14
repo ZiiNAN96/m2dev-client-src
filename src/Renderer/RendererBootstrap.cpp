@@ -1,73 +1,29 @@
-#include "EterLib/StdAfx.h"
-#include "EterLib/GrpDevice.h"
-#include "EterLib/GrpScreen.h"
 #include "RendererBootstrap.h"
 #include "DiligentD3D11Backend.h"
+#include "Platform/PlatformWindow.h"
+#include "Platform/PlatformTime.h"
 #include <fstream>
 #include <memory>
 
 namespace Renderer
 {
-namespace
-{
-struct WindowState
-{
-    IRenderBackend* backend = nullptr;
-    bool failed = false;
-    bool minimized = false;
-};
-
-LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    auto* state = reinterpret_cast<WindowState*>(GetWindowLongPtrW(window, GWLP_USERDATA));
-    if (message == WM_NCCREATE)
-    {
-        state = static_cast<WindowState*>(reinterpret_cast<CREATESTRUCTW*>(lParam)->lpCreateParams);
-        SetWindowLongPtrW(window, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(state));
-    }
-    if (message == WM_SIZE && state)
-    {
-        state->minimized = wParam == SIZE_MINIMIZED;
-        if (state->backend && !state->backend->Resize(LOWORD(lParam), HIWORD(lParam)))
-            state->failed = true;
-        return 0;
-    }
-    if (message == WM_CLOSE)
-    {
-        PostQuitMessage(0); // GPU resources are released before DestroyWindow below.
-        return 0;
-    }
-    return DefWindowProcW(window, message, wParam, lParam);
-}
-}
-
+// ZiiNAN: Platform abstraction
 int RunRendererBootstrap(void* instance, const StartupOptions& options)
 {
     std::ofstream log("renderer-bootstrap.log", std::ios::trunc);
-    log << "backend=" << "diligent-d3d11" << std::endl;
-    const auto module = static_cast<HINSTANCE>(instance);
-    const wchar_t* className = L"Metin2RendererBootstrap";
-    WNDCLASSW windowClass{};
-    windowClass.lpfnWndProc = WindowProcedure;
-    windowClass.hInstance = module;
-    windowClass.hCursor = LoadCursorW(nullptr, IDC_ARROW);
-    windowClass.lpszClassName = className;
-    if (!RegisterClassW(&windowClass))
-        return 3;
-    WindowState state;
-    HWND window = CreateWindowW(className, L"Metin2 - renderer clear/present", WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT, 800, 600, nullptr, nullptr, module, &state);
-    if (!window)
-    {
-        UnregisterClassW(className, module);
-        return 3;
-    }
-
-    std::unique_ptr<IRenderBackend> backend = std::make_unique<DiligentD3D11Backend>();
-    RECT client{};
-    GetClientRect(window, &client);
+    log << "backend=diligent-d3d11" << std::endl;
+    Platform::PlatformWindow window;
+    window.SetInstance(instance);
+    Platform::WindowCreateInfo create;
+    create.title = "Metin2 - renderer clear/present";
+    create.resizable = true;
+    if (!window.Create(create)) return 3;
+    window.SetSize(800, 600);
+    auto client = window.GetClientRect();
+    auto backend = std::make_unique<DiligentD3D11Backend>();
     int result = 0;
-    if (!backend || !backend->Initialize({window, static_cast<uint32_t>(client.right), static_cast<uint32_t>(client.bottom)}))
+    if (!backend->Initialize({window.GetNativeHandle().value,
+        static_cast<uint32_t>(client.right), static_cast<uint32_t>(client.bottom)}))
     {
         log << "ERROR: Initialize failed" << std::endl;
         result = 4;
@@ -75,55 +31,49 @@ int RunRendererBootstrap(void* instance, const StartupOptions& options)
     else
     {
         log << "Initialize OK" << std::endl;
-        state.backend = backend.get();
-        ShowWindow(window, options.smokeTest ? SW_HIDE : SW_SHOW);
+        window.Show(!options.smokeTest);
         unsigned frames = 0;
-        bool running = true;
-        while (running && !state.failed)
+        bool running = true, failed = false;
+        while (running && !failed)
         {
-            MSG message{};
-            while (PeekMessageW(&message, nullptr, 0, 0, PM_REMOVE))
+            Platform::PollResult polled;
+            while ((polled = window.PollEvents()) == Platform::PollResult::Dispatched) {}
+            if (polled == Platform::PollResult::Quit) break;
+            if (window.IsWindowMinimized())
             {
-                if (message.message == WM_QUIT)
-                    running = false;
-                TranslateMessage(&message);
-                DispatchMessageW(&message);
-            }
-            if (!running)
-                break;
-            if (state.minimized)
-            {
-                WaitMessage();
+                window.WaitForEvents();
                 continue;
             }
-            if (!backend->BeginFrame())
+            const auto next = window.GetClientRect();
+            if (next.right != client.right || next.bottom != client.bottom)
             {
-                state.failed = true;
-                break;
+                failed = !backend->Resize(static_cast<uint32_t>(next.right), static_cast<uint32_t>(next.bottom));
+                client = next;
             }
+            if (failed) break;
+            if (!backend->BeginFrame()) { failed = true; break; }
             backend->Clear({true, ClearColor{0.08f, 0.16f, 0.28f, 1.0f}});
             backend->EndFrame();
             backend->Present();
             ++frames;
             if (options.smokeTest && frames == 2)
             {
-                SetWindowPos(window, nullptr, 0, 0, 1024, 720, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
-                log << "WM_SIZE resize " << (state.failed ? "FAILED" : "OK") << std::endl;
+                window.SetSize(1024, 720);
+                const auto resized = window.GetClientRect();
+                failed = !backend->Resize(static_cast<uint32_t>(resized.right), static_cast<uint32_t>(resized.bottom));
+                client = resized;
+                log << "WM_SIZE resize " << (failed ? "FAILED" : "OK") << std::endl;
             }
-            if (options.smokeTest && frames == 5)
-                running = false;
-            Sleep(1);
+            if (options.smokeTest && frames == 5) running = false;
+            Platform::Time::SleepMilliseconds(1);
         }
-        result = state.failed ? 5 : 0;
+        result = failed ? 5 : 0;
         log << "Frames=" << frames << " result=" << result << std::endl;
     }
-    state.backend = nullptr;
-    if (backend)
-        backend->Shutdown();
+    backend->Shutdown();
     backend.reset();
     log << "Shutdown OK" << std::endl;
-    DestroyWindow(window);
-    UnregisterClassW(className, module);
+    window.Destroy();
     return result;
 }
 }

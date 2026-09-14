@@ -94,7 +94,7 @@ int main()
     try {
         // ZiiNAN: Backend-neutral graphics resource ownership
         CGraphicDevice graphics;
-        Check(window && graphics.Create(window,320,240)==CGraphicDevice::CREATE_OK,"CPU graphics context without device");
+        Check(window && graphics.Create({window},320,240)==CGraphicDevice::CREATE_OK,"CPU graphics context without device");
         {
             auto bytes=TerrainFixture::DDS(7,5,3);
             auto source=DecodeTextureSource(bytes.data(),bytes.size(),"fixture.dds");

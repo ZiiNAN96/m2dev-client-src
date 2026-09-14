@@ -10,7 +10,7 @@ class CTempFile : public CFileBase
 		virtual ~CTempFile();
 
 	protected:
-		char	m_szFileName[MAX_PATH+1];
+		char	m_szFileName[261];
 };
 
 #endif

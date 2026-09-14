@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "PythonWindow.h"
+#include "Platform/PlatformTime.h"
 #include "PythonSlotWindow.h"
 #include "PythonGridSlotWindow.h"
 #include "PythonWindowManager.h"
@@ -527,7 +528,7 @@ namespace UI
 	void CWindowManager::OnceIgnoreMouseLeftButtonUpEvent()
 	{
 		m_bOnceIgnoreMouseLeftButtonUpEventFlag = TRUE;
-		m_iIgnoreEndTime = timeGetTime() + 500;
+		m_iIgnoreEndTime = Platform::Time::TickMilliseconds() + 500;
 	}
 
 	void CWindowManager::LockWindow(CWindow * pWin)
@@ -920,7 +921,7 @@ namespace UI
 		{
 			m_bOnceIgnoreMouseLeftButtonUpEventFlag = FALSE;
 
-			if (timeGetTime() < m_iIgnoreEndTime)
+			if (Platform::Time::TickMilliseconds() < m_iIgnoreEndTime)
 			{
 				return;
 			}

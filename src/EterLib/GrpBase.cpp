@@ -21,8 +21,6 @@ void WorldPositionToPixelPosition(const Math::Vector3& c_rv3Src, Math::Vector3* 
 	pv3Dst->z=+c_rv3Src.z;
 }
 
-HWND CGraphicBase::ms_hWnd;
-HDC CGraphicBase::ms_hDC;
 
 
 

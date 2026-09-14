@@ -9,6 +9,7 @@
 #include "GrpImage.h"
 #include "TextureCache.h"
 #include "DecodedImageData.h"
+#include "Platform/PlatformTime.h"
 
 #include <limits>
 
@@ -31,7 +32,7 @@ void CResourceManager::EndThreadLoading()
 	while (!m_RequestMap.empty() || !m_WaitingMap.empty())
 	{
 		ProcessBackgroundLoading();
-		Sleep(10);
+		Platform::Time::SleepMilliseconds(10);
 	}
 }
 

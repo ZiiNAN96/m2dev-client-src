@@ -6,6 +6,7 @@ target_link_libraries(EterBase
 	lzo2
 	sodium
 	mio
+	M2Platform
 )
 
 GroupSourcesByFolder(EterBase)

@@ -5,6 +5,7 @@
 #include "EterLib/DrawState.h"
 #include "EterLib/StaticObjectTextureLoader.h"
 #include "Renderer/WorldRenderData.h"
+#include "Renderer/Diagnostics.h"
 #include <unordered_map>
 #include <unordered_set>
 #include <fstream>
@@ -29,6 +30,7 @@ StaticObjectDraw baseDraw;
 bool baseDrawValid=false;
 void Report(CGraphicThingInstance& thing,const char* status)
 {
+    if(!verboseDiagnostics) return;
     auto& object=objects[&thing];
     if(!object.reports.insert(status).second) return;
     if(!diagnostics.is_open()) diagnostics.open("static-object-adapter.log",std::ios::trunc);

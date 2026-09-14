@@ -1,7 +1,9 @@
 #ifndef __INC_ETERBASE_FILEBASE_H__
 #define __INC_ETERBASE_FILEBASE_H__
 
-#include <windows.h>
+#include "Platform/PlatformFilesystem.h"
+
+#include <cstdint>
 
 class CFileBase
 {
@@ -18,23 +20,23 @@ class CFileBase
 		void			Destroy();
 		void			Close();
 		
-		BOOL			Create(const char* filename, EFileMode mode);
-		DWORD			Size();
-		void			SeekCur(DWORD size);
-		void			Seek(DWORD offset);
-		DWORD			GetPosition();
+		bool			Create(const char* filename, EFileMode mode);
+		std::uint32_t Size();
+		void			SeekCur(std::uint32_t size);
+		void			Seek(std::uint32_t offset);
+		std::uint32_t GetPosition();
 
-		virtual BOOL	Write(const void* src, int bytes);
-		BOOL			Read(void* dest, int bytes);
+		virtual bool	Write(const void* src, int bytes);
+		bool			Read(void* dest, int bytes);
 
 		char*			GetFileName();
-		BOOL			IsNull();
+		bool			IsNull();
 		
 	protected:
 		int				m_mode;
-		char			m_filename[MAX_PATH+1];
-		HANDLE			m_hFile;
-		DWORD			m_dwSize;
+		char			m_filename[261];
+		Platform::Filesystem::File m_file;
+		std::uint32_t m_dwSize;
 };
 
 #endif

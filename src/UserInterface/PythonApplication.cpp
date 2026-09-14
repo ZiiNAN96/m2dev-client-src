@@ -13,6 +13,7 @@
 #include "Renderer/TreeRenderData.h"
 #include "Renderer/WorldRenderData.h"
 #include "Renderer/UIRenderData.h"
+#include "Platform/PlatformTime.h"
 
 #include "ProcessScanner.h"
 
@@ -113,7 +114,9 @@ CPythonApplication::~CPythonApplication()
 
 void CPythonApplication::GetMousePosition(POINT* ppt)
 {
-	CMSApplication::GetMousePosition(ppt);
+	const auto point = CMSApplication::GetMousePosition();
+	ppt->x = point.x;
+	ppt->y = point.y;
 }
 
 void CPythonApplication::SetMinFog(float fMinFog)
@@ -164,12 +167,12 @@ void CPythonApplication::Abort()
 	TraceError("============================================================================================================");
 	TraceError("Abort!!!!\n\n");
 
-	PostQuitMessage(0);
+	GetPlatformWindow().RequestQuit(0);
 }
 
 void CPythonApplication::Exit()
 {
-	PostQuitMessage(0);
+	GetPlatformWindow().RequestQuit(0);
 }
 
 void CPythonApplication::RenderGame()
@@ -345,10 +348,9 @@ bool CPythonApplication::Process()
 	DWORD dwUpdateTime4=ELTimer_GetMSec();
 #endif
 	// Mouse
-	POINT Point;
-	if (GetCursorPos(&Point)) [[likely]] {
-		ScreenToClient(m_hWnd, &Point);
-		OnMouseMove(Point.x, Point.y);		
+	Platform::Point point;
+	if (GetPlatformWindow().GetCursorScreenPosition(point) && GetPlatformWindow().ScreenToClient(point)) [[likely]] {
+		OnMouseMove(point.x, point.y);
 	}
 	//////////////////////
 #ifdef __PERFORMANCE_CHECK__
@@ -477,7 +479,7 @@ bool CPythonApplication::Process()
 					TraceError("Diligent terrain BeginFrame failed");
                     m_rendererRuntimeFailed = true;
 					m_pyGraphic.End();
-					PostQuitMessage(1);
+					GetPlatformWindow().RequestQuit(1);
 					return false;
 				}
 				m_pyGraphic.SetInterfaceRenderState();
@@ -493,7 +495,7 @@ bool CPythonApplication::Process()
 				{
 					TraceError("Diligent terrain rendering failed (resource, camera or legacy state mismatch)");
                     m_rendererRuntimeFailed = true;
-					PostQuitMessage(1);
+					GetPlatformWindow().RequestQuit(1);
 					return false;
 				}
 				//DWORD t2 = ELTimer_GetMSec();
@@ -566,7 +568,7 @@ bool CPythonApplication::Process()
 	if (rest > 0 && !bCurrentLateUpdate )
 	{
 		s_uiLoad -= rest;	// ½® ½Ã°£Àº ·Îµå¿¡¼­ »«´Ù..
-		Sleep(rest);
+		Platform::Time::SleepMilliseconds(static_cast<std::uint32_t>(rest));
 	}	
 
 	++s_dwUpdateFrameCount;
@@ -578,8 +580,7 @@ bool CPythonApplication::Process()
 
 void CPythonApplication::UpdateClientRect()
 {
-	RECT rcApp;
-	GetClientRect(&rcApp);
+	const auto rcApp = GetClientRect();
 	OnSizeChange(rcApp.right - rcApp.left, rcApp.bottom - rcApp.top);
 }
 
@@ -597,9 +598,9 @@ bool CPythonApplication::CreateDevice(int width, int height, int Windowed, int b
 {
     // ZiiNAN: Legacy D3D9 renderer removed from production path.
     if (m_terrainPresentation) return false;
-    m_terrainPresentation=Renderer::CreateTerrainPresentation(GetWindowHandle(),width,height);
+    m_terrainPresentation=Renderer::CreateTerrainPresentation(GetPlatformWindow(),width,height);
     if(!m_terrainPresentation) return FailRendererStartup("Diligent D3D11 initialization failed. No fallback.");
-    if(m_grpDevice.Create(GetWindowHandle(),width,height,Windowed!=0,bit,frequency)!=CGraphicDevice::CREATE_OK) {
+    if(m_grpDevice.Create(GetNativeHandle(),width,height,Windowed!=0,bit,frequency)!=CGraphicDevice::CREATE_OK) {
         m_terrainPresentation.reset();
         return FailRendererStartup("CPU graphics context initialization failed. No fallback.");
     }
@@ -608,7 +609,7 @@ bool CPythonApplication::CreateDevice(int width, int height, int Windowed, int b
 
 void CPythonApplication::SetUserMovingMainWindow(bool flag)
 {
-	if (flag && !GetCursorPos(&m_InitialMouseMovingPoint))
+	if (flag && !GetPlatformWindow().GetCursorScreenPosition(m_InitialMouseMovingPoint))
 		return;
 
 	m_IsMovingMainWindow = flag;
@@ -621,14 +622,13 @@ bool CPythonApplication::IsUserMovingMainWindow() const
 
 void CPythonApplication::UpdateMainWindowPosition()
 {
-	POINT finalPoint{};
-	if (GetCursorPos(&finalPoint))
+	Platform::Point finalPoint{};
+	if (GetPlatformWindow().GetCursorScreenPosition(finalPoint))
 	{
 		LONG xDiff = finalPoint.x - m_InitialMouseMovingPoint.x;
 		LONG yDiff = finalPoint.y - m_InitialMouseMovingPoint.y;
 
-		RECT r{};
-		GetWindowRect(&r);
+		const auto r = GetWindowRect();
 
 		SetPosition(r.left + xDiff, r.top + yDiff);
 		m_InitialMouseMovingPoint = finalPoint;
@@ -642,12 +642,10 @@ void CPythonApplication::Loop()
 		if (IsUserMovingMainWindow())
 			UpdateMainWindowPosition();
 		
-		if (IsMessage())
-		{
-			if (!MessageProcess())
-				break;
-		}
-		else
+		const auto eventResult = PollEvents();
+		if (eventResult == Platform::PollResult::Quit)
+			break;
+		if (eventResult == Platform::PollResult::Idle)
 		{
 			if (!Process())
 				break;
@@ -735,12 +733,12 @@ bool LoadLocaleData(const char* localePath)
 	return true;
 }
 
-unsigned __GetWindowMode(bool windowed)
+Platform::WindowStyle __GetWindowMode(bool windowed)
 {
 	if (windowed)
-		return WS_OVERLAPPED | WS_CAPTION |   WS_SYSMENU | WS_MINIMIZEBOX;
+		return Platform::WindowStyle::Windowed;
 
-	return WS_POPUP;
+	return Platform::WindowStyle::Popup;
 }
 
 bool CPythonApplication::Create(PyObject * poSelf, const char * c_szName, int width, int height, int Windowed)
@@ -759,18 +757,22 @@ bool CPythonApplication::Create(PyObject * poSelf, const char * c_szName, int wi
 
 	bool bAnotherWindow = false;
 
-	std::wstring wWindowName = Utf8ToWide(c_szName ? c_szName : "");
-
-	if (FindWindowW(nullptr, wWindowName.c_str()))
+	if (GetPlatformWindow().HasWindowWithTitle(c_szName))
 		bAnotherWindow = true;
 
 	m_dwWidth = width;
 	m_dwHeight = height;
 
 	// Window
-	UINT WindowMode = __GetWindowMode(Windowed ? true : false);
+	const auto windowMode = __GetWindowMode(Windowed != 0);
 
-	if (!CMSWindow::Create(c_szName, 4, 0, WindowMode, ::LoadIcon( GetInstance(), MAKEINTRESOURCE( IDI_METIN2 ) ), IDC_CURSOR_NORMAL))
+	Platform::WindowCreateInfo windowInfo;
+	windowInfo.title = c_szName ? c_szName : "";
+	windowInfo.style = windowMode;
+	windowInfo.classBrush = 4;
+	windowInfo.iconResource = IDI_METIN2;
+	windowInfo.cursorResource = IDC_CURSOR_NORMAL;
+	if (!CMSWindow::Create(windowInfo))
 	{
 		TraceError("CMSWindow::Create failed");
 		SET_EXCEPTION(CREATE_WINDOW);
@@ -790,7 +792,7 @@ bool CPythonApplication::Create(PyObject * poSelf, const char * c_szName, int wi
 	{
 		m_isWindowed = false;
 		m_isWindowFullScreenEnable = TRUE;
-		__SetFullScreenWindow(GetWindowHandle(), width, height, m_pySystem.GetBPP());
+		__SetFullScreenWindow(width, height, m_pySystem.GetBPP());
 
 		Windowed = true;
 	}
@@ -804,9 +806,7 @@ bool CPythonApplication::Create(PyObject * poSelf, const char * c_szName, int wi
 
 			if (bAnotherWindow)
 			{
-				RECT rc;
-
-				GetClientRect(&rc);
+				const auto rc = GetClientRect();
 
 				int windowWidth = rc.right - rc.left;
 				int windowHeight = (rc.bottom - rc.top);
@@ -878,10 +878,11 @@ bool CPythonApplication::Create(PyObject * poSelf, const char * c_szName, int wi
 
 		if (m_isWindowFullScreenEnable)
 		{
-			SetWindowPos(GetWindowHandle(), HWND_TOP, 0, 0, width, height, SWP_SHOWWINDOW);
+			SetSize(width, height);
+			Show();
 		}
 
-		if (!InitializeKeyboard(GetWindowHandle()))
+		if (!InitializeKeyboard(GetNativeHandle()))
 			return false;
 
 		m_pySystem.GetDisplaySettings();
@@ -908,7 +909,7 @@ bool CPythonApplication::Create(PyObject * poSelf, const char * c_szName, int wi
 		// Other Modules
 		DefaultFont_Startup();
 
-		CPythonIME::Instance().Create(GetWindowHandle());
+		CPythonIME::Instance().Create(static_cast<HWND>(GetNativeHandle().value));
 		CPythonIME::Instance().SetText("", 0);
 		CPythonTextTail::Instance().Initialize();
 
@@ -918,15 +919,7 @@ bool CPythonApplication::Create(PyObject * poSelf, const char * c_szName, int wi
 		CGraphicImageInstance::CreateSystem(32);
 
 		// ¹é¾÷
-		STICKYKEYS sStickKeys;
-		memset(&sStickKeys, 0, sizeof(sStickKeys));
-		sStickKeys.cbSize = sizeof(sStickKeys);
-		SystemParametersInfo( SPI_GETSTICKYKEYS, sizeof(sStickKeys), &sStickKeys, 0 );
-		m_dwStickyKeysFlag = sStickKeys.dwFlags;
-
-		// ¼³Á¤
-		sStickKeys.dwFlags &= ~(SKF_AVAILABLE|SKF_HOTKEYACTIVE);
-		SystemParametersInfo( SPI_SETSTICKYKEYS, sizeof(sStickKeys), &sStickKeys, 0 );
+		DisableAccessibilityShortcuts();
 
 		// SphereMap
 		CGrannyMaterial::CreateSphereMap(0, "d:/ymir work/special/spheremap.jpg");
@@ -1103,9 +1096,5 @@ void CPythonApplication::Destroy()
 
 	CMSApplication::Destroy();
 
-	STICKYKEYS sStickKeys;
-	memset(&sStickKeys, 0, sizeof(sStickKeys));
-	sStickKeys.cbSize = sizeof(sStickKeys);
-	sStickKeys.dwFlags = m_dwStickyKeysFlag;
-	SystemParametersInfo( SPI_SETSTICKYKEYS, sizeof(sStickKeys), &sStickKeys, 0 );
+	RestoreAccessibilityShortcuts();
 }

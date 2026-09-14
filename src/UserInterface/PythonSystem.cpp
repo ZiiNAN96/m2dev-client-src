@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "PythonSystem.h"
+#include "Platform/PlatformFilesystem.h"
 #include "PythonApplication.h"
 
 #define DEFAULT_VALUE_ALWAYS_SHOW_NAME		true
@@ -376,7 +377,7 @@ bool CPythonSystem::LoadConfig()
 {
 	FILE * fp = NULL;
 
-	if (NULL == (fp = fopen("config/metin2.cfg", "rt")))
+	if (NULL == (fp = Platform::Filesystem::OpenCFile(Platform::Filesystem::Join(Platform::Filesystem::ConfigDirectory(), "metin2.cfg").c_str(), "rt")))
 		return false;
 
 	char buf[256];
@@ -484,7 +485,7 @@ bool CPythonSystem::SaveConfig()
 {
 	FILE *fp;
 
-	if (NULL == (fp = fopen("config/metin2.cfg", "wt")))
+	if (NULL == (fp = Platform::Filesystem::OpenCFile(Platform::Filesystem::Join(Platform::Filesystem::ConfigDirectory(), "metin2.cfg").c_str(), "wt")))
 		return false;
 
 	fprintf(fp, "WIDTH						%d\n"
@@ -542,7 +543,7 @@ bool CPythonSystem::SaveConfig()
 bool CPythonSystem::LoadInterfaceStatus()
 {
 	FILE * File;
-	File = fopen("config/interface.cfg", "rb");
+	File = Platform::Filesystem::OpenCFile(Platform::Filesystem::Join(Platform::Filesystem::ConfigDirectory(), "interface.cfg").c_str(), "rb");
 
 	if (!File)
 		return false;
@@ -561,7 +562,7 @@ void CPythonSystem::SaveInterfaceStatus()
 
 	FILE * File;
 
-	File = fopen("config/interface.cfg", "wb");
+	File = Platform::Filesystem::OpenCFile(Platform::Filesystem::Join(Platform::Filesystem::ConfigDirectory(), "interface.cfg").c_str(), "wb");
 
 	if (!File)
 	{

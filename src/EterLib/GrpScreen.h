@@ -2,6 +2,7 @@
 
 #include "GrpCollisionObject.h"
 #include "SphereLib/frustum.h"
+#include "Platform/NativeTypes.h"
 
 
 class CScreen : public CGraphicCollisionObject
@@ -14,9 +15,9 @@ public:
 	void Clear();
 	bool Begin();
 	void End();
-	void Show(HWND hWnd = NULL);
+	void Show(Platform::NativeWindowHandle window = {});
 	void Show(RECT * pSrcRect);
-	void Show(RECT * pSrcRect, HWND hWnd);
+	void Show(RECT * pSrcRect, Platform::NativeWindowHandle window);
 
 	void RenderLine2d(float sx, float sy, float ex, float ey, float z=0.0f);
 	void RenderBox2d(float sx, float sy, float ex, float ey, float z=0.0f);

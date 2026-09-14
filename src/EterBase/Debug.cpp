@@ -14,7 +14,7 @@
 const DWORD DEBUG_STRING_MAX_LEN = 1024;
 
 static int isLogFile = false;
-HWND g_PopupHwnd = NULL;
+Platform::NativeWindowHandle g_PopupHwnd;
 
 // ============================================================================
 // OPTIMIZED LOGGING INFRASTRUCTURE
@@ -772,15 +772,15 @@ void LogBoxf(const char* c_szFormat, ...)
     LogBox(szBuf);
 }
 
-void LogBox(const char* c_szMsg, const char* c_szCaption, HWND hWnd)
+void LogBox(const char* c_szMsg, const char* c_szCaption, Platform::NativeWindowHandle window)
 {
-    if (!hWnd)
-        hWnd = g_PopupHwnd;
+    if (!window)
+        window = g_PopupHwnd;
 
     std::wstring wMsg = Utf8ToWide(c_szMsg ? c_szMsg : "");
     std::wstring wCaption = Utf8ToWide(c_szCaption ? c_szCaption : "LOG");
 
-    MessageBoxW(hWnd, wMsg.c_str(), wCaption.c_str(), MB_OK);
+    MessageBoxW(static_cast<HWND>(window.value), wMsg.c_str(), wCaption.c_str(), MB_OK);
 
     // Logging stays UTF-8
     Tracen(c_szMsg ? c_szMsg : "");

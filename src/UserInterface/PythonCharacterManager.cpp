@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "pythoncharactermanager.h"
+#include "Platform/PlatformTime.h"
 #include "PythonBackground.h"
 #include "PythonNonPlayer.h"
 #include "AbstractPlayer.h"
@@ -151,13 +152,13 @@ bool CPythonCharacterManager::IsCacheMode()
 void CPythonCharacterManager::Update()
 {
 #ifdef __PERFORMANCE_CHECKER__
-	DWORD t1=timeGetTime();
+	DWORD t1=Platform::Time::TickMilliseconds();
 #endif
 	CInstanceBase::ResetPerformanceCounter();
 
 	CInstanceBase* pkInstMain=GetMainInstancePtr();
 #ifdef __PERFORMANCE_CHECKER__
-	DWORD t2=timeGetTime();
+	DWORD t2=Platform::Time::TickMilliseconds();
 #endif
 	DWORD dwDeadInstCount=0;
 	DWORD dwForceVisibleInstCount=0;
@@ -188,21 +189,21 @@ void CPythonCharacterManager::Update()
 		}
 	}
 #ifdef __PERFORMANCE_CHECKER__
-	DWORD t3=timeGetTime();
+	DWORD t3=Platform::Time::TickMilliseconds();
 #endif
 	UpdateTransform();
 #ifdef __PERFORMANCE_CHECKER__
-	DWORD t4=timeGetTime();
+	DWORD t4=Platform::Time::TickMilliseconds();
 #endif
 
 	UpdateDeleting();
 #ifdef __PERFORMANCE_CHECKER__
-	DWORD t5=timeGetTime();
+	DWORD t5=Platform::Time::TickMilliseconds();
 #endif
 
 	__NEW_Pick();
 #ifdef __PERFORMANCE_CHECKER__
-	DWORD t6=timeGetTime();
+	DWORD t6=Platform::Time::TickMilliseconds();
 #endif
 
 #ifdef __PERFORMANCE_CHECKER__
@@ -282,7 +283,7 @@ void CPythonCharacterManager::UpdateTransform()
 				rkBG.CheckAdvancing(pSrcInstance);
 		}
 #ifdef __PERFORMANCE_CHECKER__
-		t2=timeGetTime();
+		t2=Platform::Time::TickMilliseconds();
 #endif
 
 #ifdef __MOVIE_MODE__

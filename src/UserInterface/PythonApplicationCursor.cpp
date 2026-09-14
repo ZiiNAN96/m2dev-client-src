@@ -33,9 +33,9 @@ bool CPythonApplication::CreateCursors()
 	
 	for (int i = 0; i < CURSOR_COUNT; ++i)
 	{
-		HANDLE hCursor = LoadImage(ms_hInstance, MAKEINTRESOURCE(ResourceID[i]), IMAGE_CURSOR, 32, 32, LR_VGACOLOR);
+		const auto hCursor = GetPlatformWindow().LoadCursorResource(ResourceID[i]);
 
-		if (NULL == hCursor)
+		if (!hCursor)
 			return false;
 
 		m_CursorHandleMap.insert(TCursorHandleMap::value_type(i, hCursor));
@@ -50,8 +50,9 @@ void CPythonApplication::DestroyCursors()
 	TCursorHandleMap::iterator itor;
 	for (itor = m_CursorHandleMap.begin(); itor != m_CursorHandleMap.end(); ++itor)
 	{
-		DestroyCursor((HCURSOR) itor->second);
+		GetPlatformWindow().DestroyCursorResource(itor->second);
 	}
+	m_CursorHandleMap.clear();
 }
 
 void CPythonApplication::SetCursorVisible(BOOL bFlag, bool bLiarCursorOn)
@@ -61,21 +62,7 @@ void CPythonApplication::SetCursorVisible(BOOL bFlag, bool bLiarCursorOn)
 	
 	if (CURSOR_MODE_HARDWARE == m_iCursorMode)
 	{
-		int iShowNum;
-		if (FALSE == m_bCursorVisible)
-		{
-			do
-			{
-				iShowNum = ShowCursor(m_bCursorVisible);
-			} while(iShowNum >= 0);
-		}
-		else
-		{
-			do
-			{
-				iShowNum = ShowCursor(m_bCursorVisible);
-			} while(iShowNum < 0);
-		}
+		GetPlatformWindow().SetCursorVisible(m_bCursorVisible != FALSE);
 	}
 }
 
@@ -134,10 +121,8 @@ BOOL CPythonApplication::SetCursorNum(int iCursorNum)
 		if (m_CursorHandleMap.end() == itor)
 			return FALSE;
 
-		HCURSOR hCursor = (HCURSOR)itor->second;
-
-		SetCursor(hCursor);
-		m_hCurrentCursor = hCursor;
+		GetPlatformWindow().SetCursor(itor->second);
+		m_hCurrentCursor = itor->second;
 	}
 
 	m_iCursorNum = iCursorNum;
@@ -153,13 +138,13 @@ void CPythonApplication::SetCursorMode(int iMode)
 	{
 		case CURSOR_MODE_HARDWARE:
 			m_iCursorMode = CURSOR_MODE_HARDWARE;
-			ShowCursor(true);
+			GetPlatformWindow().AdjustCursorVisibility(true);
 			break;
 
 		case CURSOR_MODE_SOFTWARE:
 			m_iCursorMode = CURSOR_MODE_SOFTWARE;
-			SetCursor(NULL);
-			ShowCursor(false);
+			GetPlatformWindow().SetCursor({});
+			GetPlatformWindow().AdjustCursorVisibility(false);
 			break;
 	}
 }

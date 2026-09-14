@@ -1,6 +1,6 @@
 #pragma once
 
-#ifndef VC_EXTRALEAN
+#include <cstdint>
 
 class CNetworkAddress
 {
@@ -16,27 +16,21 @@ class CNetworkAddress
 		bool Set(const char* c_szAddr, int port);
 
 		void SetLocalIP();
-		void SetIP(DWORD ip);
+		void SetIP(std::uint32_t ip);
 		void SetIP(const char* c_szIP);
 		bool SetDNS(const char* c_szDNS);
 
 		void SetPort(int port);
 		
 		int GetPort();
-		int GetSize();
-
 		void GetIP(char* szIP, int len);
 
-		DWORD GetIP();
-		
-		operator const SOCKADDR_IN&() const;	
-
+		std::uint32_t GetIP();
 
 	private:
 		bool IsIP(const char* c_szAddr);
 
 	private:
-		SOCKADDR_IN m_sockAddrIn;
+		std::uint32_t m_address;
+		std::uint16_t m_port;
 };
-
-#endif

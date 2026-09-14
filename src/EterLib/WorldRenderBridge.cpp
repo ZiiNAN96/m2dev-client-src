@@ -2,6 +2,7 @@
 #include "StdAfx.h"
 #include "EterLib/DrawStateView.h"
 #include "WorldRenderBridge.h"
+#include "Renderer/Diagnostics.h"
 #include "MaterialStateSnapshot.h"
 #include "DrawState.h"
 #include "GrpImage.h"
@@ -22,6 +23,7 @@ bool Active() { return owner && worldRenderer && worldSurfaceFrame; }
 void Report(const std::string& message,bool error)
 {
     if(error && worldRenderer) worldRenderer->ReportFailure();
+    if(!verboseDiagnostics) return;
     const auto key=std::to_string(uint32_t(part))+" "+message;
     if(reported.size()>=128 || !reported.insert(key).second) return;
     if(!diagnostics.is_open()) diagnostics.open("world-renderer.log",std::ios::trunc);

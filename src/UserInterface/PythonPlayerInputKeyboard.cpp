@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "PythonPlayer.h"
+#include "EterLib/Input.h"
 
 #include "InstanceBase.h"
 

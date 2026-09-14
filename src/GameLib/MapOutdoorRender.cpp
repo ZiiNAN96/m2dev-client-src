@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "SpeedTreeLib/TreeRenderBridge.h" // ZiiNAN: Existing tree camera-blocker texture.
+#include "Platform/PlatformTime.h"
 #include "StaticObjectBridge.h"
 #include "MapOutdoor.h"
 #include "TerrainPatch.h"
@@ -865,8 +866,8 @@ void CMapOutdoor::RenderMarkedArea()
 	DRAWSTATE.SaveRenderState(Renderer::StateSrcBlend, Renderer::BlendSrcAlpha);
 	DRAWSTATE.SaveRenderState(Renderer::StateDestBlend, Renderer::BlendInvSrcAlpha);
 
-	static long lStartTime = timeGetTime();
-	float fTime = float((timeGetTime() - lStartTime)%3000) / 3000.0f;
+	static long lStartTime = Platform::Time::TickMilliseconds();
+	float fTime = float((Platform::Time::TickMilliseconds() - lStartTime)%3000) / 3000.0f;
 	float fAlpha = fabs(fTime - 0.5f) / 2.0f + 0.1f;
 	DRAWSTATE.SetRenderState(Renderer::StateTextureFactor, Math::Color(1.0f, 1.0f, 1.0f, fAlpha));
 	DRAWSTATE.SetTextureStageState(0, Renderer::StageColorArg1, Renderer::ArgTexture);

@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "NetStream.h"
+#include "Platform/Windows/Win32Networking.h"
 #include <iomanip>
 #include <limits>
 #include <sstream>
@@ -51,12 +52,12 @@ bool CNetworkStream::__RecvInternalBuffer()
 		writableBytes, static_cast<size_t>(std::numeric_limits<int>::max())));
 	if (restSize > 0)
 	{
-		int recvSize = recv(m_sock, reinterpret_cast<char*>(m_recvBuf.WritePtr()), restSize, 0);
+		int recvSize = recv(Platform::Networking::Windows::ToSocket(m_sock), reinterpret_cast<char*>(m_recvBuf.WritePtr()), restSize, 0);
 
 		if (recvSize < 0)
 		{
-			int error = WSAGetLastError();
-			if (error != WSAEWOULDBLOCK)
+			int error = Platform::Networking::LastError();
+			if (!Platform::Networking::IsWouldBlock(error))
 				return false;
 		}
 		else if (recvSize == 0)
@@ -81,12 +82,12 @@ bool CNetworkStream::__SendInternalBuffer()
 	if (dataSize <= 0)
 		return true;
 
-	int sendSize = send(m_sock, reinterpret_cast<const char*>(m_sendBuf.ReadPtr()), dataSize, 0);
+	int sendSize = send(Platform::Networking::Windows::ToSocket(m_sock), reinterpret_cast<const char*>(m_sendBuf.ReadPtr()), dataSize, 0);
 	if (sendSize < 0)
 	{
-		int err = WSAGetLastError();
+		int err = Platform::Networking::LastError();
 		TraceError("__SendInternalBuffer: send() failed, sock=%llu, dataSize=%d, error=%d",
-			(unsigned long long)m_sock, dataSize, err);
+			static_cast<unsigned long long>(m_sock.value), dataSize, err);
 		return false;
 	}
 
@@ -99,8 +100,9 @@ bool CNetworkStream::__SendInternalBuffer()
 #pragma warning(disable:4127)
 void CNetworkStream::Process()
 {
-	if (m_sock == INVALID_SOCKET)
+	if (!m_sock)
 		return;
+	const SOCKET socket = Platform::Networking::Windows::ToSocket(m_sock);
 
 	fd_set fdsRecv;
 	fd_set fdsSend;
@@ -108,8 +110,8 @@ void CNetworkStream::Process()
 	FD_ZERO(&fdsRecv);
 	FD_ZERO(&fdsSend);
 
-	FD_SET(m_sock, &fdsRecv);
-	FD_SET(m_sock, &fdsSend);
+	FD_SET(socket, &fdsRecv);
+	FD_SET(socket, &fdsSend);
 
 	TIMEVAL delay;
 
@@ -121,7 +123,7 @@ void CNetworkStream::Process()
 
 	if (!m_isOnline)
 	{
-		if (FD_ISSET(m_sock, &fdsSend))
+		if (FD_ISSET(socket, &fdsSend))
 		{
 			m_isOnline = true;
 			OnConnectSuccess();
@@ -135,13 +137,13 @@ void CNetworkStream::Process()
 		return;
 	}
 
-	if (FD_ISSET(m_sock, &fdsSend) && (m_sendBuf.ReadableBytes() > 0))
+	if (FD_ISSET(socket, &fdsSend) && (m_sendBuf.ReadableBytes() > 0))
 	{
 		if (!__SendInternalBuffer())
 		{
-			int error = WSAGetLastError();
+			int error = Platform::Networking::LastError();
 
-			if (error != WSAEWOULDBLOCK)
+			if (!Platform::Networking::IsWouldBlock(error))
 			{
 				OnRemoteDisconnect();
 				Clear();
@@ -150,7 +152,7 @@ void CNetworkStream::Process()
 		}
 	}
 
-	if (FD_ISSET(m_sock, &fdsRecv))
+	if (FD_ISSET(socket, &fdsRecv))
 	{
 		if (!__RecvInternalBuffer())
 		{
@@ -170,7 +172,7 @@ void CNetworkStream::Process()
 
 void CNetworkStream::Disconnect()
 {
-	if (m_sock == INVALID_SOCKET)
+	if (!m_sock)
 		return;
 
 	Clear();
@@ -181,11 +183,7 @@ void CNetworkStream::Clear()
 	// Always clean cipher state (erase key material promptly)
 	m_secureCipher.CleanUp();
 
-	if (m_sock != INVALID_SOCKET)
-	{
-		closesocket(m_sock);
-		m_sock = INVALID_SOCKET;
-	}
+	Platform::Networking::Close(m_sock);
 
 	m_isOnline = false;
 	m_connectLimitTime = 0;
@@ -200,9 +198,9 @@ bool CNetworkStream::Connect(const CNetworkAddress& c_rkNetAddr, int limitSec)
 
 	m_addr = c_rkNetAddr;
 
-	m_sock = socket(AF_INET, SOCK_STREAM, 0);
+	m_sock = Platform::Networking::Windows::FromSocket(socket(AF_INET, SOCK_STREAM, 0));
 
-	if (m_sock == INVALID_SOCKET)
+	if (!m_sock)
 	{
 		Clear();
 		OnConnectFailure();
@@ -210,20 +208,25 @@ bool CNetworkStream::Connect(const CNetworkAddress& c_rkNetAddr, int limitSec)
 	}
 
 	DWORD arg = 1;
-	ioctlsocket(m_sock, FIONBIO, &arg);	// Non-blocking mode
+	const SOCKET socket = Platform::Networking::Windows::ToSocket(m_sock);
+	ioctlsocket(socket, FIONBIO, &arg);	// Non-blocking mode
 
 	// Enable TCP_NODELAY to disable Nagle's algorithm for lower latency
 	int opt = 1;
-	if (setsockopt(m_sock, IPPROTO_TCP, TCP_NODELAY, (const char*)&opt, sizeof(opt)) != 0)
+	if (setsockopt(socket, IPPROTO_TCP, TCP_NODELAY, (const char*)&opt, sizeof(opt)) != 0)
 	{
-		TraceError("setsockopt TCP_NODELAY failed: %d", WSAGetLastError());
+		TraceError("setsockopt TCP_NODELAY failed: %d", Platform::Networking::LastError());
 	}
 
-	if (connect(m_sock, (PSOCKADDR)&m_addr, m_addr.GetSize()) == SOCKET_ERROR)
+	sockaddr_in address{};
+	address.sin_family = AF_INET;
+	address.sin_addr.s_addr = htonl(m_addr.GetIP());
+	address.sin_port = htons(static_cast<u_short>(m_addr.GetPort()));
+	if (connect(socket, reinterpret_cast<sockaddr*>(&address), sizeof(address)) == SOCKET_ERROR)
 	{
-		int error = WSAGetLastError();
+		int error = Platform::Networking::LastError();
 
-		if (error != WSAEWOULDBLOCK)
+		if (!Platform::Networking::IsWouldBlock(error))
 		{
 			Tracen("error != WSAEWOULDBLOCK");
 			Clear();
@@ -236,7 +239,7 @@ bool CNetworkStream::Connect(const CNetworkAddress& c_rkNetAddr, int limitSec)
 	return true;
 }
 
-bool CNetworkStream::Connect(DWORD dwAddr, int port, int limitSec)
+bool CNetworkStream::Connect(std::uint32_t dwAddr, int port, int limitSec)
 {
 	char szAddr[256];
 	{
@@ -743,7 +746,7 @@ bool CNetworkStream::SendPongPacket()
 
 CNetworkStream::CNetworkStream()
 {
-	m_sock = INVALID_SOCKET;
+	m_sock = {};
 
 	m_isOnline = false;
 	m_connectLimitTime = 0;

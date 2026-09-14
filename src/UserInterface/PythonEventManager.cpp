@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "PythonEventManager.h"
+#include "Platform/PlatformTime.h"
 #include "PythonNetworkStream.h"
 #include "PythonNonPlayer.h"
 #include "PackLib/PackManager.h"
@@ -321,7 +322,7 @@ void CPythonEventManager::UpdateEventSet(int iIndex, int ix, int iy)
 
 	if (pEventSet->isConfirmWait)
 	{
-		int iLeftTime = std::max(0ul, pEventSet->iConfirmEndTime - timeGetTime()/1000);
+		int iLeftTime = std::max(0ul, pEventSet->iConfirmEndTime - static_cast<unsigned long>(Platform::Time::TickMilliseconds())/1000);
 		pEventSet->pConfirmTimeTextLine->SetValue(_getf(m_strLeftTimeString.c_str(), iLeftTime));
 	}
 
@@ -759,7 +760,7 @@ void CPythonEventManager::ProcessEventSet(TEventSet * pEventSet)
 			int iTimeOut = atoi(GetArgument("timeout", ScriptCommand.argList));
 			pEventSet->isConfirmWait = TRUE;
 			pEventSet->pConfirmTimeTextLine = pEventSet->pCurrentTextLine;
-			pEventSet->iConfirmEndTime = timeGetTime()/1000 + iTimeOut;
+			pEventSet->iConfirmEndTime = Platform::Time::TickMilliseconds()/1000 + iTimeOut;
 			__InsertLine(*pEventSet, TRUE);
 			MakeNextButton(pEventSet, BUTTON_TYPE_CANCEL);
 			break;

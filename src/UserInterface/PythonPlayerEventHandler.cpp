@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "PythonPlayerEventHandler.h"
+#include "Platform/PlatformTime.h"
 #include "PythonPlayer.h"
 #include "PythonCharacterManager.h"
 #include "PythonNetworkStream.h"
@@ -108,9 +109,9 @@ void CPythonPlayerEventHandler::OnAttack(const SState& c_rkState, WORD wMotionIn
 	rkNetStream.SendCharacterStatePacket(c_rkState.kPPosSelf, c_rkState.fAdvRotSelf, CInstanceBase::FUNC_COMBO, wMotionIndex);
 
 #ifdef __ATTACK_SPEED_CHECK__
-	static DWORD s_dwLastTime=timeGetTime();
+	static DWORD s_dwLastTime=Platform::Time::TickMilliseconds();
 
-	DWORD dwCurTime=timeGetTime();
+	DWORD dwCurTime=Platform::Time::TickMilliseconds();
 	Tracef("%d\n", dwCurTime-s_dwLastTime);
 	s_dwLastTime=dwCurTime;
 #endif
@@ -145,7 +146,7 @@ void CPythonPlayerEventHandler::OnHit(UINT uSkill, CActorInstance& rkActorVictim
 //#define ATTACK_TIME_LOG
 #ifdef ATTACK_TIME_LOG
 		static std::map<DWORD, float> s_prevTimed;
-		float curTime = timeGetTime() / 1000.0f;
+		float curTime = Platform::Time::TickMilliseconds() / 1000.0f;
 		bool isFirst = false;
 		if (s_prevTimed.end() == s_prevTimed.find(dwVIDVictim))
 		{

@@ -1,7 +1,7 @@
 #include "StdAfx.h"
 #include "FileDir.h"
+#include "Platform/PlatformFilesystem.h"
 #include <string>
-#include <utf8.h>
 
 CDir::CDir()
 {
@@ -15,13 +15,10 @@ CDir::~CDir()
 
 void CDir::Destroy()
 {
-	if (m_hFind)
-		FindClose(m_hFind);
-
 	Initialize();
 }
 
-bool CDir::Create(const char* c_szFilter, const char* c_szPath, BOOL bCheckedExtension)
+bool CDir::Create(const char* c_szFilter, const char* c_szPath, bool bCheckedExtension)
 {
 	Destroy();
 
@@ -34,25 +31,18 @@ bool CDir::Create(const char* c_szFilter, const char* c_szPath, BOOL bCheckedExt
 			stPath += '\\';
 	}
 
-	// Query: UTF-8 -> UTF-16 for WinAPI
-	std::string stQueryUtf8 = stPath + "*.*";
-	std::wstring stQueryW = Utf8ToWide(stQueryUtf8);
-
-	m_wfd.dwFileAttributes = 0;
-	m_wfd.dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
-
-	m_hFind = FindFirstFileW(stQueryW.c_str(), &m_wfd);
-	if (m_hFind == INVALID_HANDLE_VALUE)
+	std::vector<Platform::Filesystem::DirectoryEntry> entries;
+	if (!Platform::Filesystem::ListDirectory(stPath, entries))
 		return true;
 
-	do
+	for (const auto& entry : entries)
 	{
-		// Convert filename to UTF-8 for existing logic/callbacks
-		std::string fileNameUtf8 = WideToUtf8(m_wfd.cFileName);
+		const std::string& fileNameUtf8 = entry.name;
 
 		if (!fileNameUtf8.empty() && fileNameUtf8[0] == '.')
 			continue;
 
+		m_isFolder = entry.isDirectory;
 		if (IsFolder())
 		{
 			if (!OnFolder(c_szFilter, stPath.c_str(), fileNameUtf8.c_str()))
@@ -91,21 +81,17 @@ bool CDir::Create(const char* c_szFilter, const char* c_szPath, BOOL bCheckedExt
 			if (!OnFile(stPath.c_str(), fileNameUtf8.c_str()))
 				return false;
 		}
-	} while (FindNextFileW(m_hFind, &m_wfd));
+	}
 
 	return true;
 }
 
 bool CDir::IsFolder()
 {
-	if (m_wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-		return true;
-
-	return false;
+	return m_isFolder;
 }
 
 void CDir::Initialize()
 {
-	memset(&m_wfd, 0, sizeof(m_wfd));
-	m_hFind = NULL;
+	m_isFolder = false;
 }

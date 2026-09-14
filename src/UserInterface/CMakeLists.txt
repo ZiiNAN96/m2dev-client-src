@@ -1,6 +1,14 @@
 ﻿file(GLOB_RECURSE FILE_SOURCES "*.h" "*.c" "*.cpp")
 
+# ZiiNAN: Platform abstraction
+list(FILTER FILE_SOURCES EXCLUDE REGEX "/Windows/")
 add_executable(UserInterface WIN32 ${FILE_SOURCES} ${CMAKE_SOURCE_DIR}/src/UserInterface/UserInterface.rc)
+if(WIN32)
+    target_sources(UserInterface PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}/Windows/Win32MoviePlayer.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/Windows/Win32ApplicationLogo.cpp"
+    )
+endif()
 if(M2_BUILD_RENDERER_TESTS)
     # ZiiNAN: Local floating-text fixture entry points are absent from non-test builds.
     set_source_files_properties(PythonCharacterModule.cpp PythonBackgroundModule.cpp PROPERTIES COMPILE_DEFINITIONS M2_RENDERER_DIAGNOSTICS)
@@ -35,11 +43,11 @@ target_link_libraries(UserInterface
 	libzstd_static
 	mio
 	
-	WindowsInput
+	M2Platform
+	M2PlatformWindowsFeatures
 	Granny
 	SpeedTree
 	Python
-	WebView
 	
 	ws2_32 
 	strmiids

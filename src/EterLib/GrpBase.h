@@ -238,8 +238,6 @@ class CGraphicBase
 		static int						ms_iWidth;
 		static int						ms_iHeight;	
 
-		static HWND						ms_hWnd;
-		static HDC						ms_hDC;
 
 
 		static Math::MatrixStack ms_matrixStack;

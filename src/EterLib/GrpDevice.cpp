@@ -18,10 +18,10 @@ CGraphicDevice::~CGraphicDevice() { Destroy(); }
 DWORD GetMaxTextureWidth() { return Renderer::graphicsCapabilities.maxTextureDimension; }
 DWORD GetMaxTextureHeight() { return Renderer::graphicsCapabilities.maxTextureDimension; }
 
-int CGraphicDevice::Create(HWND window,int width,int height,bool windowed,int,int)
+int CGraphicDevice::Create(Platform::NativeWindowHandle window,int width,int height,bool windowed,int,int)
 {
     if(m_drawState || !window || width<=0 || height<=0 || !windowed) return CREATE_DEVICE;
-    ms_hWnd=window; ms_hDC=GetDC(window);
+    // ZiiNAN: Platform abstraction
     m_drawState=new CDrawState();
     ms_matrixStack.Clear();
     for(auto* matrix : {&ms_matIdentity,&ms_matWorld,&ms_matWorldView,&ms_matView,&ms_matProj,
@@ -51,6 +51,4 @@ void CGraphicDevice::Destroy()
 {
     delete m_drawState; m_drawState=nullptr;
     ms_matrixStack.Clear();
-    if(ms_hDC) ReleaseDC(ms_hWnd,ms_hDC);
-    ms_hDC=nullptr; ms_hWnd=nullptr;
 }

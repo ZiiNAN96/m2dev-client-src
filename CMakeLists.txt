@@ -12,6 +12,11 @@ if(MSVC AND NOT CMAKE_CXX_COMPILER_ARCHITECTURE_ID MATCHES "^[xX]64$")
 	message(FATAL_ERROR "m2dev-client requires the MSVC x64 target. Configure a fresh build directory with -A x64.")
 endif()
 
+# ZiiNAN: Platform abstraction
+if(NOT WIN32)
+    message(FATAL_ERROR "The production client currently requires Windows and Diligent D3D11. No other platform target is enabled.")
+endif()
+
 # ASan support
 option(ENABLE_ASAN "Enable AddressSanitizer" OFF)
 
@@ -85,8 +90,9 @@ include_directories("vendor/freetype-2.13.3/include")
 
 # Add subdirectories for libraries and executables
 option(M2_BUILD_RENDERER_TESTS "Build renderer lifecycle and GPU smoke tests" ON)
-option(M2_BUILD_PLATFORM_TESTS "Build x64 ABI and pointer round-trip tests" ON)
+option(M2_BUILD_PLATFORM_TESTS "Build platform service, boundary and x64 ABI tests" ON)
 enable_testing()
+add_subdirectory(src/Platform)
 add_subdirectory(src/Renderer)
 add_subdirectory(vendor)
 add_subdirectory(src)

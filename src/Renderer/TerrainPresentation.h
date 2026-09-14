@@ -4,6 +4,8 @@
 #include <vector>
 #include <functional>
 
+namespace Platform { class PlatformWindow; }
+
 namespace Renderer
 {
 // ZiiNAN: Device-independent metadata supplied by the active Diligent device.
@@ -21,5 +23,5 @@ public:
     virtual bool RequestScreenshot(ScreenshotSink sink) = 0;
 };
 inline ITerrainPresentation* activePresentation=nullptr;
-std::unique_ptr<ITerrainPresentation> CreateTerrainPresentation(void* parent, uint32_t width, uint32_t height);
+std::unique_ptr<ITerrainPresentation> CreateTerrainPresentation(Platform::PlatformWindow& parent, uint32_t width, uint32_t height);
 }

@@ -6,6 +6,7 @@ target_link_libraries(EterLib
 	sodium
 	mio
 	freetype
+	M2Platform
 )
 
 GroupSourcesByFolder(EterLib)

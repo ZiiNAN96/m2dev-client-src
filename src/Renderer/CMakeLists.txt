@@ -2,7 +2,7 @@ add_library(M2RendererInterface INTERFACE)
 target_include_directories(M2RendererInterface INTERFACE "${PROJECT_SOURCE_DIR}/src")
 
 add_library(M2RendererBootstrap STATIC RendererBootstrap.cpp TerrainPresentation.cpp)
-target_link_libraries(M2RendererBootstrap PRIVATE M2RendererInterface M2FirstPartyArchitectureChecks)
+target_link_libraries(M2RendererBootstrap PRIVATE M2RendererInterface M2FirstPartyArchitectureChecks M2Platform)
 
     include(FetchContent)
     set(DILIGENT_NO_DIRECT3D11 OFF CACHE BOOL "" FORCE)

@@ -2,6 +2,7 @@
 
 #include <string_view>
 #include "GpuSkinningPrototype.h"
+#include "Diagnostics.h"
 
 namespace Renderer
 {
@@ -17,9 +18,11 @@ struct StartupOptions
     bool valid = true;
     PrototypeSkinningMode skinning=defaultStartupSkinningMode;
     bool skinningSelected=false;
+    bool diagnostics=defaultVerboseDiagnostics;
 
     void ParseArgument(std::wstring_view argument)
     {
+        if (argument == L"--renderer-diagnostics") { diagnostics = true; return; }
         // ZiiNAN: GPU skinning production path — old CLI spelling is an explicit compatibility alias.
         if(argument.starts_with(L"--skinning=")) {
             const auto value=argument.substr(11);

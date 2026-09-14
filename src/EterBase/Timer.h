@@ -1,7 +1,8 @@
 #pragma once
 
-#include <windows.h>
 #include "Singleton.h"
+
+#include <cstdint>
 
 class CTimer : public CSingleton<CTimer>
 {
@@ -14,28 +15,29 @@ class CTimer : public CSingleton<CTimer>
 		void	SetBaseTime();
 
 		float	GetCurrentSecond();
-		DWORD	GetCurrentMillisecond();
+		std::uint32_t GetCurrentMillisecond();
 
 		float	GetElapsedSecond();
-		DWORD	GetElapsedMilliecond();
+		std::uint32_t GetElapsedMilliecond();
 
 		void	UseCustomTime();
 
 	protected:
 		bool	m_bUseRealTime;
-		DWORD	m_dwBaseTime;
-		DWORD	m_dwCurrentTime;
+		std::uint32_t m_dwBaseTime;
+		std::uint32_t m_dwCurrentTime;
 		float	m_fCurrentTime;
-		DWORD	m_dwElapsedTime;
+		std::uint32_t m_dwElapsedTime;
 		int		m_index;
 };
 
-BOOL	ELTimer_Init();
+bool ELTimer_Init();
 
-DWORD	ELTimer_GetMSec();
+std::uint32_t ELTimer_GetMSec();
 
-VOID	ELTimer_SetServerMSec(DWORD dwServerTime);
-DWORD	ELTimer_GetServerMSec();
+void ELTimer_SetServerMSec(std::uint32_t dwServerTime);
+std::uint32_t ELTimer_GetServerMSec();
+std::uint32_t ELTimer_GetServerFrameMSec();
 
-VOID	ELTimer_SetFrameMSec();
-DWORD	ELTimer_GetFrameMSec();
+void ELTimer_SetFrameMSec();
+std::uint32_t ELTimer_GetFrameMSec();

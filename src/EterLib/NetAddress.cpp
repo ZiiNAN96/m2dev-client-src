@@ -1,13 +1,12 @@
 #include "StdAfx.h"
 #include "NetAddress.h"
+#include "Platform/PlatformNetworking.h"
 
-#ifndef VC_EXTRALEAN
+#include <cstdio>
 
 bool CNetworkAddress::GetHostName(char* szName, int size)
 {
-	if (gethostname(szName, size)==SOCKET_ERROR)
-		return false;
-	return true;
+	return size > 0 && Platform::Networking::GetLocalHostName(szName, static_cast<std::size_t>(size));
 }
 
 CNetworkAddress::CNetworkAddress()
@@ -19,15 +18,10 @@ CNetworkAddress::~CNetworkAddress()
 {
 }
 
-CNetworkAddress::operator const SOCKADDR_IN&() const
-{
-	return m_sockAddrIn;
-}
-
 void CNetworkAddress::Clear()
 {
-	memset(&m_sockAddrIn, 0, sizeof(m_sockAddrIn));
-	m_sockAddrIn.sin_family=AF_INET;
+	m_address = 0;
+	m_port = 0;
 }
 
 bool CNetworkAddress::IsIP(const char* c_szAddr)
@@ -55,53 +49,52 @@ bool CNetworkAddress::Set(const char* c_szAddr, int port)
 
 void CNetworkAddress::SetLocalIP()
 {
-	SetIP(INADDR_ANY);	
+	SetIP(std::uint32_t{0});
 }
 
-void CNetworkAddress::SetIP(DWORD ip)
+void CNetworkAddress::SetIP(std::uint32_t ip)
 {
-	m_sockAddrIn.sin_addr.s_addr=htonl(ip);
+	m_address = ip;
 }
 
 void CNetworkAddress::SetIP(const char* c_szIP)
 {
-	m_sockAddrIn.sin_addr.s_addr=inet_addr(c_szIP);
+	std::uint32_t address = 0;
+	if (c_szIP && Platform::Networking::ResolveIPv4(c_szIP, address))
+		m_address = address;
 }
 
 bool CNetworkAddress::SetDNS(const char* c_szDNS)
 {
-	HOSTENT* pHostent=gethostbyname(c_szDNS);
-	if (!pHostent) return false;
-	memcpy(&m_sockAddrIn.sin_addr, pHostent->h_addr, sizeof(m_sockAddrIn.sin_addr));
+	std::uint32_t address = 0;
+	if (!c_szDNS || !Platform::Networking::ResolveIPv4(c_szDNS, address))
+		return false;
+	m_address = address;
 	return true;
 }
 
 void CNetworkAddress::SetPort(int port)
 {
-	m_sockAddrIn.sin_port = htons(port);
+	m_port = static_cast<std::uint16_t>(port);
 }
 
-int CNetworkAddress::GetSize()
+std::uint32_t CNetworkAddress::GetIP()
 {
-	return sizeof(m_sockAddrIn);
-}
-
-DWORD CNetworkAddress::GetIP()
-{
-	return ntohl(m_sockAddrIn.sin_addr.s_addr);
+	return m_address;
 }
 
 void CNetworkAddress::GetIP(char* szIP, int len)
 {
-	BYTE IPs[4];
-	*((DWORD*)IPs)=m_sockAddrIn.sin_addr.s_addr;
-
-	_snprintf(szIP, len, "%d.%d.%d.%d", IPs[0], IPs[1], IPs[2], IPs[3]);
+	if (!szIP || len <= 0)
+		return;
+	_snprintf(szIP, len, "%u.%u.%u.%u",
+		(m_address >> 24) & 0xff,
+		(m_address >> 16) & 0xff,
+		(m_address >> 8) & 0xff,
+		m_address & 0xff);
 }
 			
 int CNetworkAddress::GetPort()
 {
-	return ntohs(m_sockAddrIn.sin_port);
+	return m_port;
 }
-
-#endif

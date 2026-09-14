@@ -1,5 +1,7 @@
-#include "StdAfx.h"
-#include "PythonApplication.h"
+#include "UserInterface/StdAfx.h"
+#include "UserInterface/PythonApplication.h"
+#include <dshow.h>
+#include <qedit.h>
 
 static bool bInitializedLogo = false;
 
@@ -56,7 +58,7 @@ int CPythonApplication::OnLogoOpen(char* szName)
 
 	// Video Window
 	if(FAILED(m_pGraphBuilder->QueryInterface(IID_IVideoWindow, (VOID**) &m_pVideoWnd))) { return 0; }
-	if(FAILED(m_pVideoWnd->put_MessageDrain((OAHWND)this->m_hWnd))) { return 0; }
+	if(FAILED(m_pVideoWnd->put_MessageDrain(reinterpret_cast<OAHWND>(GetNativeHandle().value)))) { return 0; }
 
 	// Basic Video
 	if(FAILED(m_pGraphBuilder->QueryInterface(IID_IBasicVideo, (VOID**)&m_pBasicVideo))) { return 0; }
@@ -69,8 +71,8 @@ int CPythonApplication::OnLogoOpen(char* szName)
 	m_pVideoWnd->put_Visible(0);
 	m_pSampleGrabber->SetBufferSamples(TRUE);
 
-	m_pVideoWnd->put_Owner((OAHWND)m_hWnd);
-	m_pMediaEvent->SetNotifyWindow((OAHWND)m_hWnd, WM_APP + 1, 0);
+	m_pVideoWnd->put_Owner(reinterpret_cast<OAHWND>(GetNativeHandle().value));
+	m_pMediaEvent->SetNotifyWindow(reinterpret_cast<OAHWND>(GetNativeHandle().value), WM_APP + 1, 0);
 
 	bInitializedLogo = true;
 	

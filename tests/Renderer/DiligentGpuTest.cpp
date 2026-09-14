@@ -16,6 +16,7 @@
 #include "Renderer/DiligentUIRenderer.h"
 #include "Renderer/DiligentTextRenderer.h"
 #include "Renderer/TerrainPresentation.h"
+#include "Platform/PlatformWindow.h"
 #include "TerrainTextureFixtures.h"
 #include <iostream>
 #include <stdexcept>
@@ -124,14 +125,18 @@ static void WorldMaterialChecks(Renderer::DiligentD3D11Backend& backend)
 int main()
 {
     using namespace Renderer;
-    HWND window=CreateWindowW(L"STATIC",L"Device-free production GPU test",WS_OVERLAPPEDWINDOW,0,0,640,480,
-        nullptr,nullptr,GetModuleHandleW(nullptr),nullptr);
+    Platform::PlatformWindow platformWindow;
+    Platform::WindowCreateInfo windowInfo;
+    windowInfo.title="Device-free production GPU test";
+    const bool windowCreated=platformWindow.Create(windowInfo);
+    platformWindow.SetSize(640,480);
+    const auto window=platformWindow.GetNativeHandle().value;
     try {
         // Camera.cpp already owns the process camera singleton, including in Debug.
         CTimer timer; CGraphicDevice graphics; CameraProbe screen;
         DiligentD3D11Backend backend;
-        Check(window && backend.Initialize({window,640,480}) &&
-              graphics.Create(window,640,480)==CGraphicDevice::CREATE_OK,"Diligent-only context");
+        Check(windowCreated && window && backend.Initialize({window,640,480}) &&
+              graphics.Create({window},640,480)==CGraphicDevice::CREATE_OK,"Diligent-only context");
         screen.SetPositionCamera(1600,-1600,0,5000,45,0);
         screen.SetPerspective(30,640.f/480.f,100,25600);
         {
@@ -193,7 +198,7 @@ int main()
         backend.Shutdown();
         // Exercise the actual game presentation owner, not only its backend.
         {
-            auto presentation = CreateTerrainPresentation(window,640,480);
+            auto presentation = CreateTerrainPresentation(platformWindow,640,480);
             Check(presentation && terrainRenderer, "presentation binds terrain bridge");
             Check(actorRenderer && !actorWorldFrame,"ZiiNAN: actor owner initialized outside a world frame");
             Check(presentation->BeginFrame() && presentation->Present(), "login frame without terrain");
@@ -242,6 +247,6 @@ int main()
         graphics.Destroy();
         Check(liveSourceTextures==0 && liveSourceBuffers==0,"CPU owners released");
         WriteSourceResourceAudit(std::cout);
-        DestroyWindow(window); return 0;
-    } catch(const std::exception& e) { std::cerr<<e.what()<<'\n'; DestroyWindow(window); return 1; }
+        platformWindow.Destroy(); return 0;
+    } catch(const std::exception& e) { std::cerr<<e.what()<<'\n'; platformWindow.Destroy(); return 1; }
 }

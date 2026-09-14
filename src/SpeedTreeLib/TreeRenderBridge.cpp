@@ -2,6 +2,7 @@
 #include "StdAfx.h"
 #include "EterLib/DrawStateView.h"
 #include "TreeRenderBridge.h"
+#include "Renderer/Diagnostics.h"
 #include "SpeedTreeWrapper.h"
 #include "EterLib/DrawState.h"
 #include "EterLib/StaticObjectTextureLoader.h"
@@ -17,6 +18,7 @@ std::set<std::string> reports;
 void Report(const TreeModelData& data,const std::string& status,bool error=false)
 {
     if(error && treeRenderer) treeRenderer->ReportFailure();
+    if(!verboseDiagnostics) return;
     if(!reports.insert(data.asset+status).second) return;
     if(!diagnostics.is_open()) diagnostics.open("tree-renderer.log",std::ios::trunc);
     diagnostics << (error ? "ERROR: " : "") << status << " asset=" << data.asset << std::endl;

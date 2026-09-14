@@ -37,7 +37,7 @@ int main(int argc,char** argv)
         CPackManager packs;CResourceManager resources;Diligent::GetEngineFactoryD3D11()->SetMessageCallback(Message);
         window=CreateWindowW(L"STATIC",L"B6-X isolated benchmark",WS_OVERLAPPEDWINDOW,0,0,1280,720,nullptr,nullptr,GetModuleHandleW(nullptr),nullptr);
         DiligentD3D11Backend backend;Check(window && backend.Initialize({window,1280,720}),"benchmark backend");
-        CGraphicDevice graphics;Check(graphics.Create(window,1280,720)==CGraphicDevice::CREATE_OK,"Normal CPU capabilities and draw-state initialization");
+        CGraphicDevice graphics;Check(graphics.Create({window},1280,720)==CGraphicDevice::CREATE_OK,"Normal CPU capabilities and draw-state initialization");
         extern bool CPU_HAS_SSE2;std::cout<<"Native CPU_HAS_SSE2="<<CPU_HAS_SSE2<<'\n';
         BackendTestAccess::Describe(backend);startupSkinningMode=PrototypeSkinningMode::GPUPrototype;
         {

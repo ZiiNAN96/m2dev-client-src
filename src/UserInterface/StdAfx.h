@@ -22,7 +22,6 @@
 #define __D3DRM_H__
 #endif
 
-#include <dshow.h>
 #include "Locale.h"
 #include "GameType.h"
 

@@ -46,7 +46,13 @@
 #include "AbstractApplication.h"
 #include "MovieMan.h"
 
-#include <qedit.h>
+struct IGraphBuilder;
+struct IBaseFilter;
+struct ISampleGrabber;
+struct IMediaControl;
+struct IMediaEventEx;
+struct IVideoWindow;
+struct IBasicVideo;
 
 class CPythonApplication : public CMSApplication, public CInputKeyboard, public IAbstractApplication
 {
@@ -280,7 +286,7 @@ class CPythonApplication : public CMSApplication, public CInputKeyboard, public 
 
 
 	protected:
-		LRESULT WindowProcedure(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lParam);
+		std::intptr_t WindowProcedure(const Platform::NativeMessage& message) override;
 
 		void OnCameraUpdate();
 
@@ -310,8 +316,8 @@ class CPythonApplication : public CMSApplication, public CInputKeyboard, public 
 
 		void __UpdateCamera();
 
-		void __SetFullScreenWindow(HWND hWnd, DWORD dwWidth, DWORD dwHeight, DWORD dwBPP);
-		void __MinimizeFullScreenWindow(HWND hWnd, DWORD dwWidth, DWORD dwHeight);
+		void __SetFullScreenWindow(std::uint32_t width, std::uint32_t height, std::uint32_t bitsPerPixel);
+		void __MinimizeFullScreenWindow(std::uint32_t width, std::uint32_t height);
 
 
 	protected:
@@ -424,9 +430,9 @@ class CPythonApplication : public CMSApplication, public CInputKeyboard, public 
 		DWORD						m_dwLButtonDownTime;
 		DWORD						m_dwLButtonUpTime;
 
-		typedef std::map<int, HANDLE>		TCursorHandleMap;
+		typedef std::map<int, Platform::NativeCursorHandle>	TCursorHandleMap;
 		TCursorHandleMap			m_CursorHandleMap;
-		HANDLE						m_hCurrentCursor;
+		Platform::NativeCursorHandle	m_hCurrentCursor;
 
 		BOOL						m_bCursorVisible;
 		bool						m_bLiarCursorOn;
@@ -444,12 +450,11 @@ class CPythonApplication : public CMSApplication, public CInputKeyboard, public 
 		bool						m_isActivateWnd;
 		BOOL						m_isWindowFullScreenEnable;
 
-		DWORD						m_dwStickyKeysFlag;
 		int							m_iForceSightRange;
 
 	protected:
 		bool m_IsMovingMainWindow;
-		POINT m_InitialMouseMovingPoint;
+		Platform::Point m_InitialMouseMovingPoint;
 		int m_iCursorNum;
 		int m_iContinuousCursorNum;
 };

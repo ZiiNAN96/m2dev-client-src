@@ -4,6 +4,7 @@
 #include "FileLoaderThread.h"
 #include "ResourceManager.h"
 #include "GameThreadPool.h"
+#include "Platform/PlatformTime.h"
 
 CFileLoaderThread::CFileLoaderThread() : m_bShutdowned(false)
 {
@@ -84,5 +85,5 @@ void CFileLoaderThread::ProcessFile(const std::string& fileName)
 		m_pCompleteDeque.push_back(pData);
 	}
 
-	Sleep(g_iLoadingDelayTime);
+	Platform::Time::SleepMilliseconds(static_cast<std::uint32_t>(g_iLoadingDelayTime));
 }

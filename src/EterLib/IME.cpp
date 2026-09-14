@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "IME.h"
+#include "Platform/PlatformClipboard.h"
 #include "TextTag.h"
 #include "EterBase/Utils.h"
 #include "msctf.h"
@@ -103,8 +104,8 @@ HKL	CIME::ms_hklCurrent;
 wchar_t CIME::ms_szKeyboardLayout[KL_NAMELENGTH+1];
 OSVERSIONINFOW CIME::ms_stOSVI;
 
-HINSTANCE CIME::ms_hImm32Dll;
-HINSTANCE CIME::ms_hCurrentImeDll;
+Platform::DynamicLibrary CIME::ms_imm32Library;
+Platform::DynamicLibrary CIME::ms_currentImeLibrary;
 DWORD CIME::ms_dwImeState;
 
 DWORD CIME::ms_adwId[2] = { 0, 0 };
@@ -294,8 +295,8 @@ CIME::CIME()
 
 CIME::~CIME()
 {
-	SAFE_FREE_LIBRARY(ms_hCurrentImeDll);
-	SAFE_FREE_LIBRARY(ms_hImm32Dll);
+	ms_currentImeLibrary.Reset();
+	ms_imm32Library.Reset();
 }
 
 #pragma warning(disable : 4996)
@@ -319,26 +320,21 @@ bool CIME::Initialize(HWND hWnd)
 	}
 
 	// Load ImmLock/ImmUnlock Function Proc
-	wchar_t szPath[MAX_PATH + 1];
 	ms_bDisableIMECompletely = false;
 
-	if (GetSystemDirectoryW(szPath, MAX_PATH+1))
+	if (ms_imm32Library.LoadSystem("imm32.dll"))
 	{
-		wcscat_s(szPath, L"\\imm32.dll");
-		ms_hImm32Dll = LoadLibraryW(szPath);
-		if(ms_hImm32Dll)
-		{
-			_ImmLockIMC		= (INPUTCONTEXT*(WINAPI *)(HIMC))	GetProcAddress(ms_hImm32Dll, "ImmLockIMC");
-			_ImmUnlockIMC	= (BOOL(WINAPI *)(HIMC))			GetProcAddress(ms_hImm32Dll, "ImmUnlockIMC");
-			_ImmLockIMCC	= (LPVOID(WINAPI *)(HIMCC))			GetProcAddress(ms_hImm32Dll, "ImmLockIMCC");
-			_ImmUnlockIMCC	= (BOOL(WINAPI *)(HIMCC))			GetProcAddress(ms_hImm32Dll, "ImmUnlockIMCC");
-			BOOL (WINAPI* _ImmDisableTextFrameService)(DWORD) = (BOOL (WINAPI*)(DWORD))GetProcAddress(ms_hImm32Dll, "ImmDisableTextFrameService");
-			if ( _ImmDisableTextFrameService )
-				_ImmDisableTextFrameService( (DWORD)-1 );
-		} else {
-			ms_bDisableIMECompletely = true;
-		}
+		_ImmLockIMC = reinterpret_cast<INPUTCONTEXT*(WINAPI *)(HIMC)>(ms_imm32Library.GetSymbol("ImmLockIMC"));
+		_ImmUnlockIMC = reinterpret_cast<BOOL(WINAPI *)(HIMC)>(ms_imm32Library.GetSymbol("ImmUnlockIMC"));
+		_ImmLockIMCC = reinterpret_cast<LPVOID(WINAPI *)(HIMCC)>(ms_imm32Library.GetSymbol("ImmLockIMCC"));
+		_ImmUnlockIMCC = reinterpret_cast<BOOL(WINAPI *)(HIMCC)>(ms_imm32Library.GetSymbol("ImmUnlockIMCC"));
+		BOOL (WINAPI* disableTextFrameService)(DWORD) =
+			reinterpret_cast<BOOL(WINAPI*)(DWORD)>(ms_imm32Library.GetSymbol("ImmDisableTextFrameService"));
+		if (disableTextFrameService)
+			disableTextFrameService(static_cast<DWORD>(-1));
 	}
+	else
+		ms_bDisableIMECompletely = true;
 
 	ms_bInitialized = true;
 
@@ -369,8 +365,8 @@ void CIME::Uninitialize()
 		ImmAssociateContext(ms_hWnd, m_hOrgIMC);
 	ms_hWnd = NULL;
 	m_hOrgIMC = NULL;
-	SAFE_FREE_LIBRARY(ms_hCurrentImeDll);
-	SAFE_FREE_LIBRARY(ms_hImm32Dll);
+	ms_currentImeLibrary.Reset();
+	ms_imm32Library.Reset();
 	g_disableCicero.Uninitialize();
 	ms_bInitialized = false;
 }
@@ -786,36 +782,8 @@ void CIME::CopySelectionToClipboard(HWND hWnd)
 	if (selLen <= 0)
 		return;
 
-	if (!OpenClipboard(hWnd))
-		return;
-
-	EmptyClipboard();
-
-	const SIZE_T bytes = (SIZE_T)(selLen + 1) * sizeof(wchar_t);
-	HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, bytes);
-	if (!hMem)
-	{
-		CloseClipboard();
-		return;
-	}
-
-	wchar_t* dst = (wchar_t*)GlobalLock(hMem);
-	if (!dst)
-	{
-		GlobalFree(hMem);
-		CloseClipboard();
-		return;
-	}
-
-	memcpy(dst, m_wText + a, (size_t)selLen * sizeof(wchar_t));
-	dst[selLen] = L'\0';
-
-	GlobalUnlock(hMem);
-
-	if (!SetClipboardData(CF_UNICODETEXT, hMem))
-		GlobalFree(hMem); // only free if SetClipboardData failed
-
-	CloseClipboard();
+	const std::wstring selection(m_wText + a, m_wText + b);
+	(void)Platform::Clipboard::SetText(WideToUtf8(selection), Platform::NativeWindowHandle{hWnd});
 }
 
 void CIME::CutSelectionToClipboard(HWND hWnd)
@@ -829,24 +797,12 @@ void CIME::PasteTextFromClipBoard()
 	if (!m_bEnablePaste)
 		return;
 
-	if (!OpenClipboard(ms_hWnd))
-		return;
-
-	// 1) Prefer Unicode clipboard
-	if (HANDLE hUni = GetClipboardData(CF_UNICODETEXT))
+	std::string clipboardText;
+	if (Platform::Clipboard::GetText(clipboardText, Platform::NativeWindowHandle{ms_hWnd}))
 	{
-		if (wchar_t* wbuf = (wchar_t*)GlobalLock(hUni))
-		{
-			InsertString(wbuf, (int)wcslen(wbuf));
-			GlobalUnlock(hUni);
-		}
-
-		CloseClipboard();
-		if (ms_pEvent) ms_pEvent->OnUpdate();
-		return;
+		std::wstring wideText = Utf8ToWide(clipboardText);
+		InsertString(wideText.data(), static_cast<int>(wideText.size()));
 	}
-
-	CloseClipboard();
 	if (ms_pEvent) ms_pEvent->OnUpdate();
 }
 
@@ -1609,12 +1565,12 @@ void CIME::SetupImeApi()
 	if (ms_bUILessMode)
 		return;
 
-	SAFE_FREE_LIBRARY(ms_hCurrentImeDll);
-	ms_hCurrentImeDll = LoadLibraryW(szImeFile);
+	ms_currentImeLibrary.Reset();
+	(void)ms_currentImeLibrary.Load(imeUtf8);
 
-	if (ms_hCurrentImeDll) {
-		_GetReadingString = (UINT (WINAPI*)(HIMC, UINT, LPWSTR, PINT, BOOL*, PUINT)) (GetProcAddress(ms_hCurrentImeDll, "GetReadingString"));
-		_ShowReadingWindow =(BOOL (WINAPI*)(HIMC, BOOL)) (GetProcAddress(ms_hCurrentImeDll, "ShowReadingWindow"));
+	if (ms_currentImeLibrary.IsLoaded()) {
+		_GetReadingString = reinterpret_cast<UINT (WINAPI*)(HIMC, UINT, LPWSTR, PINT, BOOL*, PUINT)>(ms_currentImeLibrary.GetSymbol("GetReadingString"));
+		_ShowReadingWindow = reinterpret_cast<BOOL (WINAPI*)(HIMC, BOOL)>(ms_currentImeLibrary.GetSymbol("ShowReadingWindow"));
 
 		if(_ShowReadingWindow) {
 			HIMC hImc = ImmGetContext(ms_hWnd);

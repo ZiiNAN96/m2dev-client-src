@@ -1,17 +1,17 @@
 #ifndef __INC_ETERLIB_DEBUG_H__
 #define __INC_ETERLIB_DEBUG_H__
 
-#include <windows.h>
+#include "Platform/NativeTypes.h"
 
 #if defined(_DEBUG) && !defined(_PACKETDUMP)
 #define _PACKETDUMP
 #endif
 
-extern void SetLogLevel(UINT uLevel);
-extern void Log(UINT uLevel, const char* c_szMsg);
-extern void Logn(UINT uLevel, const char* c_szMsg);
-extern void Logf(UINT uLevel, const char* c_szFormat, ...);
-extern void Lognf(UINT uLevel, const char* c_szFormat, ...);
+extern void SetLogLevel(unsigned uLevel);
+extern void Log(unsigned uLevel, const char* c_szMsg);
+extern void Logn(unsigned uLevel, const char* c_szMsg);
+extern void Logf(unsigned uLevel, const char* c_szFormat, ...);
+extern void Lognf(unsigned uLevel, const char* c_szFormat, ...);
 
 extern void Trace(const char* c_szMsg);
 extern void Tracen(const char* c_szMsg);
@@ -29,7 +29,8 @@ extern void PacketDump(const char* c_szMsg);
 extern void PacketDumpf(const char* c_szFormat, ...);
 // MR-11: -- END OF -- Separate packet dump log from the main log file
 
-extern void LogBox(const char* c_szMsg, const char * c_szCaption = NULL, HWND hWnd = NULL);
+// ZiiNAN: Platform abstraction
+extern void LogBox(const char* c_szMsg, const char * c_szCaption = nullptr, Platform::NativeWindowHandle window = {});
 extern void LogBoxf(const char* c_szMsg, ...);
 
 extern void LogFile(const char* c_szMsg);
@@ -41,7 +42,7 @@ extern void SetupLog(void);
 extern void OpenLogFile(bool bUseLogFile = true);
 extern void CloseLogFile();
 
-extern HWND g_PopupHwnd;
+extern Platform::NativeWindowHandle g_PopupHwnd;
 
 #define CHECK_RETURN(flag, string)			\
 	if (flag)								\

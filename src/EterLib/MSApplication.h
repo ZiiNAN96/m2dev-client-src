@@ -4,19 +4,18 @@
 
 class CMSApplication : public CMSWindow
 {
-	public:
-		CMSApplication();		
-		virtual ~CMSApplication();
+public:
+    CMSApplication();
+    ~CMSApplication() override;
 
-		void Initialize(HINSTANCE hInstance);
+    void Initialize(void* instance);
+    void MessageLoop();
+    Platform::PollResult PollEvents();
 
-		void MessageLoop();
+    // Compatibility helpers for callers not yet moved to PollEvents.
+    bool IsMessage();
+    bool MessageProcess();
 
-		bool IsMessage();
-		bool MessageProcess();
-
-	protected:
-		void ClearWindowClass();
-
-		LRESULT WindowProcedure(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lParam);
+protected:
+    std::intptr_t WindowProcedure(const Platform::NativeMessage& message) override;
 };

@@ -2,6 +2,7 @@
 
 # =======================================================
 # FULLY CASE-INSENSITIVE BACKUP EXCLUSIONS
+/build-c2x-clean/
 # Matches all files and folders ending in:
 # _BK, _BAK, .BK, .BAK (and all case permutations)
 # =======================================================
@@ -61,3 +62,8 @@
 *.*.bAk
 *.*.baK
 *.*.bak
+
+# Generated CMake build directories
+/build/
+/build-clean/
+/build-c2x-clean/

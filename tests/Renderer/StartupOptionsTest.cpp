@@ -3,6 +3,9 @@
 int main()
 {
     using namespace Renderer;
+    if(StartupOptions{}.diagnostics != defaultVerboseDiagnostics) return 18;
+    StartupOptions diagnostics; diagnostics.ParseArgument(L"--renderer-diagnostics");
+    if(!diagnostics.valid || !diagnostics.diagnostics || diagnostics.selected || diagnostics.skinningSelected) return 19;
     if(StartupOptions{}.skinning!=PrototypeSkinningMode::GPU || startupSkinningMode!=PrototypeSkinningMode::GPU ||
        productionSkinningMode!=SkinningMode::GPU || StartupOptions{}.skinningSelected) return 10;
     StartupOptions production;production.ParseArgument(L"--skinning=gpu");production.ParseArgument(L"--skinning=gpu-prototype");

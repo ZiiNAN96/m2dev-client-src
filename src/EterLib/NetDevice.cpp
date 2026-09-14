@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "NetDevice.h"
+#include "Platform/PlatformNetworking.h"
 
 CNetworkDevice::CNetworkDevice()
 {
@@ -13,15 +14,15 @@ CNetworkDevice::~CNetworkDevice()
 
 void CNetworkDevice::Initialize()
 {
-	m_isWSA=false;
+	m_isStarted=false;
 }
 
 void CNetworkDevice::Destroy()
 {
-	if (m_isWSA)
+	if (m_isStarted)
 	{
-		WSACleanup();
-		m_isWSA=false;
+		Platform::Networking::Shutdown();
+		m_isStarted=false;
 	}
 }
 
@@ -31,11 +32,10 @@ bool CNetworkDevice::Create()
 
 	Initialize();
 
-	WSADATA wsaData;
-	if (WSAStartup(MAKEWORD(1, 1), &wsaData)!=0)
+	if (!Platform::Networking::Startup())
 		return false;
 
-	m_isWSA=true;
+	m_isStarted=true;
 	
 	return true;
 }

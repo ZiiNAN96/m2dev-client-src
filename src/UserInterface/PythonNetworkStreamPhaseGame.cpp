@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "PythonNetworkStream.h"
+#include "Platform/PlatformTime.h"
 #include "Packet.h"
 #include "GuildMarkDownloader.h"
 #include "MarkManager.h"
@@ -197,7 +198,7 @@ void CPythonNetworkStream::GamePhase()
 	}
 
 #ifdef __PERFORMANCE_CHECK__
-	DWORD timeBeginDispatch=timeGetTime();
+	DWORD timeBeginDispatch=Platform::Time::TickMilliseconds();
 #endif
 
 	const DWORD MAX_RECV_COUNT = 32;
@@ -215,7 +216,7 @@ void CPythonNetworkStream::GamePhase()
 	}
 
 #ifdef __PERFORMANCE_CHECK__
-	DWORD timeEndDispatch=timeGetTime();
+	DWORD timeEndDispatch=Platform::Time::TickMilliseconds();
 
 	if (timeEndDispatch-timeBeginDispatch>2)
 	{
@@ -2275,8 +2276,8 @@ bool CPythonNetworkStream::SendAttackPacket(UINT uMotAttack, DWORD dwVIDVictim)
 		return true;
 
 #ifdef ATTACK_TIME_LOG
-	static DWORD prevTime = timeGetTime();
-	DWORD curTime = timeGetTime();
+	static DWORD prevTime = Platform::Time::TickMilliseconds();
+	DWORD curTime = Platform::Time::TickMilliseconds();
 	TraceError("TIME: %.4f(%.4f) ATTACK_PACKET: %d TARGET: %d", curTime/1000.0f, (curTime-prevTime)/1000.0f, uMotAttack, dwVIDVictim);
 	prevTime = curTime;
 #endif
@@ -2954,11 +2955,11 @@ bool CPythonNetworkStream::SendGuildDeleteCommentPacket(DWORD dwIndex)
 
 bool CPythonNetworkStream::SendGuildRefreshCommentsPacket(DWORD dwHighestIndex)
 {
-	static DWORD s_LastTime = timeGetTime() - 1001;
+	static DWORD s_LastTime = Platform::Time::TickMilliseconds() - 1001;
 
-	if (timeGetTime() - s_LastTime < 1000)
+	if (Platform::Time::TickMilliseconds() - s_LastTime < 1000)
 		return true;
-	s_LastTime = timeGetTime();
+	s_LastTime = Platform::Time::TickMilliseconds();
 
 	TPacketCGGuild GuildPacket;
 	GuildPacket.header = CG::GUILD;

@@ -8,3 +8,18 @@ add_test(NAME Platform.PointerRoundTrip COMMAND PlatformPointerRoundTripTest)
 
 set_tests_properties(Platform.AbiLayouts Platform.PointerRoundTrip PROPERTIES LABELS "platform;x64")
 set_target_properties(PlatformAbiLayoutTest PlatformPointerRoundTripTest PROPERTIES FOLDER "Tests/Platform")
+
+# ZiiNAN: Platform abstraction
+add_executable(PlatformServicesTest PlatformServicesTest.cpp)
+target_link_libraries(PlatformServicesTest PRIVATE M2Platform M2FirstPartyArchitectureChecks)
+add_test(NAME Platform.Services COMMAND PlatformServicesTest)
+add_executable(PlatformHeaderBoundaryTest PlatformHeaderBoundaryTest.cpp)
+target_link_libraries(PlatformHeaderBoundaryTest PRIVATE M2Platform M2FirstPartyArchitectureChecks)
+add_test(NAME Platform.HeaderBoundaries COMMAND PlatformHeaderBoundaryTest)
+set_tests_properties(Platform.Services Platform.HeaderBoundaries PROPERTIES LABELS "platform;x64;c2x" TIMEOUT 45)
+set_target_properties(PlatformServicesTest PlatformHeaderBoundaryTest PROPERTIES FOLDER "Tests/Platform")
+add_executable(PlatformWindowInputTest PlatformWindowInputTest.cpp)
+target_link_libraries(PlatformWindowInputTest PRIVATE M2Platform M2FirstPartyArchitectureChecks)
+add_test(NAME Platform.WindowInput COMMAND PlatformWindowInputTest)
+set_tests_properties(Platform.WindowInput PROPERTIES LABELS "platform;x64;windows;c2x" TIMEOUT 30 RUN_SERIAL TRUE)
+set_target_properties(PlatformWindowInputTest PROPERTIES FOLDER "Tests/Platform")

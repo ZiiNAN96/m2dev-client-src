@@ -2,6 +2,7 @@
 #include "StdAfx.h"
 #include "EterLib/DrawStateView.h"
 #include "UIRenderBridge.h"
+#include "Renderer/Diagnostics.h"
 #include "MaterialStateSnapshot.h"
 #include "GrpImage.h"
 #include "DrawState.h"
@@ -15,6 +16,7 @@ namespace
 void Failure(const std::string& message)
 {
     Renderer::uiRenderer->ReportFailure();
+    if(!Renderer::verboseDiagnostics) return;
     static std::set<std::string> reported;
     static std::ofstream log("ui-renderer.log",std::ios::trunc);
     if(reported.size()<64 && reported.insert(message).second) log<<message<<std::endl;

@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "EterBase/CRC32.h"
+#include "Platform/PlatformTime.h"
 #include "PythonWindow.h"
 #include "PythonSlotWindow.h"
 #include "PythonWindowManager.h"
@@ -1912,7 +1913,7 @@ namespace UI
 		{
 			if (m_isFlash)
 			if (!IsIn())
-			if (int(timeGetTime() / 500)%2)
+			if (int(Platform::Time::TickMilliseconds() / 500)%2)
 			{
 				return;
 			}

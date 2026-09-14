@@ -550,7 +550,7 @@ void CScreen::End()
 extern bool g_isBrowserMode;
 extern RECT g_rcBrowser;
 
-void CScreen::Show(HWND hWnd)
+void CScreen::Show(Platform::NativeWindowHandle window)
 {
     // Diligent presentation is owned by CPythonApplication.
 }
@@ -560,7 +560,7 @@ void CScreen::Show(RECT * pSrcRect)
 
 }
 
-void CScreen::Show(RECT * pSrcRect, HWND hWnd)
+void CScreen::Show(RECT * pSrcRect, Platform::NativeWindowHandle window)
 {
 
 }

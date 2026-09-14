@@ -4,7 +4,7 @@
 
 PyObject* imeEnable(PyObject* poSelf, PyObject* poArgs)
 {
-	CPythonIME::Instance().Initialize(CPythonApplication::Instance().GetWindowHandle());
+	CPythonIME::Instance().Initialize(static_cast<HWND>(CPythonApplication::Instance().GetNativeHandle().value));
 	return Py_BuildNone();
 }
 

@@ -8,6 +8,8 @@
 #include "Version.h"
 #include "Renderer/RendererBootstrap.h"
 #include "Renderer/SkinningBenchmark.h"
+#include "Platform/PlatformTime.h"
+#include "Platform/PlatformFilesystem.h"
 #include <shellapi.h>
 
 #ifdef _DEBUG
@@ -156,7 +158,7 @@ bool PackInitialize(const char * c_pszFolder)
 	};
 
 	Tracef("PackInitialize: Loading root.pck\n");
-	DWORD dwStartTime = GetTickCount();
+	DWORD dwStartTime = Platform::Time::UptimeMilliseconds();
 	if (!CPackManager::instance().AddPack(std::format("{}/root.pck", c_pszFolder)))
 	{
 		TraceError("Failed to load root.pck");
@@ -168,7 +170,7 @@ bool PackInitialize(const char * c_pszFolder)
 		Tracef("PackInitialize: Loading %s.pck\n", packFileName.c_str());
 		CPackManager::instance().AddPack(std::format("{}/{}.pck", c_pszFolder, packFileName));
 	}
-	Tracef("PackInitialize: done. Time taken: %d ms\n", GetTickCount() - dwStartTime);
+	Tracef("PackInitialize: done. Time taken: %d ms\n", Platform::Time::UptimeMilliseconds() - dwStartTime);
 	return true;
 }
 
@@ -233,7 +235,7 @@ bool RunMainScript(CPythonLauncher& pyLauncher, const char* lpCmdLine)
 
 static int Main(HINSTANCE hInstance, LPSTR lpCmdLine, Renderer::BackendKind backend)
 {
-	DWORD dwRandSeed = (DWORD)time(NULL) ^ GetCurrentProcessId() ^ GetTickCount();
+	DWORD dwRandSeed = (DWORD)time(NULL) ^ GetCurrentProcessId() ^ Platform::Time::UptimeMilliseconds();
 	srandom(dwRandSeed);
 	srand(random());
 	SetLogLevel(1);
@@ -283,7 +285,7 @@ static int Main(HINSTANCE hInstance, LPSTR lpCmdLine, Renderer::BackendKind back
         (app->HasRendererRuntimeFailed() ? 5 : (scriptSucceeded ? 0 : 3));
 
 	app->Clear();
-	timeEndPeriod (1);
+	Platform::Time::EndTimerPeriod();
 	pyLauncher.Clear();
 
 	app->Destroy();
@@ -318,6 +320,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	}
     // ZiiNAN: GPU skinning production path
     Renderer::startupSkinningMode=rendererOptions.skinning;
+    Renderer::verboseDiagnostics=rendererOptions.diagnostics;
+    rendererLog << "VerboseDiagnostics=" << Renderer::verboseDiagnostics << std::endl;
     rendererLog << "Skinning=" << (rendererOptions.skinning==Renderer::PrototypeSkinningMode::CPU ? "cpu" : "gpu") << std::endl;
     rendererLog << "SkinningSelection=" << (rendererOptions.skinningSelected ? "explicit" : "default") << std::endl;
     // ZiiNAN: Production renderer selection is logged once, before any game/device setup.
@@ -338,7 +342,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     // ZiiNAN: Backend-neutral graphics resource ownership
     const int result = Main(hInstance, lpCmdLine, rendererOptions.backend);
-    std::ofstream resourceLog("source-resource-audit.log",std::ios::trunc);
+    std::ofstream resourceLog;
+    if(Renderer::verboseDiagnostics) resourceLog.open("source-resource-audit.log",std::ios::trunc);
     Renderer::WriteSourceResourceAudit(resourceLog);
     // ZiiNAN: GPU skinning production path — summary only; per-frame CSV is opt-in.
     Renderer::WriteSkinningBenchmark();
@@ -365,14 +370,8 @@ static void GrannyError(granny_log_message_type Type, granny_log_message_origin 
 
 int Setup(LPSTR lpCmdLine)
 {
-	TIMECAPS tc;
-	UINT wTimerRes;
-
-	if (timeGetDevCaps(&tc, sizeof(TIMECAPS)) != TIMERR_NOERROR) 
-		return 0;
-
-	wTimerRes = MINMAX(tc.wPeriodMin, 1, tc.wPeriodMax); 
-	timeBeginPeriod(wTimerRes); 
+	// ZiiNAN: Platform abstraction
+	if (!Platform::Time::BeginTimerPeriod()) return 0;
 
 	granny_log_callback Callback;
 	Callback.Function = nullptr;

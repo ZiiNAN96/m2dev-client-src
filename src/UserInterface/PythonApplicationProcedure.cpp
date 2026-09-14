@@ -8,7 +8,7 @@ static int gs_nMouseCaptureRef = 0;
 
 void CPythonApplication::SafeSetCapture()
 {
-	SetCapture(m_hWnd);
+	GetPlatformWindow().CaptureMouse();
 	gs_nMouseCaptureRef++;
 }
 
@@ -16,37 +16,26 @@ void CPythonApplication::SafeReleaseCapture()
 {
 	gs_nMouseCaptureRef--;
 	if (gs_nMouseCaptureRef==0)
-		ReleaseCapture();
+		GetPlatformWindow().ReleaseMouseCapture();
 }
 
-void CPythonApplication::__SetFullScreenWindow(HWND hWnd, DWORD dwWidth, DWORD dwHeight, DWORD dwBPP)
+void CPythonApplication::__SetFullScreenWindow(std::uint32_t width, std::uint32_t height, std::uint32_t bitsPerPixel)
 {
-	DEVMODE DevMode;
-	DevMode.dmSize = sizeof(DevMode);
-	DevMode.dmBitsPerPel = dwBPP;
-	DevMode.dmPelsWidth = dwWidth;
-	DevMode.dmPelsHeight = dwHeight;
-	DevMode.dmFields = DM_BITSPERPEL | DM_PELSWIDTH | DM_PELSHEIGHT;
-
-	LONG Error = ChangeDisplaySettings(&DevMode, CDS_FULLSCREEN);
-	if(Error == DISP_CHANGE_RESTART)
-	{
-		ChangeDisplaySettings(0,0);
-	}
+	GetPlatformWindow().EnterFullscreen(width, height, bitsPerPixel);
 }
 
-void CPythonApplication::__MinimizeFullScreenWindow(HWND hWnd, DWORD dwWidth, DWORD dwHeight)
+void CPythonApplication::__MinimizeFullScreenWindow(std::uint32_t width, std::uint32_t height)
 {
-	ChangeDisplaySettings(0, 0);
-	SetWindowPos(hWnd, 0, 0, 0,
-				 dwWidth,
-				 dwHeight,
-				 SWP_SHOWWINDOW);
-	ShowWindow(hWnd, SW_MINIMIZE);
+	GetPlatformWindow().MinimizeFullscreen(width, height);
 }
 
-LRESULT CPythonApplication::WindowProcedure(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lParam)
+std::intptr_t CPythonApplication::WindowProcedure(const Platform::NativeMessage& message)
 {
+	// ZiiNAN: Platform abstraction. IME remains an explicit Win32-only feature boundary.
+	const auto hWnd = static_cast<HWND>(message.window.value);
+	const auto uiMsg = static_cast<UINT>(message.id);
+	const auto wParam = static_cast<WPARAM>(message.wParam);
+	auto lParam = static_cast<LPARAM>(message.lParam);
 	const int c_DoubleClickTime = 300;
 	const int c_DoubleClickBox = 5;
 	static int s_xDownPosition = 0;
@@ -66,7 +55,7 @@ LRESULT CPythonApplication::WindowProcedure(HWND hWnd, UINT uiMsg, WPARAM wParam
 
 					if (m_isWindowFullScreenEnable)
 					{
-						__SetFullScreenWindow(hWnd, m_dwWidth, m_dwHeight, m_pySystem.GetBPP());
+						__SetFullScreenWindow(m_dwWidth, m_dwHeight, m_pySystem.GetBPP());
 					}
 				}
 				else
@@ -77,7 +66,7 @@ LRESULT CPythonApplication::WindowProcedure(HWND hWnd, UINT uiMsg, WPARAM wParam
 
 					if (m_isWindowFullScreenEnable)
 					{
-						__MinimizeFullScreenWindow(hWnd, m_dwWidth, m_dwHeight);
+						__MinimizeFullScreenWindow(m_dwWidth, m_dwHeight);
 					}
 
 					if (IsUserMovingMainWindow())
@@ -150,7 +139,7 @@ LRESULT CPythonApplication::WindowProcedure(HWND hWnd, UINT uiMsg, WPARAM wParam
 		case WM_LBUTTONUP:
 			m_dwLButtonUpTime = ELTimer_GetMSec();
 
-			if (hWnd == GetCapture())
+			if (GetPlatformWindow().HasMouseCapture())
 			{
 				SafeReleaseCapture();
 				OnMouseLeftButtonUp(short(LOWORD(lParam)), short(HIWORD(lParam)));
@@ -165,7 +154,7 @@ LRESULT CPythonApplication::WindowProcedure(HWND hWnd, UINT uiMsg, WPARAM wParam
 			break;
 
 		case WM_MBUTTONUP:
-			if (GetCapture() == hWnd)
+			if (GetPlatformWindow().HasMouseCapture())
 			{
 				SafeReleaseCapture();
 
@@ -180,7 +169,7 @@ LRESULT CPythonApplication::WindowProcedure(HWND hWnd, UINT uiMsg, WPARAM wParam
 			return 0;
 
 		case WM_RBUTTONUP:
-			if (hWnd == GetCapture()) 
+			if (GetPlatformWindow().HasMouseCapture())
 			{
 				SafeReleaseCapture();
 
@@ -205,15 +194,14 @@ LRESULT CPythonApplication::WindowProcedure(HWND hWnd, UINT uiMsg, WPARAM wParam
 			{
 				TraceError("Diligent terrain resize failed");
                 m_rendererRuntimeFailed = true;
-				PostQuitMessage(1);
+				GetPlatformWindow().RequestQuit(1);
 			}
 			switch (wParam)
 			{
 				case SIZE_RESTORED:
 				case SIZE_MAXIMIZED:
 					{
-						RECT rcWnd; 
-						GetClientRect(&rcWnd); 
+						const auto rcWnd = GetClientRect();
 				
 						UINT uWidth=rcWnd.right-rcWnd.left; 
 						UINT uHeight=rcWnd.bottom-rcWnd.left; 
@@ -233,8 +221,7 @@ LRESULT CPythonApplication::WindowProcedure(HWND hWnd, UINT uiMsg, WPARAM wParam
 
 		case WM_EXITSIZEMOVE:    
 			{
-				RECT rcWnd; 
-				GetClientRect(&rcWnd); 
+				const auto rcWnd = GetClientRect();
 				
 				UINT uWidth=rcWnd.right-rcWnd.left; 
 				UINT uHeight=rcWnd.bottom-rcWnd.left; 
@@ -250,7 +237,7 @@ LRESULT CPythonApplication::WindowProcedure(HWND hWnd, UINT uiMsg, WPARAM wParam
 				case HTSYSMENU:
 					return 0;
 				case HTMINBUTTON:
-					ShowWindow(hWnd, SW_MINIMIZE);
+					GetPlatformWindow().Minimize();
 					return 0;
 				case HTCLOSE:
 					// The experimental terrain surface covers the unported exit menu.
@@ -310,12 +297,12 @@ LRESULT CPythonApplication::WindowProcedure(HWND hWnd, UINT uiMsg, WPARAM wParam
 			{
 				if (m_bCursorVisible && CURSOR_MODE_HARDWARE == m_iCursorMode)
 				{
-					SetCursor((HCURSOR) m_hCurrentCursor);
+					GetPlatformWindow().SetCursor(m_hCurrentCursor);
 					return 0;
 				}
 				else
 				{
-					SetCursor(NULL);
+					GetPlatformWindow().SetCursor({});
 					return 0;
 				}
 			}
@@ -328,7 +315,7 @@ LRESULT CPythonApplication::WindowProcedure(HWND hWnd, UINT uiMsg, WPARAM wParam
 				return 0;
 			}
 #ifdef _DEBUG
-			PostQuitMessage(0);
+			GetPlatformWindow().RequestQuit(0);
 #else	
 			RunPressExitKey();
 #endif
@@ -341,5 +328,7 @@ LRESULT CPythonApplication::WindowProcedure(HWND hWnd, UINT uiMsg, WPARAM wParam
 			break;
 	}	
 
-	return CMSApplication::WindowProcedure(hWnd, uiMsg, wParam, lParam);
+	auto defaultMessage = message;
+	defaultMessage.lParam = static_cast<std::intptr_t>(lParam);
+	return CMSApplication::WindowProcedure(defaultMessage);
 }

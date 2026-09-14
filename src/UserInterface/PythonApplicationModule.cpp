@@ -5,6 +5,7 @@
 #include "PackLib/PackManager.h"
 #include "EterBase/tea.h"
 #include "Renderer/SkinningBenchmark.h"
+#include "Platform/PlatformTime.h"
 
 #include <stb_image.h>
 #include <utf8.h>
@@ -781,7 +782,7 @@ PyObject * appSleep(PyObject * poSelf, PyObject * poArgs)
 	if (!PyTuple_GetInteger(poArgs, 0, &iTime))
 		return Py_BuildException();
 
-	Sleep(iTime);
+	Platform::Time::SleepMilliseconds(static_cast<std::uint32_t>(iTime));
 
 	return Py_BuildNone();
 }

@@ -1,5 +1,4 @@
 #pragma once
-#include <windows.h>
 #include "Math/Math.h"
 #include <cstdint>
 namespace Renderer {

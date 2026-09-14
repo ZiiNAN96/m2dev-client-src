@@ -4,6 +4,10 @@
 #include "NetAddress.h"
 #include "RingBuffer.h"
 #include "ControlPackets.h"
+#include "Platform/PlatformNetworking.h"
+
+#include <cstdint>
+#include <ctime>
 
 
 class CNetworkStream
@@ -26,7 +30,7 @@ class CNetworkStream
 
 		bool Connect(const CNetworkAddress& c_rkNetAddr, int limitSec = 3);
 		bool Connect(const char* c_szAddr, int port, int limitSec = 3);
-		bool Connect(DWORD dwAddr, int port, int limitSec = 3);
+		bool Connect(std::uint32_t dwAddr, int port, int limitSec = 3);
 		void Disconnect();
 
 		bool Peek(int len);
@@ -95,7 +99,7 @@ class CNetworkStream
 		// Secure cipher (libsodium/XChaCha20-Poly1305)
 		SecureCipher m_secureCipher;
 
-		SOCKET	m_sock;
+		Platform::Networking::NativeSocket m_sock;
 
 		CNetworkAddress m_addr;
 

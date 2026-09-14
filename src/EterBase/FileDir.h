@@ -1,8 +1,6 @@
 #ifndef __ETER_FILE_DIR__
 #define __ETER_FILE_DIR__
 
-#include <windows.h>
-
 class CDir
 {
 	public:
@@ -10,7 +8,7 @@ class CDir
 		virtual ~CDir();
 		
 		void Destroy();		
-		bool Create(const char* c_szFilter, const char* c_szPath="", BOOL bCheckedExtension = FALSE);
+		bool Create(const char* c_szFilter, const char* c_szPath="", bool bCheckedExtension = false);
 		
 	protected:
 		virtual bool OnFolder(const char* c_szFilter, const char* c_szPath, const char* c_szName) = 0;
@@ -22,8 +20,7 @@ class CDir
 		void Initialize();
 		
 	protected:
-		WIN32_FIND_DATA m_wfd;
-		HANDLE m_hFind;
+		bool m_isFolder;
 };
 
 
