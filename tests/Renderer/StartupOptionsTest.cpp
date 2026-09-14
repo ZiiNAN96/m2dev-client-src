@@ -3,6 +3,12 @@
 int main()
 {
     using namespace Renderer;
+    if(StartupOptions{}.gr2Reader!=AssetRuntime::GR2ReaderMode::Granny) return 30;
+    StartupOptions reader; reader.ParseArgument(L"--gr2-reader=ziinan");
+    if(!reader.valid || reader.animationRuntime!=AssetRuntime::AnimationRuntimeMode::ZiiNAN) return 31;
+    reader.ParseArgument(L"--animation-runtime=granny"); if(reader.valid) return 32;
+    StartupOptions conflict; conflict.ParseArgument(L"--animation-runtime=granny"); conflict.ParseArgument(L"--gr2-reader=ziinan"); if(conflict.valid) return 33;
+    for(auto value:{L"--gr2-reader=",L"--gr2-reader=auto",L"--gr2-reader=ZiiNAN"}) { StartupOptions bad; bad.ParseArgument(value); if(bad.valid) return 34; }
     if (StartupOptions{}.animationStallAudit) return 24;
     StartupOptions stall;
     stall.ParseArgument(L"--animation-stall-audit");

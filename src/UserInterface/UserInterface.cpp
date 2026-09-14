@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "AssetRuntime/Granny/GrannyAssetProvider.h"
 #include "Renderer/ResourceData.h"
+#include "AssetRuntime/GR2/GR2AssetProvider.h"
 #include "EterLib/SourceResourceAudit.h"
 #include "PythonApplication.h"
 #include "ProcessScanner.h"
@@ -316,14 +317,16 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	LocalFree(rendererArgv);
 	if (!rendererOptions.valid)
 	{
-        rendererLog << "ERROR: Invalid/conflicting renderer selection; no fallback. ExitCode=2" << std::endl;
-		MessageBoxW(nullptr, L"Unsupported or conflicting selection. Use --renderer=d3d11, --skinning=gpu or cpu, and --animation-runtime=granny (default) or ziinan.",
+        rendererLog << "ERROR: Invalid/conflicting renderer or asset reader selection; no fallback. ExitCode=2" << std::endl;
+		MessageBoxW(nullptr, L"Unsupported or conflicting selection. Use --renderer=d3d11, --skinning=gpu or cpu, --animation-runtime=granny or ziinan, --gr2-reader=granny (default) or ziinan (requires ZiiNAN animation).",
 		            L"Invalid renderer selection", MB_OK | MB_ICONERROR);
 		return 2;
 	}
     // ZiiNAN: GPU skinning production path
     Renderer::startupSkinningMode=rendererOptions.skinning;
     AssetRuntime::startupAnimationRuntime=rendererOptions.animationRuntime;
+    AssetRuntime::startupGR2Reader=rendererOptions.gr2Reader;
+    rendererLog << "GR2Reader=" << (rendererOptions.gr2Reader==AssetRuntime::GR2ReaderMode::ZiiNAN ? "ziinan" : "granny") << std::endl;
     if (rendererOptions.animationStallAudit) AssetRuntime::AnimationStallAudit::Enable();
     AssetRuntime::animationRuntimeErrorSink=[](const char* message) { TraceError("%s", message); };
     Renderer::verboseDiagnostics=rendererOptions.diagnostics;
@@ -363,6 +366,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     resourceLog << "AssetDocuments=" << AssetRuntime::liveDocuments
         << " AnimationInstances=" << AssetRuntime::liveAnimationInstances
         << " MeshBindings=" << AssetRuntime::liveMeshBindings << '\n';
+    resourceLog << "GR2ReaderResources=" << AssetRuntime::GR2::liveReaderDocuments
+        << " NativeGR2Reads=" << AssetRuntime::GR2::nativeFileReads
+        << " GrannyFileReads=" << AssetRuntime::grannyFileReads << '\n';
+    resourceLog << "NativeAnimationDecodes=" << AssetRuntime::GR2::nativeAnimationDecodes
+        << " NativeBoundClipHits=" << AssetRuntime::GR2::boundClipHits
+        << " NativeBoundClipBypasses=" << AssetRuntime::GR2::boundClipBypasses << '\n';
     resourceLog << "IndependentAnimationInstances=" << AssetRuntime::liveIndependentAnimationInstances
         << " IndependentPoseSamples=" << AssetRuntime::independentPoseSamples
         << " ReferencePoseSamples=" << AssetRuntime::referencePoseSamples

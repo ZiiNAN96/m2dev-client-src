@@ -2,6 +2,7 @@
 #include "GrannyInterop.h"
 #include "GrannyAnimationAdapter.h"
 #include "AssetRuntime/AnimationRuntimeMode.h"
+#include "AssetRuntime/GR2ReaderMode.h"
 #include "AssetRuntime/AnimationStallAudit.h"
 #include "EterGrnLib/Deform.h"
 #include <algorithm>
@@ -784,6 +785,7 @@ public:
         if (bytes.empty() || !bytes.data() || bytes.size() > static_cast<std::size_t>(std::numeric_limits<granny_int32>::max()))
             return {{}, AssetError::InvalidInput};
         const auto fingerprint = Fingerprint(bytes);
+        ++grannyFileReads;
         FileOwner file(GrannyReadEntireFileFromMemory(static_cast<granny_int32>(bytes.size()), const_cast<std::byte*>(bytes.data())));
         if (!file) return {{}, AssetError::InvalidAsset};
         auto* info = GrannyGetFileInfo(file.get());

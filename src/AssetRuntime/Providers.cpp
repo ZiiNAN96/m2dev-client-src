@@ -1,6 +1,8 @@
 #include "Providers.h"
 #include "Granny/GrannyAssetProvider.h"
 #include "GlTF/GlTFAssetProvider.h"
+#include "GR2/GR2AssetProvider.h"
+#include "GR2ReaderMode.h"
 #include <algorithm>
 
 namespace AssetRuntime
@@ -19,7 +21,7 @@ LoadResult LoadModel(AssetId id, std::span<const std::byte> bytes)
         return static_cast<char>(c >= 'A' && c <= 'Z' ? c + ('a' - 'A') : c);
     });
     AssetProvider* provider = nullptr;
-    if (extension == "gr2") provider = &GetGrannyAssetProvider();
+    if (extension == "gr2") provider = startupGR2Reader==GR2ReaderMode::ZiiNAN ? &GetGR2AssetProvider() : &GetGrannyAssetProvider();
     else if (extension == "glb") provider = &GetGlTFAssetProvider();
     if (!provider) return {{}, AssetError::UnsupportedLayout};
     return LoadModel(std::move(id), bytes, *provider);

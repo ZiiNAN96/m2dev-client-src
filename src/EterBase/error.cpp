@@ -60,6 +60,11 @@ LONG __stdcall EterExceptionFilter(_EXCEPTION_POINTERS* pExceptionInfo)
 		fprintf(fException, "Time Stamp: 0x%08x - %s\n", (unsigned int)module_time, ctime(&module_time));
 		fprintf(fException, "\n");
 		fprintf(fException, "Exception Type: 0x%08x\n", pExceptionInfo->ExceptionRecord->ExceptionCode);
+        const auto faultAddress = reinterpret_cast<ULONG_PTR>(pExceptionInfo->ExceptionRecord->ExceptionAddress);
+        const auto moduleBase = reinterpret_cast<ULONG_PTR>(hModule);
+        fprintf(fException, "Module Base: 0x%016llx Fault Address: 0x%016llx Fault RVA: 0x%llx\n",
+            static_cast<unsigned long long>(moduleBase), static_cast<unsigned long long>(faultAddress),
+            static_cast<unsigned long long>(faultAddress - moduleBase));
 		fprintf(fException, "\n");
 
 		/*

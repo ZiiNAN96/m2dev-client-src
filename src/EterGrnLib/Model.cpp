@@ -301,7 +301,8 @@ bool CGrannyModel::LoadAssetMeshes()
         if (source.indexCount && source.indexWidth != AssetRuntime::IndexWidth::UInt16 &&
             source.indexWidth != AssetRuntime::IndexWidth::UInt32) return false;
         // Keep the productive Granny stream unchanged; neutral rigid assets retain their declared width.
-        if (!m_pgrnModel && source.indexWidth == AssetRuntime::IndexWidth::UInt32)
+        if (!m_pgrnModel && source.indexWidth == AssetRuntime::IndexWidth::UInt32 &&
+            asset->preferredIndexWidth != AssetRuntime::IndexWidth::UInt16)
             m_indexWidth = AssetRuntime::IndexWidth::UInt32;
         if (source.vertexCount > std::uint32_t(std::numeric_limits<int>::max() - vertices) ||
             source.indexCount > std::uint32_t(std::numeric_limits<int>::max() - indices) ||

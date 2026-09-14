@@ -4,6 +4,7 @@
 #include "GpuSkinningPrototype.h"
 #include "Diagnostics.h"
 #include "AssetRuntime/AnimationRuntimeMode.h"
+#include "AssetRuntime/GR2ReaderMode.h"
 
 namespace Renderer
 {
@@ -23,14 +24,29 @@ struct StartupOptions
     AssetRuntime::AnimationRuntimeMode animationRuntime=AssetRuntime::AnimationRuntimeMode::Granny;
     bool animationRuntimeSelected=false;
     bool animationStallAudit=false;
+    AssetRuntime::GR2ReaderMode gr2Reader=AssetRuntime::GR2ReaderMode::Granny;
+    bool gr2ReaderSelected=false;
 
     void ParseArgument(std::wstring_view argument)
     {
+        if(argument.starts_with(L"--gr2-reader=")) {
+            const auto value=argument.substr(13);
+            if(value!=L"granny" && value!=L"ziinan") { valid=false; return; }
+            const auto requested=value==L"ziinan"?AssetRuntime::GR2ReaderMode::ZiiNAN:AssetRuntime::GR2ReaderMode::Granny;
+            if(gr2ReaderSelected && requested!=gr2Reader) valid=false;
+            gr2Reader=requested; gr2ReaderSelected=true;
+            if(requested==AssetRuntime::GR2ReaderMode::ZiiNAN) {
+                if(animationRuntimeSelected && animationRuntime!=AssetRuntime::AnimationRuntimeMode::ZiiNAN) valid=false;
+                animationRuntime=AssetRuntime::AnimationRuntimeMode::ZiiNAN;
+            }
+            return;
+        }
         if (argument == L"--animation-stall-audit") { animationStallAudit=true; return; }
         if (argument.starts_with(L"--animation-runtime=")) {
             const auto value=argument.substr(20);
             if (value!=L"granny" && value!=L"ziinan") { valid=false; return; }
             const auto requested=value==L"ziinan" ? AssetRuntime::AnimationRuntimeMode::ZiiNAN : AssetRuntime::AnimationRuntimeMode::Granny;
+            if(gr2Reader==AssetRuntime::GR2ReaderMode::ZiiNAN && requested!=AssetRuntime::AnimationRuntimeMode::ZiiNAN) valid=false;
             if (animationRuntimeSelected && requested!=animationRuntime) valid=false;
             animationRuntime=requested; animationRuntimeSelected=true; return;
         }

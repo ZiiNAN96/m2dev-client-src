@@ -65,8 +65,12 @@ void CActorInstance::UpdatePointInstance(TCollisionPointInstance * pPointInstanc
 			return;
 		}
 
-		Math::Matrix * pmatBone = (Math::Matrix *)pModelInstance->GetBoneMatrixPointer(pPointInstance->dwBoneIndex);
-		matBone = *(Math::Matrix *)pModelInstance->GetCompositeBoneMatrixPointer(pPointInstance->dwBoneIndex);
+		const auto* pmatBone = reinterpret_cast<const Math::Matrix*>(pModelInstance->GetBoneMatrixPointer(pPointInstance->dwBoneIndex));
+        const auto* composite = pModelInstance->GetCompositeBoneMatrixPointer(pPointInstance->dwBoneIndex);
+        // A rejected native animation has no usable pose; its provider reports
+        // the error. Do not dereference an absent matrix during world entry.
+        if (!pmatBone || !composite) return;
+		matBone = *reinterpret_cast<const Math::Matrix*>(composite);
 		matBone._41 = pmatBone->_41;
 		matBone._42 = pmatBone->_42;
 		matBone._43 = pmatBone->_43;
@@ -141,7 +145,9 @@ void CActorInstance::UpdateAdvancingPointInstance()
 				continue;
 			}
 
-			matCenter = *(Math::Matrix *)pModelInstance->GetBoneMatrixPointer(rInstance.dwBoneIndex);
+            const auto* bone = pModelInstance->GetBoneMatrixPointer(rInstance.dwBoneIndex);
+            if (!bone) continue;
+			matCenter = *reinterpret_cast<const Math::Matrix*>(bone);
 			matCenter *= m_worldMatrix;
 		}
 		else

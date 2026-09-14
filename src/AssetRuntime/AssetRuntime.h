@@ -133,6 +133,9 @@ struct ModelAsset
     std::vector<std::uint32_t> animations; // Document animation slots.
     Deformation deformation{Deformation::Rigid};
     bool renderable{true};
+    // A provider may request a narrower upload only after validating every index.
+    // Mesh indexWidth continues to describe the original source stream.
+    IndexWidth preferredIndexWidth{IndexWidth::Unknown};
 };
 enum class AnimationPath { Translation, Rotation, Scale };
 enum class AnimationInterpolation { Linear, Step, CubicSpline };
