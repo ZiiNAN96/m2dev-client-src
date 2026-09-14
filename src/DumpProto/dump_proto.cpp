@@ -8,6 +8,7 @@
 #include <vector>
 #include <algorithm>
 #include <cstring>
+#include <cstdint>
 #include <io.h>
 #include <direct.h>
 #include <sodium.h>
@@ -163,7 +164,7 @@ enum EItemMisc
 typedef struct SItemLimit
 {
 	BYTE	bType;
-	long	lValue;
+	int32_t	lValue;
 } TItemLimit;
 #pragma pack()
 
@@ -171,7 +172,7 @@ typedef struct SItemLimit
 typedef struct SItemApply
 {
 	BYTE	bType;
-	long	lValue;
+	int32_t	lValue;
 } TItemApply;
 #pragma pack()
 
@@ -198,8 +199,8 @@ typedef struct
 
 	TItemLimit	aLimits[ITEM_LIMIT_MAX_NUM];
 	TItemApply	aApplies[ITEM_APPLY_MAX_NUM];
-	long        alValues[ITEM_VALUES_MAX_NUM];
-	long	alSockets[ITEM_SOCKET_MAX_NUM];
+	int32_t     alValues[ITEM_VALUES_MAX_NUM];
+	int32_t	alSockets[ITEM_SOCKET_MAX_NUM];
 	DWORD	dwRefinedVnum;
 	WORD	wRefineSet;
 	BYTE	bAlterToMagicItemPct;

@@ -19,7 +19,25 @@ bool PyTuple_GetBoolean(PyObject* poArgs, int pos, bool* ret);
 
 template <typename T>
 bool PyTuple_GetPointer(PyObject* poArgs, int pos, T** ret) {
-	return PyTuple_GetUnsignedLongLong(poArgs, pos, (unsigned long long*)ret);
+	if (!poArgs || !ret || pos < 0 || pos >= PyTuple_Size(poArgs))
+		return false;
+
+	PyObject* poItem = PyTuple_GetItem(poArgs, pos);
+	if (!poItem)
+		return false;
+
+	// ZiiNAN: 64-bit safety cleanup
+	void* pointer = PyLong_AsVoidPtr(poItem);
+	if (!pointer && PyErr_Occurred())
+		return false;
+
+	*ret = static_cast<T*>(pointer);
+	return true;
+}
+
+// ZiiNAN: 64-bit safety cleanup
+inline PyObject* Py_BuildPointer(const void* pointer) {
+	return PyLong_FromVoidPtr(const_cast<void*>(pointer));
 }
 
 bool PyCallClassMemberFunc(PyObject* poClass, const char* c_szFunc, PyObject* poArgs);

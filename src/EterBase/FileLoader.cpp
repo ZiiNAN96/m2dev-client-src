@@ -17,21 +17,23 @@ bool CMemoryTextFileLoader::SplitLineByTab(DWORD dwLine, CTokenVector* pstTokenV
 	pstTokenVector->clear();
 
 	const std::string & c_rstLine = GetLineString(dwLine);
-	const int c_iLineLength = c_rstLine.length();
+	const std::string::size_type c_iLineLength = c_rstLine.length();
 
 	if (0 == c_iLineLength)
 		return false;
 
-	int basePos = 0;
+	std::string::size_type basePos = 0;
 
 	do
 	{
-		int beginPos = c_rstLine.find_first_of("\t", basePos);
+		const std::string::size_type beginPos = c_rstLine.find_first_of("\t", basePos);
 
 		pstTokenVector->push_back(c_rstLine.substr(basePos, beginPos-basePos));
 
+		if (beginPos == std::string::npos)
+			break;
 		basePos = beginPos+1;
-	} while (basePos < c_iLineLength && basePos > 0);
+	} while (basePos < c_iLineLength);
 
 	return true;
 }
@@ -44,23 +46,23 @@ int CMemoryTextFileLoader::SplitLine2(DWORD dwLine, CTokenVector* pstTokenVector
 	std::string stToken;
 	const std::string & c_rstLine = GetLineString(dwLine);
 
-	DWORD basePos = 0;
+	std::string::size_type basePos = 0;
 
 	do
 	{
-		int beginPos = c_rstLine.find_first_not_of(c_szDelimeter, basePos);
+		std::string::size_type beginPos = c_rstLine.find_first_not_of(c_szDelimeter, basePos);
 
-		if (beginPos < 0)
+		if (beginPos == std::string::npos)
 			return -1;
 
-		int endPos;
+		std::string::size_type endPos;
 
 		if (c_rstLine[beginPos] == '"')
 		{
 			++beginPos;
 			endPos = c_rstLine.find_first_of("\"", beginPos);
 
-			if (endPos < 0)
+			if (endPos == std::string::npos)
 				return -2;
 
 			basePos = endPos + 1;
@@ -74,7 +76,7 @@ int CMemoryTextFileLoader::SplitLine2(DWORD dwLine, CTokenVector* pstTokenVector
 		pstTokenVector->push_back(c_rstLine.substr(beginPos, endPos - beginPos));
 
 		// 추가 코드. 맨뒤에 탭이 있는 경우를 체크한다. - [levites]
-		if (int(c_rstLine.find_first_not_of(c_szDelimeter, basePos)) < 0)
+		if (c_rstLine.find_first_not_of(c_szDelimeter, basePos) == std::string::npos)
 			break;
 	} while (basePos < c_rstLine.length());
 
@@ -89,22 +91,22 @@ bool CMemoryTextFileLoader::SplitLine(DWORD dwLine, CTokenVector* pstTokenVector
 	std::string stToken;
 	const std::string & c_rstLine = GetLineString(dwLine);
 
-	DWORD basePos = 0;
+	std::string::size_type basePos = 0;
 
 	do
 	{
-		int beginPos = c_rstLine.find_first_not_of(c_szDelimeter, basePos);
-		if (beginPos < 0)
+		std::string::size_type beginPos = c_rstLine.find_first_not_of(c_szDelimeter, basePos);
+		if (beginPos == std::string::npos)
 			return false;
 
-		int endPos;
+		std::string::size_type endPos;
 
 		if (c_rstLine[beginPos] == '"')
 		{
 			++beginPos;
 			endPos = c_rstLine.find_first_of("\"", beginPos);
 
-			if (endPos < 0)
+			if (endPos == std::string::npos)
 				return false;
 			
 			basePos = endPos + 1;
@@ -118,7 +120,7 @@ bool CMemoryTextFileLoader::SplitLine(DWORD dwLine, CTokenVector* pstTokenVector
 		pstTokenVector->push_back(c_rstLine.substr(beginPos, endPos - beginPos));
 
 		// 추가 코드. 맨뒤에 탭이 있는 경우를 체크한다. - [levites]
-		if (int(c_rstLine.find_first_not_of(c_szDelimeter, basePos)) < 0)
+		if (c_rstLine.find_first_not_of(c_szDelimeter, basePos) == std::string::npos)
 			break;
 	} while (basePos < c_rstLine.length());
 
@@ -127,7 +129,8 @@ bool CMemoryTextFileLoader::SplitLine(DWORD dwLine, CTokenVector* pstTokenVector
 
 DWORD CMemoryTextFileLoader::GetLineCount()
 {
-	return m_stLineVector.size();
+	assert(m_stLineVector.size() <= MAXDWORD);
+	return m_stLineVector.size() > MAXDWORD ? MAXDWORD : static_cast<DWORD>(m_stLineVector.size());
 }
 
 bool CMemoryTextFileLoader::CheckLineIndex(DWORD dwLine)
@@ -144,14 +147,14 @@ const std::string & CMemoryTextFileLoader::GetLineString(DWORD dwLine)
 	return m_stLineVector[dwLine];
 }
 
-void CMemoryTextFileLoader::Bind(int bufSize, const void* c_pvBuf)
+void CMemoryTextFileLoader::Bind(size_t bufSize, const void* c_pvBuf)
 {
 	m_stLineVector.reserve(128);
 	m_stLineVector.clear();
 
 	const char * c_pcBuf = (const char *)c_pvBuf;
 	std::string stLine;
-	int pos = 0;
+	size_t pos = 0;
 
 	while (pos < bufSize)
 	{
@@ -193,10 +196,7 @@ int CMemoryFileLoader::GetPosition()
 
 bool CMemoryFileLoader::IsReadableSize(int size)
 {
-	if (m_pos + size > m_size)
-		return false;
-
-	return true;
+	return size >= 0 && m_pos >= 0 && m_pos <= m_size && size <= m_size - m_pos;
 }
 
 bool CMemoryFileLoader::Read(int size, void* pvDst)
@@ -237,8 +237,10 @@ int CDiskFileLoader::GetSize()
 bool CDiskFileLoader::Read(int size, void* pvDst)
 {
 	assert(m_fp != NULL);
+	if (!m_fp || size < 0 || (!pvDst && size > 0))
+		return false;
 
-	int ret = fread(pvDst, size, 1, m_fp);
+	const size_t ret = fread(pvDst, static_cast<size_t>(size), 1, m_fp);
 
 	if (ret <= 0)
 		return false;
@@ -260,9 +262,19 @@ bool CDiskFileLoader::Open(const char* c_szFileName)
 	if (!m_fp)
 		return false;
 
-	fseek(m_fp, 0, SEEK_END);
-	m_size = ftell(m_fp);
-	fseek(m_fp, 0, SEEK_SET);
+	// ZiiNAN: 64-bit safety cleanup
+	if (_fseeki64(m_fp, 0, SEEK_END) != 0)
+	{
+		Close();
+		return false;
+	}
+	const __int64 fileSize = _ftelli64(m_fp);
+	if (fileSize < 0 || fileSize > INT_MAX || _fseeki64(m_fp, 0, SEEK_SET) != 0)
+	{
+		Close();
+		return false;
+	}
+	m_size = static_cast<int>(fileSize);
 	return true;
 }
 

@@ -26,11 +26,11 @@ wchar_t	CIME::m_wText[IMESTR_MAXLEN];
 #define LANG_CHS						MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED)
 
 // Chinese Traditional
-#define _CHT_HKL_DAYI					((HKL)0xE0060404)	// DaYi
-#define _CHT_HKL_NEW_PHONETIC			((HKL)0xE0080404)	// New Phonetic
-#define _CHT_HKL_NEW_CHANG_JIE			((HKL)0xE0090404)	// New Chang Jie
-#define _CHT_HKL_NEW_QUICK				((HKL)0xE00A0404)	// New Quick
-#define _CHT_HKL_HK_CANTONESE			((HKL)0xE00B0404)	// Hong Kong Cantonese
+#define _CHT_HKL_DAYI					(reinterpret_cast<HKL>(static_cast<ULONG_PTR>(0xE0060404ULL)))	// DaYi
+#define _CHT_HKL_NEW_PHONETIC			(reinterpret_cast<HKL>(static_cast<ULONG_PTR>(0xE0080404ULL)))	// New Phonetic
+#define _CHT_HKL_NEW_CHANG_JIE			(reinterpret_cast<HKL>(static_cast<ULONG_PTR>(0xE0090404ULL)))	// New Chang Jie
+#define _CHT_HKL_NEW_QUICK				(reinterpret_cast<HKL>(static_cast<ULONG_PTR>(0xE00A0404ULL)))	// New Quick
+#define _CHT_HKL_HK_CANTONESE			(reinterpret_cast<HKL>(static_cast<ULONG_PTR>(0xE00B0404ULL)))	// Hong Kong Cantonese
 
 #define CHT_IMEFILENAME1				L"TINTLGNT.IME" // New Phonetic
 #define CHT_IMEFILENAME2				L"CINTLGNT.IME" // New Chang Jie
@@ -46,10 +46,10 @@ wchar_t	CIME::m_wText[IMESTR_MAXLEN];
 #define IMEID_CHT_VER_VISTA				(LANG_CHT | MAKEIMEVERSION(7, 0))	// All TSF TIP under Cicero UI-less mode: a hack to make GetImeId() return non-zero value
 
 // Chinese Simplized
-#define _CHS_HKL						((HKL)0xE00E0804) // MSPY
-#define _CHS_HKL_QQPINYIN				((HKL)0xE0210804) // QQ PinYin
-#define _CHS_HKL_SOGOU					((HKL)0xE0220804) // Sougou PinYin
-#define _CHS_HKL_GOOGLEPINYIN			((HKL)0xE0230804) // Google PinYin
+#define _CHS_HKL						(reinterpret_cast<HKL>(static_cast<ULONG_PTR>(0xE00E0804ULL))) // MSPY
+#define _CHS_HKL_QQPINYIN				(reinterpret_cast<HKL>(static_cast<ULONG_PTR>(0xE0210804ULL))) // QQ PinYin
+#define _CHS_HKL_SOGOU					(reinterpret_cast<HKL>(static_cast<ULONG_PTR>(0xE0220804ULL))) // Sougou PinYin
+#define _CHS_HKL_GOOGLEPINYIN			(reinterpret_cast<HKL>(static_cast<ULONG_PTR>(0xE0230804ULL))) // Google PinYin
 
 #define CHS_IMEFILENAME1				L"PINTLGNT.IME"		// MSPY1.5/2/3
 #define CHS_IMEFILENAME2				L"MSSCIPYA.IME"		// MSPY3 for OfficeXP
@@ -1475,7 +1475,8 @@ DWORD CIME::GetImeId( UINT uIndex )
 		return ms_adwId[uIndex];
 	hklPrev = hkl;
 
-	DWORD dwLang = ((DWORD)hkl & 0xffff);
+	// ZiiNAN: 64-bit safety cleanup
+	const DWORD dwLang = LOWORD(reinterpret_cast<ULONG_PTR>(hkl));
 
 	if ( ms_bUILessMode && GETLANG() == LANG_CHT ) {
 		// In case of Vista, artifitial value is returned so that it's not considered as older IME.
@@ -1733,8 +1734,9 @@ void CIME::CheckToggleState()
 		return;
 
 	/* Check Toggle State */ 
+	const ULONG_PTR keyboardLayoutId = reinterpret_cast<ULONG_PTR>(ms_hklCurrent);
 	bool bIme = ImmIsIME( ms_hklCurrent ) != 0
-		&& ( ( 0xF0000000 & (DWORD)ms_hklCurrent ) == 0xE0000000 ); // Hack to detect IME correctly. When IME is running as TIP, ImmIsIME() returns true for CHT US keyboard.
+		&& ( ( 0xF0000000ULL & keyboardLayoutId ) == 0xE0000000ULL ); // Hack to detect IME correctly. When IME is running as TIP, ImmIsIME() returns true for CHT US keyboard.
 	ms_bChineseIME = ( GETPRIMLANG() == LANG_CHINESE ) && bIme;
 
 	HIMC himc;

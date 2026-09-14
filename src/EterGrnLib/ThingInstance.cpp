@@ -395,7 +395,8 @@ void CGraphicThingInstance::SetMaterialImagePointer(UINT ePart, const char* c_sz
 {
 	if (ePart>=m_LODControllerVector.size())
 	{
-		TraceError("CGraphicThingInstance::SetMaterialImagePointer(ePart(%d)<uPartCount(%d), c_szImageName=%s, pImage=%s) - ePart OUT OF RANGE",
+		// ZiiNAN: 64-bit safety cleanup
+		TraceError("CGraphicThingInstance::SetMaterialImagePointer(ePart(%u)<uPartCount(%zu), c_szImageName=%s, pImage=%s) - ePart OUT OF RANGE",
 			ePart, m_LODControllerVector.size(), c_szImageName, pImage->GetFileName());
 
 		return;
@@ -403,7 +404,7 @@ void CGraphicThingInstance::SetMaterialImagePointer(UINT ePart, const char* c_sz
 
 	if (!m_LODControllerVector[ePart])
 	{
-		TraceError("CGraphicThingInstance::SetMaterialImagePointer(ePart(%d), c_szImageName=%s, pImage=%s) - ePart Data is NULL",
+		TraceError("CGraphicThingInstance::SetMaterialImagePointer(ePart(%u)<uPartCount(%zu), c_szImageName=%s, pImage=%s) - ePart Data is NULL",
 			ePart, m_LODControllerVector.size(), c_szImageName, pImage->GetFileName());
 
 		return;
@@ -416,7 +417,7 @@ void CGraphicThingInstance::SetMaterialData(UINT ePart, const char* c_szImageNam
 {
 	if (ePart>=m_LODControllerVector.size())
 	{
-		TraceError("CGraphicThingInstance::SetMaterialData(ePart(%d)<uPartCount(%d)) - ePart OUT OF RANGE",
+		TraceError("CGraphicThingInstance::SetMaterialData(ePart(%u)<uPartCount(%zu)) - ePart OUT OF RANGE",
 			ePart, m_LODControllerVector.size());
 
 		return;
@@ -424,7 +425,7 @@ void CGraphicThingInstance::SetMaterialData(UINT ePart, const char* c_szImageNam
 
 	if (!m_LODControllerVector[ePart])
 	{
-		TraceError("CGraphicThingInstance::SetMaterialData(ePart(%d)) - ePart Data is NULL",
+		TraceError("CGraphicThingInstance::SetMaterialData(ePart(%u)<uPartCount(%zu)) - ePart Data is NULL",
 			ePart, m_LODControllerVector.size());
 
 		return;
@@ -437,7 +438,7 @@ void CGraphicThingInstance::SetSpecularInfo(UINT ePart, const char* c_szMtrlName
 {
 	if (ePart>=m_LODControllerVector.size())
 	{
-		TraceError("CGraphicThingInstance::SetSpecularInfo(ePart(%d)<uPartCount(%d)) - ePart OUT OF RANGE",
+		TraceError("CGraphicThingInstance::SetSpecularInfo(ePart(%u)<uPartCount(%zu)) - ePart OUT OF RANGE",
 			ePart, m_LODControllerVector.size());
 
 		return;
@@ -445,7 +446,7 @@ void CGraphicThingInstance::SetSpecularInfo(UINT ePart, const char* c_szMtrlName
 
 	if (!m_LODControllerVector[ePart])
 	{
-		TraceError("CGraphicThingInstance::SetSpecularInfo(ePart(%d)) - ePart Data is NULL",
+		TraceError("CGraphicThingInstance::SetSpecularInfo(ePart(%u)<uPartCount(%zu)) - ePart Data is NULL",
 			ePart, m_LODControllerVector.size());
 
 		return;

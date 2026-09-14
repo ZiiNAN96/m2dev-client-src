@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "NetStream.h"
 #include <iomanip>
+#include <limits>
 #include <sstream>
 
 #if defined(_DEBUG) && !defined(_PACKETDUMP)
@@ -26,11 +27,17 @@ void CNetworkStream::DecryptPendingRecvData()
 
 void CNetworkStream::SetRecvBufferSize(int recvBufSize)
 {
+	if (recvBufSize < 0)
+		return;
+
 	m_recvBuf.Reserve(static_cast<size_t>(recvBufSize));
 }
 
 void CNetworkStream::SetSendBufferSize(int sendBufSize)
 {
+	if (sendBufSize < 0)
+		return;
+
 	m_sendBuf.Reserve(static_cast<size_t>(sendBufSize));
 }
 
@@ -38,7 +45,10 @@ bool CNetworkStream::__RecvInternalBuffer()
 {
 	m_recvBuf.EnsureWritable(4096);
 
-	int restSize = static_cast<int>(m_recvBuf.WritableBytes());
+	// ZiiNAN: 64-bit safety cleanup
+	const size_t writableBytes = m_recvBuf.WritableBytes();
+	const int restSize = static_cast<int>(std::min(
+		writableBytes, static_cast<size_t>(std::numeric_limits<int>::max())));
 	if (restSize > 0)
 	{
 		int recvSize = recv(m_sock, reinterpret_cast<char*>(m_recvBuf.WritePtr()), restSize, 0);
@@ -257,16 +267,23 @@ void CNetworkStream::ClearRecvBuffer()
 
 int CNetworkStream::GetRecvBufferSize()
 {
-	return static_cast<int>(m_recvBuf.ReadableBytes());
+	return static_cast<int>(std::min(
+		m_recvBuf.ReadableBytes(), static_cast<size_t>(std::numeric_limits<int>::max())));
 }
 
 bool CNetworkStream::Peek(int size)
 {
+	if (size < 0)
+		return false;
+
 	return m_recvBuf.HasBytes(static_cast<size_t>(size));
 }
 
 bool CNetworkStream::Peek(int size, char* pDestBuf)
 {
+	if (size < 0)
+		return false;
+
 	return m_recvBuf.Peek(pDestBuf, static_cast<size_t>(size));
 }
 
@@ -529,11 +546,15 @@ bool CNetworkStream::Recv(int size, char * pDestBuf)
 
 int CNetworkStream::__GetSendBufferSize()
 {
-	return static_cast<int>(m_sendBuf.ReadableBytes());
+	return static_cast<int>(std::min(
+		m_sendBuf.ReadableBytes(), static_cast<size_t>(std::numeric_limits<int>::max())));
 }
 
 bool CNetworkStream::Send(int size, const char * pSrcBuf)
 {
+	if (size < 0 || (size > 0 && !pSrcBuf))
+		return false;
+
 	// Track packet sends: detect new packet start by checking [header:2][length:2] framing
 	if (size >= 4)
 	{

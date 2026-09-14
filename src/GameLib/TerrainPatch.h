@@ -14,6 +14,8 @@
 #include "Renderer/TerrainRenderData.h"
 #include "Renderer/WorldRenderData.h"
 
+#include <cstdint>
+
 #pragma pack(push)
 #pragma pack(1)
 
@@ -101,7 +103,7 @@ public:
 
 	UINT GetWaterFaceCount();
 
-	void SoftwareTransformPatch_UpdateTerrainLighting(DWORD dwVersion, const Renderer::LightValues& c_rkLight, const Renderer::MaterialValues& c_rkMtrl);
+	void SoftwareTransformPatch_UpdateTerrainLighting(std::uintptr_t version, const Renderer::LightValues& c_rkLight, const Renderer::MaterialValues& c_rkMtrl);
 	
 	void BuildTerrainVertexBuffer(HardwareTransformPatch_SSourceVertex* akSrcVertex);
 	void BuildWaterVertexBuffer(SWaterVertex* akSrcVertex, UINT uWaterVertexCount);
@@ -126,7 +128,7 @@ private:
 	BYTE					m_byType;
 
 	bool					m_bNeedUpdate;
-	DWORD					m_dwVersion;
+	std::uintptr_t			m_lightVersion;
 
 public:
 	CGraphicVertexBuffer* GetWaterVertexBufferPointer()	{ return &m_WaterVertexBuffer;}
@@ -203,7 +205,7 @@ public:
 	SoftwareTransformPatch_SSourceVertex* SoftwareTransformPatch_GetTerrainVertexDataPtr();
 	CGraphicVertexBuffer* HardwareTransformPatch_GetVertexBufferPtr();
 
-	void SoftwareTransformPatch_UpdateTerrainLighting(DWORD dwVersion, const Renderer::LightValues& c_rkLight, const Renderer::MaterialValues& c_rkMtrl);
+	void SoftwareTransformPatch_UpdateTerrainLighting(std::uintptr_t version, const Renderer::LightValues& c_rkLight, const Renderer::MaterialValues& c_rkMtrl);
 	
 protected:
 	bool					m_bUsed;

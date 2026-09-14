@@ -1,7 +1,9 @@
 #pragma once
 
 #include "EterBase/Debug.h"
+#include <limits>
 #include <mutex>
+#include <new>
 
 template<typename T>
 class CDynamicPool
@@ -48,7 +50,15 @@ class CDynamicPool
 
 			T* p = m_Free.back();
 			m_Free.pop_back();
-			return new(p) T(std::forward<_Types>(_Args)...);
+			try
+			{
+				return new(p) T(std::forward<_Types>(_Args)...);
+			}
+			catch (...)
+			{
+				m_Free.push_back(p);
+				throw;
+			}
 		}
 
 		void Free(T* p)
@@ -76,15 +86,30 @@ class CDynamicPool
 		}
 
 	protected:
-		void Grow() noexcept
+		void Grow()
 		{
-			size_t uChunkSize = m_uChunkSize + m_uChunkSize * m_Chunks.size();
+			// ZiiNAN: 64-bit safety cleanup
+			if (!m_uChunkSize || m_Chunks.size() == std::numeric_limits<size_t>::max())
+				throw std::bad_alloc();
 
-			T* pStart = (T*) ::malloc(uChunkSize * sizeof(T));
-			m_Chunks.push_back(pStart);
+			const size_t chunkOrdinal = m_Chunks.size() + 1;
+			if (m_uChunkSize > std::numeric_limits<size_t>::max() / chunkOrdinal)
+				throw std::bad_alloc();
+
+			const size_t uChunkSize = m_uChunkSize * chunkOrdinal;
+			if (uChunkSize > std::numeric_limits<size_t>::max() / sizeof(T) ||
+				uChunkSize > m_Data.max_size() - m_Data.size() ||
+				uChunkSize > m_Free.max_size() - m_Free.size())
+				throw std::bad_alloc();
 
 			m_Data.reserve(m_Data.size() + uChunkSize);
 			m_Free.reserve(m_Free.size() + uChunkSize);
+			m_Chunks.reserve(chunkOrdinal);
+
+			T* pStart = static_cast<T*>(::malloc(uChunkSize * sizeof(T)));
+			if (!pStart)
+				throw std::bad_alloc();
+			m_Chunks.push_back(pStart);
 
 			for (size_t i = 0; i < uChunkSize; ++i)
 			{

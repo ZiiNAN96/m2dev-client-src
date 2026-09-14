@@ -7,29 +7,39 @@ on:
 
 jobs:
   win:
-    name: "Windows Build"
+    name: "Windows x64 (${{ matrix.configuration }})"
     runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration: [Debug, Release]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        
-      - name: Build project
-        id: build_project
+
+      - name: Configure x64
         shell: pwsh
         working-directory: ${{ github.workspace }}
-        run: |
-          mkdir build
-          cd build
-          cmake ..
-          cmake --build . --config RelWithDebInfo
+        run: cmake -S . -B build -A x64
+
+      - name: Build project
+        shell: pwsh
+        working-directory: ${{ github.workspace }}
+        run: cmake --build build --config ${{ matrix.configuration }} --parallel
+
+      - name: Run x64 platform tests
+        shell: pwsh
+        working-directory: ${{ github.workspace }}
+        run: ctest --test-dir build -C ${{ matrix.configuration }} -L platform --output-on-failure
 
       - name: Collect outputs
+        shell: pwsh
         run: |
-          mkdir _output
-          cp build/bin/* _output
+          New-Item -ItemType Directory -Force _output
+          Copy-Item -Path "build/bin/${{ matrix.configuration }}/*" -Destination _output -Recurse -Force
 
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: output_win
+          name: output_win_x64_${{ matrix.configuration }}
           path: _output

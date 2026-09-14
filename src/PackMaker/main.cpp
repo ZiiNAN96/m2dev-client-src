@@ -1,13 +1,35 @@
+#include <algorithm>
+#include <cctype>
+#include <clocale>
+#include <cstdint>
+#include <cstdlib>
+#include <cstring>
 #include <map>
 #include <fstream>
 #include <iostream>
 #include <filesystem>
+#include <limits>
+#include <string_view>
+#include <type_traits>
 
 #include <zstd.h>
 #include <argparse.hpp>
 #include <sodium.h>
 
 #include "PackLib/config.h"
+
+template <typename Target, typename Source>
+static bool CheckedUnsignedCast(Source value, Target& result)
+{
+	static_assert(std::is_unsigned_v<Target> && std::is_unsigned_v<Source>);
+	if constexpr ((std::numeric_limits<Source>::max)() > (std::numeric_limits<Target>::max)()) {
+		if (value > static_cast<Source>((std::numeric_limits<Target>::max)()))
+			return false;
+	}
+
+	result = static_cast<Target>(value);
+	return true;
+}
 
 static void EncryptData(uint8_t* data, size_t len, const uint8_t* nonce)
 {
@@ -67,8 +89,12 @@ int main(int argc, char* argv[])
 		std::filesystem::path relative_path = std::filesystem::relative(entry.path(), input);
 
 		TPackFileEntry& file_entry = entries[relative_path];
-		memset(&file_entry, 0, sizeof(file_entry));
-		file_entry.file_size = entry.file_size();
+		std::memset(&file_entry, 0, sizeof(file_entry));
+		const uintmax_t source_file_size = entry.file_size();
+		if (!CheckedUnsignedCast(source_file_size, file_entry.file_size)) {
+			std::cerr << "Input file is too large for the pack format: " << entry.path() << std::endl;
+			return EXIT_FAILURE;
+		}
 
 		constexpr std::string_view ymir_work_prefix = "ymir work/";
 		std::string rp_str = relative_path.generic_string();
@@ -80,18 +106,43 @@ int main(int argc, char* argv[])
 			return static_cast<char>(std::tolower(c));
 		});
 
-		rp_str.copy(file_entry.file_name, sizeof(file_entry.file_name) - 1);
+		if (rp_str.size() >= PACK_FILENAME_CAPACITY) {
+			std::cerr << "Pack path exceeds " << (PACK_FILENAME_CAPACITY - 1)
+				<< " bytes: " << rp_str << std::endl;
+			return EXIT_FAILURE;
+		}
+
+		std::memcpy(file_entry.file_name, rp_str.data(), rp_str.size());
 	}
 
 	TPackFileHeader header;
-	memset(&header, 0, sizeof(header));
-	header.entry_num = entries.size();
-	header.data_begin = sizeof(TPackFileHeader) + sizeof(TPackFileEntry) * entries.size();
+	std::memset(&header, 0, sizeof(header));
+	if (!CheckedUnsignedCast(entries.size(), header.entry_num)) {
+		std::cerr << "Too many files for the pack format" << std::endl;
+		return EXIT_FAILURE;
+	}
+	if (header.entry_num > ((std::numeric_limits<uint64_t>::max)() - sizeof(TPackFileHeader)) / sizeof(TPackFileEntry)) {
+		std::cerr << "Pack index size exceeds the format limit" << std::endl;
+		return EXIT_FAILURE;
+	}
+	header.data_begin = sizeof(TPackFileHeader) + sizeof(TPackFileEntry) * header.entry_num;
+	if (header.data_begin > static_cast<uint64_t>((std::numeric_limits<std::streamoff>::max)())) {
+		std::cerr << "Pack index exceeds the output stream limit" << std::endl;
+		return EXIT_FAILURE;
+	}
 
 	randombytes_buf(header.nonce, sizeof(header.nonce));
 
-	ofs.write((const char*) &header, sizeof(header));
-	ofs.seekp(header.data_begin, std::ios::beg);
+	ofs.write(reinterpret_cast<const char*>(&header), static_cast<std::streamsize>(sizeof(header)));
+	if (!ofs) {
+		std::cerr << "Failed to write pack header" << std::endl;
+		return EXIT_FAILURE;
+	}
+	ofs.seekp(static_cast<std::streamoff>(header.data_begin), std::ios::beg);
+	if (!ofs) {
+		std::cerr << "Failed to seek to pack data" << std::endl;
+		return EXIT_FAILURE;
+	}
 
 	uint64_t offset = 0;
 	for (auto& [path, entry] : entries) {
@@ -101,44 +152,86 @@ int main(int argc, char* argv[])
 			return EXIT_FAILURE;
 		}
 
-		static std::vector<char> buffer;
-		buffer.resize(entry.file_size);
+		size_t file_size = 0;
+		if (!CheckedUnsignedCast(entry.file_size, file_size) ||
+			entry.file_size > static_cast<uint64_t>((std::numeric_limits<std::streamsize>::max)())) {
+			std::cerr << "Input file exceeds process or stream limits: " << (input / path) << std::endl;
+			return EXIT_FAILURE;
+		}
 
-		if (!ifs.read(buffer.data(), entry.file_size)) {
+		static std::vector<char> buffer;
+		if (file_size > buffer.max_size()) {
+			std::cerr << "Input file exceeds buffer limits: " << (input / path) << std::endl;
+			return EXIT_FAILURE;
+		}
+		buffer.resize(file_size);
+
+		if (file_size != 0 && !ifs.read(buffer.data(), static_cast<std::streamsize>(file_size))) {
 			std::cerr << "Failed to read input file: " << (input / path) << std::endl;
 			return EXIT_FAILURE;
 		}
 
-		size_t compress_bound = ZSTD_compressBound(entry.file_size);
+		size_t compress_bound = ZSTD_compressBound(file_size);
 		static std::vector<char> compressed_buffer;
+		if (ZSTD_isError(compress_bound) || compress_bound > compressed_buffer.max_size()) {
+			std::cerr << "Input file exceeds compression limits: " << (input / path) << std::endl;
+			return EXIT_FAILURE;
+		}
 		compressed_buffer.resize(compress_bound);
 
-		entry.compressed_size = ZSTD_compress(compressed_buffer.data(), compress_bound, buffer.data(), entry.file_size, 17);
-		if(ZSTD_isError(entry.compressed_size)) {
-			std::cerr << "Failed to compress input file: " << (input / path) << " error: " << ZSTD_getErrorName(entry.compressed_size) << std::endl;
+		const char empty_input = 0;
+		const void* const input_data = file_size == 0 ? static_cast<const void*>(&empty_input) : buffer.data();
+		const size_t compressed_size = ZSTD_compress(compressed_buffer.data(), compress_bound, input_data, file_size, 17);
+		if(ZSTD_isError(compressed_size)) {
+			std::cerr << "Failed to compress input file: " << (input / path) << " error: " << ZSTD_getErrorName(compressed_size) << std::endl;
+			return EXIT_FAILURE;
+		}
+		if (static_cast<uintmax_t>(compressed_size) > static_cast<uintmax_t>((std::numeric_limits<std::streamsize>::max)()) ||
+			compressed_size > (std::numeric_limits<uint64_t>::max)() - offset ||
+			offset > static_cast<uint64_t>((std::numeric_limits<std::streamoff>::max)()) - header.data_begin ||
+			compressed_size > static_cast<uint64_t>((std::numeric_limits<std::streamoff>::max)()) - header.data_begin - offset) {
+			std::cerr << "Compressed data exceeds pack or stream limits: " << (input / path) << std::endl;
 			return EXIT_FAILURE;
 		}
 
 		entry.offset = offset;
+		entry.compressed_size = static_cast<uint64_t>(compressed_size);
 
 		entry.encryption = 0;
 		if (path.has_extension() && path.extension() == ".py") {
 			entry.encryption = 1;
 
 			randombytes_buf(entry.nonce, sizeof(entry.nonce));
-			EncryptData((uint8_t*)compressed_buffer.data(), entry.compressed_size, entry.nonce);
+			EncryptData(reinterpret_cast<uint8_t*>(compressed_buffer.data()), compressed_size, entry.nonce);
 		}
 
-		ofs.write(compressed_buffer.data(), entry.compressed_size);
+		ofs.write(compressed_buffer.data(), static_cast<std::streamsize>(compressed_size));
+		if (!ofs) {
+			std::cerr << "Failed to write compressed data: " << (input / path) << std::endl;
+			return EXIT_FAILURE;
+		}
 		offset += entry.compressed_size;
 	}
 
 	ofs.seekp(sizeof(TPackFileHeader), std::ios::beg);
+	if (!ofs) {
+		std::cerr << "Failed to seek to pack index" << std::endl;
+		return EXIT_FAILURE;
+	}
 
 	for (auto& [path, entry] : entries) {
 		TPackFileEntry tmp = entry;
-		EncryptData((uint8_t*)&tmp, sizeof(TPackFileEntry), header.nonce);
-		ofs.write((const char*)&tmp, sizeof(TPackFileEntry));
+		EncryptData(reinterpret_cast<uint8_t*>(&tmp), sizeof(tmp), header.nonce);
+		ofs.write(reinterpret_cast<const char*>(&tmp), static_cast<std::streamsize>(sizeof(tmp)));
+		if (!ofs) {
+			std::cerr << "Failed to write pack index" << std::endl;
+			return EXIT_FAILURE;
+		}
+	}
+	ofs.flush();
+	if (!ofs) {
+		std::cerr << "Failed to flush pack output" << std::endl;
+		return EXIT_FAILURE;
 	}
 
 	return EXIT_SUCCESS;

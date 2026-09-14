@@ -1,6 +1,7 @@
 #ifndef __INC_METIN_II_371GNFBQOCJ_LZO_H__
 #define __INC_METIN_II_371GNFBQOCJ_LZO_H__
 
+#include <cstddef>
 #include <windows.h>
 #include <lzo/lzo1x.h>
 #include "Singleton.h"
@@ -27,7 +28,7 @@ class CLZObject
 		void			BeginCompressInBuffer(const void * pvIn, UINT uiInLen, void * pvOut);
 		bool			Compress();
 		
-		bool			BeginDecompress(const void * pvIn);
+		bool			BeginDecompress(const void * pvIn, size_t inputSize);
 		bool			Decompress(DWORD * pdwKey = NULL);
 		
 		bool			Encrypt(DWORD * pdwKey);
@@ -64,7 +65,7 @@ class CLZO : public CSingleton<CLZO>
 		
 		bool	CompressMemory(CLZObject & rObj, const void * pIn, UINT uiInLen);
 		bool	CompressEncryptedMemory(CLZObject & rObj, const void * pIn, UINT uiInLen, DWORD * pdwKey);
-		bool	Decompress(CLZObject & rObj, const BYTE * pbBuf, DWORD * pdwKey = NULL);
+		bool	Decompress(CLZObject & rObj, const BYTE * pbBuf, size_t inputSize, size_t expectedOutputSize, DWORD * pdwKey = NULL);
 		BYTE *	GetWorkMemory();
 		
 	private:

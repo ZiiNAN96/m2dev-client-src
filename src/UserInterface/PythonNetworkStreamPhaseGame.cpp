@@ -3832,7 +3832,7 @@ bool CPythonNetworkStream::RecvTimePacket()
 		return false;
 
 	IAbstractApplication& rkApp=IAbstractApplication::GetSingleton();
-	rkApp.SetServerTime(TimePacket.time);
+	rkApp.SetServerTime(static_cast<time_t>(TimePacket.time));
 
 	return true;
 }

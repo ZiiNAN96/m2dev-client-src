@@ -55,7 +55,7 @@ void CGrannyModelInstance::RenderWithOneTexture()
 #ifdef _TEST
 	Granny_RenderBoxBones(GrannyGetSourceSkeleton(m_pgrnModelInstance), m_pgrnWorldPose, TEST_matWorld);
 	if (GetAsyncKeyState('P'))
-		Tracef("render %x", m_pgrnModelInstance);	
+		Tracef("render %p", static_cast<void*>(m_pgrnModelInstance));
 	return;
 #endif
 

@@ -10,6 +10,8 @@
 #include "TextureCache.h"
 #include "DecodedImageData.h"
 
+#include <limits>
+
 int g_iLoadingDelayTime = 1;  // Reduced from 20ms to 1ms for faster async loading
 
 const long c_Deleting_Wait_Time = 30000;			// 삭제 대기 시간 (30초)
@@ -90,8 +92,16 @@ void CResourceManager::ProcessBackgroundLoading()
 		if (pResource)
 		{
 			if (pResource->IsEmpty())
-			{				
-				pResource->OnLoad(pData->File.size(), pData->File.data());
+			{
+				if (pData->File.size() > static_cast<size_t>(std::numeric_limits<int>::max()))
+				{
+					TraceError("CResourceManager::Update: file too large for legacy resource API: %s (%zu bytes)", pData->stFileName.c_str(), pData->File.size());
+					m_WaitingMap.erase(GetCRC32(pData->stFileName.c_str(), pData->stFileName.size()));
+					delete pData;
+					continue;
+				}
+
+				pResource->OnLoad(static_cast<int>(pData->File.size()), pData->File.data());
 				pResource->AddReferenceOnly();
 
 				// 여기서 올라간 레퍼런스 카운트를 일정 시간이 지난 뒤에 풀어주기 위하여

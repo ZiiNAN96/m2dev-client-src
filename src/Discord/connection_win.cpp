@@ -4,6 +4,7 @@
 #define NOSERVICE
 #define NOIME
 #include <assert.h>
+#include <limits>
 #include <windows.h>
 
 int GetProcessId()
@@ -86,7 +87,11 @@ bool BaseConnection::Write(const void* data, size_t length)
     if (!data) {
         return false;
     }
-    const DWORD bytesLength = (DWORD)length;
+    // ZiiNAN: 64-bit safety cleanup
+    if (length > std::numeric_limits<DWORD>::max()) {
+        return false;
+    }
+    const DWORD bytesLength = static_cast<DWORD>(length);
     DWORD bytesWritten = 0;
     return ::WriteFile(self->pipe, data, bytesLength, &bytesWritten, nullptr) == TRUE &&
       bytesWritten == bytesLength;
@@ -106,10 +111,13 @@ bool BaseConnection::Read(void* data, size_t length)
     if (self->pipe == INVALID_HANDLE_VALUE) {
         return false;
     }
+    if (length > std::numeric_limits<DWORD>::max()) {
+        return false;
+    }
+    const DWORD bytesToRead = static_cast<DWORD>(length);
     DWORD bytesAvailable = 0;
     if (::PeekNamedPipe(self->pipe, nullptr, 0, nullptr, &bytesAvailable, nullptr)) {
-        if (bytesAvailable >= length) {
-            DWORD bytesToRead = (DWORD)length;
+        if (bytesAvailable >= bytesToRead) {
             DWORD bytesRead = 0;
             if (::ReadFile(self->pipe, data, bytesToRead, &bytesRead, nullptr) == TRUE) {
                 assert(bytesToRead == bytesRead);

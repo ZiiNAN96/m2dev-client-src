@@ -7,6 +7,8 @@
 #include "EterGrnLib/Thing.h"
 #include "GameType.h"
 
+#include <cstdint>
+
 class CItemData
 {
 	public:
@@ -391,13 +393,14 @@ class CItemData
 		typedef struct SItemLimit
 		{
 			BYTE        bType;
-			long        lValue;
+			// ZiiNAN: 64-bit safety cleanup
+			int32_t     lValue;
 		} TItemLimit;
 
 		typedef struct SItemApply
 		{
 			BYTE        bType;
-			long        lValue;
+			int32_t     lValue;
 		} TItemApply;
 
 		typedef struct SItemTable
@@ -422,8 +425,8 @@ class CItemData
 			
 			TItemLimit  aLimits[ITEM_LIMIT_MAX_NUM];
 			TItemApply  aApplies[ITEM_APPLY_MAX_NUM];
-			long        alValues[ITEM_VALUES_MAX_NUM];
-			long        alSockets[ITEM_SOCKET_MAX_NUM];
+			int32_t     alValues[ITEM_VALUES_MAX_NUM];
+			int32_t     alSockets[ITEM_SOCKET_MAX_NUM];
 			DWORD       dwRefinedVnum;
 			WORD		wRefineSet;
 			BYTE        bAlterToMagicItemPct;

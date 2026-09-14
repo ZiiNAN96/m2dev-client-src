@@ -1,0 +1,10 @@
+add_executable(PlatformAbiLayoutTest AbiLayoutTest.cpp)
+target_link_libraries(PlatformAbiLayoutTest PRIVATE mio M2FirstPartyArchitectureChecks)
+add_test(NAME Platform.AbiLayouts COMMAND PlatformAbiLayoutTest)
+
+add_executable(PlatformPointerRoundTripTest PointerRoundTripTest.cpp)
+target_link_libraries(PlatformPointerRoundTripTest PRIVATE Python M2FirstPartyArchitectureChecks ws2_32 version)
+add_test(NAME Platform.PointerRoundTrip COMMAND PlatformPointerRoundTripTest)
+
+set_tests_properties(Platform.AbiLayouts Platform.PointerRoundTrip PROPERTIES LABELS "platform;x64")
+set_target_properties(PlatformAbiLayoutTest PlatformPointerRoundTripTest PROPERTIES FOLDER "Tests/Platform")

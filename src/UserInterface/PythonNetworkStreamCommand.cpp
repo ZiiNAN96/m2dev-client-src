@@ -178,7 +178,8 @@ void CPythonNetworkStream::ServerCommand(char * c_szCommand)
 	{
 		if (2 != TokenVector.size())
 		{
-			TraceError("CPythonNetworkStream::ServerCommand(c_szCommand=%s) - Strange Parameter Count : %s", c_szCommand);
+			// ZiiNAN: 64-bit safety cleanup
+			TraceError("CPythonNetworkStream::ServerCommand(c_szCommand=%s) - Strange Parameter Count : %zu", c_szCommand, TokenVector.size());
 			return;
 		}
 
@@ -195,7 +196,7 @@ void CPythonNetworkStream::ServerCommand(char * c_szCommand)
 	{
 		if (TokenVector.size() < 2)
 		{
-			TraceError("CPythonNetworkStream::ServerCommand(c_szCommand=%s) - Strange Parameter Count : %s", c_szCommand);
+			TraceError("CPythonNetworkStream::ServerCommand(c_szCommand=%s) - Strange Parameter Count : %zu", c_szCommand, TokenVector.size());
 			return;
 		}
 
@@ -203,7 +204,7 @@ void CPythonNetworkStream::ServerCommand(char * c_szCommand)
 		{
 			if (3 > TokenVector.size())
 			{
-				TraceError("CPythonNetworkStream::ServerCommand(c_szCommand=%s) - Strange Parameter Count : %s", c_szCommand);
+				TraceError("CPythonNetworkStream::ServerCommand(c_szCommand=%s) - Strange Parameter Count : %zu", c_szCommand, TokenVector.size());
 				return;
 			}
 
@@ -218,7 +219,7 @@ void CPythonNetworkStream::ServerCommand(char * c_szCommand)
 		{
 			if (5 != TokenVector.size())
 			{
-				TraceError("CPythonNetworkStream::ServerCommand(c_szCommand=%s) - Strange Parameter Count : %s", c_szCommand);
+				TraceError("CPythonNetworkStream::ServerCommand(c_szCommand=%s) - Strange Parameter Count : %zu", c_szCommand, TokenVector.size());
 				return;
 			}
 
@@ -231,7 +232,7 @@ void CPythonNetworkStream::ServerCommand(char * c_szCommand)
 		{
 			if (4 != TokenVector.size())
 			{
-				TraceError("CPythonNetworkStream::ServerCommand(c_szCommand=%s) - Strange Parameter Count : %s", c_szCommand);
+				TraceError("CPythonNetworkStream::ServerCommand(c_szCommand=%s) - Strange Parameter Count : %zu", c_szCommand, TokenVector.size());
 				return;
 			}
 
@@ -281,7 +282,7 @@ void CPythonNetworkStream::ServerCommand(char * c_szCommand)
 	{
 		if (2 != TokenVector.size())
 		{
-			TraceError("CPythonNetworkStream::ServerCommand(c_szCommand=%s) - Strange Parameter Count : %s", c_szCommand);
+			TraceError("CPythonNetworkStream::ServerCommand(c_szCommand=%s) - Strange Parameter Count : %zu", c_szCommand, TokenVector.size());
 			return;
 		}
 
@@ -296,7 +297,7 @@ void CPythonNetworkStream::ServerCommand(char * c_szCommand)
 	{		
 		if (2 != TokenVector.size())
 		{
-			TraceError("CPythonNetworkStream::ServerCommand(c_szCommand=%s) - Strange Parameter Count : %s", c_szCommand);
+			TraceError("CPythonNetworkStream::ServerCommand(c_szCommand=%s) - Strange Parameter Count : %zu", c_szCommand, TokenVector.size());
 			return;
 		}
 
@@ -317,7 +318,7 @@ void CPythonNetworkStream::ServerCommand(char * c_szCommand)
 	{
 		if (4 != TokenVector.size())
 		{
-			TraceError("CPythonNetworkStream::ServerCommand(c_szCommand=%s) - Strange Parameter Count : %s", c_szCommand);
+			TraceError("CPythonNetworkStream::ServerCommand(c_szCommand=%s) - Strange Parameter Count : %zu", c_szCommand, TokenVector.size());
 			return;
 		}
 
@@ -375,7 +376,7 @@ void CPythonNetworkStream::ServerCommand(char * c_szCommand)
 	{
 		if (3 != TokenVector.size())
 		{
-			TraceError("CPythonNetworkStream::ServerCommand(c_szCommand=%s) - Strange Parameter Count : %s", c_szCommand);
+			TraceError("CPythonNetworkStream::ServerCommand(c_szCommand=%s) - Strange Parameter Count : %zu", c_szCommand, TokenVector.size());
 			return;
 		}
 
@@ -390,7 +391,7 @@ void CPythonNetworkStream::ServerCommand(char * c_szCommand)
 	{
 		if (2 != TokenVector.size())
 		{
-			TraceError("CPythonNetworkStream::ServerCommand(c_szCommand=%s) - Strange Parameter Count : %d", c_szCommand, TokenVector.size());
+			TraceError("CPythonNetworkStream::ServerCommand(c_szCommand=%s) - Strange Parameter Count : %zu", c_szCommand, TokenVector.size());
 			return;
 		}
 

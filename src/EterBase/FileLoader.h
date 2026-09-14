@@ -14,7 +14,7 @@ class CMemoryTextFileLoader
 		CMemoryTextFileLoader();
 		virtual ~CMemoryTextFileLoader();
 
-		void				Bind(int bufSize, const void* c_pvBuf);
+		void				Bind(size_t bufSize, const void* c_pvBuf);
 		DWORD				GetLineCount();
 		bool				CheckLineIndex(DWORD dwLine);
 		bool				SplitLine(DWORD dwLine, CTokenVector * pstTokenVector, const char * c_szDelimeter = " \t");

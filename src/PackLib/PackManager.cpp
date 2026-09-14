@@ -1,8 +1,29 @@
 #include "PackManager.h"
 #include "EterLib/BufferPool.h"
+#include <cstdint>
 #include <fstream>
 #include <filesystem>
+#include <limits>
+#include <new>
+#include <stdexcept>
+#include <type_traits>
 #include "EterBase/Debug.h"
+
+namespace
+{
+template <typename Target, typename Source>
+bool CheckedUnsignedCast(Source value, Target& result)
+{
+	static_assert(std::is_unsigned_v<Target> && std::is_unsigned_v<Source>);
+	if constexpr ((std::numeric_limits<Source>::max)() > (std::numeric_limits<Target>::max)()) {
+		if (value > static_cast<Source>((std::numeric_limits<Target>::max)()))
+			return false;
+	}
+
+	result = static_cast<Target>(value);
+	return true;
+}
+}
 
 CPackManager::CPackManager()
 	: m_load_from_pack(true)
@@ -61,19 +82,53 @@ bool CPackManager::GetFileWithPool(std::string_view path, TPackFile& result, CBu
 	std::ifstream ifs(buf, std::ios::binary);
 	if (ifs.is_open()) {
 		ifs.seekg(0, std::ios::end);
-		size_t size = ifs.tellg();
-		ifs.seekg(0, std::ios::beg);
+		const std::streampos end_position = ifs.tellg();
+		if (end_position == std::streampos(-1))
+			return false;
 
-		if (pPool) {
-			result = pPool->Acquire(size);
-			result.resize(size);
-		} else {
-			result.resize(size);
+		const std::streamoff end_offset = static_cast<std::streamoff>(end_position);
+		if (end_offset < 0)
+			return false;
+
+		const uintmax_t unsigned_size = static_cast<uintmax_t>(end_offset);
+		size_t size = 0;
+		if (!CheckedUnsignedCast(unsigned_size, size) ||
+			unsigned_size > static_cast<uintmax_t>((std::numeric_limits<std::streamsize>::max)())) {
+			return false;
 		}
 
-		if (ifs.read((char*)result.data(), size)) {
+		if (size > result.max_size())
+			return false;
+
+		ifs.seekg(0, std::ios::beg);
+		if (!ifs)
+			return false;
+
+		if (size == 0) {
+			result.clear();
 			return true;
 		}
+
+		try {
+			if (pPool) {
+				result = pPool->Acquire(size);
+				result.resize(size);
+			} else {
+				result.resize(size);
+			}
+		} catch (const std::bad_alloc&) {
+			result.clear();
+			return false;
+		} catch (const std::length_error&) {
+			result.clear();
+			return false;
+		}
+
+		if (ifs.read(reinterpret_cast<char*>(result.data()), static_cast<std::streamsize>(size))) {
+			return true;
+		}
+
+		result.clear();
 	}
 
 	return false;

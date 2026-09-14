@@ -202,8 +202,8 @@ PyObject * questGetQuestData(PyObject * poSelf, PyObject * poArgs)
 		}
 	}
 
-	return Py_BuildValue("sKsi",	pQuestInstance->strTitle.c_str(),
-									pImage,
+	return Py_BuildValue("sNsi",	pQuestInstance->strTitle.c_str(),
+									Py_BuildPointer(pImage),
 									pQuestInstance->strCounterName.c_str(),
 									pQuestInstance->iCounterValue);
 }

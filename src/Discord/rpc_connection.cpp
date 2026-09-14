@@ -45,8 +45,13 @@ void RpcConnection::Open()
     }
     else {
         sendFrame.opcode = Opcode::Handshake;
-        sendFrame.length = (uint32_t)JsonWriteHandshakeObj(
+        const size_t handshakeLength = JsonWriteHandshakeObj(
           sendFrame.message, sizeof(sendFrame.message), RpcVersion, appId);
+        if (handshakeLength >= sizeof(sendFrame.message)) {
+            Close();
+            return;
+        }
+        sendFrame.length = static_cast<uint32_t>(handshakeLength);
 
         if (connection->Write(&sendFrame, sizeof(MessageFrameHeader) + sendFrame.length)) {
             state = State::SentHandshake;
@@ -68,9 +73,16 @@ void RpcConnection::Close()
 
 bool RpcConnection::Write(const void* data, size_t length)
 {
+    // ZiiNAN: 64-bit safety cleanup
+    if (length >= sizeof(sendFrame.message) || (length > 0 && !data)) {
+        return false;
+    }
+
     sendFrame.opcode = Opcode::Frame;
-    memcpy(sendFrame.message, data, length);
-    sendFrame.length = (uint32_t)length;
+    if (length > 0) {
+        memcpy(sendFrame.message, data, length);
+    }
+    sendFrame.length = static_cast<uint32_t>(length);
     if (!connection->Write(&sendFrame, sizeof(MessageFrameHeader) + length)) {
         Close();
         return false;
@@ -83,7 +95,7 @@ bool RpcConnection::Read(JsonDocument& message)
     if (state != State::Connected && state != State::SentHandshake) {
         return false;
     }
-    MessageFrame readFrame;
+    MessageFrame readFrame{};
     for (;;) {
         bool didRead = connection->Read(&readFrame, sizeof(MessageFrameHeader));
         if (!didRead) {
@@ -95,6 +107,13 @@ bool RpcConnection::Read(JsonDocument& message)
             return false;
         }
 
+        if (readFrame.length >= sizeof(readFrame.message)) {
+            lastErrorCode = (int)ErrorCode::ReadCorrupt;
+            StringCopy(lastErrorMessage, "IPC frame is too large");
+            Close();
+            return false;
+        }
+
         if (readFrame.length > 0) {
             didRead = connection->Read(readFrame.message, readFrame.length);
             if (!didRead) {
@@ -103,8 +122,8 @@ bool RpcConnection::Read(JsonDocument& message)
                 Close();
                 return false;
             }
-            readFrame.message[readFrame.length] = 0;
         }
+        readFrame.message[readFrame.length] = 0;
 
         switch (readFrame.opcode) {
         case Opcode::Close: {

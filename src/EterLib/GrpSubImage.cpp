@@ -64,7 +64,7 @@ void CGraphicSubImage::SetSearchPath(const char * c_szFileName)
 
 bool CGraphicSubImage::OnLoad(int iSize, const void* c_pvBuf)
 {
-	if (!c_pvBuf)
+	if (!c_pvBuf || iSize <= 0)
 		return false;
 
 	CTokenVector stTokenVector;
@@ -72,7 +72,7 @@ bool CGraphicSubImage::OnLoad(int iSize, const void* c_pvBuf)
 
 	CMemoryTextFileLoader textFileLoader;
 
-	textFileLoader.Bind(iSize, c_pvBuf);
+	textFileLoader.Bind(static_cast<size_t>(iSize), c_pvBuf);
 
 	for (DWORD i = 0; i < textFileLoader.GetLineCount(); ++i)
 	{
@@ -99,30 +99,23 @@ bool CGraphicSubImage::OnLoad(int iSize, const void* c_pvBuf)
 	if (c_rstTitle != "subimage")
 		return false;
 	
-	char szFileName[256];
+	// ZiiNAN: 64-bit safety cleanup
+	std::string imageFileName;
 	if ("2.0"==c_rstVersion)
-	{	
+	{
 		const std::string& c_rstSubFileName=GetFileNameString();
-		int nPos=c_rstSubFileName.find_last_of('\\', -1);
-		if (nPos>=0)
-		{
-			nPos++;
-			memcpy(szFileName, c_rstSubFileName.c_str(), nPos);
-			szFileName[nPos]='\0';
-			memcpy(szFileName+nPos, c_rstImage.c_str(), c_rstImage.length());
-			szFileName[nPos+c_rstImage.length()]='\0';
-		}
-		else
-		{
-			memcpy(szFileName, c_rstImage.c_str(), c_rstImage.length());
-		}
+		const std::string::size_type separatorPos = c_rstSubFileName.find_last_of('\\');
+		if (separatorPos != std::string::npos)
+			imageFileName.assign(c_rstSubFileName, 0, separatorPos + 1);
+		imageFileName += c_rstImage;
 	}
 	else
 	{
-		_snprintf(szFileName, sizeof(szFileName), "%s%s", m_SearchPath, c_rstImage.c_str());
+		imageFileName = m_SearchPath;
+		imageFileName += c_rstImage;
 	}
 
-	SetImageFileName(szFileName);
+	SetImageFileName(imageFileName.c_str());
 
 	SetRectPosition(atoi(c_rstLeft.c_str()),
 					atoi(c_rstTop.c_str()),

@@ -26,7 +26,7 @@ std::shared_ptr<const SkinningModelData> Extract(const granny_model& model)
     if(model.MeshBindingCount<=0 || !model.MeshBindings) return result;
     result->meshes.resize(model.MeshBindingCount);
     result->status.resize(model.MeshBindingCount,SkinDataStatus::MissingData);
-    uint32_t deformOffset=0;
+    uint64_t deformOffset=0;
     for(int m=0;m<model.MeshBindingCount;++m) {
         const auto* source=model.MeshBindings[m].Mesh;
         auto& status=result->status[m];
@@ -36,9 +36,15 @@ std::shared_ptr<const SkinningModelData> Extract(const granny_model& model)
         const auto* type=GrannyGetMeshVertexType(source);
         if(!type) { status=SkinDataStatus::UnsupportedLayout; continue; }
         if(GrannyMeshIsRigid(source)) { status=SkinDataStatus::Rigid; continue; }
-        const uint32_t offset=deformOffset; deformOffset+=count;
+        // ZiiNAN: 64-bit safety cleanup
+        if(static_cast<uint64_t>(count)>std::numeric_limits<uint32_t>::max()-deformOffset) {
+            status=SkinDataStatus::InvalidTopology; break;
+        }
+        const uint32_t offset=static_cast<uint32_t>(deformOffset);
+        deformOffset+=static_cast<uint32_t>(count);
         if(skeleton->names.empty()) { status=SkinDataStatus::InvalidSkeleton; continue; }
         if(skeleton->names.size()>preparedBoneLimit) { status=SkinDataStatus::PaletteTooLarge; continue; }
+        if(source->BoneBindingCount<=0) { status=SkinDataStatus::InvalidSkeleton; continue; }
         if(!GrannyDataTypesAreEqualWithNames(type,GrannyPWNT3432VertexType)) {
             status=SkinDataStatus::UnsupportedLayout; continue;
         }
@@ -46,7 +52,8 @@ std::shared_ptr<const SkinningModelData> Extract(const granny_model& model)
         if(!vertices) continue;
         auto data=std::make_shared<StaticSkinnedMeshData>();
         data->name=source->Name?source->Name:"";
-        data->meshIndex=m; data->deformVertexOffset=offset; data->meshBoneCount=source->BoneBindingCount;
+        data->meshIndex=static_cast<uint32_t>(m); data->deformVertexOffset=offset;
+        data->meshBoneCount=static_cast<uint32_t>(source->BoneBindingCount);
         data->vertices.resize(count);
         std::memcpy(data->vertices.data(),vertices,count*sizeof(SkinningVertex));
         status=ValidateSkinVertices(data->vertices,data->meshBoneCount,data->diagnostics);

@@ -1997,7 +1997,8 @@ typedef struct SPlayerSkill
 {
 	uint8_t bMasterType;
 	uint8_t bLevel;
-	time_t tNextRead;
+	// ZiiNAN: 64-bit safety cleanup
+	int64_t tNextRead;
 } TPlayerSkill;
 
 typedef struct packet_skill_level_new
@@ -2249,7 +2250,7 @@ typedef struct SPacketGCTime
 {
     uint16_t	header;
     uint16_t	length;
-    time_t      time;
+    int64_t     time;
 } TPacketGCTime;
 
 enum

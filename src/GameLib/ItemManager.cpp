@@ -5,6 +5,8 @@
 
 #include "ItemManager.h"
 
+#include <limits>
+
 static DWORD s_adwItemProtoKey[4] =
 {
 	173217,
@@ -254,7 +256,6 @@ DWORD GetHashCode( const char* pString )
 bool CItemManager::LoadItemTable(const char* c_szFileName)
 {	
 	TPackFile file;
-	LPCVOID pvData;
 
 	if (!CPackManager::Instance().GetFile(c_szFileName, file))
 		return false;
@@ -263,17 +264,23 @@ bool CItemManager::LoadItemTable(const char* c_szFileName)
 	DWORD dwVersion=0;
 	DWORD dwStride=0;
 
-	uint8_t* p = file.data();
-	memcpy(&dwFourCC, p, sizeof(DWORD));
-	p += sizeof(DWORD);
+	size_t cursor = 0;
+	const auto readDword = [&](DWORD& value) {
+		if (cursor > file.size() || sizeof(value) > file.size() - cursor)
+			return false;
+		memcpy(&value, file.data() + cursor, sizeof(value));
+		cursor += sizeof(value);
+		return true;
+	};
+
+	// ZiiNAN: 64-bit safety cleanup
+	if (!readDword(dwFourCC))
+		return false;
 
 	if (dwFourCC == MAKEFOURCC('M', 'I', 'P', 'X'))
 	{
-		memcpy(&dwVersion, p, sizeof(DWORD));
-		p += sizeof(DWORD);
-
-		memcpy(&dwStride, p, sizeof(DWORD));
-		p += sizeof(DWORD);
+		if (!readDword(dwVersion) || !readDword(dwStride))
+			return false;
 	
 		if (dwVersion != 1)
 		{
@@ -293,22 +300,21 @@ bool CItemManager::LoadItemTable(const char* c_szFileName)
 		return false;
 	}
 
-	memcpy(&dwElements, p, sizeof(DWORD));
-	p += sizeof(DWORD);
-
-	memcpy(&dwDataSize, p, sizeof(DWORD));
-	p += sizeof(DWORD);
-
-	BYTE * pbData = new BYTE[dwDataSize];
-	memcpy(pbData, p, dwDataSize);
+	if (!readDword(dwElements) || !readDword(dwDataSize) ||
+		cursor > file.size() || dwDataSize > file.size() - cursor)
+		return false;
 
 	/////
 
-	CLZObject zObj;
+	const uint64_t expectedSize = static_cast<uint64_t>(dwElements) * sizeof(CItemData::TItemTable);
+	if (expectedSize > (std::numeric_limits<size_t>::max)())
+		return false;
 
-	if (!CLZO::Instance().Decompress(zObj, pbData, s_adwItemProtoKey))
+	CLZObject zObj;
+	if (!CLZO::Instance().Decompress(zObj, file.data() + cursor, dwDataSize,
+		static_cast<size_t>(expectedSize), s_adwItemProtoKey))
 	{
-		delete [] pbData;
+		TraceError("CPythonItem::LoadItemTable: invalid item count/size in %s", c_szFileName);
 		return false;
 	}
 
@@ -321,6 +327,10 @@ bool CItemManager::LoadItemTable(const char* c_szFileName)
 
 	for (DWORD i = 0; i < dwElements; ++i, ++table)
 	{
+		if (!memchr(table->szName, '\0', sizeof(table->szName)) ||
+			!memchr(table->szLocaleName, '\0', sizeof(table->szLocaleName)))
+			return false;
+
 		CItemData * pItemData;
 		DWORD dwVnum = table->dwVnum;
 
@@ -366,7 +376,6 @@ bool CItemManager::LoadItemTable(const char* c_szFileName)
 		}
 	}
 
-	delete [] pbData;
 	return true;
 }
 

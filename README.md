@@ -25,7 +25,7 @@ Earlier milestone reports are historical evidence, not current setup instruction
 
 ## How to build (short version)
 
-> cmake -S . -B build
+> cmake -S . -B build -A x64
 >
 > cmake --build build --config Release
 
@@ -169,7 +169,7 @@ Building the project is extremely simple, if all Visual Studio components are be
   > Open up your terminal inside, or `cd` in your project's root working directory and initialize the build with this command:
   >
   > ```
-  > cmake -S . -B build
+  > cmake -S . -B build -A x64
   > ```
   >
   > A new `build` folder has been created in your project's root directory. This folder contains all the build files and configurations, along with the `sln` file to open the project in Visual Studio.
@@ -203,13 +203,13 @@ Building the project is extremely simple, if all Visual Studio components are be
   >
   > ![](https://metin2.download/picture/EN38Dz0Yef2edZ5Ptp4a5t4xWs1tr9V5/.png)
   >
-  > **Note**: if this is **NOT** your first build after executing the `cmake -S . -B build` command for this workspace, it is recommended to click **Clean Solution** before **Build Solution**.
+  > **Note**: if this is **NOT** your first build after executing the `cmake -S . -B build -A x64` command for this workspace, it is recommended to click **Clean Solution** before **Build Solution**.
   >
   > <br>
   >
   > Where to find your compiled binaries:
   >
-  > Inside the **build** folder in your cloned repository, you should have a **bin** folder and inside that, you should have a **Debug**, **Release**, **RelWithDebInfo** or **MinSizeRel** folder, depending on your build configuration selection.
+  > Inside the **build** folder in your cloned repository, you should have a **bin** folder and inside that, you should have a **Debug**, **Release** or **RelWithDebInfo** folder, depending on your build configuration selection.
   >
   > In that folder you should be seeing all your binaries:
   >
@@ -219,7 +219,7 @@ Building the project is extremely simple, if all Visual Studio components are be
   >
   > If you **HAVE** the **Client** project installed, paste these 2 `.exe` files in these locations inside the Server project:
   >
-  > - **Metin2_<Debug|Release|RelWithDebInfo|MinSizeRel>.exe**: inside root folder of the Client project
+  > - **Metin2_<Debug|Release|RelWithDebInfo>.exe**: inside root folder of the Client project
   > - **PackMaker.exe**: inside `assets\PackMaker.exe`
   >
   > <br>

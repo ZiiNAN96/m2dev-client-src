@@ -402,7 +402,8 @@ void CDrawState::RestoreRenderState(Renderer::RenderStateKey Type)
 #ifdef _DEBUG
 	if (m_RenderStateStack[Type].empty())
 	{
-		Tracef(" CDrawState::SaveRenderState - This render state was not saved [%d, %d]\n", Type);
+		// ZiiNAN: 64-bit safety cleanup
+		Tracef(" CDrawState::SaveRenderState - This render state was not saved [%u]\n", static_cast<unsigned>(Type));
 		DrawState_Assert(!" This render state was not saved!");
 	}
 #endif _DEBUG
@@ -457,7 +458,8 @@ void CDrawState::RestoreTextureStageState(DWORD dwStage, Renderer::TextureStageK
 #ifdef _DEBUG
 	if (m_TextureStageStateStack[dwStage][Type].empty())
 	{
-		Tracef(" CDrawState::RestoreTextureStageState - This texture stage state was not saved [%d, %d]\n", dwStage, Type);
+		Tracef(" CDrawState::RestoreTextureStageState - This texture stage state was not saved [%u, %u]\n",
+			static_cast<unsigned>(dwStage), static_cast<unsigned>(Type));
 		DrawState_Assert(!" This texture stage state was not saved!");
 	}
 #endif _DEBUG
@@ -551,7 +553,7 @@ void CDrawState::RestoreTransform(Renderer::MatrixSlot Type)
 #ifdef _DEBUG
 	if (m_TransformStack[Type].empty())
 	{
-		Tracef(" CDrawState::RestoreTransform - This transform was not saved [%d]\n", Type);
+		Tracef(" CDrawState::RestoreTransform - This transform was not saved [%u]\n", static_cast<unsigned>(Type));
 		DrawState_Assert(!" This render state was not saved!");
 	}
 #endif _DEBUG
@@ -575,7 +577,6 @@ void CDrawState::SetVertexConstants(DWORD dwRegister, CONST void* pConstantData,
 {
     if(dwRegister<=96 && dwConstantCount<=96-dwRegister) memcpy(m_vertexConstants[dwRegister],pConstantData,dwConstantCount*16);
 }
-
 
 
 

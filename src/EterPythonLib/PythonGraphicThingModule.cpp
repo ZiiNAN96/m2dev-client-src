@@ -2,14 +2,11 @@
 
 bool PyTuple_GetThingInstance(PyObject* poArgs, int pos, CGraphicThingInstance** ppRetThingInstance)
 {
-	unsigned long long handle;
-	if (!PyTuple_GetUnsignedLongLong(poArgs, pos, &handle))
+	if (!PyTuple_GetPointer(poArgs, pos, ppRetThingInstance))
 		return false;
 
-	if (!handle)
+	if (!*ppRetThingInstance)
 		return false;
-
-	*ppRetThingInstance = (CGraphicThingInstance*)handle;	
 	return true;
 }
 
@@ -20,7 +17,7 @@ PyObject* grpThingGenerate(PyObject* poSelf, PyObject* poArgs)
 		return Py_BuildException();
 
 	if (strlen(szFileName) <= 0)
-		return Py_BuildValue("K", 0);
+		return Py_BuildPointer(nullptr);
 
 	CResource* pResource = CResourceManager::Instance().GetResourcePointer(szFileName);
 
@@ -32,7 +29,7 @@ PyObject* grpThingGenerate(PyObject* poSelf, PyObject* poArgs)
 	pThingInstance->ReserveModelInstance(1);
 	pThingInstance->RegisterModelThing(0, static_cast<CGraphicThing*>(pResource));
 	pThingInstance->SetModelInstance(0, 0, 0);
-	return Py_BuildValue("K", pThingInstance);
+	return Py_BuildPointer(pThingInstance);
 }
 
 PyObject* grpThingDelete(PyObject* poSelf, PyObject* poArgs)

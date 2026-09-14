@@ -1,3 +1,5 @@
+link_libraries(M2FirstPartyArchitectureChecks)
+
 add_executable(RendererStartupOptionsTest StartupOptionsTest.cpp)
 target_link_libraries(RendererStartupOptionsTest PRIVATE M2RendererInterface)
 add_test(NAME Renderer.StartupOptions COMMAND RendererStartupOptionsTest)

@@ -2,7 +2,7 @@ add_library(M2RendererInterface INTERFACE)
 target_include_directories(M2RendererInterface INTERFACE "${PROJECT_SOURCE_DIR}/src")
 
 add_library(M2RendererBootstrap STATIC RendererBootstrap.cpp TerrainPresentation.cpp)
-target_link_libraries(M2RendererBootstrap PRIVATE M2RendererInterface)
+target_link_libraries(M2RendererBootstrap PRIVATE M2RendererInterface M2FirstPartyArchitectureChecks)
 
     include(FetchContent)
     set(DILIGENT_NO_DIRECT3D11 OFF CACHE BOOL "" FORCE)
@@ -42,5 +42,5 @@ target_link_libraries(M2RendererBootstrap PRIVATE M2RendererInterface)
     # ZiiNAN: Existing CPU effects, no simulation or other backend changes.
     target_sources(M2RendererDiligent PRIVATE DiligentEffectRenderer.cpp)
     target_include_directories(M2RendererDiligent PRIVATE "${diligentcore_SOURCE_DIR}")
-    target_link_libraries(M2RendererDiligent PUBLIC M2RendererInterface PRIVATE Diligent-GraphicsEngineD3D11-static)
+    target_link_libraries(M2RendererDiligent PUBLIC M2RendererInterface PRIVATE Diligent-GraphicsEngineD3D11-static M2FirstPartyArchitectureChecks)
     target_link_libraries(M2RendererBootstrap PRIVATE M2RendererDiligent)

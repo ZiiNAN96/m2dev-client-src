@@ -1,5 +1,8 @@
 #include "StdAfx.h"
 #include <stdlib.h>
+#include <cstring>
+#include <limits>
+#include <new>
 
 #include "lzo.h"
 #include "tea.h"
@@ -180,15 +183,40 @@ bool CLZObject::Compress()
     return true;
 }
 
-bool CLZObject::BeginDecompress(const void * pvIn)
+bool CLZObject::BeginDecompress(const void * pvIn, size_t inputSize)
 {
-    THeader * pHeader = (THeader *) pvIn;
+	// ZiiNAN: 64-bit safety cleanup
+	if (!pvIn || inputSize < sizeof(THeader) + sizeof(DWORD))
+		return false;
+
+	THeader * pHeader = (THeader *) pvIn;
 
     if (pHeader->dwFourCC != ms_dwFourCC)
     {
 		TraceError("LZObject: not a valid data");
 		return false;
-    }
+	}
+
+	if (pHeader->dwEncryptSize)
+	{
+		if (pHeader->dwEncryptSize < sizeof(DWORD) ||
+			pHeader->dwEncryptSize % 8 != 0 ||
+			pHeader->dwEncryptSize > static_cast<DWORD>((std::numeric_limits<int>::max)()) ||
+			pHeader->dwEncryptSize > inputSize - sizeof(THeader) ||
+			pHeader->dwCompressedSize > pHeader->dwEncryptSize - sizeof(DWORD))
+		{
+			TraceError("LZObject: encrypted payload exceeds input");
+			return false;
+		}
+	}
+	else if (pHeader->dwCompressedSize > inputSize - sizeof(THeader) - sizeof(DWORD))
+	{
+		TraceError("LZObject: compressed payload exceeds input");
+		return false;
+	}
+
+	if (pHeader->dwRealSize == 0)
+		return false;
 	
     m_pHeader	= pHeader;
     m_pbIn	= (const BYTE *) pvIn + (sizeof(THeader) + sizeof(DWORD));
@@ -200,8 +228,19 @@ bool CLZObject::BeginDecompress(const void * pvIn)
 	count++;
 	printf("decompress cur: %d, ave: %d\n", pHeader->dwRealSize, sum/count);
 	*/
+	BYTE* outputBuffer = nullptr;
+	try
+	{
+		outputBuffer = gs_freeMemMgr.Alloc(pHeader->dwRealSize);
+	}
+	catch (const std::bad_alloc&)
+	{
+		TraceError("LZObject: output allocation failed for %u bytes", pHeader->dwRealSize);
+		return false;
+	}
+
 	m_dwBufferSize = pHeader->dwRealSize;
-	m_pbBuffer = gs_freeMemMgr.Alloc(m_dwBufferSize);
+	m_pbBuffer = outputBuffer;
     memset(m_pbBuffer, 0, pHeader->dwRealSize);
     return true;
 }
@@ -215,10 +254,11 @@ public:
 	};
 public:
 	DecryptBuffer(unsigned size)
+		: m_buf(nullptr)
 	{
 		if (size >= LOCAL_BUF_SIZE)
 		{
-			m_buf = new char[size];
+			m_buf = new (std::nothrow) char[size];
 			dbg_printf("DecryptBuffer - AllocHeap %d\n", size);
 		}
 		else
@@ -229,7 +269,7 @@ public:
 	}
 	~DecryptBuffer()
 	{
-		if (m_local_buf != m_buf)
+		if (m_buf && m_local_buf != m_buf)
 		{
 			dbg_printf("DecryptBuffer - FreeHeap\n");
 			delete [] m_buf;
@@ -256,12 +296,23 @@ bool CLZObject::Decompress(DWORD * pdwKey)
 
 	if (m_pHeader->dwEncryptSize)
 	{
+		if (!pdwKey)
+			return false;
+
 		DecryptBuffer buf(m_pHeader->dwEncryptSize);
 		BYTE* pbDecryptedBuffer = static_cast<BYTE*>(buf.GetBufferPtr());
+		if (!pbDecryptedBuffer)
+		{
+			TraceError("LZObject: decrypt allocation failed for %u bytes", m_pHeader->dwEncryptSize);
+			return false;
+		}
 
-		__Decrypt(pdwKey, pbDecryptedBuffer);
+		if (!__Decrypt(pdwKey, pbDecryptedBuffer))
+			return false;
 
-		if (*reinterpret_cast<DWORD*>(pbDecryptedBuffer) != ms_dwFourCC)
+		DWORD decryptedFourCC = 0;
+		std::memcpy(&decryptedFourCC, pbDecryptedBuffer, sizeof(decryptedFourCC));
+		if (decryptedFourCC != ms_dwFourCC)
 		{
 			TraceError("LZObject: key incorrect");
 			return false;
@@ -317,9 +368,9 @@ bool CLZObject::Encrypt(DWORD * pdwKey)
 bool CLZObject::__Decrypt(DWORD * key, BYTE* data)
 {
     assert(m_pbBuffer);
-		
-    tea_decrypt((DWORD *) data, (const DWORD *) (m_pbIn - sizeof(DWORD)), key, m_pHeader->dwEncryptSize);
-    return true;
+
+	const int encryptedSize = static_cast<int>(m_pHeader->dwEncryptSize);
+	return tea_decrypt((DWORD *) data, (const DWORD *) (m_pbIn - sizeof(DWORD)), key, encryptedSize) == encryptedSize;
 }
 
 void CLZObject::AllocBuffer(DWORD dwSrcSize)
@@ -389,9 +440,17 @@ bool CLZO::CompressEncryptedMemory(CLZObject & rObj, const void * pIn, UINT uiIn
     return false;
 }   
 
-bool CLZO::Decompress(CLZObject & rObj, const BYTE * pbBuf, DWORD * pdwKey)
+bool CLZO::Decompress(CLZObject & rObj, const BYTE * pbBuf, size_t inputSize, size_t expectedOutputSize, DWORD * pdwKey)
 {
-    if (!rObj.BeginDecompress(pbBuf))
+	if (!pbBuf || inputSize < sizeof(CLZObject::THeader))
+		return false;
+
+	CLZObject::THeader header{};
+	std::memcpy(&header, pbBuf, sizeof(header));
+	if (header.dwRealSize != expectedOutputSize)
+		return false;
+
+    if (!rObj.BeginDecompress(pbBuf, inputSize))
 		return false;
 	
     if (!rObj.Decompress(pdwKey))

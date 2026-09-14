@@ -255,7 +255,8 @@ void CMapManager::BeginEnvironment()
 	{
 		DRAWSTATE.LightEnable(0, TRUE);
 
-		rkMap.ApplyLight((DWORD)mc_pcurEnvironmentData, mc_pcurEnvironmentData->DirLights[ENV_DIRLIGHT_BACKGROUND]);		
+		// ZiiNAN: 64-bit safety cleanup
+		rkMap.ApplyLight(reinterpret_cast<std::uintptr_t>(mc_pcurEnvironmentData), mc_pcurEnvironmentData->DirLights[ENV_DIRLIGHT_BACKGROUND]);
 	}
 	else
 		DRAWSTATE.LightEnable(0, FALSE);

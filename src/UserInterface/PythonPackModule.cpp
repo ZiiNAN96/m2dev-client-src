@@ -1,6 +1,8 @@
 #include "StdAfx.h"
 #include "PackLib/PackManager.h"
 
+#include <limits>
+
 PyObject * packExist(PyObject * poSelf, PyObject * poArgs)
 {
 	char * strFileName;
@@ -28,7 +30,15 @@ PyObject * packGet(PyObject * poSelf, PyObject * poArgs)
 		{
 			TPackFile file;
 			if (CPackManager::Instance().GetFile(strFileName, file))
-				return Py_BuildValue("s#",file.data(), file.size());
+			{
+				if (file.size() > static_cast<size_t>((std::numeric_limits<Py_ssize_t>::max)()))
+				{
+					PyErr_SetString(PyExc_OverflowError, "packed file is too large for Python");
+					return nullptr;
+				}
+				// ZiiNAN: 64-bit safety cleanup
+				return Py_BuildValue("s#", reinterpret_cast<const char*>(file.data()), static_cast<Py_ssize_t>(file.size()));
+			}
 		}
 	}
 

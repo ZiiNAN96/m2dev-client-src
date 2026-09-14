@@ -19,10 +19,10 @@ PyObject* grpCreateTextBar(PyObject* poSelf, PyObject* poArgs)
 	if (!pTextBar->Create(iWidth, iHeight))
 	{
 		delete pTextBar;
-		return Py_BuildValue("K", NULL);
+		return Py_BuildPointer(nullptr);
 	}
 
-	return Py_BuildValue("K", pTextBar);
+	return Py_BuildPointer(pTextBar);
 }
 
 PyObject* grpCreateBigTextBar(PyObject* poSelf, PyObject* poArgs)
@@ -42,10 +42,10 @@ PyObject* grpCreateBigTextBar(PyObject* poSelf, PyObject* poArgs)
 	if (!pTextBar->Create(iWidth, iHeight))
 	{
 		delete pTextBar;
-		return Py_BuildValue("K", NULL);
+		return Py_BuildPointer(nullptr);
 	}
 
-	return Py_BuildValue("K", pTextBar);
+	return Py_BuildPointer(pTextBar);
 }
 
 PyObject* grpDestroyTextBar(PyObject* poSelf, PyObject* poArgs)

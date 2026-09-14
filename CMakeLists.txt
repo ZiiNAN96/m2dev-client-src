@@ -5,6 +5,13 @@ project(m2dev-client-src)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+if(NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
+	message(FATAL_ERROR "m2dev-client supports only the x64 ABI. Configure a fresh build directory with -A x64.")
+endif()
+if(MSVC AND NOT CMAKE_CXX_COMPILER_ARCHITECTURE_ID MATCHES "^[xX]64$")
+	message(FATAL_ERROR "m2dev-client requires the MSVC x64 target. Configure a fresh build directory with -A x64.")
+endif()
+
 # ASan support
 option(ENABLE_ASAN "Enable AddressSanitizer" OFF)
 
@@ -34,6 +41,13 @@ add_compile_options(
 	$<$<CXX_COMPILER_ID:MSVC>:/wd4828>
 	$<$<CXX_COMPILER_ID:MSVC>:/wd4996>
 	$<$<CXX_COMPILER_ID:MSVC>:/wd5033>
+)
+
+add_library(M2FirstPartyArchitectureChecks INTERFACE)
+target_compile_options(M2FirstPartyArchitectureChecks INTERFACE
+	$<$<COMPILE_LANG_AND_ID:CXX,MSVC>:/we4302>
+	$<$<COMPILE_LANG_AND_ID:CXX,MSVC>:/we4311>
+	$<$<COMPILE_LANG_AND_ID:CXX,MSVC>:/we4312>
 )
 
 # ASan flags
@@ -71,11 +85,15 @@ include_directories("vendor/freetype-2.13.3/include")
 
 # Add subdirectories for libraries and executables
 option(M2_BUILD_RENDERER_TESTS "Build renderer lifecycle and GPU smoke tests" ON)
+option(M2_BUILD_PLATFORM_TESTS "Build x64 ABI and pointer round-trip tests" ON)
 enable_testing()
 add_subdirectory(src/Renderer)
 add_subdirectory(vendor)
 add_subdirectory(src)
 add_subdirectory(extern)
+if(M2_BUILD_PLATFORM_TESTS)
+	add_subdirectory(tests/Platform)
+endif()
 if(M2_BUILD_RENDERER_TESTS)
 	add_subdirectory(tests/Renderer)
 endif()

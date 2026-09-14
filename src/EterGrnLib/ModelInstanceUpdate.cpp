@@ -30,7 +30,7 @@ void CGrannyModelInstance::Update(DWORD dwAniFPS)
 
 		if (t2-t1>3)
 		{
-			fprintf(fp, "%f:%x:- GrannySetModelClock(time=%f) = %dms\n", timeGetTime()/1000.0f, this, GetLocalTime(), t2-t1);
+			fprintf(fp, "%f:%p:- GrannySetModelClock(time=%f) = %dms\n", timeGetTime()/1000.0f, static_cast<void*>(this), GetLocalTime(), t2-t1);
 			fflush(fp);
 		}			
 	}

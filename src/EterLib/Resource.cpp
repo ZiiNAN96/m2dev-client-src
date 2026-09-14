@@ -7,6 +7,8 @@
 #include "Resource.h"
 #include "ResourceManager.h"
 
+#include <limits>
+
 bool CResource::ms_bDeleteImmediately = false;
 
 CResource::CResource(const char* c_szFileName) : me_state(STATE_EMPTY)
@@ -53,7 +55,15 @@ void CResource::Load()
 		m_dwLoadCostMiliiSecond = ELTimer_GetMSec() - dwStart;
 		//Tracef("CResource::Load %s (%d bytes) in %d ms\n", c_szFileName, file.Size(), m_dwLoadCostMiliiSecond);
 
-		if (OnLoad(file.size(), file.data()))
+		// ZiiNAN: 64-bit safety cleanup
+		if (file.size() > static_cast<size_t>(std::numeric_limits<int>::max()))
+		{
+			TraceError("CResource::Load: file too large for legacy resource API: %s (%zu bytes)", c_szFileName, file.size());
+			me_state = STATE_ERROR;
+			return;
+		}
+
+		if (OnLoad(static_cast<int>(file.size()), file.data()))
 		{
 			me_state = STATE_EXIST;
 		}
@@ -84,7 +94,14 @@ void CResource::Reload()
 	TPackFile	file;
 	if (CPackManager::Instance().GetFile(GetFileName(), file))
 	{
-		if (OnLoad(file.size(), file.data()))
+		if (file.size() > static_cast<size_t>(std::numeric_limits<int>::max()))
+		{
+			TraceError("CResource::Reload: file too large for legacy resource API: %s (%zu bytes)", GetFileName(), file.size());
+			me_state = STATE_ERROR;
+			return;
+		}
+
+		if (OnLoad(static_cast<int>(file.size()), file.data()))
 		{
 			me_state = STATE_EXIST;
 		}

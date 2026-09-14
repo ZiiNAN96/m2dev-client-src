@@ -4,6 +4,8 @@
 #include "SkinningDataAdapter.h"
 #include "Renderer/SkinningBenchmark.h"
 
+#include <limits>
+
 const CGrannyMaterialPalette& CGrannyModel::GetMaterialPalette() const
 {
 	return m_kMtrlPal;
@@ -176,20 +178,31 @@ bool CGrannyModel::LoadMeshs()
 	{
 		CGrannyMesh& rMesh = m_meshs[m];
 		granny_mesh* pgrnMesh = m_pgrnModel->MeshBindings[m].Mesh;
+		const int vertexCount = GrannyGetMeshVertexCount(pgrnMesh);
+		const int indexCount = GrannyGetMeshIndexCount(pgrnMesh);
+		// ZiiNAN: 64-bit safety cleanup
+		if (vertexCount < 0 || indexCount < 0 ||
+			vertexCount > std::numeric_limits<int>::max() - vtxPos ||
+			indexCount > std::numeric_limits<int>::max() - idxPos)
+			return false;
 
 		if (GrannyMeshIsRigid(pgrnMesh))
 		{
+			if (vertexCount > std::numeric_limits<int>::max() - vtxRigidPos)
+				return false;
 			if (!rMesh.CreateFromGrannyMeshPointer(pgrnSkeleton, pgrnMesh, vtxRigidPos, idxPos, m_kMtrlPal))
 				return false;
 
-			vtxRigidPos += GrannyGetMeshVertexCount(pgrnMesh);	
+			vtxRigidPos += vertexCount;
 		}
 		else
 		{
+			if (vertexCount > std::numeric_limits<int>::max() - vtxDeformPos)
+				return false;
 			if (!rMesh.CreateFromGrannyMeshPointer(pgrnSkeleton, pgrnMesh, vtxDeformPos, idxPos, m_kMtrlPal))
 				return false;
 
-			vtxDeformPos += GrannyGetMeshVertexCount(pgrnMesh);
+			vtxDeformPos += vertexCount;
 			m_canDeformPNVertices |= rMesh.CanDeformPNTVertices();
 		}
 		m_bHaveBlendThing |= rMesh.HaveBlendThing();
@@ -206,8 +219,8 @@ bool CGrannyModel::LoadMeshs()
 				m_vertexLayout |= Renderer::VertexTex2;
 		}
 
-		vtxPos += GrannyGetMeshVertexCount(pgrnMesh);
-		idxPos += GrannyGetMeshIndexCount(pgrnMesh);		
+		vtxPos += vertexCount;
+		idxPos += indexCount;
 
 		if (rMesh.GetTriGroupNodeList(CGrannyMaterial::TYPE_DIFFUSE_PNT))
 			++diffusePNTMeshNodeCount;
@@ -216,6 +229,9 @@ bool CGrannyModel::LoadMeshs()
 			++blendPNTMeshNodeCount;
 	}
 
+	if (diffusePNTMeshNodeCount > std::numeric_limits<int>::max() - blendPNTMeshNodeCount ||
+		diffusePNTMeshNodeCount + blendPNTMeshNodeCount > std::numeric_limits<int>::max() - blendPNT2MeshNodeCount)
+		return false;
 	m_meshNodeCapacity = diffusePNTMeshNodeCount + blendPNTMeshNodeCount + blendPNT2MeshNodeCount;
 	m_meshNodes = new TMeshNode[m_meshNodeCapacity];
 
@@ -435,8 +451,10 @@ void CGrannyModel::CaptureActorSource(bool attachment)
     // ZiiNAN: Diligent actor attachment rendering
     if(!Renderer::actorRenderer || m_vtxCount<=0 || m_idxCount<=0 ||
        m_vertexLayout!=(Renderer::VertexPosition|Renderer::VertexNormal|Renderer::VertexTex1)) return;
+    const uint64_t vertexCount=static_cast<uint64_t>(m_deformVtxCount)+static_cast<uint64_t>(m_rigidVtxCount);
+    if(vertexCount>std::numeric_limits<uint32_t>::max()) return;
     auto source=std::make_shared<Renderer::ActorModelSource>();
-    source->vertexCount=static_cast<uint32_t>(m_deformVtxCount+m_rigidVtxCount);
+    source->vertexCount=static_cast<uint32_t>(vertexCount);
     source->deformVertexCount=static_cast<uint32_t>(m_deformVtxCount);
     source->rigidVertices.resize(m_rigidVtxCount);
     source->indices.resize(m_idxCount);

@@ -60,7 +60,7 @@ void CTerrainPatch::Clear()
 	
 	m_fMinX = m_fMaxX = m_fMinY = m_fMaxY = m_fMinZ = m_fMaxZ = 0.0f;
 
-	m_dwVersion=0;
+	m_lightVersion=0;
 }
 
 void CTerrainPatch::BuildWaterVertexBuffer(SWaterVertex* akSrcVertex, UINT uWaterVertexCount)
@@ -138,12 +138,12 @@ void CTerrainPatch::__BuildHardwareTerrainVertexBuffer(HardwareTransformPatch_SS
 	}
 }
 
-void CTerrainPatch::SoftwareTransformPatch_UpdateTerrainLighting(DWORD dwVersion, const Renderer::LightValues& c_rkLight, const Renderer::MaterialValues& c_rkMtrl)
+void CTerrainPatch::SoftwareTransformPatch_UpdateTerrainLighting(std::uintptr_t version, const Renderer::LightValues& c_rkLight, const Renderer::MaterialValues& c_rkMtrl)
 {
-	if (m_dwVersion==dwVersion)
+	if (m_lightVersion==version)
 		return;
 
-	m_dwVersion=dwVersion;
+	m_lightVersion=version;
 	
 	SoftwareTransformPatch_SSourceVertex* akSrcVertex=SoftwareTransformPatch_GetTerrainVertexDataPtr();
 	if (!akSrcVertex)
@@ -221,10 +221,10 @@ bool CTerrainPatchProxy::IsIn(const Math::Vector3& c_rv3Target, float fRadius)
 	return false;
 }
 
-void CTerrainPatchProxy::SoftwareTransformPatch_UpdateTerrainLighting(DWORD dwVersion, const Renderer::LightValues& c_rkLight, const Renderer::MaterialValues& c_rkMtrl)
+void CTerrainPatchProxy::SoftwareTransformPatch_UpdateTerrainLighting(std::uintptr_t version, const Renderer::LightValues& c_rkLight, const Renderer::MaterialValues& c_rkMtrl)
 {
 	if (m_pTerrainPatch)
-		m_pTerrainPatch->SoftwareTransformPatch_UpdateTerrainLighting(dwVersion, c_rkLight, c_rkMtrl);	
+		m_pTerrainPatch->SoftwareTransformPatch_UpdateTerrainLighting(version, c_rkLight, c_rkMtrl);
 }
 
 CGraphicVertexBuffer* CTerrainPatchProxy::HardwareTransformPatch_GetVertexBufferPtr()

@@ -1,4 +1,5 @@
 #pragma once
+#include <cstddef>
 #include <cstdint>
 #include <array>
 #include <vector>
@@ -10,6 +11,7 @@
 
 constexpr size_t PACK_KEY_SIZE = crypto_stream_xchacha20_KEYBYTES;      // 32 bytes
 constexpr size_t PACK_NONCE_SIZE = crypto_stream_xchacha20_NONCEBYTES;  // 24 bytes
+constexpr size_t PACK_FILENAME_CAPACITY = 261;
 
 constexpr std::array<uint8_t, PACK_KEY_SIZE> PACK_KEY = {
 	0x00,0x11,0x22,0x33, 0x44,0x55,0x66,0x77,
@@ -27,7 +29,7 @@ struct TPackFileHeader
 };
 struct TPackFileEntry
 {
-	char		file_name[FILENAME_MAX+1];
+	char		file_name[PACK_FILENAME_CAPACITY];
 	uint64_t	offset;
 	uint64_t	file_size;
 	uint64_t	compressed_size;
@@ -35,6 +37,18 @@ struct TPackFileEntry
 	uint8_t     nonce[PACK_NONCE_SIZE];
 };
 #pragma pack(pop)
+
+static_assert(sizeof(TPackFileHeader) == 40);
+static_assert(offsetof(TPackFileHeader, entry_num) == 0);
+static_assert(offsetof(TPackFileHeader, data_begin) == 8);
+static_assert(offsetof(TPackFileHeader, nonce) == 16);
+static_assert(sizeof(TPackFileEntry) == 310);
+static_assert(offsetof(TPackFileEntry, file_name) == 0);
+static_assert(offsetof(TPackFileEntry, offset) == 261);
+static_assert(offsetof(TPackFileEntry, file_size) == 269);
+static_assert(offsetof(TPackFileEntry, compressed_size) == 277);
+static_assert(offsetof(TPackFileEntry, encryption) == 285);
+static_assert(offsetof(TPackFileEntry, nonce) == 286);
 
 class CPack;
 using TPackFile = std::vector<uint8_t>;

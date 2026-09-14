@@ -22,15 +22,12 @@ typedef BOOL
 	__in_opt PVOID UserContext
 	);
 */
-#if _MSC_VER >= 1400
-BOOL CALLBACK EnumerateLoadedModulesProc(PCSTR ModuleName, ULONG ModuleBase, ULONG ModuleSize, PVOID UserContext)
-#else
-BOOL CALLBACK EnumerateLoadedModulesProc(PSTR ModuleName, ULONG ModuleBase, ULONG ModuleSize, PVOID UserContext)
-#endif
+// ZiiNAN: 64-bit safety cleanup
+BOOL CALLBACK EnumerateLoadedModulesProc(PCSTR ModuleName, DWORD64 ModuleBase, ULONG ModuleSize, PVOID UserContext)
 {
-	DWORD offset = *((DWORD*)UserContext);
+	const DWORD64 offset = *static_cast<const DWORD64*>(UserContext);
 
-	if (offset >= ModuleBase && offset <= ModuleBase + ModuleSize)
+	if (offset >= ModuleBase && offset - ModuleBase < ModuleSize)
 	{
 		fprintf(fException, "%s", ModuleName);
 		//__idx += sprintf(__msg+__idx, "%s", ModuleName);
@@ -106,7 +103,7 @@ LONG __stdcall EterExceptionFilter(_EXCEPTION_POINTERS* pExceptionInfo)
 			{
 				fprintf(fException, "0x%016llx\t", stackFrame.AddrPC.Offset);
 				//__idx+=sprintf(__msg+__idx, "0x%016llx\t", stackFrame.AddrPC.Offset);
-				EnumerateLoadedModules64(hProcess, (PENUMLOADED_MODULES_CALLBACK64)EnumerateLoadedModulesProc, &stackFrame.AddrPC.Offset);
+				EnumerateLoadedModules64(hProcess, EnumerateLoadedModulesProc, &stackFrame.AddrPC.Offset);
 				fprintf(fException, "\n");
 
 				//__idx+=sprintf(__msg+__idx,  "\n");

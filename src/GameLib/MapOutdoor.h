@@ -99,7 +99,7 @@ class CMapOutdoor : public CMapBase
 
 		bool			LoadSetting(const char * c_szFileName);
 
-		void			ApplyLight(DWORD dwVersion, const Renderer::LightValues& c_rkLight);
+		void			ApplyLight(std::uintptr_t version, const Renderer::LightValues& c_rkLight);
 		void			SetEnvironmentScreenFilter();
 		void			SetEnvironmentSkyBox();
 		void			SetEnvironmentLensFlare();
@@ -567,7 +567,7 @@ class CMapOutdoor : public CMapBase
 
 
 	protected:
-		DWORD m_terrainLightVersion=0;
+		std::uintptr_t m_terrainLightVersion=0;
 		struct SoftwareTransformPatch_SRenderState {
 			Math::Matrix m_m4Proj;
 			Math::Matrix m_m4Frustum;

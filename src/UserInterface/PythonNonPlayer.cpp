@@ -5,6 +5,8 @@
 #include "InstanceBase.h"
 #include "PythonCharacterManager.h"
 
+#include <limits>
+
 bool CPythonNonPlayer::LoadNonPlayerData(const char * c_szFileName)
 {
 	static DWORD s_adwMobProtoKey[4] =
@@ -23,6 +25,9 @@ bool CPythonNonPlayer::LoadNonPlayerData(const char * c_szFileName)
 		return false;
 
 	DWORD dwFourCC, dwElements, dwDataSize;
+	if (file.size() < sizeof(DWORD) * 3)
+		return false;
+
 	memcpy(&dwFourCC, file.data(), sizeof(DWORD));
 
 	if (dwFourCC != MAKEFOURCC('M', 'M', 'P', 'T'))
@@ -33,28 +38,33 @@ bool CPythonNonPlayer::LoadNonPlayerData(const char * c_szFileName)
 
 	memcpy(&dwElements, file.data() + sizeof(DWORD), sizeof(DWORD));
 	memcpy(&dwDataSize, file.data() + sizeof(DWORD) * 2, sizeof(DWORD));
-
-	BYTE * pbData = new BYTE[dwDataSize];
-	memcpy(pbData, file.data() + sizeof(DWORD) * 3, dwDataSize);
+	constexpr size_t headerSize = sizeof(DWORD) * 3;
+	if (dwDataSize > file.size() - headerSize)
+		return false;
 	/////
+
+	const uint64_t expectedSize = static_cast<uint64_t>(dwElements) * sizeof(TMobTable);
+	if (expectedSize > (std::numeric_limits<size_t>::max)())
+		return false;
 
 	CLZObject zObj;
 
-	if (!CLZO::Instance().Decompress(zObj, pbData, s_adwMobProtoKey))
+	// ZiiNAN: 64-bit safety cleanup
+	if (!CLZO::Instance().Decompress(zObj, file.data() + headerSize, dwDataSize,
+		static_cast<size_t>(expectedSize), s_adwMobProtoKey))
 	{
-		delete [] pbData;
-		return false;
-	}
-
-	if ((zObj.GetSize() % sizeof(TMobTable)) != 0)
-	{
-		TraceError("CPythonNonPlayer::LoadNonPlayerData: invalid size %u check data format.", zObj.GetSize());
+		TraceError("CPythonNonPlayer::LoadNonPlayerData: invalid item count/size.");
 		return false;
 	}
 
 	TMobTable * pTable = (TMobTable *) zObj.GetBuffer();
-    for (DWORD i = 0; i < dwElements; ++i, ++pTable)
+	for (DWORD i = 0; i < dwElements; ++i, ++pTable)
 	{
+		if (!memchr(pTable->szName, '\0', sizeof(pTable->szName)) ||
+			!memchr(pTable->szLocaleName, '\0', sizeof(pTable->szLocaleName)) ||
+			!memchr(pTable->szFolder, '\0', sizeof(pTable->szFolder)))
+			return false;
+
 		TMobTable * pNonPlayerData = new TMobTable;
 
 		memcpy(pNonPlayerData, pTable, sizeof(TMobTable));
@@ -63,7 +73,6 @@ bool CPythonNonPlayer::LoadNonPlayerData(const char * c_szFileName)
 		m_NonPlayerDataMap.insert(TNonPlayerDataMap::value_type(pNonPlayerData->dwVnum, pNonPlayerData));
 	}
 
-	delete [] pbData;
 	return true;
 }
 

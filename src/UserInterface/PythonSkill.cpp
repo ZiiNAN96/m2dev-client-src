@@ -1646,7 +1646,7 @@ PyObject * skillGetSkillConditionDescription(PyObject * poSelf, PyObject * poArg
 		return Py_BuildException("skill.GetSkillConditionDescription() - Failed to find skill by %d", iSkillIndex);
 
 	if (iConditionIndex >= c_pSkillData->ConditionDataVector.size())
-		return Py_BuildValue("None");
+		return Py_BuildNone();
 
 	return Py_BuildValue("s", c_pSkillData->ConditionDataVector[iConditionIndex].c_str());
 }
@@ -1832,7 +1832,7 @@ PyObject * skillGetSkillRequirementData(PyObject * poSelf, PyObject * poArgs)
 
 	CPythonSkill::SSkillData * pRequireSkillData;
 	if (!CPythonSkill::Instance().GetSkillDataByName(c_pSkillData->strRequireSkillName.c_str(), &pRequireSkillData))
-		return Py_BuildValue("si", 0, "None", 0);
+		return Py_BuildValue("si", "None", 0);
 
 	int ireqLevel = (int)ceil(float(c_pSkillData->byRequireSkillLevel)/float(std::max(1, (int)pRequireSkillData->byLevelUpPoint)));
 	return Py_BuildValue("si", c_pSkillData->strRequireSkillName.c_str(), ireqLevel);
@@ -2058,9 +2058,9 @@ PyObject * skillGetIconImage(PyObject * poSelf, PyObject * poArgs)
 
 	CPythonSkill::SSkillData * c_pSkillData;
 	if (!CPythonSkill::Instance().GetSkillData(iSkillIndex, &c_pSkillData))
-		return Py_BuildValue("K", 0);	// 익셉션을 내는 대신 0을 리턴한다.
+		return Py_BuildPointer(nullptr);	// 익셉션을 내는 대신 0을 리턴한다.
 
-	return Py_BuildValue("K", c_pSkillData->pImage);
+	return Py_BuildPointer(c_pSkillData->pImage);
 }
 
 
@@ -2078,7 +2078,7 @@ PyObject * skillGetIconInstance(PyObject * poSelf, PyObject * poArgs)
 	CGraphicImageInstance * pImageInstance = CGraphicImageInstance::New();
 	pImageInstance->SetImagePointer(c_pSkillData->pImage);
 
-	return Py_BuildValue("K", pImageInstance);
+	return Py_BuildPointer(pImageInstance);
 }
 
 PyObject * skillGetIconImageNew(PyObject * poSelf, PyObject * poArgs)
@@ -2101,7 +2101,7 @@ PyObject * skillGetIconImageNew(PyObject * poSelf, PyObject * poArgs)
 	if (iGradeIndex >= CPythonSkill::SKILL_GRADE_COUNT)		
 		iGradeIndex = CPythonSkill::SKILL_GRADE_COUNT-1;
 
-	return Py_BuildValue("K", c_pSkillData->GradeData[iGradeIndex].pImage);
+	return Py_BuildPointer(c_pSkillData->GradeData[iGradeIndex].pImage);
 }
 
 PyObject * skillGetIconInstanceNew(PyObject * poSelf, PyObject * poArgs)
@@ -2129,7 +2129,7 @@ PyObject * skillGetIconInstanceNew(PyObject * poSelf, PyObject * poArgs)
 	CGraphicImageInstance * pImageInstance = CGraphicImageInstance::New();
 	pImageInstance->SetImagePointer(c_pSkillData->GradeData[iGradeIndex].pImage);
 
-	return Py_BuildValue("K", pImageInstance);
+	return Py_BuildPointer(pImageInstance);
 }
 
 PyObject * skillDeleteIconInstance(PyObject * poSelf, PyObject * poArgs)
@@ -2157,9 +2157,10 @@ PyObject * skillGetGradeData(PyObject * poSelf, PyObject * poArgs)
 		return Py_BuildException("skill.GetGradeData - Failed to find skill by %d", iSkillIndex);
 
 	if (iGradeIndex < 0 || iGradeIndex >= CPythonSkill::SKILL_GRADE_COUNT)
-		return Py_BuildException("Strange grade index [%d]", iSkillIndex, iGradeIndex);
+		return Py_BuildException("Strange grade index [%d]", iGradeIndex);
 
-	return Py_BuildValue("i", c_pSkillData->GradeData[iGradeIndex]);
+	// ZiiNAN: 64-bit safety cleanup
+	return Py_BuildValue("i", static_cast<int>(c_pSkillData->GradeData[iGradeIndex].wMotionIndex));
 }
 
 PyObject * skillGetNewAffectDataCount(PyObject * poSelf, PyObject * poArgs)

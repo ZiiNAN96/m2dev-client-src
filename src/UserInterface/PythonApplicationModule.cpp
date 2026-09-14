@@ -463,12 +463,13 @@ PyObject * appGetTime(PyObject * poSelf, PyObject * poArgs)
 
 PyObject * appGetGlobalTime(PyObject * poSelf, PyObject * poArgs)
 {
-	return Py_BuildValue("i", CPythonApplication::Instance().GetServerTime());
+	// ZiiNAN: 64-bit safety cleanup
+	return PyLong_FromLongLong(static_cast<long long>(CPythonApplication::Instance().GetServerTime()));
 }
 
 PyObject * appGetGlobalTimeStamp(PyObject * poSelf, PyObject * poArgs)
 {
-	return Py_BuildValue("i", CPythonApplication::Instance().GetServerTimeStamp());
+	return PyLong_FromLongLong(static_cast<long long>(CPythonApplication::Instance().GetServerTimeStamp()));
 }
 
 PyObject * appGetUpdateFPS(PyObject * poSelf, PyObject * poArgs)
@@ -998,7 +999,7 @@ PyObject * appOpenTextFile(PyObject * poSelf, PyObject * poArgs)
 
 	CTextLineLoader * pTextLineLoader = new CTextLineLoader(szFileName);
 
-	return Py_BuildValue("K", pTextLineLoader);
+	return Py_BuildPointer(pTextLineLoader);
 }
 
 PyObject * appCloseTextFile(PyObject * poSelf, PyObject * poArgs)

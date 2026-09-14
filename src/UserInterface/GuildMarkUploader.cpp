@@ -5,6 +5,8 @@
 #include "stb_image.h"
 #include "stb_image_write.h"
 
+#include <limits>
+
 #ifdef __VTUNE__
 #else
 
@@ -85,6 +87,8 @@ bool CGuildMarkUploader::__Load(const char* c_szFileName, UINT* peError)
 
 bool CGuildMarkUploader::__LoadSymbol(const char* c_szFileName, UINT* peError)
 {
+	m_symbolBuf.clear();
+
 	int width, height, channels;
 	unsigned char* data = stbi_load(c_szFileName, &width, &height, &channels, 4);
 
@@ -114,13 +118,33 @@ bool CGuildMarkUploader::__LoadSymbol(const char* c_szFileName, UINT* peError)
 		return false;
 	}
 
-	fseek(file, 0, SEEK_END);
-	long fileSize = ftell(file);
-	fseek(file, 0, SEEK_SET);
+	// ZiiNAN: 64-bit safety cleanup
+	const size_t maxSymbolSize = std::numeric_limits<uint16_t>::max() - sizeof(TPacketCGSymbolUpload);
+	if (fseek(file, 0, SEEK_END) != 0)
+	{
+		fclose(file);
+		*peError = ERROR_LOAD;
+		return false;
+	}
 
-	m_symbolBuf.resize(static_cast<size_t>(fileSize));
-	fread(m_symbolBuf.data(), m_symbolBuf.size(), 1, file);
+	const long fileSize = ftell(file);
+	if (fileSize <= 0 || static_cast<size_t>(fileSize) > maxSymbolSize || fseek(file, 0, SEEK_SET) != 0)
+	{
+		fclose(file);
+		*peError = ERROR_LOAD;
+		return false;
+	}
+
+	const size_t symbolSize = static_cast<size_t>(fileSize);
+	m_symbolBuf.resize(symbolSize);
+	const size_t bytesRead = fread(m_symbolBuf.data(), 1, symbolSize, file);
 	fclose(file);
+	if (bytesRead != symbolSize)
+	{
+		m_symbolBuf.clear();
+		*peError = ERROR_LOAD;
+		return false;
+	}
 
 	m_dwSymbolCRC32 = GetFileCRC32(c_szFileName);
 	return true;
@@ -283,11 +307,14 @@ bool CGuildMarkUploader::__SendSymbolPacket()
 {
 	if (m_symbolBuf.empty())
 		return false;
+	const size_t maxSymbolSize = std::numeric_limits<uint16_t>::max() - sizeof(TPacketCGSymbolUpload);
+	if (m_symbolBuf.size() > maxSymbolSize)
+		return false;
 
-	TPacketCGSymbolUpload kPacketSymbolUpload;
+	TPacketCGSymbolUpload kPacketSymbolUpload{};
 	kPacketSymbolUpload.header=CG::GUILD_SYMBOL_UPLOAD;
 	kPacketSymbolUpload.handle=m_dwGuildID;
-	kPacketSymbolUpload.length=sizeof(TPacketCGSymbolUpload) + static_cast<uint16_t>(m_symbolBuf.size());
+	kPacketSymbolUpload.length=static_cast<uint16_t>(sizeof(TPacketCGSymbolUpload) + m_symbolBuf.size());
 
 	if (!Send(sizeof(TPacketCGSymbolUpload), &kPacketSymbolUpload))
 		return false;

@@ -936,7 +936,9 @@ void CInstanceBase::__SetAffect(UINT eAffect, bool isVisible)
 
 	if (eAffect>=AFFECT_NUM)
 	{
-		TraceError("CInstanceBase[VID:%d]::SetAffect(eAffect:%d<AFFECT_NUM:%d, isVisible=%d)", GetVirtualID(), eAffect, isVisible);
+		// ZiiNAN: 64-bit safety cleanup
+		TraceError("CInstanceBase[VID:%u]::SetAffect(eAffect:%u<AFFECT_NUM:%u, isVisible=%d)",
+			static_cast<unsigned>(GetVirtualID()), static_cast<unsigned>(eAffect), static_cast<unsigned>(AFFECT_NUM), isVisible);
 		return;
 	}
 
@@ -985,8 +987,8 @@ void CInstanceBase::SetEmoticon(UINT eEmoticon)
 {
 	if (eEmoticon>=EMOTICON_NUM)
 	{
-		TraceError("CInstanceBase[VID:%d]::SetEmoticon(eEmoticon:%d<EMOTICON_NUM:%d, isVisible=%d)",
-			GetVirtualID(), eEmoticon);
+		TraceError("CInstanceBase[VID:%u]::SetEmoticon(eEmoticon:%u<EMOTICON_NUM:%u)",
+			static_cast<unsigned>(GetVirtualID()), static_cast<unsigned>(eEmoticon), static_cast<unsigned>(EMOTICON_NUM));
 		return;
 	}
 	if (IsPossibleEmoticon())

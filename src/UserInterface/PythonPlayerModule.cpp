@@ -1928,9 +1928,9 @@ PyObject * playerGetEmotionIconImage(PyObject* poSelf, PyObject* poArgs)
 		return Py_BuildException();
 
 	if (m_kMap_iEmotionIndex_pkIconImage.end() == m_kMap_iEmotionIndex_pkIconImage.find(iIndex))
-		return Py_BuildValue("K", 0);
+		return Py_BuildPointer(nullptr);
 
-	return Py_BuildValue("K", m_kMap_iEmotionIndex_pkIconImage[iIndex]);
+	return Py_BuildPointer(m_kMap_iEmotionIndex_pkIconImage[iIndex]);
 }
 
 PyObject * playerSetItemData(PyObject* poSelf, PyObject* poArgs)

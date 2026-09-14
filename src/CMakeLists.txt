@@ -1,3 +1,5 @@
+link_libraries(M2FirstPartyArchitectureChecks)
+
 add_subdirectory(AudioLib)
 add_subdirectory(Discord)
 add_subdirectory(EffectLib)
