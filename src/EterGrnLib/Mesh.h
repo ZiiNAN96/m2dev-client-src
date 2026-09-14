@@ -30,7 +30,7 @@ class CGrannyMesh
 			int vertexBase, int indexBase, CGrannyMaterialPalette& palette);
 		const AssetRuntime::MeshAsset* GetAsset() const { return m_asset; }
 		bool					CreateFromGrannyMeshPointer(granny_skeleton* pgrnSkeleton, granny_mesh* pgrnMesh, int vtxBasePos, int idxBasePos, CGrannyMaterialPalette& rkMtrlPal);			
-		bool					LoadIndices(void* dstBaseIndices);
+		bool LoadIndices(void* dstBaseIndices, AssetRuntime::IndexWidth width = AssetRuntime::IndexWidth::UInt16);
 		bool					LoadPNTVertices(void* dstBaseVertices);
 		bool					NEW_LoadVertices(void* dstBaseVertices);
 		void					Destroy();

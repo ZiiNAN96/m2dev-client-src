@@ -34,6 +34,7 @@ StaticObjectGeometryPtr DiligentActorRenderer::CreateGeometry(const ActorModelSo
     if(data.IsRigid()) source.vertices=data.rigidVertices;
     else source.vertices.resize(data.vertexCount);
     source.indices=data.indices;
+    source.indices32=data.indices32;
     auto geometry=data.IsRigid() ? m_meshes.UploadGeometry(source) : m_meshes.UploadDynamicGeometry(source);
     if(geometry) ++m_indexUploads;
     if(geometry && part!=ActorPart::Body) m_attachmentGeometry.emplace_back(geometry);

@@ -9,6 +9,8 @@ struct StaticObjectSource
 {
     std::vector<StaticObjectVertex> vertices;
     std::vector<uint16_t> indices;
+    // ZiiNAN: Modern asset pipeline; exactly one index stream is populated.
+    std::vector<uint32_t> indices32;
 };
 struct StaticObjectGeometry { virtual ~StaticObjectGeometry() = default; };
 using StaticObjectGeometryPtr = std::shared_ptr<StaticObjectGeometry>;

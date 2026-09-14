@@ -46,6 +46,7 @@ bool CGrannyMesh::CreateFromAsset(const AssetRuntime::ModelHandle& model, std::s
     for (const auto index : m_asset->materialBindings) {
         if (index >= materials.size()) return false;
         const auto slot = palette.RegisterMaterial(materials[index]);
+        if (slot == CGrannyMaterialPalette::InvalidMaterial) return false;
         m_mtrlIndexVector.push_back(slot);
         m_bHaveBlendThing |= palette.GetMaterialRef(slot).GetType() == CGrannyMaterial::TYPE_BLEND_PNT;
     }
@@ -68,25 +69,29 @@ bool CGrannyMesh::CreateFromAsset(const AssetRuntime::ModelHandle& model, std::s
     return true;
 }
 
-bool CGrannyMesh::LoadIndices(void * dstBaseIndices)
+bool CGrannyMesh::LoadIndices(void * dstBaseIndices, AssetRuntime::IndexWidth width)
 {
+    if (width != AssetRuntime::IndexWidth::UInt16 && width != AssetRuntime::IndexWidth::UInt32) return false;
+    const std::size_t stride = width == AssetRuntime::IndexWidth::UInt32 ? 4 : 2;
     if (m_runtimeBound) {
         if (!m_document || !m_asset) return false;
         if (!m_asset->indexCount) return true;
         if (!dstBaseIndices) return false;
-        static_assert(sizeof(TIndex) == 2 || sizeof(TIndex) == 4);
-        const auto width = sizeof(TIndex) == 2 ? AssetRuntime::IndexWidth::UInt16 : AssetRuntime::IndexWidth::UInt32;
-        TIndex* dstIndices = static_cast<TIndex*>(dstBaseIndices) + m_idxBasePos;
+        if (m_idxBasePos < 0 || std::size_t(m_idxBasePos) > std::numeric_limits<std::size_t>::max() / stride ||
+            std::size_t(m_asset->indexCount) > std::numeric_limits<std::size_t>::max() / stride) return false;
+        auto* dstIndices = static_cast<std::byte*>(dstBaseIndices) + std::size_t(m_idxBasePos) * stride;
         const auto error = m_document->CopyIndices(m_assetModel, m_assetMesh, width,
-            {reinterpret_cast<std::byte*>(dstIndices), std::size_t(m_asset->indexCount) * sizeof(TIndex)});
+            {dstIndices, std::size_t(m_asset->indexCount) * stride});
         if (error != AssetRuntime::AssetError::None)
             TraceError("Asset Runtime index upload: mesh=%zu error=%s", m_assetMesh, AssetRuntime::ErrorName(error));
         return error == AssetRuntime::AssetError::None;
     }
 
 	const granny_mesh * pgrnMesh = GetGrannyMeshPointer();
-	TIndex * dstIndices = ((TIndex *)dstBaseIndices) + m_idxBasePos;
-	GrannyCopyMeshIndices(pgrnMesh, sizeof(TIndex), dstIndices);
+    if (!pgrnMesh || !dstBaseIndices || m_idxBasePos < 0 ||
+        std::size_t(m_idxBasePos) > std::numeric_limits<std::size_t>::max() / stride) return false;
+    auto* dstIndices = static_cast<std::byte*>(dstBaseIndices) + std::size_t(m_idxBasePos) * stride;
+	GrannyCopyMeshIndices(pgrnMesh, static_cast<int>(stride), dstIndices);
 	return true;
 }
 

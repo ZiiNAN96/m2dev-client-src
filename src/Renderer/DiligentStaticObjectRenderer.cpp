@@ -44,6 +44,10 @@ struct Geometry final : StaticObjectGeometry
     std::shared_ptr<SkinMeshBuffers> skin;
     std::shared_ptr<SkinPoseBuffer> pose;
     std::vector<uint16_t> validationIndices;
+    std::vector<uint32_t> validationIndices32;
+    VALUE_TYPE indexType=VT_UINT16;
+    std::size_t IndexCount() const { return indexType==VT_UINT32 ? validationIndices32.size() : validationIndices.size(); }
+    uint32_t IndexAt(std::size_t index) const { return indexType==VT_UINT32 ? validationIndices32[index] : validationIndices[index]; }
     uint32_t vertexCount=0;
     bool dynamic=false; // ZiiNAN: Only actor VBs use discard updates.
     std::shared_ptr<Counters> counters;
@@ -254,6 +258,7 @@ bool DiligentStaticObjectRenderer::PreparePrototype(StaticObjectGeometryPtr& geo
 {
     auto& s=*m_impl;
     if(!s.backend.m_impl || !s.backend.m_impl->inFrame || !s.pipelines[12] ||
+       (source && !source->indices32.empty()) ||
        !ValidPrototypeModel(data) || !ValidPrototypePalette(palette)) return false;
     auto mesh=std::dynamic_pointer_cast<Geometry>(geometry);
     if(mesh && (!mesh->skin || !mesh->pose || mesh->skin->meshes!=data.meshes || mesh->skin->remaps!=remaps ||
@@ -329,12 +334,16 @@ StaticObjectGeometryPtr DiligentStaticObjectRenderer::CreateGeometry(const Stati
 {
     auto& s=*m_impl;
     const auto fail=[&]() -> StaticObjectGeometryPtr { s.failed=true; return {}; };
-    if(!s.backend.m_impl || data.vertices.empty() || data.indices.empty() ||
-       data.vertices.size()>std::numeric_limits<uint32_t>::max()/32 ||
-       data.indices.size()>std::numeric_limits<uint32_t>::max()/2) return fail();
+    const bool wide=!data.indices32.empty();
+    const auto indexCount=wide ? data.indices32.size() : data.indices.size();
+    const auto indexStride=wide ? sizeof(uint32_t) : sizeof(uint16_t);
+    if(!s.backend.m_impl || data.vertices.empty() || !indexCount || (wide && !data.indices.empty()) ||
+        data.vertices.size()>std::numeric_limits<uint32_t>::max()/32 ||
+       indexCount>std::numeric_limits<uint32_t>::max()/indexStride) return fail();
     for(const auto& vertex:data.vertices) for(float v:vertex) if(!std::isfinite(v)) return fail();
     // Indices are mesh-local; exact base/range is validated at submission.
     for(auto index:data.indices) if(index>=data.vertices.size()) return fail();
+    for(auto index:data.indices32) if(index>=data.vertices.size()) return fail();
     try {
         auto result=std::make_shared<Geometry>();
         BufferDesc desc;
@@ -343,12 +352,14 @@ StaticObjectGeometryPtr DiligentStaticObjectRenderer::CreateGeometry(const Stati
         desc.CPUAccessFlags=dynamic ? CPU_ACCESS_WRITE : CPU_ACCESS_NONE;
         BufferData initial{data.vertices.data(),desc.Size};
         s.backend.m_impl->device->CreateBuffer(desc,dynamic ? nullptr : &initial,&result->vertices);
-        desc.Name="Original static uint16 indices"; desc.Size=data.indices.size()*2; desc.BindFlags=BIND_INDEX_BUFFER;
+        desc.Name=wide ? "Static uint32 indices" : "Original static uint16 indices";
+        desc.Size=indexCount*indexStride; desc.BindFlags=BIND_INDEX_BUFFER;
         desc.Usage=USAGE_IMMUTABLE; desc.CPUAccessFlags=CPU_ACCESS_NONE;
-        initial={data.indices.data(),desc.Size};
+        initial={wide ? static_cast<const void*>(data.indices32.data()) : static_cast<const void*>(data.indices.data()),desc.Size};
         s.backend.m_impl->device->CreateBuffer(desc,&initial,&result->indices);
         if(!result->vertices || !result->indices) return fail();
         result->vertexCount=static_cast<uint32_t>(data.vertices.size()); result->validationIndices=data.indices;
+        result->validationIndices32=data.indices32; result->indexType=wide ? VT_UINT32 : VT_UINT16;
         result->dynamic=dynamic;
         result->counters=s.counters; ++s.counters->geometry;
         return result;
@@ -428,14 +439,14 @@ void DiligentStaticObjectRenderer::Draw(const StaticObjectGeometryPtr& geometry,
        cull>=3 || !s.pipelines[variant] || draw.alphaReference>255 || static_cast<uint32_t>(draw.alphaTest)>2 ||
        static_cast<uint32_t>(draw.actorStage)>3 || (draw.cameraAlpha && draw.sphereMap) ||
        (draw.actorStage==ActorMaterialStage::Specular && !draw.sphereMap) ||
-       !draw.indexCount || draw.indexCount%3 || draw.firstIndex>mesh->validationIndices.size() ||
-       draw.indexCount>mesh->validationIndices.size()-draw.firstIndex || !draw.vertexCount ||
+       !draw.indexCount || draw.indexCount%3 || draw.firstIndex>mesh->IndexCount() ||
+       draw.indexCount>mesh->IndexCount()-draw.firstIndex || !draw.vertexCount ||
        draw.baseVertex>mesh->vertexCount || draw.vertexCount>mesh->vertexCount-draw.baseVertex ||
        static_cast<uint32_t>(draw.fog)>3) { s.failed=true; return; }
     if((rigid && !mesh->skin->rigidVertices) ||
        (skin && draw.vertexCount>mesh->skin->deformCount-draw.baseVertex)) { s.failed=true; return; }
     for(size_t i=draw.firstIndex;i<size_t(draw.firstIndex)+draw.indexCount;++i)
-        if(mesh->validationIndices[i]>=draw.vertexCount) { s.failed=true; return; }
+        if(mesh->IndexAt(i)>=draw.vertexCount) { s.failed=true; return; }
     try {
         auto& b=*s.backend.m_impl;
         if(!image->sampler || !(image->sampling==draw.sampling) || image->anisotropic!=draw.anisotropic || image->maxAnisotropy!=draw.maxAnisotropy) {
@@ -520,7 +531,7 @@ void DiligentStaticObjectRenderer::Draw(const StaticObjectGeometryPtr& geometry,
         b.context->SetVertexBuffers(0,1,&vertex,&offset,RESOURCE_STATE_TRANSITION_MODE_TRANSITION,SET_VERTEX_BUFFERS_FLAG_RESET);
         b.context->SetIndexBuffer(mesh->indices,0,RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
         b.context->CommitShaderResources(binding,RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
-        DrawIndexedAttribs attributes{draw.indexCount,VT_UINT16,DRAW_FLAG_VERIFY_ALL};
+        DrawIndexedAttribs attributes{draw.indexCount,mesh->indexType,DRAW_FLAG_VERIFY_ALL};
         attributes.FirstIndexLocation=draw.firstIndex;
         attributes.BaseVertex=draw.baseVertex-(rigid ? mesh->skin->deformCount : 0);
         b.context->DrawIndexed(attributes); ++s.draws;

@@ -7,8 +7,11 @@
 #include <map>
 #include <string>
 #include <mutex>
+#include <memory>
 
 class CTextureCache;
+class CGraphicImage;
+namespace AssetRuntime { struct EncodedImage; }
 
 class CResourceManager : public CSingleton<CResourceManager>
 {
@@ -28,6 +31,7 @@ class CResourceManager : public CSingleton<CResourceManager>
 		CResource *	FindResourcePointer(DWORD dwFileCRC);
 		CResource *	GetResourcePointer(const char * c_szFileName);
 		CResource *	GetTypeResourcePointer(const char * c_szFileName, int iType=-1);
+		CGraphicImage* GetEncodedImagePointer(std::shared_ptr<const AssetRuntime::EncodedImage> image);
 
 		// 추가
 		bool		isResourcePointerData(DWORD dwFileCRC);

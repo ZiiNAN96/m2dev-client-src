@@ -2,7 +2,7 @@
 #include "Eterbase/Debug.h"
 #include "Thing.h"
 #include "ThingInstance.h"
-#include "AssetRuntime/Granny/GrannyAssetProvider.h"
+#include "AssetRuntime/Providers.h"
 
 CGraphicThing::CGraphicThing(const char* fileName) : CResource(fileName)
 {
@@ -85,17 +85,20 @@ int CGraphicThing::GetModelCount() const
 
 int CGraphicThing::GetMotionCount() const
 {
-    return static_cast<int>(m_asset.AnimationCount());
+    int count = 0;
+    for (std::size_t i = 0; i < m_asset.AnimationCount(); ++i)
+        if (!m_asset.Animation(i).Get()->metadataOnly) ++count;
+    return count;
 }
 
 bool CGraphicThing::OnLoad(int size, const void* bytes)
 {
     if (!bytes || size <= 0) return false;
     auto loaded = AssetRuntime::LoadModel(GetFileNameString(),
-        {static_cast<const std::byte*>(bytes), static_cast<size_t>(size)},
-        AssetRuntime::GetGrannyAssetProvider());
+        {static_cast<const std::byte*>(bytes), static_cast<size_t>(size)});
     if (!loaded) {
-        TraceError("Asset Runtime load failed: %s", GetFileName());
+        TraceError("Asset Runtime load failed: %s error=%s detail=%s", GetFileName(),
+            AssetRuntime::ErrorName(loaded.error), loaded.diagnostic.c_str());
         return false;
     }
     m_asset = std::move(loaded.asset);
@@ -142,7 +145,10 @@ bool CGraphicThing::LoadMotions()
     const int count = GetMotionCount();
     if (!count) return true;
     m_motions = new CGrannyMotion[count];
-    for (int i = 0; i < count; ++i)
-        if (!m_motions[i].BindAsset(m_asset.Animation(i))) return false;
+    int output = 0;
+    for (std::size_t i = 0; i < m_asset.AnimationCount(); ++i) {
+        const auto clip = m_asset.Animation(i);
+        if (!clip.Get()->metadataOnly && !m_motions[output++].BindAsset(clip)) return false;
+    }
     return true;
 }

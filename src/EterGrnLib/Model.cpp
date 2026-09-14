@@ -122,6 +122,8 @@ bool CGrannyModel::LoadPNTVertices()
 
 	assert(m_meshs != NULL);
 
+	const auto stride = Renderer::VertexStride(m_vertexLayout);
+    if (!stride || std::uint32_t(m_rigidVtxCount) > std::uint32_t(std::numeric_limits<int>::max()) / stride) return false;
 	if (!m_pntVtxBuf.Create(m_rigidVtxCount, m_vertexLayout))
 		return false;
 
@@ -145,7 +147,9 @@ bool CGrannyModel::LoadIndices()
 	if (m_idxCount <= 0)
 		return true;
 
-	if (!m_idxBuf.Create(m_idxCount, Renderer::IndexFormat::UInt16))
+    const bool wide = m_indexWidth == AssetRuntime::IndexWidth::UInt32;
+    if (std::size_t(m_idxCount) > std::numeric_limits<std::uint32_t>::max() / (wide ? 4u : 2u)) return false;
+	if (!m_idxBuf.Create(m_idxCount, wide ? Renderer::IndexFormat::UInt32 : Renderer::IndexFormat::UInt16))
 		return false;
 
 	void * indices;
@@ -156,7 +160,7 @@ bool CGrannyModel::LoadIndices()
 	for (int m = 0; m < GetMeshCount(); ++m)
 	{
 		CGrannyMesh& rMesh = m_meshs[m];
-		if (!rMesh.LoadIndices(indices)) { m_idxBuf.Unlock(); return false; }
+		if (!rMesh.LoadIndices(indices, m_indexWidth)) { m_idxBuf.Unlock(); return false; }
 	}
 
 	m_idxBuf.Unlock();	
@@ -294,6 +298,11 @@ bool CGrannyModel::LoadAssetMeshes()
     int diffuseNodes = 0, blendNodes = 0;
     for (int index = 0; index < meshCount; ++index) {
         const auto& source = asset->meshes[index];
+        if (source.indexCount && source.indexWidth != AssetRuntime::IndexWidth::UInt16 &&
+            source.indexWidth != AssetRuntime::IndexWidth::UInt32) return false;
+        // Keep the productive Granny stream unchanged; neutral rigid assets retain their declared width.
+        if (!m_pgrnModel && source.indexWidth == AssetRuntime::IndexWidth::UInt32)
+            m_indexWidth = AssetRuntime::IndexWidth::UInt32;
         if (source.vertexCount > std::uint32_t(std::numeric_limits<int>::max() - vertices) ||
             source.indexCount > std::uint32_t(std::numeric_limits<int>::max() - indices) ||
             source.deformation == AssetRuntime::Deformation::Mixed ||
@@ -371,7 +380,7 @@ void CGrannyModel::AppendMeshNode(CGrannyMesh::EType eMeshType, CGrannyMaterial:
 
 bool CGrannyModel::CreateFromAsset(AssetRuntime::ModelHandle asset)
 {
-    if (!IsEmpty() || !asset) return false;
+    if (!IsEmpty() || !asset || !asset.Get()->renderable) return false;
     m_asset = std::move(asset);
     // Optional legacy/reference interop. All production geometry and material construction is neutral.
     m_pgrnModel = AssetRuntime::GrannyInterop::GetModel(m_asset);
@@ -486,6 +495,8 @@ bool CGrannyModel::__LoadVertices()
 //	assert((m_vertexLayout & (Renderer::VertexPosition|Renderer::VertexNormal|Renderer::VertexTex1)) == m_vertexLayout);
 
 //	if (!m_pntVtxBuf.Create(m_rigidVtxCount, Renderer::VertexPosition|Renderer::VertexNormal|Renderer::VertexTex1))
+	const auto stride = Renderer::VertexStride(m_vertexLayout);
+    if (!stride || std::uint32_t(m_rigidVtxCount) > std::uint32_t(std::numeric_limits<int>::max()) / stride) return false;
 	if (!m_pntVtxBuf.Create(m_rigidVtxCount, m_vertexLayout))
 		return false;
 	
@@ -506,6 +517,7 @@ bool CGrannyModel::__LoadVertices()
 void CGrannyModel::Initialize()
 {
     m_asset = {};
+    m_indexWidth = AssetRuntime::IndexWidth::UInt16;
     m_skinningData.reset();
     m_staticObjectSource.reset();
     m_actorSource.reset(); // ZiiNAN: Model-owned immutable actor indices.
@@ -537,12 +549,15 @@ bool CGrannyModel::CaptureStaticObjectSource()
     static_assert(sizeof(Renderer::StaticObjectVertex) == sizeof(TPNTVertex));
     auto source = std::make_shared<Renderer::StaticObjectSource>();
     source->vertices.resize(m_rigidVtxCount);
-    source->indices.resize(m_idxCount);
+    const bool wide = m_indexWidth == AssetRuntime::IndexWidth::UInt32;
+    if (wide) source->indices32.resize(m_idxCount);
+    else source->indices.resize(m_idxCount);
+    void* indices = wide ? static_cast<void*>(source->indices32.data()) : static_cast<void*>(source->indices.data());
     for (int i=0; i<GetMeshCount(); ++i)
     {
         // Same original conversion and offsets, while Granny file sections are alive.
         if (!m_meshs[i].NEW_LoadVertices(source->vertices.data()) ||
-            !m_meshs[i].LoadIndices(source->indices.data())) return false;
+            !m_meshs[i].LoadIndices(indices, m_indexWidth)) return false;
     }
     m_staticObjectSource = std::move(source);
     return true;
@@ -560,9 +575,12 @@ bool CGrannyModel::CaptureActorSource(bool attachment)
     source->vertexCount=static_cast<uint32_t>(vertexCount);
     source->deformVertexCount=static_cast<uint32_t>(m_deformVtxCount);
     source->rigidVertices.resize(m_rigidVtxCount);
-    source->indices.resize(m_idxCount);
+    const bool wide = m_indexWidth == AssetRuntime::IndexWidth::UInt32;
+    if (wide) source->indices32.resize(m_idxCount);
+    else source->indices.resize(m_idxCount);
+    void* indices = wide ? static_cast<void*>(source->indices32.data()) : static_cast<void*>(source->indices.data());
     for(int i=0;i<GetMeshCount();++i) {
-        if(!m_meshs[i].LoadIndices(source->indices.data())) return false;
+        if(!m_meshs[i].LoadIndices(indices, m_indexWidth)) return false;
         if(m_rigidVtxCount && !m_meshs[i].NEW_LoadVertices(source->rigidVertices.data())) return false;
     }
     m_actorSource=std::move(source);

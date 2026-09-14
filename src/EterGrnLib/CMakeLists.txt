@@ -7,6 +7,7 @@ target_link_libraries(EterGrnLib
 	mio
 	AssetRuntime
 	AssetRuntimeGranny
+	AssetRuntimeProviders
 )
 
 GroupSourcesByFolder(EterGrnLib)

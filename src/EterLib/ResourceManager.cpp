@@ -10,8 +10,10 @@
 #include "TextureCache.h"
 #include "DecodedImageData.h"
 #include "Platform/PlatformTime.h"
+#include "AssetRuntime/AssetRuntime.h"
 
 #include <limits>
+#include <stdexcept>
 
 int g_iLoadingDelayTime = 1;  // Reduced from 20ms to 1ms for faster async loading
 
@@ -235,6 +237,36 @@ CResource * CResourceManager::InsertResourcePointer(DWORD dwFileCRC, CResource* 
 	m_pResMap.insert(TResourcePointerMap::value_type(dwFileCRC, pResource));
 	return pResource;
 }
+
+// ZiiNAN: Modern asset pipeline
+CGraphicImage* CResourceManager::GetEncodedImagePointer(std::shared_ptr<const AssetRuntime::EncodedImage> image)
+try
+{
+	if (!image || image->id.empty() || image->bytes.size() < 4 || image->bytes.size() > 64u * 1024u * 1024u) return nullptr;
+	const auto* bytes = reinterpret_cast<const unsigned char*>(image->bytes.data());
+	const unsigned char pngMagic[] = {137, 80, 78, 71, 13, 10, 26, 10};
+	const bool png = image->mimeType == "image/png" && image->bytes.size() >= sizeof(pngMagic) && !memcmp(bytes, pngMagic, sizeof(pngMagic));
+	const bool jpeg = image->mimeType == "image/jpeg" && bytes[0] == 0xff && bytes[1] == 0xd8 && bytes[2] == 0xff;
+	if (!png && !jpeg) return nullptr;
+	const DWORD key = GetCRC32(image->id.data(), image->id.size());
+	std::lock_guard<std::mutex> lock(m_ResourceMapMutex);
+	const auto found = m_pResMap.find(key);
+	if (found != m_pResMap.end()) {
+		auto* resource = found->second;
+		if (resource->GetFileNameString() != image->id || !resource->IsType(CGraphicImage::Type())) return nullptr;
+		auto* cached = static_cast<CGraphicImage*>(resource);
+		if (!cached->IsEmpty()) return cached->MatchesEncodedImage(*image) ? cached : nullptr;
+		return cached->LoadEncodedImage(std::move(image)) ? cached : nullptr;
+	}
+	auto created = std::make_unique<CGraphicImage>(image->id.c_str());
+	if (!created->LoadEncodedImage(std::move(image))) return nullptr;
+	auto* result = created.get();
+	m_pResMap.emplace(key, result);
+	created.release();
+	return result;
+}
+catch (const std::bad_alloc&) { return nullptr; }
+catch (const std::length_error&) { return nullptr; }
 
 
 int __ConvertPathName(const char * c_szPathName, char * pszRetPathName, int retLen)

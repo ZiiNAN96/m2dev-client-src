@@ -47,15 +47,27 @@ struct BoneAsset
     std::string name;
     LocalTransform localBind;
     Matrix4 inverseBind{};
+    std::int32_t sourceNodeIndex{-1};
+    Matrix4 localBindMatrix{1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1};
+    bool hasLocalBindMatrix{};
 };
 struct SkeletonAsset
 {
     std::string name;
     std::vector<BoneAsset> bones;
+    BoneId rootIndex{-1};
+    std::int32_t sourceRootNode{-1};
     BoneId FindBone(std::string_view name) const;
 };
 enum class MaterialStage { Diffuse, DiffuseOpacity };
 enum class Culling { Clockwise, None };
+// ZiiNAN: Modern asset pipeline
+struct EncodedImage
+{
+    AssetId id;
+    std::string mimeType;
+    std::vector<std::byte> bytes;
+};
 struct MaterialAsset
 {
     std::string name;
@@ -68,6 +80,10 @@ struct MaterialAsset
     bool specular{};
     float specularPower{};
     std::uint8_t sphereMapIndex{};
+    std::array<std::shared_ptr<const EncodedImage>, 2> embeddedImages{};
+    std::array<float, 4> baseColorFactor{1, 1, 1, 1};
+    float alphaCutoff{0.5f};
+    bool explicitRenderState{};
     // Per-draw actor/world passes may override these legacy defaults.
 };
 struct MaterialGroup
@@ -81,6 +97,9 @@ struct SkinningAsset
     std::vector<Bounds> boneBounds;
     std::uint32_t influencesPerVertex{}, weightOffset{}, indexOffset{};
     bool normalizedByteWeights{}, byteBoneIndices{}, validRemap{};
+    // Owned import metadata; not a promise that a runtime skin evaluator is available.
+    std::vector<std::array<std::uint32_t, 4>> jointIndices;
+    std::vector<std::array<float, 4>> jointWeights;
 };
 struct SkinningStreamView
 {
@@ -103,6 +122,7 @@ struct MeshAsset
     std::vector<MaterialGroup> materialGroups; // Original mesh-local material slots.
     SkinningAsset skin;
     bool twoSided{};
+    std::vector<std::array<float, 4>> tangents; // Optional transformed tangent + bitangent handedness metadata.
 };
 struct ModelAsset
 {
@@ -112,6 +132,17 @@ struct ModelAsset
     std::optional<SkeletonAsset> skeleton;
     std::vector<std::uint32_t> animations; // Document animation slots.
     Deformation deformation{Deformation::Rigid};
+    bool renderable{true};
+};
+enum class AnimationPath { Translation, Rotation, Scale };
+enum class AnimationInterpolation { Linear, Step, CubicSpline };
+struct AnimationChannelAsset
+{
+    std::int32_t targetNode{-1};
+    std::string targetName;
+    AnimationPath path{AnimationPath::Translation};
+    AnimationInterpolation interpolation{AnimationInterpolation::Linear};
+    std::uint32_t keyframeCount{};
 };
 struct AnimationTextEvent { std::string text; float time{}; };
 struct AnimationAsset
@@ -120,6 +151,8 @@ struct AnimationAsset
     float duration{}, timeStep{};
     std::uint32_t trackGroupCount{};
     std::vector<AnimationTextEvent> textEvents; // Existing first-track-group event order.
+    std::vector<AnimationChannelAsset> channels;
+    bool metadataOnly{};
 };
 
 class AssetDocument;
@@ -247,6 +280,7 @@ struct LoadResult
 {
     AssetHandle asset;
     AssetError error{AssetError::None};
+    std::string diagnostic{};
     explicit operator bool() const { return bool(asset) && error == AssetError::None; }
 };
 class AssetProvider

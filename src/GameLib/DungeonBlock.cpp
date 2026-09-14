@@ -10,6 +10,7 @@ class CDungeonModelInstance : public CGrannyModelInstance
 {
 		std::vector<std::array<float,10>> m_vertices;
 		std::vector<uint16_t> m_indices;
+        std::vector<uint32_t> m_indices32;
 		Renderer::WorldResources m_resources;
 		static void Submit(const void* native,const Renderer::SpecialMeshDraw& group)
 		{
@@ -17,8 +18,9 @@ class CDungeonModelInstance : public CGrannyModelInstance
 			auto* renderer=Renderer::worldRenderer;
 			if(!renderer || !Renderer::worldSurfaceFrame) return;
 			Renderer::EffectDraw draw; draw.strip=false; std::string error;
+            const auto indexCount = self.m_indices32.empty() ? self.m_indices.size() : self.m_indices32.size();
 			if(!CaptureMaterialState(draw,error,true) || group.material>=self.m_kMtrlPal.GetMaterialCount() ||
-				group.firstIndex>self.m_indices.size() || group.indexCount>self.m_indices.size()-group.firstIndex) { renderer->ReportFailure(); return; }
+				group.firstIndex>indexCount || group.indexCount>indexCount-group.firstIndex) { renderer->ReportFailure(); return; }
 			auto& material=self.m_kMtrlPal.GetMaterialRef(group.material);
 			auto load=[&](CGraphicImage* image) -> Renderer::TerrainTexturePtr {
 				if(!image) return {}; auto& texture=self.m_resources.textures[image->GetFileName()];
@@ -29,7 +31,7 @@ class CDungeonModelInstance : public CGrannyModelInstance
 			if((draw.textured && !texture) || (material.GetImagePointer(1) && !draw.secondaryTexture)) { renderer->ReportFailure(); return; }
 			std::vector<Renderer::EffectVertex> vertices; vertices.reserve(group.indexCount);
 			for(uint32_t i=0;i<group.indexCount;++i) {
-				const auto index=self.m_indices[group.firstIndex+i];
+                const auto index=self.m_indices32.empty() ? self.m_indices[group.firstIndex+i] : self.m_indices32[group.firstIndex+i];
 				if(index>=group.vertexCount || uint64_t(group.baseVertex)+index>=self.m_vertices.size()) { renderer->ReportFailure(); return; }
 				const auto& v=self.m_vertices[group.baseVertex+index];
 				vertices.push_back({{v[0],v[1],v[2]},0xffffffff,{v[6],v[7]}});
@@ -48,8 +50,16 @@ class CDungeonModelInstance : public CGrannyModelInstance
 			if(m_pModel->GetRigidVertexBytes()<size_t(m_pModel->GetRigidVertexCount())*40) return false;
 			void* vertices=nullptr; void* indices=nullptr;
 			if(!m_pModel->LockVertices(&indices,&vertices)) return false;
-			m_vertices.resize(m_pModel->GetRigidVertexCount()); m_indices.resize(m_pModel->GetIdxCount());
-			memcpy(m_vertices.data(),vertices,m_vertices.size()*40); memcpy(m_indices.data(),indices,m_indices.size()*2);
+            m_vertices.resize(m_pModel->GetRigidVertexCount());
+            m_indices.clear(); m_indices32.clear();
+            if (m_pModel->GetIndexWidth() == AssetRuntime::IndexWidth::UInt32) {
+                m_indices32.resize(m_pModel->GetIdxCount());
+                memcpy(m_indices32.data(),indices,m_indices32.size()*sizeof(uint32_t));
+            } else {
+                m_indices.resize(m_pModel->GetIdxCount());
+                memcpy(m_indices.data(),indices,m_indices.size()*sizeof(uint16_t));
+            }
+			memcpy(m_vertices.data(),vertices,m_vertices.size()*40);
 			m_pModel->UnlockVertices(); return true;
 		}
 

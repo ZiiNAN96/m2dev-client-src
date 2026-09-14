@@ -115,6 +115,7 @@ class CGrannyMaterial : public CReferenceObject
 class CGrannyMaterialPalette
 {
 	public:
+		static constexpr DWORD InvalidMaterial = ~DWORD(0);
 		CGrannyMaterialPalette();
 		virtual ~CGrannyMaterialPalette();
 

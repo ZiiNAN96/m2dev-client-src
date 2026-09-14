@@ -26,7 +26,13 @@ using TerrainTexturePtr = std::shared_ptr<TerrainTexture>;
 class ITextureUploader
 {
 public:
+    ITextureUploader() = default;
+    ITextureUploader(const ITextureUploader&) : ITextureUploader() {}
+    ITextureUploader& operator=(const ITextureUploader&) { cacheLifetime_ = std::make_shared<unsigned char>(); return *this; }
     virtual ~ITextureUploader() = default;
     virtual TerrainTexturePtr UploadTexture(const TerrainTextureData&) = 0;
+    std::weak_ptr<const void> TextureCacheLifetime() const { return cacheLifetime_; }
+private:
+    std::shared_ptr<const void> cacheLifetime_ = std::make_shared<unsigned char>();
 };
 }

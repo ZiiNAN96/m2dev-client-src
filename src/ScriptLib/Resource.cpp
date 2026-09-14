@@ -6,6 +6,7 @@
 #include "EterLib/GrpText.h"
 #include "EterLib/AttributeData.h"
 #include "EterGrnLib/Thing.h"
+#include "AssetRuntime/Providers.h"
 #include "EterGrnLib/ThingInstance.h"
 #include "EffectLib/EffectMesh.h"
 #include "EffectLib/EffectInstance.h"
@@ -96,7 +97,8 @@ CPythonResource::CPythonResource()
 	m_resManager.RegisterResourceNewFunctionPointer("bmp", NewImage);
 	m_resManager.RegisterResourceNewFunctionPointer("png", NewImage);
 	m_resManager.RegisterResourceNewFunctionPointer("fnt", NewText);
-	m_resManager.RegisterResourceNewFunctionPointer("gr2", NewThing);
+    for (const auto extension : AssetRuntime::ModelExtensions())
+        m_resManager.RegisterResourceNewFunctionPointer(extension.data(), NewThing);
 	m_resManager.RegisterResourceNewFunctionPointer("mde", NewEffectMesh);
 	m_resManager.RegisterResourceNewFunctionPointer("mdatr", NewAttributeData);
 }

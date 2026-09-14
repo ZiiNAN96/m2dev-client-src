@@ -43,6 +43,7 @@ class CGrannyModel : public CReferenceObject
 			const std::vector<std::unique_ptr<AssetRuntime::MeshBinding>>& bindings) const;
 
 		int GetIdxCount();
+        AssetRuntime::IndexWidth GetIndexWidth() const { return m_indexWidth; }
 		int GetMeshCount() const;
 		CGrannyMesh * GetMeshPointer(int iMesh);
 		granny_model * GetGrannyModelPointer();
@@ -98,6 +99,7 @@ class CGrannyModel : public CReferenceObject
 		CGrannyMaterialPalette	m_kMtrlPal;
 	private:
         AssetRuntime::ModelHandle m_asset;
+        AssetRuntime::IndexWidth m_indexWidth{AssetRuntime::IndexWidth::UInt16};
 		bool					m_bHaveBlendThing;
         std::shared_ptr<const Renderer::StaticObjectSource> m_staticObjectSource;
         std::shared_ptr<const Renderer::ActorModelSource> m_actorSource; // ZiiNAN: No bones or animation copies.

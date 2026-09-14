@@ -6,6 +6,7 @@
 #include "EterLib/StaticObjectTextureLoader.h"
 #include "Renderer/WorldRenderData.h"
 #include "Renderer/Diagnostics.h"
+#include "Renderer/AssetMaterialRenderData.h"
 #include <unordered_map>
 #include <unordered_set>
 #include <fstream>
@@ -326,7 +327,7 @@ void SubmitStaticMapObject(CGraphicThingInstance& thing, StaticMapObjectPass pas
             else {
                 // ZiiNAN: An equipped weapon may already be cached; reuse its existing rigid CPU snapshot.
                 const auto& source=*model->GetActorSource();
-                resource.geometry=renderer->UploadGeometry({source.rigidVertices,source.indices});
+                resource.geometry=renderer->UploadGeometry({source.rigidVertices,source.indices,source.indices32});
             }
         }
         if(!resource.geometry) { Report(thing,"ERROR: geometry upload"); return; }
@@ -355,9 +356,11 @@ void SubmitStaticMapObject(CGraphicThingInstance& thing, StaticMapObjectPass pas
                 auto& material=palette.GetMaterialRef(group->mtrlIndex);
                 const auto& name=material.GetAsset().textures[0];
                 auto& texture=resource.textures[name];
-                if(!texture) texture=LoadStaticObjectTextureFile(name.c_str(),*renderer);
+                if(!texture) texture=material.GetAsset().explicitRenderState && material.GetImagePointer(0) ?
+                    material.GetImagePointer(0)->GetAssetTexture(*renderer) : LoadStaticObjectTextureFile(name.c_str(),*renderer);
                 if(!texture) { Report(thing,"ERROR: texture upload"); return; }
                 draw.cull=material.GetAsset().culling==AssetRuntime::Culling::None ? StaticObjectCull::None : common.cull;
+                ApplyAssetMaterial(material.GetAsset(),draw);
                 draw.firstIndex=group->idxPos; draw.indexCount=group->triCount*3;
                 renderer->Draw(resource.geometry,texture,draw);
             }
@@ -400,9 +403,11 @@ void SubmitSpecialThing(void* context,const void* native,const Renderer::ActorNa
         if(!image) return {}; auto& texture=data.textures[image->GetFileName()];
         if(!texture) texture=LoadStaticObjectTextureFile(image->GetFileName(),*actorRenderer); return texture;
     };
-    auto texture=load(material.GetImagePointer(0));
+    auto texture=material.GetAsset().explicitRenderState && material.GetImagePointer(0) ?
+        material.GetImagePointer(0)->GetAssetTexture(*actorRenderer) : load(material.GetImagePointer(0));
     if(!texture) { fail("ERROR: special thing diffuse image"); return; }
     if(c.cameraAlpha) { draw.cameraAlpha=load(c.cameraAlpha); if(!draw.cameraAlpha) { fail("ERROR: special thing camera mask"); return; } }
+    ApplyAssetMaterial(material.GetAsset(),draw);
     if(draw.actorStage==ActorMaterialStage::Specular) {
         draw.sphereMap=load(material.GetSphereMapImage()); if(!draw.sphereMap) { fail("ERROR: special thing sphere image"); return; }
     }

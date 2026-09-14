@@ -6,6 +6,7 @@
 #include "EterLib/StaticObjectTextureLoader.h"
 #include "EterLib/DrawState.h"
 #include "Renderer/Diagnostics.h"
+#include "Renderer/AssetMaterialRenderData.h"
 #include <fstream>
 
 // ZiiNAN: Diligent mount actor rendering
@@ -107,6 +108,7 @@ void Submit(void* context, const void* nativeInstance, ActorPart part, const Act
     if(native.material>=palette.GetMaterialCount()) { Report(actor,*instance,"ERROR: actor material index"); return; }
     auto& material=palette.GetMaterialRef(native.material);
     const auto& materialAsset=material.GetAsset();
+    ApplyAssetMaterial(materialAsset,draw);
     // OneTexture's opacity pass uses the same native stage-0 image, not a synthetic second mask.
     auto load=[&](const std::string& name) -> TerrainTexturePtr {
         if(name.empty()) return {};
@@ -118,7 +120,8 @@ void Submit(void* context, const void* nativeInstance, ActorPart part, const Act
         }
         return texture;
     };
-    const auto texture=load(materialAsset.textures[0]);
+    const auto texture=materialAsset.explicitRenderState && material.GetImagePointer(0) ?
+        material.GetImagePointer(0)->GetAssetTexture(*actorRenderer) : load(materialAsset.textures[0]);
     if(!texture) { Report(actor,*instance,"ERROR: actor diffuse texture upload"); return; }
     if(draw.actorStage==ActorMaterialStage::Specular) {
         const auto* sphere=material.GetSphereMapImage();
