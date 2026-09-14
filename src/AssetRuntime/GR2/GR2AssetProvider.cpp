@@ -70,8 +70,27 @@ public:
     {
         if(!clip_ || failed_ || !std::isfinite(elapsed)) return;
         const float blend=BlendWeight();
-        for(unsigned c=0;c<3;++c) for(unsigned axis=0;axis<3;++axis)
-            matrix[12+c]+=elapsed*matrix[axis*4+c]*(velocity_[axis]*speed_*blend+previousVelocity_[axis]*previousSpeed_*(1-blend));
+        if(!motion_.periodic && !previousMotion_.periodic) {
+            for(unsigned c=0;c<3;++c) for(unsigned axis=0;axis<3;++axis)
+                matrix[12+c]+=elapsed*matrix[axis*4+c]*(motion_.velocity[axis]*speed_*blend+previousMotion_.velocity[axis]*previousSpeed_*(1-blend));
+            return;
+        }
+        std::array<float,3> translation{},rotation{},previousTranslation{},previousRotation{};
+        if(!motion_.Delta(elapsed*speed_,translation,rotation) ||
+            !previousMotion_.Delta(elapsed*previousSpeed_,previousTranslation,previousRotation)) return;
+        AR::LocalTransform delta;
+        for(unsigned i=0;i<3;++i) {
+            delta.translation[i]=translation[i]*blend+previousTranslation[i]*(1-blend);
+            rotation[i]=rotation[i]*blend+previousRotation[i]*(1-blend);
+        }
+        const double angle=std::sqrt(double(rotation[0])*rotation[0]+double(rotation[1])*rotation[1]+double(rotation[2])*rotation[2]);
+        if(angle>0) {
+            for(unsigned i=0;i<3;++i) delta.rotation[i]=static_cast<float>(rotation[i]*std::sin(angle*.5)/angle);
+            delta.rotation[3]=static_cast<float>(std::cos(angle*.5));
+        }
+        AR::Matrix original;std::copy(matrix.begin(),matrix.end(),original.begin());
+        const auto updated=AR::Multiply(AR::LocalMatrix(delta),original);
+        if(std::all_of(updated.begin(),updated.end(),[](float x){return std::isfinite(x);})) std::copy(updated.begin(),updated.end(),matrix.begin());
     }
     std::span<const float> BoneWorldMatrix(BoneId bone) const override
     {
@@ -120,7 +139,7 @@ private:
     std::array<std::shared_ptr<const AR::RuntimeAnimationClip>,4> variants_;
     AR::AnimationPose pose_,scratch_; std::vector<AR::Matrix> model_,palette_;
     float clock_{},start_{},speed_=1,blendStart_{},blendDuration_{},previousStart_{},previousSpeed_=1;
-    std::array<float,3> velocity_{},previousVelocity_{};
+    GR2::RootMotion motion_,previousMotion_;
     int loops_{}; bool ready_{},failed_{};
 };
 class Document final : public AssetDocument
@@ -237,8 +256,8 @@ AssetError Instance::SetMotion(const AnimationHandle& handle,float time,float bl
         return AssetError::EvaluationFailed;
     }
     previous_=clip_; previousStart_=start_; previousSpeed_=speed_;
-    previousVelocity_=velocity_;
-    for(unsigned i=0;i<3;++i) velocity_[i]=handle.Get()->duration>0?group->loopTranslation[i]/handle.Get()->duration:0;
+    previousMotion_=motion_;motion_.periodic=group->periodicLoop;
+    for(unsigned i=0;i<3;++i) motion_.velocity[i]=handle.Get()->duration>0?group->loopTranslation[i]/handle.Get()->duration:0;
     blendStart_=time; blendDuration_=blend; start_=time; speed_=speed; loops_=loops;
     // Collision/attachment queries can occur before the next pose evaluation.
     // A successful control change preserves the last valid pose.

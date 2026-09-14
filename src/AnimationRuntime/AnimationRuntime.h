@@ -46,7 +46,11 @@ public:
     RuntimeSkeleton& operator=(RuntimeSkeleton&&) noexcept = default;
     ~RuntimeSkeleton();
 
-    bool Initialize(std::vector<SkeletonBone> bones, std::string& error);
+    // Indexed source formats can contain several roots and repeated display
+    // names. Indices, parent validation and evaluation order remain unchanged.
+    enum class SourceSemantics { NamedTree, IndexedForest };
+    bool Initialize(std::vector<SkeletonBone> bones, std::string& error,
+        SourceSemantics semantics = SourceSemantics::NamedTree);
     const std::vector<SkeletonBone>& Bones() const noexcept { return bones_; }
     const std::vector<std::uint32_t>& EvaluationOrder() const noexcept { return evaluationOrder_; }
     std::int32_t FindBone(std::string_view name) const noexcept;

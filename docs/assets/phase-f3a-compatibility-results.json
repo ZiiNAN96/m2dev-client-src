@@ -1,0 +1,2353 @@
+{
+  "baseline_commit": "500986389ef91742e0c7a6b96e67f4276aa4c791",
+  "total": 9166,
+  "counts": {
+    "parsed": 9159,
+    "malformed": 7
+  },
+  "production_referenced_unsupported": 1,
+  "usage_unresolved": 20,
+  "usage_unresolved_rejected": 1,
+  "pack_overridden_raw_copies": 5,
+  "new_rejects": [],
+  "clusters": {
+    "duplicate_bone_names": {
+      "total": 6,
+      "production": 4,
+      "unresolved": 2,
+      "parsed": 6
+    },
+    "duplicate_track_names": {
+      "total": 20,
+      "production": 7,
+      "unresolved": 13,
+      "parsed": 20
+    },
+    "empty_mesh": {
+      "total": 1,
+      "production": 1,
+      "unresolved": 0,
+      "parsed": 1
+    },
+    "nonfinite_curve": {
+      "total": 2,
+      "production": 1,
+      "unresolved": 1,
+      "parsed": 0
+    },
+    "overridden_bad_raw_size": {
+      "total": 5,
+      "production": 0,
+      "unresolved": 0,
+      "parsed": 0
+    },
+    "periodic_loop": {
+      "total": 14,
+      "production": 13,
+      "unresolved": 1,
+      "parsed": 14
+    },
+    "skeleton_forest": {
+      "total": 4,
+      "production": 1,
+      "unresolved": 3,
+      "parsed": 4
+    }
+  },
+  "evidence_sha256": {
+    "docs/assets/phase-f34-rejected-classification.json": "9364508f84802e2ed38dbc1466e3e54bc272cc760445756874c1f3b9213930fc",
+    "build/f3a/corpus-verified/files.tsv": "bb4e60a4bbdfab787b77a0ea41c77c6df05d9a6d6afc12da295350aa7e904b82",
+    "build/f3a/root-cause-probe.log": "248ec1e2c9282459dd4101154e023c7c910707b7c740154cc969d94040c99753",
+    "build/f3a/packed-audit.tsv": "a2333307ef27c18af38a1afd3611962e9329d04d14b0960332ab5cbf830c2a62"
+  },
+  "rows": [
+    {
+      "path": "NPC/ymir work/npc/doctor/die.gr2",
+      "sha256": "c8647d6015ed90cc614b4e83ef0c1112a82cfe502c2878ef992a6bcded65d022",
+      "asset_type": "NPC model/animation",
+      "usage_before": "production",
+      "usage_after": "production",
+      "cluster": "periodic_loop",
+      "reader_site": "GR2AnimationReader.cpp: ReadAnimation",
+      "field": "TrackGroup.PeriodicLoop",
+      "before": "unsupported curve/type",
+      "before_error": "periodic or explicit root motion",
+      "after": "parsed",
+      "after_error": "",
+      "packed_native": "1",
+      "granny_load": "1",
+      "section_type_field_evidence": [
+        "GROUP Bip01 flags=3 section:offset=0:180 type=6:4064",
+        "PeriodicLoop section:offset=0:66216 type_address=6:5056 type=48:Radius/10x1;dAngle/10x1;dZ/10x1;BasisX/10x3;BasisY/10x3;Axis/10x3;"
+      ],
+      "granny_reference_evidence": [
+        "REF_GROUP 0 loop=0 0 0",
+        "REF_SAMPLE fraction=0 nan_bones=0 translation=2.24895 1.39426 -1.09858 rotation=-0.0306391 0.0397699 0",
+        "REF_SAMPLE fraction=0.25 nan_bones=0 translation=2.24895 1.39426 -1.09858 rotation=-0.0306391 0.0397699 0",
+        "REF_SAMPLE fraction=0.5 nan_bones=0 translation=2.24895 1.39426 -1.09858 rotation=-0.0306391 0.0397699 0",
+        "REF_SAMPLE fraction=1.1 nan_bones=0 translation=2.24895 1.39426 -1.09858 rotation=-0.0306391 0.0397699 0"
+      ],
+      "original_usage_evidence": [
+        {
+          "path": "NPC/ymir work/npc/doctor/die.msa",
+          "virtual_path": "d:/ymir work/npc/doctor/die.msa",
+          "line": 3,
+          "text": "MotionFileName           \"d:/ymir work/npc/doctor/die.gr2\"",
+          "kind": "explicit"
+        }
+      ],
+      "motion_list_evidence": [
+        {
+          "path": "NPC/ymir work/npc/doctor/motlist.txt",
+          "line": 1,
+          "text": "GENERAL DEAD die.msa 100"
+        }
+      ]
+    },
+    {
+      "path": "PC/ymir work/pc/assassin/assassin.gr2",
+      "sha256": "58fa44e7a0ec996a81cc9e50992ca485889cff8256ca83b60a5b61c96cbaf34e",
+      "asset_type": "player model",
+      "usage_before": "usage unresolved",
+      "usage_after": "usage unresolved",
+      "cluster": "skeleton_forest",
+      "reader_site": "GR2ModelReader.cpp: Read / RuntimeSkeleton::Initialize",
+      "field": "Skeleton.Bones[].ParentIndex",
+      "before": "unsupported curve/type",
+      "before_error": "runtime skeleton: skeleton requires exactly one connected root",
+      "after": "parsed",
+      "after_error": "",
+      "packed_native": "1",
+      "granny_load": "1",
+      "section_type_field_evidence": [
+        "BONE index=0 parent=-1 name=\"assasin_low\" section:offset=0:2640 type=6:32992",
+        "BONE index=1 parent=-1 name=\"Bip01\" section:offset=0:2796 type=6:32992",
+        "MESH assasin_low vertex_count=2429 indices=6822 index16=0 groups=2 section:offset=0:38128 type=6:34240",
+        "MESH Object14 vertex_count=136 indices=312 index16=0 groups=1 section:offset=0:37492 type=6:34240",
+        "MESH Object01 vertex_count=53 indices=249 index16=0 groups=1 section:offset=0:37360 type=6:34240",
+        "MESH Object05 vertex_count=344 indices=468 index16=0 groups=1 section:offset=0:36760 type=6:34240",
+        "MESH Object02 vertex_count=106 indices=249 index16=0 groups=1 section:offset=0:36628 type=6:34240",
+        "MESH Object03 vertex_count=68 indices=312 index16=0 groups=1 section:offset=0:35992 type=6:34240",
+        "MESH Object04 vertex_count=170 indices=468 index16=0 groups=1 section:offset=0:35392 type=6:34240",
+        "MESH Object09 vertex_count=126 indices=498 index16=0 groups=1 section:offset=0:32596 type=6:34240",
+        "MESH Object10 vertex_count=240 indices=684 index16=0 groups=1 section:offset=0:29764 type=6:34240",
+        "MESH Object06 vertex_count=152 indices=198 index16=0 groups=1 section:offset=0:29596 type=6:34240",
+        "MESH Object07 vertex_count=76 indices=198 index16=0 groups=1 section:offset=0:29428 type=6:34240",
+        "MESH Object08 vertex_count=99 indices=78 index16=0 groups=1 section:offset=0:26524 type=6:34240",
+        "MESH Object13 vertex_count=34 indices=156 index16=0 groups=1 section:offset=0:26356 type=6:34240",
+        "MESH Object11 vertex_count=96 indices=459 index16=0 groups=1 section:offset=0:26152 type=6:34240",
+        "MESH Object12 vertex_count=192 indices=459 index16=0 groups=1 section:offset=0:25948 type=6:34240",
+        "MESH Object15 vertex_count=169 indices=720 index16=0 groups=1 section:offset=0:24016 type=6:34240",
+        "MESH Plane01 vertex_count=25 indices=96 index16=0 groups=1 section:offset=0:21184 type=6:34240"
+      ],
+      "granny_reference_evidence": [],
+      "original_usage_evidence": [],
+      "motion_list_evidence": []
+    },
+    {
+      "path": "PC/ymir work/pc/sura/general/run10.gr2",
+      "sha256": "fc22b8821006dc5040dd366be446d0a68189552c8f329dd1e8b11d7c5c930c1f",
+      "asset_type": "player animation",
+      "usage_before": "usage unresolved",
+      "usage_after": "usage unresolved",
+      "cluster": "periodic_loop",
+      "reader_site": "GR2AnimationReader.cpp: ReadAnimation",
+      "field": "TrackGroup.PeriodicLoop",
+      "before": "unsupported curve/type",
+      "before_error": "periodic or explicit root motion",
+      "after": "parsed",
+      "after_error": "",
+      "packed_native": "1",
+      "granny_load": "1",
+      "section_type_field_evidence": [
+        "GROUP Bip01 flags=3 section:offset=0:180 type=6:4064",
+        "PeriodicLoop section:offset=0:27408 type_address=6:5056 type=48:Radius/10x1;dAngle/10x1;dZ/10x1;BasisX/10x3;BasisY/10x3;Axis/10x3;"
+      ],
+      "granny_reference_evidence": [
+        "REF_GROUP 0 loop=0 0 0",
+        "REF_SAMPLE fraction=0 nan_bones=0 translation=44.3855 2.08202 4.75805 rotation=5.00232e-11 0 2.44869e-10",
+        "REF_SAMPLE fraction=0.25 nan_bones=0 translation=44.3855 2.08202 4.75805 rotation=5.00232e-11 0 2.44869e-10",
+        "REF_SAMPLE fraction=0.5 nan_bones=0 translation=44.3855 2.08202 4.75805 rotation=5.00232e-11 0 2.44869e-10",
+        "REF_SAMPLE fraction=1.1 nan_bones=0 translation=44.3855 2.08202 4.75805 rotation=5.00232e-11 0 2.44869e-10"
+      ],
+      "original_usage_evidence": [],
+      "motion_list_evidence": []
+    },
+    {
+      "path": "metin2_patch_dragon_rock_mobs/ymir work/monster2/crustacean_officer/run.gr2",
+      "sha256": "651249f9d63e75bbf243d3988c35f61fd8e1e1943e10eff8a89ae1450ec7fc54",
+      "asset_type": "mob model/animation",
+      "usage_before": "production",
+      "usage_after": "production",
+      "cluster": "periodic_loop",
+      "reader_site": "GR2AnimationReader.cpp: ReadAnimation",
+      "field": "TrackGroup.PeriodicLoop",
+      "before": "unsupported curve/type",
+      "before_error": "periodic or explicit root motion",
+      "after": "parsed",
+      "after_error": "",
+      "packed_native": "1",
+      "granny_load": "1",
+      "section_type_field_evidence": [
+        "GROUP IK Chain04 flags=3 section:offset=0:196 type=6:4064",
+        "PeriodicLoop section:offset=0:676 type_address=6:5056 type=48:Radius/10x1;dAngle/10x1;dZ/10x1;BasisX/10x3;BasisY/10x3;Axis/10x3;",
+        "GROUP IK Chain03 flags=3 section:offset=0:724 type=6:4064",
+        "PeriodicLoop section:offset=0:1204 type_address=6:5056 type=48:Radius/10x1;dAngle/10x1;dZ/10x1;BasisX/10x3;BasisY/10x3;Axis/10x3;",
+        "GROUP IK Chain02 flags=3 section:offset=0:1252 type=6:4064",
+        "PeriodicLoop section:offset=0:1732 type_address=6:5056 type=48:Radius/10x1;dAngle/10x1;dZ/10x1;BasisX/10x3;BasisY/10x3;Axis/10x3;",
+        "GROUP IK Chain01 flags=3 section:offset=0:1780 type=6:4064",
+        "PeriodicLoop section:offset=0:2260 type_address=6:5056 type=48:Radius/10x1;dAngle/10x1;dZ/10x1;BasisX/10x3;BasisY/10x3;Axis/10x3;",
+        "GROUP Bip01 flags=3 section:offset=0:2308 type=6:4064"
+      ],
+      "granny_reference_evidence": [
+        "REF_GROUP 4 loop=0 -143.484 0",
+        "REF_SAMPLE fraction=0 nan_bones=0 translation=0 -19.566 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.25 nan_bones=0 translation=0 -19.566 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.5 nan_bones=0 translation=0 -19.566 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=1.1 nan_bones=0 translation=0 -19.566 0 rotation=0 0 0"
+      ],
+      "original_usage_evidence": [
+        {
+          "path": "metin2_patch_dragon_rock_mobs/ymir work/monster2/crustacean_officer/run.msa",
+          "virtual_path": "d:/ymir work/monster2/crustacean_officer/run.msa",
+          "line": 3,
+          "text": "MotionFileName           \"D:\\Ymir Work\\monster2\\crustacean_officer\\run.GR2\"",
+          "kind": "explicit"
+        }
+      ],
+      "motion_list_evidence": [
+        {
+          "path": "metin2_patch_dragon_rock_mobs/ymir work/monster2/crustacean_officer/motlist.txt",
+          "line": 4,
+          "text": "GENERAL RUN run.msa 100"
+        }
+      ]
+    },
+    {
+      "path": "metin2_patch_dragon_rock_mobs/ymir work/monster2/crustacean_officer/walk.gr2",
+      "sha256": "2e3db8c7f09c91fafeeac1ee428889d44f71e48dc52cb72c08e327b5b774ab47",
+      "asset_type": "mob model/animation",
+      "usage_before": "production",
+      "usage_after": "production",
+      "cluster": "periodic_loop",
+      "reader_site": "GR2AnimationReader.cpp: ReadAnimation",
+      "field": "TrackGroup.PeriodicLoop",
+      "before": "unsupported curve/type",
+      "before_error": "periodic or explicit root motion",
+      "after": "parsed",
+      "after_error": "",
+      "packed_native": "1",
+      "granny_load": "1",
+      "section_type_field_evidence": [
+        "GROUP IK Chain04 flags=3 section:offset=0:196 type=6:4064",
+        "PeriodicLoop section:offset=0:932 type_address=6:5056 type=48:Radius/10x1;dAngle/10x1;dZ/10x1;BasisX/10x3;BasisY/10x3;Axis/10x3;",
+        "GROUP IK Chain03 flags=3 section:offset=0:980 type=6:4064",
+        "PeriodicLoop section:offset=0:1716 type_address=6:5056 type=48:Radius/10x1;dAngle/10x1;dZ/10x1;BasisX/10x3;BasisY/10x3;Axis/10x3;",
+        "GROUP IK Chain02 flags=3 section:offset=0:1764 type=6:4064",
+        "PeriodicLoop section:offset=0:2500 type_address=6:5056 type=48:Radius/10x1;dAngle/10x1;dZ/10x1;BasisX/10x3;BasisY/10x3;Axis/10x3;",
+        "GROUP IK Chain01 flags=3 section:offset=0:2548 type=6:4064",
+        "PeriodicLoop section:offset=0:3284 type_address=6:5056 type=48:Radius/10x1;dAngle/10x1;dZ/10x1;BasisX/10x3;BasisY/10x3;Axis/10x3;",
+        "GROUP Bip01 flags=3 section:offset=0:3332 type=6:4064"
+      ],
+      "granny_reference_evidence": [
+        "REF_GROUP 4 loop=0 -175 0",
+        "REF_SAMPLE fraction=0 nan_bones=0 translation=0 -17.5 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.25 nan_bones=0 translation=0 -17.5 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.5 nan_bones=0 translation=0 -17.5 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=1.1 nan_bones=0 translation=0 -17.5 0 rotation=0 0 0"
+      ],
+      "original_usage_evidence": [
+        {
+          "path": "metin2_patch_dragon_rock_mobs/ymir work/monster2/crustacean_officer/walk.msa",
+          "virtual_path": "d:/ymir work/monster2/crustacean_officer/walk.msa",
+          "line": 3,
+          "text": "MotionFileName           \"D:\\Ymir Work\\monster2\\crustacean_officer\\walk.GR2\"",
+          "kind": "explicit"
+        }
+      ],
+      "motion_list_evidence": [
+        {
+          "path": "metin2_patch_dragon_rock_mobs/ymir work/monster2/crustacean_officer/motlist.txt",
+          "line": 15,
+          "text": "GENERAL WALK walk.msa 100"
+        }
+      ]
+    },
+    {
+      "path": "metin2_patch_dragon_rock_mobs/ymir work/monster2/crustacean_soldier/run.gr2",
+      "sha256": "e284ccd3960ef8edd377a3c6fcbc220b2e6914ff106b2563ea1b33697a33a310",
+      "asset_type": "mob model/animation",
+      "usage_before": "production",
+      "usage_after": "production",
+      "cluster": "periodic_loop",
+      "reader_site": "GR2AnimationReader.cpp: ReadAnimation",
+      "field": "TrackGroup.PeriodicLoop",
+      "before": "unsupported curve/type",
+      "before_error": "periodic or explicit root motion",
+      "after": "parsed",
+      "after_error": "",
+      "packed_native": "1",
+      "granny_load": "1",
+      "section_type_field_evidence": [
+        "GROUP IK Chain02 flags=3 section:offset=0:196 type=6:4064",
+        "GROUP IK Chain01 flags=3 section:offset=0:696 type=6:4064",
+        "GROUP IK Chain03 flags=3 section:offset=0:1196 type=6:4064",
+        "PeriodicLoop section:offset=0:1676 type_address=6:5056 type=48:Radius/10x1;dAngle/10x1;dZ/10x1;BasisX/10x3;BasisY/10x3;Axis/10x3;",
+        "GROUP IK Chain04 flags=3 section:offset=0:1724 type=6:4064",
+        "GROUP Bip01 flags=3 section:offset=0:2224 type=6:4064"
+      ],
+      "granny_reference_evidence": [
+        "REF_GROUP 4 loop=-0.0165 -150 0",
+        "REF_SAMPLE fraction=0 nan_bones=0 translation=-0.00225 -20.4545 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.25 nan_bones=0 translation=-0.00225 -20.4545 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.5 nan_bones=0 translation=-0.00225 -20.4545 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=1.1 nan_bones=0 translation=-0.00225 -20.4545 0 rotation=0 0 0"
+      ],
+      "original_usage_evidence": [
+        {
+          "path": "metin2_patch_dragon_rock_mobs/ymir work/monster2/crustacean_soldier/run.msa",
+          "virtual_path": "d:/ymir work/monster2/crustacean_soldier/run.msa",
+          "line": 3,
+          "text": "MotionFileName           \"D:\\Ymir Work\\monster2\\crustacean_soldier\\run.GR2\"",
+          "kind": "explicit"
+        }
+      ],
+      "motion_list_evidence": [
+        {
+          "path": "metin2_patch_dragon_rock_mobs/ymir work/monster2/crustacean_soldier/motlist.txt",
+          "line": 4,
+          "text": "GENERAL RUN run.msa 100"
+        }
+      ]
+    },
+    {
+      "path": "metin2_patch_dragon_rock_mobs/ymir work/monster2/crustacean_soldier/walk.gr2",
+      "sha256": "d159e699f3d134882cb49d7c88328678ef3dce5b0faf40a6c28e98ad7026e30f",
+      "asset_type": "mob model/animation",
+      "usage_before": "production",
+      "usage_after": "production",
+      "cluster": "periodic_loop",
+      "reader_site": "GR2AnimationReader.cpp: ReadAnimation",
+      "field": "TrackGroup.PeriodicLoop",
+      "before": "unsupported curve/type",
+      "before_error": "periodic or explicit root motion",
+      "after": "parsed",
+      "after_error": "",
+      "packed_native": "1",
+      "granny_load": "1",
+      "section_type_field_evidence": [
+        "GROUP IK Chain02 flags=3 section:offset=0:196 type=6:4064",
+        "GROUP IK Chain01 flags=3 section:offset=0:952 type=6:4064",
+        "GROUP IK Chain03 flags=3 section:offset=0:1708 type=6:4064",
+        "PeriodicLoop section:offset=0:2444 type_address=6:5056 type=48:Radius/10x1;dAngle/10x1;dZ/10x1;BasisX/10x3;BasisY/10x3;Axis/10x3;",
+        "GROUP IK Chain04 flags=3 section:offset=0:2492 type=6:4064",
+        "GROUP Bip01 flags=3 section:offset=0:3200 type=6:4064"
+      ],
+      "granny_reference_evidence": [
+        "REF_GROUP 4 loop=0 -150 0",
+        "REF_SAMPLE fraction=0 nan_bones=0 translation=0 -15 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.25 nan_bones=0 translation=0 -15 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.5 nan_bones=0 translation=0 -15 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=1.1 nan_bones=0 translation=0 -15 0 rotation=0 0 0"
+      ],
+      "original_usage_evidence": [
+        {
+          "path": "metin2_patch_dragon_rock_mobs/ymir work/monster2/crustacean_soldier/walk.msa",
+          "virtual_path": "d:/ymir work/monster2/crustacean_soldier/walk.msa",
+          "line": 3,
+          "text": "MotionFileName           \"D:\\Ymir Work\\monster2\\crustacean_soldier\\walk.GR2\"",
+          "kind": "explicit"
+        }
+      ],
+      "motion_list_evidence": [
+        {
+          "path": "metin2_patch_dragon_rock_mobs/ymir work/monster2/crustacean_soldier/motlist.txt",
+          "line": 15,
+          "text": "GENERAL WALK walk.msa 100"
+        }
+      ]
+    },
+    {
+      "path": "metin2_patch_dragon_rock_mobs/ymir work/monster2/ent_boss1/normal_attack.gr2",
+      "sha256": "dbce93b303e2ce3853b1de6b788a56f9381b252ffb0f7ca61459411af4d2a8f3",
+      "asset_type": "boss model/animation",
+      "usage_before": "production",
+      "usage_after": "production",
+      "cluster": "periodic_loop",
+      "reader_site": "GR2AnimationReader.cpp: ReadAnimation",
+      "field": "TrackGroup.PeriodicLoop",
+      "before": "unsupported curve/type",
+      "before_error": "periodic or explicit root motion",
+      "after": "parsed",
+      "after_error": "",
+      "packed_native": "1",
+      "granny_load": "1",
+      "section_type_field_evidence": [
+        "GROUP Bip01 flags=3 section:offset=0:180 type=6:4064",
+        "PeriodicLoop section:offset=0:73328 type_address=6:5056 type=48:Radius/10x1;dAngle/10x1;dZ/10x1;BasisX/10x3;BasisY/10x3;Axis/10x3;"
+      ],
+      "granny_reference_evidence": [
+        "REF_GROUP 0 loop=0 0 0",
+        "REF_SAMPLE fraction=0 nan_bones=0 translation=0 0 0 rotation=8.91025e-10 1.78205e-09 -1.51852e-11",
+        "REF_SAMPLE fraction=0.25 nan_bones=0 translation=0 0 0 rotation=8.91025e-10 1.78205e-09 -1.51852e-11",
+        "REF_SAMPLE fraction=0.5 nan_bones=0 translation=0 0 0 rotation=8.91025e-10 1.78205e-09 -1.51852e-11",
+        "REF_SAMPLE fraction=1.1 nan_bones=0 translation=0 0 0 rotation=8.91025e-10 1.78205e-09 -1.51852e-11"
+      ],
+      "original_usage_evidence": [
+        {
+          "path": "metin2_patch_dragon_rock_mobs/ymir work/monster2/ent_boss1/normal_attack.msa",
+          "virtual_path": "d:/ymir work/monster2/ent_boss1/normal_attack.msa",
+          "line": 3,
+          "text": "MotionFileName           \"D:\\Ymir Work\\monster2\\ent_boss1\\normal_attack.GR2\"",
+          "kind": "explicit"
+        }
+      ],
+      "motion_list_evidence": [
+        {
+          "path": "metin2_patch_dragon_rock_mobs/ymir work/monster2/ent_boss1/motlist.txt",
+          "line": 5,
+          "text": "GENERAL NORMAL_ATTACK normal_attack.msa 60"
+        }
+      ]
+    },
+    {
+      "path": "metin2_patch_dragon_rock_mobs/ymir work/monster2/ent_boss2/run.gr2",
+      "sha256": "7fda7b77f51d706fa4b02d5e75ca27f0ad92f726da77b10414f123e5d7575b94",
+      "asset_type": "boss model/animation",
+      "usage_before": "production",
+      "usage_after": "production",
+      "cluster": "periodic_loop",
+      "reader_site": "GR2AnimationReader.cpp: ReadAnimation",
+      "field": "TrackGroup.PeriodicLoop",
+      "before": "unsupported curve/type",
+      "before_error": "periodic or explicit root motion",
+      "after": "parsed",
+      "after_error": "",
+      "packed_native": "1",
+      "granny_load": "1",
+      "section_type_field_evidence": [
+        "GROUP Point03 flags=3 section:offset=0:188 type=6:4064",
+        "PeriodicLoop section:offset=0:1604 type_address=6:5056 type=48:Radius/10x1;dAngle/10x1;dZ/10x1;BasisX/10x3;BasisY/10x3;Axis/10x3;",
+        "GROUP Point02 flags=3 section:offset=0:1652 type=6:4064",
+        "PeriodicLoop section:offset=0:3068 type_address=6:5056 type=48:Radius/10x1;dAngle/10x1;dZ/10x1;BasisX/10x3;BasisY/10x3;Axis/10x3;",
+        "GROUP Bip01 flags=3 section:offset=0:3116 type=6:4064"
+      ],
+      "granny_reference_evidence": [
+        "REF_GROUP 2 loop=0 -833 0",
+        "REF_SAMPLE fraction=0 nan_bones=0 translation=0 -78.0938 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.25 nan_bones=0 translation=0 -78.0937 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.5 nan_bones=0 translation=0 -78.0937 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=1.1 nan_bones=0 translation=0 -78.0938 0 rotation=0 0 0"
+      ],
+      "original_usage_evidence": [
+        {
+          "path": "metin2_patch_dragon_rock_mobs/ymir work/monster2/ent_boss2/run.msa",
+          "virtual_path": "d:/ymir work/monster2/ent_boss2/run.msa",
+          "line": 3,
+          "text": "MotionFileName           \"D:\\Ymir Work\\monster2\\ent_boss2\\run.GR2\"",
+          "kind": "explicit"
+        }
+      ],
+      "motion_list_evidence": [
+        {
+          "path": "metin2_patch_dragon_rock_mobs/ymir work/monster2/ent_boss2/motlist.txt",
+          "line": 5,
+          "text": "GENERAL RUN run.msa 100"
+        }
+      ]
+    },
+    {
+      "path": "metin2_patch_dragon_rock_mobs/ymir work/monster2/ent_boss2/walk.gr2",
+      "sha256": "02c7ba2f21be074afafd497131721fce9f07bcccb3a1389c281038a59e4d7277",
+      "asset_type": "boss model/animation",
+      "usage_before": "production",
+      "usage_after": "production",
+      "cluster": "periodic_loop",
+      "reader_site": "GR2AnimationReader.cpp: ReadAnimation",
+      "field": "TrackGroup.PeriodicLoop",
+      "before": "unsupported curve/type",
+      "before_error": "periodic or explicit root motion",
+      "after": "parsed",
+      "after_error": "",
+      "packed_native": "1",
+      "granny_load": "1",
+      "section_type_field_evidence": [
+        "GROUP Point03 flags=3 section:offset=0:188 type=6:4064",
+        "PeriodicLoop section:offset=0:1604 type_address=6:5056 type=48:Radius/10x1;dAngle/10x1;dZ/10x1;BasisX/10x3;BasisY/10x3;Axis/10x3;",
+        "GROUP Point02 flags=3 section:offset=0:1652 type=6:4064",
+        "PeriodicLoop section:offset=0:3048 type_address=6:5056 type=48:Radius/10x1;dAngle/10x1;dZ/10x1;BasisX/10x3;BasisY/10x3;Axis/10x3;",
+        "GROUP Bip01 flags=3 section:offset=0:3096 type=6:4064"
+      ],
+      "granny_reference_evidence": [
+        "REF_GROUP 2 loop=0 -577 0",
+        "REF_SAMPLE fraction=0 nan_bones=0 translation=0 -54.0938 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.25 nan_bones=0 translation=0 -54.0937 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.5 nan_bones=0 translation=0 -54.0937 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=1.1 nan_bones=0 translation=0 -54.0938 0 rotation=0 0 0"
+      ],
+      "original_usage_evidence": [
+        {
+          "path": "metin2_patch_dragon_rock_mobs/ymir work/monster2/ent_boss2/walk.msa",
+          "virtual_path": "d:/ymir work/monster2/ent_boss2/walk.msa",
+          "line": 3,
+          "text": "MotionFileName           \"D:\\Ymir Work\\monster2\\ent_boss2\\walk.GR2\"",
+          "kind": "explicit"
+        }
+      ],
+      "motion_list_evidence": [
+        {
+          "path": "metin2_patch_dragon_rock_mobs/ymir work/monster2/ent_boss2/motlist.txt",
+          "line": 19,
+          "text": "GENERAL WALK walk.msa 100"
+        }
+      ]
+    },
+    {
+      "path": "metin2_patch_dragon_rock_mobs/ymir work/monster2/manticore_boss2/special_attack.gr2",
+      "sha256": "abbf7a5177482669f52f7e210d5aaf456bc3b278a8568dda0a88e93677b60eae",
+      "asset_type": "boss model/animation",
+      "usage_before": "production",
+      "usage_after": "production",
+      "cluster": "periodic_loop",
+      "reader_site": "GR2AnimationReader.cpp: ReadAnimation",
+      "field": "TrackGroup.PeriodicLoop",
+      "before": "unsupported curve/type",
+      "before_error": "periodic or explicit root motion",
+      "after": "parsed",
+      "after_error": "",
+      "packed_native": "1",
+      "granny_load": "1",
+      "section_type_field_evidence": [
+        "GROUP Dummy01 flags=3 section:offset=0:188 type=6:4064",
+        "PeriodicLoop section:offset=0:2660 type_address=6:5056 type=48:Radius/10x1;dAngle/10x1;dZ/10x1;BasisX/10x3;BasisY/10x3;Axis/10x3;",
+        "GROUP Particle View 01 flags=3 section:offset=0:2708 type=6:4064",
+        "GROUP Bip01 flags=3 section:offset=0:2900 type=6:4064"
+      ],
+      "granny_reference_evidence": [
+        "REF_GROUP 2 loop=0 0 0",
+        "REF_SAMPLE fraction=0 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.25 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.5 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=1.1 nan_bones=0 translation=0 0 0 rotation=0 0 0"
+      ],
+      "original_usage_evidence": [
+        {
+          "path": "metin2_patch_dragon_rock_mobs/ymir work/monster2/manticore_boss2/special_attack.msa",
+          "virtual_path": "d:/ymir work/monster2/manticore_boss2/special_attack.msa",
+          "line": 3,
+          "text": "MotionFileName           \"D:/Ymir Work/monster2/manticore_boss2/special_attack.GR2\"",
+          "kind": "explicit"
+        }
+      ],
+      "motion_list_evidence": [
+        {
+          "path": "metin2_patch_dragon_rock_mobs/ymir work/monster2/manticore_boss2/motlist.txt",
+          "line": 8,
+          "text": "GENERAL SPECIAL special_attack.msa 50"
+        }
+      ]
+    },
+    {
+      "path": "metin2_patch_dragon_rock_mobs/ymir work/monster2/ogre_boss2/run.gr2",
+      "sha256": "7c7d787fb6c3638f2b607d27456bac80359d6679ef78ce212784a72369ee700e",
+      "asset_type": "boss model/animation",
+      "usage_before": "production",
+      "usage_after": "production",
+      "cluster": "periodic_loop",
+      "reader_site": "GR2AnimationReader.cpp: ReadAnimation",
+      "field": "TrackGroup.PeriodicLoop",
+      "before": "unsupported curve/type",
+      "before_error": "periodic or explicit root motion",
+      "after": "parsed",
+      "after_error": "",
+      "packed_native": "1",
+      "granny_load": "1",
+      "section_type_field_evidence": [
+        "GROUP Bip01 flags=3 section:offset=0:180 type=6:4064",
+        "PeriodicLoop section:offset=0:31944 type_address=6:5056 type=48:Radius/10x1;dAngle/10x1;dZ/10x1;BasisX/10x3;BasisY/10x3;Axis/10x3;"
+      ],
+      "granny_reference_evidence": [
+        "REF_GROUP 0 loop=0 0 0",
+        "REF_SAMPLE fraction=0 nan_bones=0 translation=-0.20153 -99.5074 6.43501 rotation=1.11644e-09 2.23289e-09 -3.68005e-11",
+        "REF_SAMPLE fraction=0.25 nan_bones=0 translation=-0.20153 -99.5074 6.43501 rotation=1.11644e-09 2.23289e-09 -3.68005e-11",
+        "REF_SAMPLE fraction=0.5 nan_bones=0 translation=-0.20153 -99.5074 6.43501 rotation=1.11644e-09 2.23289e-09 -3.68005e-11",
+        "REF_SAMPLE fraction=1.1 nan_bones=0 translation=-0.20153 -99.5074 6.43501 rotation=1.11644e-09 2.23289e-09 -3.68005e-11"
+      ],
+      "original_usage_evidence": [
+        {
+          "path": "metin2_patch_dragon_rock_mobs/ymir work/monster2/ogre_boss2/run.msa",
+          "virtual_path": "d:/ymir work/monster2/ogre_boss2/run.msa",
+          "line": 3,
+          "text": "MotionFileName           \"D:\\Ymir Work\\monster2\\ogre_boss2\\run.GR2\"",
+          "kind": "explicit"
+        }
+      ],
+      "motion_list_evidence": [
+        {
+          "path": "metin2_patch_dragon_rock_mobs/ymir work/monster2/ogre_boss2/motlist.txt",
+          "line": 5,
+          "text": "GENERAL RUN run.msa 100"
+        }
+      ]
+    },
+    {
+      "path": "metin2_patch_dragon_rock_mobs/ymir work/monster2/ogre_soldier/normal_attack1.gr2",
+      "sha256": "407080b1910c756a3e30e0de6716b07f1cd82b7d5e4a56f8112418b040a6ed6f",
+      "asset_type": "mob model/animation",
+      "usage_before": "production",
+      "usage_after": "production",
+      "cluster": "periodic_loop",
+      "reader_site": "GR2AnimationReader.cpp: ReadAnimation",
+      "field": "TrackGroup.PeriodicLoop",
+      "before": "unsupported curve/type",
+      "before_error": "periodic or explicit root motion",
+      "after": "parsed",
+      "after_error": "",
+      "packed_native": "1",
+      "granny_load": "1",
+      "section_type_field_evidence": [
+        "GROUP Bip01 flags=3 section:offset=0:180 type=6:4064",
+        "PeriodicLoop section:offset=0:39964 type_address=6:5056 type=48:Radius/10x1;dAngle/10x1;dZ/10x1;BasisX/10x3;BasisY/10x3;Axis/10x3;"
+      ],
+      "granny_reference_evidence": [
+        "REF_GROUP 0 loop=0 0 0",
+        "REF_SAMPLE fraction=0 nan_bones=0 translation=0 0 0 rotation=-5.58072e-10 -2.23229e-09 9.0635e-11",
+        "REF_SAMPLE fraction=0.25 nan_bones=0 translation=0 0 0 rotation=-5.58072e-10 -2.23229e-09 9.0635e-11",
+        "REF_SAMPLE fraction=0.5 nan_bones=0 translation=0 0 0 rotation=-5.58072e-10 -2.23229e-09 9.0635e-11",
+        "REF_SAMPLE fraction=1.1 nan_bones=0 translation=0 0 0 rotation=-5.58072e-10 -2.23229e-09 9.0635e-11"
+      ],
+      "original_usage_evidence": [
+        {
+          "path": "metin2_patch_dragon_rock_mobs/ymir work/monster2/ogre_soldier/normal_attack1.msa",
+          "virtual_path": "d:/ymir work/monster2/ogre_soldier/normal_attack1.msa",
+          "line": 3,
+          "text": "MotionFileName           \"D:/Ymir Work/monster2/ogre_soldier/normal_attack1.GR2\"",
+          "kind": "explicit"
+        }
+      ],
+      "motion_list_evidence": [
+        {
+          "path": "metin2_patch_dragon_rock_mobs/ymir work/monster2/ogre_soldier/motlist.txt",
+          "line": 5,
+          "text": "GENERAL NORMAL_ATTACK1 normal_attack1.msa 40"
+        }
+      ]
+    },
+    {
+      "path": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief2_soldier2/redthief2_soldier2_lod_01.gr2",
+      "sha256": "055083f483bfc167f7052ba7285402e366334065a674d1848c2886240ff7b685",
+      "asset_type": "mob model/animation",
+      "usage_before": "production",
+      "usage_after": "production",
+      "cluster": "empty_mesh",
+      "reader_site": "GR2MeshReader.cpp: ReadMesh",
+      "field": "Mesh.PrimaryVertexData.Vertices / PrimaryTopology",
+      "before": "malformed",
+      "before_error": "empty mesh vertices",
+      "after": "parsed",
+      "after_error": "",
+      "packed_native": "1",
+      "granny_load": "1",
+      "section_type_field_evidence": [
+        "BONE index=0 parent=-1 name=\"Object01\" section:offset=0:1832 type=6:51296",
+        "MESH Object01 vertex_count=0 indices=0 index16=0 groups=0 section:offset=0:20828 type=6:52544",
+        "BONE index=0 parent=-1 name=\"Bip01\" section:offset=0:2516 type=6:51296",
+        "MESH redthief2_soldier2 vertex_count=1990 indices=7392 index16=0 groups=1 section:offset=0:21428 type=6:52544",
+        "MESH shoulder vertex_count=305 indices=882 index16=0 groups=1 section:offset=0:18796 type=6:52544",
+        "MESH waist vertex_count=193 indices=393 index16=0 groups=1 section:offset=0:16764 type=6:52544",
+        "MESH redthief2_soldier2_weapon2 vertex_count=118 indices=318 index16=0 groups=1 section:offset=0:16164 type=6:52544",
+        "MESH redthief2_soldier2_weapon1 vertex_count=118 indices=318 index16=0 groups=1 section:offset=0:15564 type=6:52544",
+        "BONE index=0 parent=-1 name=\"]\" section:offset=0:14104 type=6:51296",
+        "MESH ] vertex_count=0 indices=0 index16=0 groups=0 section:offset=0:23460 type=6:52544"
+      ],
+      "granny_reference_evidence": [],
+      "original_usage_evidence": [
+        {
+          "path": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief2_soldier2/redthief2_soldier2.msm",
+          "virtual_path": "d:/ymir work/monster2/redthief2_soldier2/redthief2_soldier2.msm",
+          "line": 3,
+          "text": "BaseModelFileName     \"D:\\Ymir Work\\monster2\\redthief2_soldier2\\redthief2_soldier2.GR2\"",
+          "kind": "implicit LOD via CRaceData::GetLODModelThing"
+        }
+      ],
+      "motion_list_evidence": []
+    },
+    {
+      "path": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_general/back_damage.gr2",
+      "sha256": "083b0e312850d9df28d4f2cd4cfbcf82c45b9a5278c5ac494128803286aa157b",
+      "asset_type": "boss model/animation",
+      "usage_before": "production",
+      "usage_after": "production",
+      "cluster": "nonfinite_curve",
+      "reader_site": "GR2AnimationReader.cpp: ReadCurve -> Types::Reals -> File::Float",
+      "field": "TransformTracks[].{Position,Orientation,ScaleShear}Curve.Controls[]",
+      "before": "malformed",
+      "before_error": "nonfinite float",
+      "after": "malformed",
+      "after_error": "nonfinite float",
+      "packed_native": "0",
+      "granny_load": "1",
+      "section_type_field_evidence": [
+        "NONFINITE Root.TrackGroups[0].TransformTracks[14].PositionCurve.Controls[0].Real32[0] section:offset=0:8556 bits=7fc00000 type=6:4640",
+        "NONFINITE Root.TrackGroups[0].TransformTracks[14].PositionCurve.Controls[1].Real32[0] section:offset=0:8560 bits=7fc00000 type=6:4640",
+        "NONFINITE Root.TrackGroups[0].TransformTracks[14].PositionCurve.Controls[2].Real32[0] section:offset=0:8564 bits=7fc00000 type=6:4640",
+        "NONFINITE Root.TrackGroups[0].TransformTracks[14].PositionCurve.Controls[3].Real32[0] section:offset=0:8568 bits=7fc00000 type=6:4640",
+        "NONFINITE Root.TrackGroups[0].TransformTracks[14].PositionCurve.Controls[4].Real32[0] section:offset=0:8572 bits=7fc00000 type=6:4640",
+        "NONFINITE Root.TrackGroups[0].TransformTracks[14].PositionCurve.Controls[5].Real32[0] section:offset=0:8576 bits=7fc00000 type=6:4640",
+        "NONFINITE Root.TrackGroups[0].TransformTracks[14].PositionCurve.Controls[6].Real32[0] section:offset=0:8580 bits=7fc00000 type=6:4640",
+        "NONFINITE Root.TrackGroups[0].TransformTracks[14].PositionCurve.Controls[7].Real32[0] section:offset=0:8584 bits=7fc00000 type=6:4640"
+      ],
+      "granny_reference_evidence": [
+        "REF_GROUP 0 loop=0 0 0",
+        "REF_NAN_BONE 42 Bip01 R Finger2",
+        "REF_NAN_BONE 43 Bip01 R Finger21",
+        "REF_NAN_BONE 44 Bip01 R Finger22",
+        "REF_NAN_BONE 45 Bip01 R Finger2Nub",
+        "REF_NAN_BONE 68 Bip01 L Finger2",
+        "REF_NAN_BONE 69 Bip01 L Finger21",
+        "REF_NAN_BONE 70 Bip01 L Finger22",
+        "REF_NAN_BONE 71 Bip01 L Finger2Nub",
+        "REF_SAMPLE fraction=0 nan_bones=8 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.25 nan_bones=8 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.5 nan_bones=8 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=1.1 nan_bones=8 translation=0 0 0 rotation=0 0 0"
+      ],
+      "original_usage_evidence": [
+        {
+          "path": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_general/back_damage.msa",
+          "virtual_path": "d:/ymir work/monster2/redthief_general/back_damage.msa",
+          "line": 3,
+          "text": "MotionFileName           \"D:\\Ymir Work\\monster2\\redthief_general\\back_damage.GR2\"",
+          "kind": "explicit"
+        },
+        {
+          "path": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief2_general/back_damage.msa",
+          "virtual_path": "d:/ymir work/monster2/redthief2_general/back_damage.msa",
+          "line": 3,
+          "text": "MotionFileName           \"D:\\Ymir Work\\monster2\\redthief_general\\back_damage.GR2\"",
+          "kind": "explicit"
+        }
+      ],
+      "motion_list_evidence": [
+        {
+          "path": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_general/motlist.txt",
+          "line": 7,
+          "text": "GENERAL FRONT_DAMAGE back_damage.msa 100"
+        },
+        {
+          "path": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_general/motlist.txt",
+          "line": 11,
+          "text": "GENERAL BACK_DAMAGE back_damage.msa 100"
+        },
+        {
+          "path": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief2_general/motlist.txt",
+          "line": 7,
+          "text": "GENERAL FRONT_DAMAGE back_damage.msa 100"
+        },
+        {
+          "path": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief2_general/motlist.txt",
+          "line": 11,
+          "text": "GENERAL BACK_DAMAGE back_damage.msa 100"
+        }
+      ]
+    },
+    {
+      "path": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_general/front_damage.gr2",
+      "sha256": "85e893322fc9ee7fc94947e4e52d50c52e4b0b327980b1a6fff57fc40a1bc6bb",
+      "asset_type": "boss model/animation",
+      "usage_before": "usage unresolved",
+      "usage_after": "usage unresolved",
+      "cluster": "nonfinite_curve",
+      "reader_site": "GR2AnimationReader.cpp: ReadCurve -> Types::Reals -> File::Float",
+      "field": "TransformTracks[].{Position,Orientation,ScaleShear}Curve.Controls[]",
+      "before": "malformed",
+      "before_error": "nonfinite float",
+      "after": "malformed",
+      "after_error": "nonfinite float",
+      "packed_native": "0",
+      "granny_load": "1",
+      "section_type_field_evidence": [
+        "NONFINITE Root.TrackGroups[0].TransformTracks[14].PositionCurve.Controls[0].Real32[0] section:offset=0:8556 bits=7fc00000 type=6:4640",
+        "NONFINITE Root.TrackGroups[0].TransformTracks[14].PositionCurve.Controls[1].Real32[0] section:offset=0:8560 bits=7fc00000 type=6:4640",
+        "NONFINITE Root.TrackGroups[0].TransformTracks[14].PositionCurve.Controls[2].Real32[0] section:offset=0:8564 bits=7fc00000 type=6:4640",
+        "NONFINITE Root.TrackGroups[0].TransformTracks[14].PositionCurve.Controls[3].Real32[0] section:offset=0:8568 bits=7fc00000 type=6:4640",
+        "NONFINITE Root.TrackGroups[0].TransformTracks[14].PositionCurve.Controls[4].Real32[0] section:offset=0:8572 bits=7fc00000 type=6:4640",
+        "NONFINITE Root.TrackGroups[0].TransformTracks[14].PositionCurve.Controls[5].Real32[0] section:offset=0:8576 bits=7fc00000 type=6:4640",
+        "NONFINITE Root.TrackGroups[0].TransformTracks[14].PositionCurve.Controls[6].Real32[0] section:offset=0:8580 bits=7fc00000 type=6:4640",
+        "NONFINITE Root.TrackGroups[0].TransformTracks[14].PositionCurve.Controls[7].Real32[0] section:offset=0:8584 bits=7fc00000 type=6:4640"
+      ],
+      "granny_reference_evidence": [
+        "REF_GROUP 0 loop=0 0 0",
+        "REF_NAN_BONE 42 Bip01 R Finger2",
+        "REF_NAN_BONE 43 Bip01 R Finger21",
+        "REF_NAN_BONE 44 Bip01 R Finger22",
+        "REF_NAN_BONE 45 Bip01 R Finger2Nub",
+        "REF_NAN_BONE 68 Bip01 L Finger2",
+        "REF_NAN_BONE 69 Bip01 L Finger21",
+        "REF_NAN_BONE 70 Bip01 L Finger22",
+        "REF_NAN_BONE 71 Bip01 L Finger2Nub",
+        "REF_SAMPLE fraction=0 nan_bones=8 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.25 nan_bones=8 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.5 nan_bones=8 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=1.1 nan_bones=8 translation=0 0 0 rotation=0 0 0"
+      ],
+      "original_usage_evidence": [
+        {
+          "path": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_general/front_damage.msa",
+          "virtual_path": "d:/ymir work/monster2/redthief_general/front_damage.msa",
+          "line": 3,
+          "text": "MotionFileName           \"D:\\Ymir Work\\monster2\\redthief_general\\front_damage.GR2\"",
+          "kind": "explicit"
+        },
+        {
+          "path": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief2_general/front_damage.msa",
+          "virtual_path": "d:/ymir work/monster2/redthief2_general/front_damage.msa",
+          "line": 3,
+          "text": "MotionFileName           \"D:\\Ymir Work\\monster2\\redthief_general\\front_damage.GR2\"",
+          "kind": "explicit"
+        }
+      ],
+      "motion_list_evidence": []
+    },
+    {
+      "path": "metin2_patch_easter1/ymir work/pc/warrior/hair/hair_11_1.gr2",
+      "sha256": "3c88e07aac4ae6987994035d32850db24648c6b4aa05678051dd4310077941c3",
+      "asset_type": "player hair",
+      "usage_before": "production",
+      "usage_after": "production",
+      "cluster": "skeleton_forest",
+      "reader_site": "GR2ModelReader.cpp: Read / RuntimeSkeleton::Initialize",
+      "field": "Skeleton.Bones[].ParentIndex",
+      "before": "unsupported curve/type",
+      "before_error": "runtime skeleton: skeleton requires exactly one connected root",
+      "after": "parsed",
+      "after_error": "",
+      "packed_native": "1",
+      "granny_load": "1",
+      "section_type_field_evidence": [
+        "BONE index=0 parent=-1 name=\"00000000000000\" section:offset=0:1008 type=6:20608",
+        "BONE index=1 parent=-1 name=\"Bip01\" section:offset=0:1164 type=6:20608",
+        "MESH hair_11_1 vertex_count=207 indices=1020 index16=0 groups=1 section:offset=0:14256 type=6:21856"
+      ],
+      "granny_reference_evidence": [],
+      "original_usage_evidence": [
+        {
+          "path": "root/msm/warrior_m.msm",
+          "virtual_path": "msm/warrior_m.msm",
+          "line": 181,
+          "text": "Model\t\t\t\t\"hair/hair_11_1.gr2\"",
+          "kind": "explicit"
+        },
+        {
+          "path": "root/msm/warrior_m.msm",
+          "virtual_path": "msm/warrior_m.msm",
+          "line": 314,
+          "text": "Model\t\t\t\t\"hair/hair_11_1.gr2\"",
+          "kind": "explicit"
+        },
+        {
+          "path": "root/msm/warrior_m.msm",
+          "virtual_path": "msm/warrior_m.msm",
+          "line": 321,
+          "text": "Model\t\t\t\t\"hair/hair_11_1.gr2\"",
+          "kind": "explicit"
+        },
+        {
+          "path": "root/msm/warrior_m.msm",
+          "virtual_path": "msm/warrior_m.msm",
+          "line": 328,
+          "text": "Model\t\t\t\t\"hair/hair_11_1.gr2\"",
+          "kind": "explicit"
+        },
+        {
+          "path": "root/msm/warrior_m.msm",
+          "virtual_path": "msm/warrior_m.msm",
+          "line": 335,
+          "text": "Model\t\t\t\t\"hair/hair_11_1.gr2\"",
+          "kind": "explicit"
+        }
+      ],
+      "motion_list_evidence": []
+    },
+    {
+      "path": "metin2_patch_easter1/ymir work/pc/warrior/warrior_rabbit1_backup.gr2",
+      "sha256": "8294a442290a0ca867feb3002eb21338761fd16c252b9b88de1760dbf86667cf",
+      "asset_type": "player model",
+      "usage_before": "usage unresolved",
+      "usage_after": "usage unresolved",
+      "cluster": "skeleton_forest",
+      "reader_site": "GR2ModelReader.cpp: Read / RuntimeSkeleton::Initialize",
+      "field": "Skeleton.Bones[].ParentIndex",
+      "before": "unsupported curve/type",
+      "before_error": "runtime skeleton: skeleton requires exactly one connected root",
+      "after": "parsed",
+      "after_error": "",
+      "packed_native": "1",
+      "granny_load": "1",
+      "section_type_field_evidence": [
+        "BONE index=0 parent=-1 name=\"00000000000000\" section:offset=0:1824 type=6:24128",
+        "BONE index=1 parent=-1 name=\"Bip01\" section:offset=0:1980 type=6:24128",
+        "MESH warrior_face vertex_count=180 indices=1002 index16=0 groups=1 section:offset=0:18028 type=6:25376",
+        "MESH warrior_rabbit1 vertex_count=1133 indices=5022 index16=0 groups=1 section:offset=0:15348 type=6:25376"
+      ],
+      "granny_reference_evidence": [],
+      "original_usage_evidence": [],
+      "motion_list_evidence": []
+    },
+    {
+      "path": "metin2_patch_eu4/ymir work/npc2/halloween1/halloween1.gr2",
+      "sha256": "c2e66c7b9dbdf327b2f159001d46833e93e242e7cc7222dc7cb89a05ed19d76f",
+      "asset_type": "NPC model/animation",
+      "usage_before": "production",
+      "usage_after": "production",
+      "cluster": "duplicate_bone_names",
+      "reader_site": "GR2ModelReader.cpp: Read / RuntimeSkeleton::Initialize",
+      "field": "Skeleton.Bones[].Name",
+      "before": "malformed",
+      "before_error": "skeleton: bone names must be nonempty and unique",
+      "after": "parsed",
+      "after_error": "",
+      "packed_native": "1",
+      "granny_load": "1",
+      "section_type_field_evidence": [
+        "BONE index=0 parent=-1 name=\"bip01\" section:offset=0:1824 type=6:15712",
+        "BONE index=12 parent=1 name=\"bone01\" section:offset=0:3696 type=6:15712",
+        "BONE index=71 parent=1 name=\"bone01\" section:offset=0:12900 type=6:15712",
+        "MESH halloween1 vertex_count=2416 indices=9132 index16=0 groups=2 section:offset=0:14224 type=6:16960"
+      ],
+      "granny_reference_evidence": [],
+      "original_usage_evidence": [
+        {
+          "path": "metin2_patch_eu4/ymir work/npc2/halloween1/halloween1.msm",
+          "virtual_path": "d:/ymir work/npc2/halloween1/halloween1.msm",
+          "line": 3,
+          "text": "BaseModelFileName     \"D:\\Ymir Work\\npc2\\halloween1\\halloween1.GR2\"",
+          "kind": "explicit"
+        }
+      ],
+      "motion_list_evidence": []
+    },
+    {
+      "path": "metin2_patch_eu4/ymir work/npc2/halloween1/wait.gr2",
+      "sha256": "6c4cc43a1c00af74d10e8ccf32556b9af2d5726b951445a8e44f52f88bbf07d1",
+      "asset_type": "NPC model/animation",
+      "usage_before": "production",
+      "usage_after": "production",
+      "cluster": "duplicate_track_names",
+      "reader_site": "GR2AnimationReader.cpp: ReadAnimation / BindAnimation",
+      "field": "TrackGroup.TransformTracks[].Name",
+      "before": "malformed",
+      "before_error": "duplicate/empty track target",
+      "after": "parsed",
+      "after_error": "",
+      "packed_native": "1",
+      "granny_load": "1",
+      "section_type_field_evidence": [
+        "GROUP bone01 flags=2 section:offset=0:184 type=6:4064",
+        "GROUP bip01 flags=2 section:offset=0:412 type=6:4064",
+        "TEXT_OUTSIDE time=4.66666651 duration=1.33333337 label=end section:offset=0:21328 type=6:4960",
+        "TRACK index=63 first=62 name=\"bone01\" section:offset=0:4572 type=6:4704"
+      ],
+      "granny_reference_evidence": [
+        "REF_GROUP 1 loop=0 0 0",
+        "REF_BIND bone=71 name=\"bone01\" find_bone=12 track=63",
+        "REF_SAMPLE fraction=0 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.25 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.5 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=1.10000002 nan_bones=0 translation=0 0 0 rotation=0 0 0"
+      ],
+      "original_usage_evidence": [
+        {
+          "path": "metin2_patch_eu4/ymir work/npc2/halloween1/wait.msa",
+          "virtual_path": "d:/ymir work/npc2/halloween1/wait.msa",
+          "line": 3,
+          "text": "MotionFileName           \"D:\\Ymir Work\\npc2\\halloween1\\wait.GR2\"",
+          "kind": "explicit"
+        }
+      ],
+      "motion_list_evidence": [
+        {
+          "path": "metin2_patch_eu4/ymir work/npc2/halloween1/motlist.txt",
+          "line": 1,
+          "text": "GENERAL WAIT wait.msa 85"
+        }
+      ]
+    },
+    {
+      "path": "metin2_patch_eu4/ymir work/npc2/halloween1/wait1.gr2",
+      "sha256": "63b1730d781c91ec5b0cd7980cace820c511fe81c4914d02d79d66c2f9e3f129",
+      "asset_type": "NPC model/animation",
+      "usage_before": "production",
+      "usage_after": "production",
+      "cluster": "duplicate_track_names",
+      "reader_site": "GR2AnimationReader.cpp: ReadAnimation / BindAnimation",
+      "field": "TrackGroup.TransformTracks[].Name",
+      "before": "malformed",
+      "before_error": "duplicate/empty track target",
+      "after": "parsed",
+      "after_error": "",
+      "packed_native": "1",
+      "granny_load": "1",
+      "section_type_field_evidence": [
+        "GROUP bone01 flags=2 section:offset=0:192 type=6:4064",
+        "GROUP bone02 flags=2 section:offset=0:420 type=6:4064",
+        "GROUP bone01 flags=2 section:offset=0:648 type=6:4064",
+        "GROUP bip01 flags=2 section:offset=0:3556 type=6:4064",
+        "TRACK index=63 first=62 name=\"bone01\" section:offset=0:7716 type=6:4704"
+      ],
+      "granny_reference_evidence": [
+        "REF_GROUP 3 loop=0 0 0",
+        "REF_BIND bone=71 name=\"bone01\" find_bone=12 track=63",
+        "REF_SAMPLE fraction=0 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.25 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.5 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=1.10000002 nan_bones=0 translation=0 0 0 rotation=0 0 0"
+      ],
+      "original_usage_evidence": [
+        {
+          "path": "metin2_patch_eu4/ymir work/npc2/halloween1/wait1.msa",
+          "virtual_path": "d:/ymir work/npc2/halloween1/wait1.msa",
+          "line": 3,
+          "text": "MotionFileName           \"D:\\Ymir Work\\npc2\\halloween1\\wait1.GR2\"",
+          "kind": "explicit"
+        }
+      ],
+      "motion_list_evidence": [
+        {
+          "path": "metin2_patch_eu4/ymir work/npc2/halloween1/motlist.txt",
+          "line": 2,
+          "text": "GENERAL WAIT1 wait1.msa 15"
+        }
+      ]
+    },
+    {
+      "path": "metin2_patch_eu4/ymir work/npc2/halloween1/walk1.gr2",
+      "sha256": "08f2dff25f12f204512c8385f945103f110c19a02eca14918f2d6b8581f47cdf",
+      "asset_type": "NPC model/animation",
+      "usage_before": "production",
+      "usage_after": "production",
+      "cluster": "periodic_loop",
+      "reader_site": "GR2AnimationReader.cpp: ReadAnimation",
+      "field": "TrackGroup.PeriodicLoop",
+      "before": "unsupported curve/type",
+      "before_error": "periodic or explicit root motion",
+      "after": "parsed",
+      "after_error": "",
+      "packed_native": "1",
+      "granny_load": "1",
+      "section_type_field_evidence": [
+        "GROUP bip01 flags=3 section:offset=0:180 type=6:4064",
+        "TEXT_OUTSIDE time=4.66666651 duration=1 label=end section:offset=0:31112 type=6:4960",
+        "PeriodicLoop section:offset=0:31120 type_address=6:5056 type=48:Radius/10x1;dAngle/10x1;dZ/10x1;BasisX/10x3;BasisY/10x3;Axis/10x3;",
+        "TRACK index=63 first=62 name=\"bone01\" section:offset=0:4340 type=6:4704"
+      ],
+      "granny_reference_evidence": [
+        "REF_GROUP 0 loop=0 0 0",
+        "REF_BIND bone=71 name=\"bone01\" find_bone=12 track=63",
+        "REF_SAMPLE fraction=0 nan_bones=0 translation=12.9862204 0.276934147 0.526792765 rotation=-1.70196901e-09 -9.39916145e-10 -3.39736572e-11",
+        "REF_SAMPLE fraction=0.25 nan_bones=0 translation=12.9862194 0.276934147 0.526792765 rotation=-1.70196879e-09 -9.39916034e-10 -3.39736538e-11",
+        "REF_SAMPLE fraction=0.5 nan_bones=0 translation=12.9862194 0.276934147 0.526792765 rotation=-1.70196879e-09 -9.39916034e-10 -3.39736538e-11",
+        "REF_SAMPLE fraction=1.10000002 nan_bones=0 translation=12.9862204 0.276934147 0.526792765 rotation=-1.70196901e-09 -9.39916145e-10 -3.39736572e-11"
+      ],
+      "original_usage_evidence": [
+        {
+          "path": "metin2_patch_eu4/ymir work/npc2/halloween1/walk1.msa",
+          "virtual_path": "d:/ymir work/npc2/halloween1/walk1.msa",
+          "line": 3,
+          "text": "MotionFileName           \"D:\\Ymir Work\\npc2\\halloween1\\walk1.GR2\"",
+          "kind": "explicit"
+        }
+      ],
+      "motion_list_evidence": [
+        {
+          "path": "metin2_patch_eu4/ymir work/npc2/halloween1/motlist.txt",
+          "line": 3,
+          "text": "GENERAL WALK walk1.msa 100"
+        }
+      ]
+    },
+    {
+      "path": "metin2_patch_xmas/ymir work/npc2/pig_young1/walk.gr2",
+      "sha256": "1f089399ecfbe2bf27bb6f2bdb30765864a9d68858fc981094cef3708bffaddc",
+      "asset_type": "pet (NPC skeleton)",
+      "usage_before": "production",
+      "usage_after": "production",
+      "cluster": "periodic_loop",
+      "reader_site": "GR2AnimationReader.cpp: ReadAnimation",
+      "field": "TrackGroup.PeriodicLoop",
+      "before": "unsupported curve/type",
+      "before_error": "periodic or explicit root motion",
+      "after": "parsed",
+      "after_error": "",
+      "packed_native": "1",
+      "granny_load": "1",
+      "section_type_field_evidence": [
+        "GROUP Bip01 flags=3 section:offset=0:180 type=6:4064",
+        "PeriodicLoop section:offset=0:15240 type_address=6:5056 type=48:Radius/10x1;dAngle/10x1;dZ/10x1;BasisX/10x3;BasisY/10x3;Axis/10x3;"
+      ],
+      "granny_reference_evidence": [
+        "REF_GROUP 0 loop=0 0 0",
+        "REF_SAMPLE fraction=0 nan_bones=0 translation=-0.00796079636 -9.1965723 0.384356916 rotation=-2.53886223e-09 -3.04663494e-09 1.06106356e-11",
+        "REF_SAMPLE fraction=0.25 nan_bones=0 translation=-0.00796079636 -9.1965723 0.384356916 rotation=-2.53886223e-09 -3.04663494e-09 1.06106356e-11",
+        "REF_SAMPLE fraction=0.5 nan_bones=0 translation=-0.00796079636 -9.19657135 0.384356856 rotation=-2.53886201e-09 -3.0466345e-09 1.06106339e-11",
+        "REF_SAMPLE fraction=1.10000002 nan_bones=0 translation=-0.00796079636 -9.1965723 0.384356916 rotation=-2.53886223e-09 -3.04663494e-09 1.06106356e-11"
+      ],
+      "original_usage_evidence": [
+        {
+          "path": "metin2_patch_xmas/ymir work/npc2/pig_young1/walk.msa",
+          "virtual_path": "d:/ymir work/npc2/pig_young1/walk.msa",
+          "line": 3,
+          "text": "MotionFileName           \"D:\\Ymir Work\\npc2\\pig_young1\\walk.GR2\"",
+          "kind": "explicit"
+        }
+      ],
+      "motion_list_evidence": [
+        {
+          "path": "metin2_patch_xmas/ymir work/npc2/pig_young1/motlist.txt",
+          "line": 4,
+          "text": "GENERAL WALK walk.msa 100"
+        }
+      ]
+    },
+    {
+      "path": "patch2/ymir work/npc2/historian/historian.gr2",
+      "sha256": "b12e2b23b253b2388382ee65416c6c8c8c5c1e4233c0a35f273d200fc0679914",
+      "asset_type": "NPC model/animation",
+      "usage_before": "production",
+      "usage_after": "production",
+      "cluster": "duplicate_bone_names",
+      "reader_site": "GR2ModelReader.cpp: Read / RuntimeSkeleton::Initialize",
+      "field": "Skeleton.Bones[].Name",
+      "before": "malformed",
+      "before_error": "skeleton: bone names must be nonempty and unique",
+      "after": "parsed",
+      "after_error": "",
+      "packed_native": "1",
+      "granny_load": "1",
+      "section_type_field_evidence": [
+        "BONE index=0 parent=-1 name=\"Bip01\" section:offset=0:1824 type=6:30912",
+        "BONE index=27 parent=26 name=\"Bone_li03\" section:offset=0:6036 type=6:30912",
+        "BONE index=30 parent=29 name=\"Bone_li03\" section:offset=0:6504 type=6:30912",
+        "MESH obj_historian2 vertex_count=253 indices=1074 index16=0 groups=1 section:offset=0:22876 type=6:32160",
+        "MESH historian vertex_count=1971 indices=8337 index16=0 groups=2 section:offset=0:19400 type=6:32160"
+      ],
+      "granny_reference_evidence": [],
+      "original_usage_evidence": [
+        {
+          "path": "patch2/ymir work/npc2/historian/historian.msm",
+          "virtual_path": "d:/ymir work/npc2/historian/historian.msm",
+          "line": 3,
+          "text": "BaseModelFileName     \"D:\\Ymir Work\\npc2\\historian\\historian.GR2\"",
+          "kind": "explicit"
+        }
+      ],
+      "motion_list_evidence": []
+    },
+    {
+      "path": "patch2/ymir work/npc2/historian/run.gr2",
+      "sha256": "b6ec26eb5bbecd56f1c4f127169608d09f7a385a573a2050a2e18b64cbd02309",
+      "asset_type": "NPC model/animation",
+      "usage_before": "production",
+      "usage_after": "production",
+      "cluster": "duplicate_track_names",
+      "reader_site": "GR2AnimationReader.cpp: ReadAnimation / BindAnimation",
+      "field": "TrackGroup.TransformTracks[].Name",
+      "before": "malformed",
+      "before_error": "duplicate/empty track target",
+      "after": "parsed",
+      "after_error": "",
+      "packed_native": "1",
+      "granny_load": "1",
+      "section_type_field_evidence": [
+        "GROUP Bip01 flags=3 section:offset=0:180 type=6:4064",
+        "TRACK index=94 first=93 name=\"Bone_li03\" section:offset=0:6324 type=6:4704"
+      ],
+      "granny_reference_evidence": [
+        "REF_GROUP 0 loop=0 -300 0",
+        "REF_BIND bone=30 name=\"Bone_li03\" find_bone=27 track=94",
+        "REF_SAMPLE fraction=0 nan_bones=0 translation=0 -40.9090919 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.25 nan_bones=0 translation=0 -40.9090919 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.5 nan_bones=0 translation=0 -40.9090881 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=1.10000002 nan_bones=0 translation=0 -40.9090919 0 rotation=0 0 0"
+      ],
+      "original_usage_evidence": [
+        {
+          "path": "patch2/ymir work/npc2/historian/run.msa",
+          "virtual_path": "d:/ymir work/npc2/historian/run.msa",
+          "line": 3,
+          "text": "MotionFileName           \"D:\\Ymir Work\\npc2\\historian\\run.GR2\"",
+          "kind": "explicit"
+        }
+      ],
+      "motion_list_evidence": [
+        {
+          "path": "patch2/ymir work/npc2/historian/motlist.txt",
+          "line": 3,
+          "text": "GENERAL RUN run.msa 100"
+        }
+      ]
+    },
+    {
+      "path": "patch2/ymir work/npc2/historian/wait.gr2",
+      "sha256": "2cd68945994b8bf582f9118e3c2487099519454a4b81206d396eaa578424c4cd",
+      "asset_type": "NPC model/animation",
+      "usage_before": "production",
+      "usage_after": "production",
+      "cluster": "duplicate_track_names",
+      "reader_site": "GR2AnimationReader.cpp: ReadAnimation / BindAnimation",
+      "field": "TrackGroup.TransformTracks[].Name",
+      "before": "malformed",
+      "before_error": "duplicate/empty track target",
+      "after": "parsed",
+      "after_error": "",
+      "packed_native": "1",
+      "granny_load": "1",
+      "section_type_field_evidence": [
+        "GROUP Dummy04 flags=2 section:offset=0:184 type=6:4064",
+        "GROUP Bip01 flags=2 section:offset=0:1856 type=6:4064",
+        "TRACK index=94 first=93 name=\"Bone_li03\" section:offset=0:8000 type=6:4704"
+      ],
+      "granny_reference_evidence": [
+        "REF_GROUP 1 loop=0 0 0",
+        "REF_BIND bone=30 name=\"Bone_li03\" find_bone=27 track=94",
+        "REF_SAMPLE fraction=0 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.25 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.5 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=1.10000002 nan_bones=0 translation=0 0 0 rotation=0 0 0"
+      ],
+      "original_usage_evidence": [
+        {
+          "path": "patch2/ymir work/npc2/historian/wait.msa",
+          "virtual_path": "d:/ymir work/npc2/historian/wait.msa",
+          "line": 3,
+          "text": "MotionFileName           \"D:\\Ymir Work\\npc2\\historian\\wait.GR2\"",
+          "kind": "explicit"
+        }
+      ],
+      "motion_list_evidence": [
+        {
+          "path": "patch2/ymir work/npc2/historian/motlist.txt",
+          "line": 1,
+          "text": "GENERAL WAIT wait.msa 85"
+        }
+      ]
+    },
+    {
+      "path": "patch2/ymir work/npc2/historian/wait1.gr2",
+      "sha256": "cd3fa0ba21139a601207665329ab44d5a8f32e10604f1d3c6869cd5cb91001e2",
+      "asset_type": "NPC model/animation",
+      "usage_before": "production",
+      "usage_after": "production",
+      "cluster": "duplicate_track_names",
+      "reader_site": "GR2AnimationReader.cpp: ReadAnimation / BindAnimation",
+      "field": "TrackGroup.TransformTracks[].Name",
+      "before": "malformed",
+      "before_error": "duplicate/empty track target",
+      "after": "parsed",
+      "after_error": "",
+      "packed_native": "1",
+      "granny_load": "1",
+      "section_type_field_evidence": [
+        "GROUP Dummy04 flags=2 section:offset=0:184 type=6:4064",
+        "GROUP Bip01 flags=2 section:offset=0:2208 type=6:4064",
+        "TRACK index=94 first=93 name=\"Bone_li03\" section:offset=0:8352 type=6:4704"
+      ],
+      "granny_reference_evidence": [
+        "REF_GROUP 1 loop=0 0 0",
+        "REF_BIND bone=30 name=\"Bone_li03\" find_bone=27 track=94",
+        "REF_SAMPLE fraction=0 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.25 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.5 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=1.10000002 nan_bones=0 translation=0 0 0 rotation=0 0 0"
+      ],
+      "original_usage_evidence": [
+        {
+          "path": "patch2/ymir work/npc2/historian/wait1.msa",
+          "virtual_path": "d:/ymir work/npc2/historian/wait1.msa",
+          "line": 3,
+          "text": "MotionFileName           \"D:\\Ymir Work\\npc2\\historian\\wait1.GR2\"",
+          "kind": "explicit"
+        }
+      ],
+      "motion_list_evidence": [
+        {
+          "path": "patch2/ymir work/npc2/historian/motlist.txt",
+          "line": 2,
+          "text": "GENERAL WAIT1 wait1.msa 15"
+        }
+      ]
+    },
+    {
+      "path": "patch2/ymir work/npc2/historian/walk.gr2",
+      "sha256": "c894bc4a38ee33c1b591b0bef64bbbf03115d77d9690adddd110eea044bfd747",
+      "asset_type": "NPC model/animation",
+      "usage_before": "production",
+      "usage_after": "production",
+      "cluster": "duplicate_track_names",
+      "reader_site": "GR2AnimationReader.cpp: ReadAnimation / BindAnimation",
+      "field": "TrackGroup.TransformTracks[].Name",
+      "before": "malformed",
+      "before_error": "duplicate/empty track target",
+      "after": "parsed",
+      "after_error": "",
+      "packed_native": "1",
+      "granny_load": "1",
+      "section_type_field_evidence": [
+        "GROUP Dummy04 flags=3 section:offset=0:184 type=6:4064",
+        "GROUP Bip01 flags=3 section:offset=0:1456 type=6:4064",
+        "TRACK index=94 first=93 name=\"Bone_li03\" section:offset=0:7600 type=6:4704"
+      ],
+      "granny_reference_evidence": [
+        "REF_GROUP 1 loop=0 -200 0",
+        "REF_BIND bone=30 name=\"Bone_li03\" find_bone=27 track=94",
+        "REF_SAMPLE fraction=0 nan_bones=0 translation=0 -20 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.25 nan_bones=0 translation=0 -19.9999981 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.5 nan_bones=0 translation=0 -19.9999981 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=1.10000002 nan_bones=0 translation=0 -20 0 rotation=0 0 0"
+      ],
+      "original_usage_evidence": [
+        {
+          "path": "patch2/ymir work/npc2/historian/walk.msa",
+          "virtual_path": "d:/ymir work/npc2/historian/walk.msa",
+          "line": 3,
+          "text": "MotionFileName           \"D:\\Ymir Work\\npc2\\historian\\walk.GR2\"",
+          "kind": "explicit"
+        }
+      ],
+      "motion_list_evidence": [
+        {
+          "path": "patch2/ymir work/npc2/historian/motlist.txt",
+          "line": 4,
+          "text": "GENERAL WALK walk.msa 100"
+        }
+      ]
+    },
+    {
+      "path": "season1/season1/monster/ch_officer/skipia_officer_attack.gr2",
+      "sha256": "bad858cfb26dd7ae808775649d6c03a07f90f9acde11b26828dd309fbbcb0a20",
+      "asset_type": "mob model/animation",
+      "usage_before": "usage unresolved",
+      "usage_after": "usage unresolved",
+      "cluster": "duplicate_track_names",
+      "reader_site": "GR2AnimationReader.cpp: ReadAnimation / BindAnimation",
+      "field": "TrackGroup.TransformTracks[].Name",
+      "before": "malformed",
+      "before_error": "duplicate/empty track target",
+      "after": "parsed",
+      "after_error": "",
+      "packed_native": "1",
+      "granny_load": "1",
+      "section_type_field_evidence": [
+        "GROUP Bip01 flags=2 section:offset=0:180 type=6:4064",
+        "TRACK index=51 first=50 name=\"rar_01\" section:offset=0:3572 type=6:4704",
+        "TRACK index=53 first=52 name=\"rar_02\" section:offset=0:3700 type=6:4704",
+        "TRACK index=55 first=54 name=\"rar_03\" section:offset=0:3828 type=6:4704"
+      ],
+      "granny_reference_evidence": [
+        "REF_GROUP 0 loop=0 0 0",
+        "REF_SAMPLE fraction=0 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.25 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.5 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=1.10000002 nan_bones=0 translation=0 0 0 rotation=0 0 0"
+      ],
+      "original_usage_evidence": [
+        {
+          "path": "season1/season1/monster/ch_officer/skipia_officer_attack.msa",
+          "virtual_path": "season1/monster/ch_officer/skipia_officer_attack.msa",
+          "line": 3,
+          "text": "MotionFileName           \"season1\\monster\\ch_officer\\skipia_officer_attack.GR2\"",
+          "kind": "explicit"
+        }
+      ],
+      "motion_list_evidence": [
+        {
+          "path": "season1/season1/monster/ch_officer/motlist.txt",
+          "line": 4,
+          "text": "GENERAL NORMAL_ATTACK skipia_officer_attack.msa 50"
+        }
+      ]
+    },
+    {
+      "path": "season1/season1/monster/ch_officer/skipia_officer_attack1.gr2",
+      "sha256": "434768d8e0ace7f37800b90e5d620d4f893fb93cce551471dfd1a3782023a690",
+      "asset_type": "mob model/animation",
+      "usage_before": "usage unresolved",
+      "usage_after": "usage unresolved",
+      "cluster": "duplicate_track_names",
+      "reader_site": "GR2AnimationReader.cpp: ReadAnimation / BindAnimation",
+      "field": "TrackGroup.TransformTracks[].Name",
+      "before": "malformed",
+      "before_error": "duplicate/empty track target",
+      "after": "parsed",
+      "after_error": "",
+      "packed_native": "1",
+      "granny_load": "1",
+      "section_type_field_evidence": [
+        "GROUP Bip01 flags=2 section:offset=0:180 type=6:4064",
+        "TRACK index=51 first=50 name=\"rar_01\" section:offset=0:3572 type=6:4704",
+        "TRACK index=53 first=52 name=\"rar_02\" section:offset=0:3700 type=6:4704",
+        "TRACK index=55 first=54 name=\"rar_03\" section:offset=0:3828 type=6:4704"
+      ],
+      "granny_reference_evidence": [
+        "REF_GROUP 0 loop=0 0 0",
+        "REF_SAMPLE fraction=0 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.25 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.5 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=1.10000002 nan_bones=0 translation=0 0 0 rotation=0 0 0"
+      ],
+      "original_usage_evidence": [
+        {
+          "path": "season1/season1/monster/ch_officer/skipia_officer_attack1.msa",
+          "virtual_path": "season1/monster/ch_officer/skipia_officer_attack1.msa",
+          "line": 3,
+          "text": "MotionFileName           \"season1\\monster\\ch_officer\\skipia_officer_attack1.GR2\"",
+          "kind": "explicit"
+        }
+      ],
+      "motion_list_evidence": [
+        {
+          "path": "season1/season1/monster/ch_officer/motlist.txt",
+          "line": 5,
+          "text": "GENERAL NORMAL_ATTACK1 skipia_officer_attack1.msa 50"
+        }
+      ]
+    },
+    {
+      "path": "season1/season1/monster/ch_officer/skipia_officer_back_dead.gr2",
+      "sha256": "2ae8da9c43ab28aa30449c7b173a10b11f8d3417bf4bf2489dbfe45ec4d039ff",
+      "asset_type": "mob model/animation",
+      "usage_before": "usage unresolved",
+      "usage_after": "usage unresolved",
+      "cluster": "duplicate_track_names",
+      "reader_site": "GR2AnimationReader.cpp: ReadAnimation / BindAnimation",
+      "field": "TrackGroup.TransformTracks[].Name",
+      "before": "malformed",
+      "before_error": "duplicate/empty track target",
+      "after": "parsed",
+      "after_error": "",
+      "packed_native": "1",
+      "granny_load": "1",
+      "section_type_field_evidence": [
+        "GROUP Bip01 flags=2 section:offset=0:180 type=6:4064",
+        "TRACK index=51 first=50 name=\"rar_01\" section:offset=0:3572 type=6:4704",
+        "TRACK index=53 first=52 name=\"rar_02\" section:offset=0:3700 type=6:4704",
+        "TRACK index=55 first=54 name=\"rar_03\" section:offset=0:3828 type=6:4704"
+      ],
+      "granny_reference_evidence": [
+        "REF_GROUP 0 loop=0 0 0",
+        "REF_SAMPLE fraction=0 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.25 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.5 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=1.10000002 nan_bones=0 translation=0 0 0 rotation=0 0 0"
+      ],
+      "original_usage_evidence": [
+        {
+          "path": "season1/season1/monster/ch_officer/skipia_officer_back_dead.msa",
+          "virtual_path": "season1/monster/ch_officer/skipia_officer_back_dead.msa",
+          "line": 3,
+          "text": "MotionFileName           \"season1\\monster\\ch_officer\\skipia_officer_back_dead.GR2\"",
+          "kind": "explicit"
+        }
+      ],
+      "motion_list_evidence": [
+        {
+          "path": "season1/season1/monster/ch_officer/motlist.txt",
+          "line": 15,
+          "text": "GENERAL BACK_DEAD skipia_officer_back_dead.msa 100"
+        }
+      ]
+    },
+    {
+      "path": "season1/season1/monster/ch_officer/skipia_officer_back_knockdown.gr2",
+      "sha256": "a4274328d83dbe668c51874fbaa5c71820b68015ef0a7b01d0e374ac0be32d65",
+      "asset_type": "mob model/animation",
+      "usage_before": "usage unresolved",
+      "usage_after": "usage unresolved",
+      "cluster": "duplicate_track_names",
+      "reader_site": "GR2AnimationReader.cpp: ReadAnimation / BindAnimation",
+      "field": "TrackGroup.TransformTracks[].Name",
+      "before": "malformed",
+      "before_error": "duplicate/empty track target",
+      "after": "parsed",
+      "after_error": "",
+      "packed_native": "1",
+      "granny_load": "1",
+      "section_type_field_evidence": [
+        "GROUP Bip01 flags=3 section:offset=0:180 type=6:4064",
+        "TRACK index=51 first=50 name=\"rar_01\" section:offset=0:3572 type=6:4704",
+        "TRACK index=53 first=52 name=\"rar_02\" section:offset=0:3700 type=6:4704",
+        "TRACK index=55 first=54 name=\"rar_03\" section:offset=0:3828 type=6:4704"
+      ],
+      "granny_reference_evidence": [
+        "REF_GROUP 0 loop=0 0 0",
+        "REF_SAMPLE fraction=0 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.25 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.5 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=1.10000002 nan_bones=0 translation=0 0 0 rotation=0 0 0"
+      ],
+      "original_usage_evidence": [
+        {
+          "path": "season1/season1/monster/ch_officer/skipia_officer_back_knockdown.msa",
+          "virtual_path": "season1/monster/ch_officer/skipia_officer_back_knockdown.msa",
+          "line": 3,
+          "text": "MotionFileName           \"season1\\monster\\ch_officer\\skipia_officer_back_knockdown.GR2\"",
+          "kind": "explicit"
+        }
+      ],
+      "motion_list_evidence": [
+        {
+          "path": "season1/season1/monster/ch_officer/motlist.txt",
+          "line": 13,
+          "text": "GENERAL BACK_KNOCKDOWN skipia_officer_back_knockdown.msa 100"
+        }
+      ]
+    },
+    {
+      "path": "season1/season1/monster/ch_officer/skipia_officer_back_standup.gr2",
+      "sha256": "7c3c5a302be2c4b4d7d4938a80b6566d9057dc74e60fd859be1700f28626e643",
+      "asset_type": "mob model/animation",
+      "usage_before": "usage unresolved",
+      "usage_after": "usage unresolved",
+      "cluster": "duplicate_track_names",
+      "reader_site": "GR2AnimationReader.cpp: ReadAnimation / BindAnimation",
+      "field": "TrackGroup.TransformTracks[].Name",
+      "before": "malformed",
+      "before_error": "duplicate/empty track target",
+      "after": "parsed",
+      "after_error": "",
+      "packed_native": "1",
+      "granny_load": "1",
+      "section_type_field_evidence": [
+        "GROUP Bip01 flags=2 section:offset=0:180 type=6:4064",
+        "TRACK index=51 first=50 name=\"rar_01\" section:offset=0:3572 type=6:4704",
+        "TRACK index=53 first=52 name=\"rar_02\" section:offset=0:3700 type=6:4704",
+        "TRACK index=55 first=54 name=\"rar_03\" section:offset=0:3828 type=6:4704"
+      ],
+      "granny_reference_evidence": [
+        "REF_GROUP 0 loop=0 0 0",
+        "REF_SAMPLE fraction=0 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.25 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.5 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=1.10000002 nan_bones=0 translation=0 0 0 rotation=0 0 0"
+      ],
+      "original_usage_evidence": [
+        {
+          "path": "season1/season1/monster/ch_officer/skipia_officer_back_standup.msa",
+          "virtual_path": "season1/monster/ch_officer/skipia_officer_back_standup.msa",
+          "line": 3,
+          "text": "MotionFileName           \"season1\\monster\\ch_officer\\skipia_officer_back_standup.GR2\"",
+          "kind": "explicit"
+        }
+      ],
+      "motion_list_evidence": [
+        {
+          "path": "season1/season1/monster/ch_officer/motlist.txt",
+          "line": 14,
+          "text": "GENERAL BACK_STANDUP skipia_officer_back_standup.msa 100"
+        }
+      ]
+    },
+    {
+      "path": "season1/season1/monster/ch_officer/skipia_officer_dead.gr2",
+      "sha256": "d1716435fd2d5c37bda2868b9299a135a3253061ff9f2aa62f26254166aa1733",
+      "asset_type": "mob model/animation",
+      "usage_before": "usage unresolved",
+      "usage_after": "usage unresolved",
+      "cluster": "duplicate_track_names",
+      "reader_site": "GR2AnimationReader.cpp: ReadAnimation / BindAnimation",
+      "field": "TrackGroup.TransformTracks[].Name",
+      "before": "malformed",
+      "before_error": "duplicate/empty track target",
+      "after": "parsed",
+      "after_error": "",
+      "packed_native": "1",
+      "granny_load": "1",
+      "section_type_field_evidence": [
+        "GROUP Bip01 flags=2 section:offset=0:180 type=6:4064",
+        "TRACK index=51 first=50 name=\"rar_01\" section:offset=0:3572 type=6:4704",
+        "TRACK index=53 first=52 name=\"rar_02\" section:offset=0:3700 type=6:4704",
+        "TRACK index=55 first=54 name=\"rar_03\" section:offset=0:3828 type=6:4704"
+      ],
+      "granny_reference_evidence": [
+        "REF_GROUP 0 loop=0 0 0",
+        "REF_SAMPLE fraction=0 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.25 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.5 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=1.10000002 nan_bones=0 translation=0 0 0 rotation=0 0 0"
+      ],
+      "original_usage_evidence": [
+        {
+          "path": "season1/season1/monster/ch_officer/skipia_officer_dead.msa",
+          "virtual_path": "season1/monster/ch_officer/skipia_officer_dead.msa",
+          "line": 3,
+          "text": "MotionFileName           \"season1\\monster\\ch_officer\\skipia_officer_dead.GR2\"",
+          "kind": "explicit"
+        }
+      ],
+      "motion_list_evidence": [
+        {
+          "path": "season1/season1/monster/ch_officer/motlist.txt",
+          "line": 8,
+          "text": "GENERAL FRONT_DEAD skipia_officer_dead.msa 100"
+        }
+      ]
+    },
+    {
+      "path": "season1/season1/monster/ch_officer/skipia_officer_front_damage.gr2",
+      "sha256": "cc51cdd17ac292a2571ecc931c74604dc9618b669d6a66cc3ffb6e98a0f25017",
+      "asset_type": "mob model/animation",
+      "usage_before": "usage unresolved",
+      "usage_after": "usage unresolved",
+      "cluster": "duplicate_track_names",
+      "reader_site": "GR2AnimationReader.cpp: ReadAnimation / BindAnimation",
+      "field": "TrackGroup.TransformTracks[].Name",
+      "before": "malformed",
+      "before_error": "duplicate/empty track target",
+      "after": "parsed",
+      "after_error": "",
+      "packed_native": "1",
+      "granny_load": "1",
+      "section_type_field_evidence": [
+        "GROUP Bip01 flags=2 section:offset=0:180 type=6:4064",
+        "TRACK index=51 first=50 name=\"rar_01\" section:offset=0:3572 type=6:4704",
+        "TRACK index=53 first=52 name=\"rar_02\" section:offset=0:3700 type=6:4704",
+        "TRACK index=55 first=54 name=\"rar_03\" section:offset=0:3828 type=6:4704"
+      ],
+      "granny_reference_evidence": [
+        "REF_GROUP 0 loop=0 0 0",
+        "REF_SAMPLE fraction=0 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.25 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.5 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=1.10000002 nan_bones=0 translation=0 0 0 rotation=0 0 0"
+      ],
+      "original_usage_evidence": [
+        {
+          "path": "season1/season1/monster/ch_officer/skipia_officer_front_damage.msa",
+          "virtual_path": "season1/monster/ch_officer/skipia_officer_front_damage.msa",
+          "line": 3,
+          "text": "MotionFileName           \"season1\\monster\\ch_officer\\skipia_officer_front_damage.GR2\"",
+          "kind": "explicit"
+        },
+        {
+          "path": "season1/season1/monster/ch_officer/skipia_officer_damage.msa",
+          "virtual_path": "season1/monster/ch_officer/skipia_officer_damage.msa",
+          "line": 3,
+          "text": "MotionFileName           \"season1\\monster\\ch_officer\\skipia_officer_front_damage.GR2\"",
+          "kind": "explicit"
+        }
+      ],
+      "motion_list_evidence": [
+        {
+          "path": "season1/season1/monster/ch_officer/motlist.txt",
+          "line": 6,
+          "text": "GENERAL FRONT_DAMAGE skipia_officer_damage.msa 50"
+        }
+      ]
+    },
+    {
+      "path": "season1/season1/monster/ch_officer/skipia_officer_front_damage1.gr2",
+      "sha256": "a438fac90741ec09728a39abedf69f42dcc1ee42ca5d00c45c5e6739d543f793",
+      "asset_type": "mob model/animation",
+      "usage_before": "usage unresolved",
+      "usage_after": "usage unresolved",
+      "cluster": "duplicate_track_names",
+      "reader_site": "GR2AnimationReader.cpp: ReadAnimation / BindAnimation",
+      "field": "TrackGroup.TransformTracks[].Name",
+      "before": "malformed",
+      "before_error": "duplicate/empty track target",
+      "after": "parsed",
+      "after_error": "",
+      "packed_native": "1",
+      "granny_load": "1",
+      "section_type_field_evidence": [
+        "GROUP Bip01 flags=2 section:offset=0:180 type=6:4064",
+        "TRACK index=51 first=50 name=\"rar_01\" section:offset=0:3572 type=6:4704",
+        "TRACK index=53 first=52 name=\"rar_02\" section:offset=0:3700 type=6:4704",
+        "TRACK index=55 first=54 name=\"rar_03\" section:offset=0:3828 type=6:4704"
+      ],
+      "granny_reference_evidence": [
+        "REF_GROUP 0 loop=0 0 0",
+        "REF_SAMPLE fraction=0 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.25 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.5 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=1.10000002 nan_bones=0 translation=0 0 0 rotation=0 0 0"
+      ],
+      "original_usage_evidence": [
+        {
+          "path": "season1/season1/monster/ch_officer/skipia_officer_front_damage1.msa",
+          "virtual_path": "season1/monster/ch_officer/skipia_officer_front_damage1.msa",
+          "line": 3,
+          "text": "MotionFileName           \"season1\\monster\\ch_officer\\skipia_officer_front_damage1.GR2\"",
+          "kind": "explicit"
+        },
+        {
+          "path": "season1/season1/monster/ch_officer/skipia_officer_damage1.msa",
+          "virtual_path": "season1/monster/ch_officer/skipia_officer_damage1.msa",
+          "line": 3,
+          "text": "MotionFileName           \"season1\\monster\\ch_officer\\skipia_officer_front_damage1.GR2\"",
+          "kind": "explicit"
+        }
+      ],
+      "motion_list_evidence": [
+        {
+          "path": "season1/season1/monster/ch_officer/motlist.txt",
+          "line": 7,
+          "text": "GENERAL FRONT_DAMAGE1 skipia_officer_damage1.msa 50"
+        }
+      ]
+    },
+    {
+      "path": "season1/season1/monster/ch_officer/skipia_officer_front_standup.gr2",
+      "sha256": "c5c0d8a70d1ae4065ff8828600c54993940e8faf014fb7ddcef30490e65a0c43",
+      "asset_type": "mob model/animation",
+      "usage_before": "usage unresolved",
+      "usage_after": "usage unresolved",
+      "cluster": "duplicate_track_names",
+      "reader_site": "GR2AnimationReader.cpp: ReadAnimation / BindAnimation",
+      "field": "TrackGroup.TransformTracks[].Name",
+      "before": "malformed",
+      "before_error": "duplicate/empty track target",
+      "after": "parsed",
+      "after_error": "",
+      "packed_native": "1",
+      "granny_load": "1",
+      "section_type_field_evidence": [
+        "GROUP Bip01 flags=2 section:offset=0:180 type=6:4064",
+        "TRACK index=51 first=50 name=\"rar_01\" section:offset=0:3572 type=6:4704",
+        "TRACK index=53 first=52 name=\"rar_02\" section:offset=0:3700 type=6:4704",
+        "TRACK index=55 first=54 name=\"rar_03\" section:offset=0:3828 type=6:4704"
+      ],
+      "granny_reference_evidence": [
+        "REF_GROUP 0 loop=0 0 0",
+        "REF_SAMPLE fraction=0 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.25 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.5 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=1.10000002 nan_bones=0 translation=0 0 0 rotation=0 0 0"
+      ],
+      "original_usage_evidence": [
+        {
+          "path": "season1/season1/monster/ch_officer/skipia_officer_standup.msa",
+          "virtual_path": "season1/monster/ch_officer/skipia_officer_standup.msa",
+          "line": 3,
+          "text": "MotionFileName           \"season1\\monster\\ch_officer\\skipia_officer_front_standup.GR2\"",
+          "kind": "explicit"
+        },
+        {
+          "path": "season1/season1/monster/ch_officer/skipia_officer_front_standup.msa",
+          "virtual_path": "season1/monster/ch_officer/skipia_officer_front_standup.msa",
+          "line": 3,
+          "text": "MotionFileName           \"season1\\monster\\ch_officer\\skipia_officer_front_standup.GR2\"",
+          "kind": "explicit"
+        }
+      ],
+      "motion_list_evidence": [
+        {
+          "path": "season1/season1/monster/ch_officer/motlist.txt",
+          "line": 10,
+          "text": "GENERAL FRONT_STANDUP skipia_officer_front_standup.msa 100"
+        }
+      ]
+    },
+    {
+      "path": "season1/season1/monster/ch_officer/skipia_officer_run.gr2",
+      "sha256": "0ca9a9121ad2a56c901c34a7a5e6a25bc662dc915088ceffc316f5a3f2b100e6",
+      "asset_type": "mob model/animation",
+      "usage_before": "usage unresolved",
+      "usage_after": "usage unresolved",
+      "cluster": "duplicate_track_names",
+      "reader_site": "GR2AnimationReader.cpp: ReadAnimation / BindAnimation",
+      "field": "TrackGroup.TransformTracks[].Name",
+      "before": "malformed",
+      "before_error": "duplicate/empty track target",
+      "after": "parsed",
+      "after_error": "",
+      "packed_native": "1",
+      "granny_load": "1",
+      "section_type_field_evidence": [
+        "GROUP Bip01 flags=3 section:offset=0:180 type=6:4064",
+        "TRACK index=51 first=50 name=\"rar_01\" section:offset=0:3572 type=6:4704",
+        "TRACK index=53 first=52 name=\"rar_02\" section:offset=0:3700 type=6:4704",
+        "TRACK index=55 first=54 name=\"rar_03\" section:offset=0:3828 type=6:4704"
+      ],
+      "granny_reference_evidence": [
+        "REF_GROUP 0 loop=0 -319.665466 0",
+        "REF_SAMPLE fraction=0 nan_bones=0 translation=0 -39.9581795 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.25 nan_bones=0 translation=0 -39.9581795 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.5 nan_bones=0 translation=0 -39.9581795 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=1.10000002 nan_bones=0 translation=0 -39.9581795 0 rotation=0 0 0"
+      ],
+      "original_usage_evidence": [
+        {
+          "path": "season1/season1/monster/ch_officer/skipia_officer_run.msa",
+          "virtual_path": "season1/monster/ch_officer/skipia_officer_run.msa",
+          "line": 3,
+          "text": "MotionFileName           \"season1\\monster\\ch_officer\\skipia_officer_run.GR2\"",
+          "kind": "explicit"
+        }
+      ],
+      "motion_list_evidence": [
+        {
+          "path": "season1/season1/monster/ch_officer/motlist.txt",
+          "line": 3,
+          "text": "GENERAL RUN skipia_officer_run.msa 100"
+        }
+      ]
+    },
+    {
+      "path": "season1/season1/monster/ch_officer/skipia_officer_wait.gr2",
+      "sha256": "066570790510594e002e811e458fb6305fe87d6d96b04d20f645cbe7b6711344",
+      "asset_type": "mob model/animation",
+      "usage_before": "usage unresolved",
+      "usage_after": "usage unresolved",
+      "cluster": "duplicate_track_names",
+      "reader_site": "GR2AnimationReader.cpp: ReadAnimation / BindAnimation",
+      "field": "TrackGroup.TransformTracks[].Name",
+      "before": "malformed",
+      "before_error": "duplicate/empty track target",
+      "after": "parsed",
+      "after_error": "",
+      "packed_native": "1",
+      "granny_load": "1",
+      "section_type_field_evidence": [
+        "GROUP Bip01 flags=2 section:offset=0:180 type=6:4064",
+        "TRACK index=51 first=50 name=\"rar_01\" section:offset=0:3572 type=6:4704",
+        "TRACK index=53 first=52 name=\"rar_02\" section:offset=0:3700 type=6:4704",
+        "TRACK index=55 first=54 name=\"rar_03\" section:offset=0:3828 type=6:4704"
+      ],
+      "granny_reference_evidence": [
+        "REF_GROUP 0 loop=0 0 0",
+        "REF_SAMPLE fraction=0 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.25 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.5 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=1.10000002 nan_bones=0 translation=0 0 0 rotation=0 0 0"
+      ],
+      "original_usage_evidence": [
+        {
+          "path": "season1/season1/monster/ch_officer/skipia_officer_wait.msa",
+          "virtual_path": "season1/monster/ch_officer/skipia_officer_wait.msa",
+          "line": 3,
+          "text": "MotionFileName           \"season1\\monster\\ch_officer\\skipia_officer_wait.GR2\"",
+          "kind": "explicit"
+        }
+      ],
+      "motion_list_evidence": [
+        {
+          "path": "season1/season1/monster/ch_officer/motlist.txt",
+          "line": 1,
+          "text": "GENERAL WAIT skipia_officer_wait.msa 70"
+        }
+      ]
+    },
+    {
+      "path": "season1/season1/monster/ch_officer/skipia_officer_wait1.gr2",
+      "sha256": "1d9f8a708d53e6779fb0170c0875bb701c2f3a30c8fa47dea4fa85670d23a3a2",
+      "asset_type": "mob model/animation",
+      "usage_before": "usage unresolved",
+      "usage_after": "usage unresolved",
+      "cluster": "duplicate_track_names",
+      "reader_site": "GR2AnimationReader.cpp: ReadAnimation / BindAnimation",
+      "field": "TrackGroup.TransformTracks[].Name",
+      "before": "malformed",
+      "before_error": "duplicate/empty track target",
+      "after": "parsed",
+      "after_error": "",
+      "packed_native": "1",
+      "granny_load": "1",
+      "section_type_field_evidence": [
+        "GROUP Bip01 flags=2 section:offset=0:180 type=6:4064",
+        "TRACK index=51 first=50 name=\"rar_01\" section:offset=0:3572 type=6:4704",
+        "TRACK index=53 first=52 name=\"rar_02\" section:offset=0:3700 type=6:4704",
+        "TRACK index=55 first=54 name=\"rar_03\" section:offset=0:3828 type=6:4704"
+      ],
+      "granny_reference_evidence": [
+        "REF_GROUP 0 loop=0 0 0",
+        "REF_SAMPLE fraction=0 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.25 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.5 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=1.10000002 nan_bones=0 translation=0 0 0 rotation=0 0 0"
+      ],
+      "original_usage_evidence": [
+        {
+          "path": "season1/season1/monster/ch_officer/skipia_officer_wait1.msa",
+          "virtual_path": "season1/monster/ch_officer/skipia_officer_wait1.msa",
+          "line": 3,
+          "text": "MotionFileName           \"season1\\monster\\ch_officer\\skipia_officer_wait1.GR2\"",
+          "kind": "explicit"
+        }
+      ],
+      "motion_list_evidence": [
+        {
+          "path": "season1/season1/monster/ch_officer/motlist.txt",
+          "line": 2,
+          "text": "GENERAL WAIT1 skipia_officer_wait1.msa 30"
+        }
+      ]
+    },
+    {
+      "path": "season1/season1/pc/assassin/assassin.gr2",
+      "sha256": "58fa44e7a0ec996a81cc9e50992ca485889cff8256ca83b60a5b61c96cbaf34e",
+      "asset_type": "player model",
+      "usage_before": "usage unresolved",
+      "usage_after": "usage unresolved",
+      "cluster": "skeleton_forest",
+      "reader_site": "GR2ModelReader.cpp: Read / RuntimeSkeleton::Initialize",
+      "field": "Skeleton.Bones[].ParentIndex",
+      "before": "unsupported curve/type",
+      "before_error": "runtime skeleton: skeleton requires exactly one connected root",
+      "after": "parsed",
+      "after_error": "",
+      "packed_native": "1",
+      "granny_load": "1",
+      "section_type_field_evidence": [
+        "BONE index=0 parent=-1 name=\"assasin_low\" section:offset=0:2640 type=6:32992",
+        "BONE index=1 parent=-1 name=\"Bip01\" section:offset=0:2796 type=6:32992",
+        "MESH assasin_low vertex_count=2429 indices=6822 index16=0 groups=2 section:offset=0:38128 type=6:34240",
+        "MESH Object14 vertex_count=136 indices=312 index16=0 groups=1 section:offset=0:37492 type=6:34240",
+        "MESH Object01 vertex_count=53 indices=249 index16=0 groups=1 section:offset=0:37360 type=6:34240",
+        "MESH Object05 vertex_count=344 indices=468 index16=0 groups=1 section:offset=0:36760 type=6:34240",
+        "MESH Object02 vertex_count=106 indices=249 index16=0 groups=1 section:offset=0:36628 type=6:34240",
+        "MESH Object03 vertex_count=68 indices=312 index16=0 groups=1 section:offset=0:35992 type=6:34240",
+        "MESH Object04 vertex_count=170 indices=468 index16=0 groups=1 section:offset=0:35392 type=6:34240",
+        "MESH Object09 vertex_count=126 indices=498 index16=0 groups=1 section:offset=0:32596 type=6:34240",
+        "MESH Object10 vertex_count=240 indices=684 index16=0 groups=1 section:offset=0:29764 type=6:34240",
+        "MESH Object06 vertex_count=152 indices=198 index16=0 groups=1 section:offset=0:29596 type=6:34240",
+        "MESH Object07 vertex_count=76 indices=198 index16=0 groups=1 section:offset=0:29428 type=6:34240",
+        "MESH Object08 vertex_count=99 indices=78 index16=0 groups=1 section:offset=0:26524 type=6:34240",
+        "MESH Object13 vertex_count=34 indices=156 index16=0 groups=1 section:offset=0:26356 type=6:34240",
+        "MESH Object11 vertex_count=96 indices=459 index16=0 groups=1 section:offset=0:26152 type=6:34240",
+        "MESH Object12 vertex_count=192 indices=459 index16=0 groups=1 section:offset=0:25948 type=6:34240",
+        "MESH Object15 vertex_count=169 indices=720 index16=0 groups=1 section:offset=0:24016 type=6:34240",
+        "MESH Plane01 vertex_count=25 indices=96 index16=0 groups=1 section:offset=0:21184 type=6:34240"
+      ],
+      "granny_reference_evidence": [],
+      "original_usage_evidence": [],
+      "motion_list_evidence": []
+    },
+    {
+      "path": "season2/season2/monster/ch_officer/skipia_officer.gr2",
+      "sha256": "c049db0f2afa94a4cad0d04209aafc58b32680ac7e30ede8b19d799ed64e0887",
+      "asset_type": "mob model/animation",
+      "usage_before": "usage unresolved",
+      "usage_after": "usage unresolved",
+      "cluster": "duplicate_bone_names",
+      "reader_site": "GR2ModelReader.cpp: Read / RuntimeSkeleton::Initialize",
+      "field": "Skeleton.Bones[].Name",
+      "before": "malformed",
+      "before_error": "skeleton: bone names must be nonempty and unique",
+      "after": "parsed",
+      "after_error": "",
+      "packed_native": "1",
+      "granny_load": "1",
+      "section_type_field_evidence": [
+        "BONE index=0 parent=-1 name=\"Bip01\" section:offset=0:1824 type=6:27584",
+        "BONE index=19 parent=2 name=\"rar_01\" section:offset=0:4788 type=6:27584",
+        "BONE index=20 parent=19 name=\"rar_02\" section:offset=0:4944 type=6:27584",
+        "BONE index=21 parent=20 name=\"rar_03\" section:offset=0:5100 type=6:27584",
+        "BONE index=22 parent=2 name=\"rar_01\" section:offset=0:5256 type=6:27584",
+        "BONE index=23 parent=22 name=\"rar_02\" section:offset=0:5412 type=6:27584",
+        "BONE index=24 parent=23 name=\"rar_03\" section:offset=0:5568 type=6:27584",
+        "MESH skipia_officer01 vertex_count=2678 indices=8673 index16=0 groups=1 section:offset=0:14452 type=6:28832",
+        "MESH skipia_officer02 vertex_count=264 indices=822 index16=0 groups=1 section:offset=0:13852 type=6:28832"
+      ],
+      "granny_reference_evidence": [],
+      "original_usage_evidence": [
+        {
+          "path": "season2/season2/monster/ch_officer/shape.msm",
+          "virtual_path": "season2/monster/ch_officer/shape.msm",
+          "line": 3,
+          "text": "BaseModelFileName     \"season2\\monster\\ch_officer\\skipia_officer.GR2\"",
+          "kind": "explicit"
+        },
+        {
+          "path": "season2/season2/monster/ch_officer/officer.msm",
+          "virtual_path": "season2/monster/ch_officer/officer.msm",
+          "line": 3,
+          "text": "BaseModelFileName   \"season2\\monster\\ch_officer\\skipia_officer.GR2\"",
+          "kind": "explicit"
+        }
+      ],
+      "motion_list_evidence": []
+    },
+    {
+      "path": "season2/season2/monster/ch_officer/skipia_officer_back_dead.gr2",
+      "sha256": "2ae8da9c43ab28aa30449c7b173a10b11f8d3417bf4bf2489dbfe45ec4d039ff",
+      "asset_type": "mob model/animation",
+      "usage_before": "usage unresolved",
+      "usage_after": "usage unresolved",
+      "cluster": "duplicate_track_names",
+      "reader_site": "GR2AnimationReader.cpp: ReadAnimation / BindAnimation",
+      "field": "TrackGroup.TransformTracks[].Name",
+      "before": "malformed",
+      "before_error": "duplicate/empty track target",
+      "after": "parsed",
+      "after_error": "",
+      "packed_native": "1",
+      "granny_load": "1",
+      "section_type_field_evidence": [
+        "GROUP Bip01 flags=2 section:offset=0:180 type=6:4064",
+        "TRACK index=51 first=50 name=\"rar_01\" section:offset=0:3572 type=6:4704",
+        "TRACK index=53 first=52 name=\"rar_02\" section:offset=0:3700 type=6:4704",
+        "TRACK index=55 first=54 name=\"rar_03\" section:offset=0:3828 type=6:4704"
+      ],
+      "granny_reference_evidence": [
+        "REF_GROUP 0 loop=0 0 0",
+        "REF_BIND bone=22 name=\"rar_01\" find_bone=19 track=51",
+        "REF_BIND bone=23 name=\"rar_02\" find_bone=20 track=53",
+        "REF_BIND bone=24 name=\"rar_03\" find_bone=21 track=55",
+        "REF_SAMPLE fraction=0 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.25 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.5 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=1.10000002 nan_bones=0 translation=0 0 0 rotation=0 0 0"
+      ],
+      "original_usage_evidence": [
+        {
+          "path": "season2/season2/monster/ch_officer/skipia_officer_back_dead.msa",
+          "virtual_path": "season2/monster/ch_officer/skipia_officer_back_dead.msa",
+          "line": 3,
+          "text": "MotionFileName           \"season2\\monster\\ch_officer\\skipia_officer_back_dead.GR2\"",
+          "kind": "explicit"
+        }
+      ],
+      "motion_list_evidence": [
+        {
+          "path": "season2/season2/monster/ch_officer/motlist.txt",
+          "line": 15,
+          "text": "GENERAL BACK_DEAD skipia_officer_back_dead.msa 100"
+        }
+      ]
+    },
+    {
+      "path": "season2/season2/monster/ch_officer/skipia_officer_lod_01.gr2",
+      "sha256": "34e52324bb0972f948a45abb6ad30876569319c76105bd57d14d884c8c06121a",
+      "asset_type": "mob model/animation",
+      "usage_before": "usage unresolved",
+      "usage_after": "usage unresolved",
+      "cluster": "duplicate_bone_names",
+      "reader_site": "GR2ModelReader.cpp: Read / RuntimeSkeleton::Initialize",
+      "field": "Skeleton.Bones[].Name",
+      "before": "malformed",
+      "before_error": "skeleton: bone names must be nonempty and unique",
+      "after": "parsed",
+      "after_error": "",
+      "packed_native": "1",
+      "granny_load": "1",
+      "section_type_field_evidence": [
+        "BONE index=0 parent=-1 name=\"Bip01\" section:offset=0:2392 type=6:30016",
+        "BONE index=19 parent=2 name=\"rar_01\" section:offset=0:5356 type=6:30016",
+        "BONE index=20 parent=19 name=\"rar_02\" section:offset=0:5512 type=6:30016",
+        "BONE index=21 parent=20 name=\"rar_03\" section:offset=0:5668 type=6:30016",
+        "BONE index=22 parent=2 name=\"rar_01\" section:offset=0:5824 type=6:30016",
+        "BONE index=23 parent=22 name=\"rar_02\" section:offset=0:5980 type=6:30016",
+        "BONE index=24 parent=23 name=\"rar_03\" section:offset=0:6136 type=6:30016",
+        "MESH skipia_officer01 vertex_count=1954 indices=5982 index16=0 groups=1 section:offset=0:15020 type=6:31264",
+        "MESH skipia_officer02 vertex_count=264 indices=822 index16=0 groups=1 section:offset=0:14420 type=6:31264"
+      ],
+      "granny_reference_evidence": [],
+      "original_usage_evidence": [
+        {
+          "path": "season2/season2/monster/ch_officer/shape.msm",
+          "virtual_path": "season2/monster/ch_officer/shape.msm",
+          "line": 3,
+          "text": "BaseModelFileName     \"season2\\monster\\ch_officer\\skipia_officer.GR2\"",
+          "kind": "implicit LOD via CRaceData::GetLODModelThing"
+        },
+        {
+          "path": "season2/season2/monster/ch_officer/officer.msm",
+          "virtual_path": "season2/monster/ch_officer/officer.msm",
+          "line": 3,
+          "text": "BaseModelFileName   \"season2\\monster\\ch_officer\\skipia_officer.GR2\"",
+          "kind": "implicit LOD via CRaceData::GetLODModelThing"
+        }
+      ],
+      "motion_list_evidence": []
+    },
+    {
+      "path": "season3_eu/ymir work/monster2/ch_officer/37.gr2",
+      "sha256": "2ae8da9c43ab28aa30449c7b173a10b11f8d3417bf4bf2489dbfe45ec4d039ff",
+      "asset_type": "mob model/animation",
+      "usage_before": "production",
+      "usage_after": "production",
+      "cluster": "duplicate_track_names",
+      "reader_site": "GR2AnimationReader.cpp: ReadAnimation / BindAnimation",
+      "field": "TrackGroup.TransformTracks[].Name",
+      "before": "malformed",
+      "before_error": "duplicate/empty track target",
+      "after": "parsed",
+      "after_error": "",
+      "packed_native": "1",
+      "granny_load": "1",
+      "section_type_field_evidence": [
+        "GROUP Bip01 flags=2 section:offset=0:180 type=6:4064",
+        "TRACK index=51 first=50 name=\"rar_01\" section:offset=0:3572 type=6:4704",
+        "TRACK index=53 first=52 name=\"rar_02\" section:offset=0:3700 type=6:4704",
+        "TRACK index=55 first=54 name=\"rar_03\" section:offset=0:3828 type=6:4704"
+      ],
+      "granny_reference_evidence": [
+        "REF_GROUP 0 loop=0 0 0",
+        "REF_BIND bone=22 name=\"rar_01\" find_bone=19 track=51",
+        "REF_BIND bone=23 name=\"rar_02\" find_bone=20 track=53",
+        "REF_BIND bone=24 name=\"rar_03\" find_bone=21 track=55",
+        "REF_SAMPLE fraction=0 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.25 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=0.5 nan_bones=0 translation=0 0 0 rotation=0 0 0",
+        "REF_SAMPLE fraction=1.10000002 nan_bones=0 translation=0 0 0 rotation=0 0 0"
+      ],
+      "original_usage_evidence": [
+        {
+          "path": "season3_eu/ymir work/monster2/ch_officer/37.msa",
+          "virtual_path": "d:/ymir work/monster2/ch_officer/37.msa",
+          "line": 3,
+          "text": "MotionFileName           \"d:\\ymir work\\monster2\\ch_officer\\37.GR2\"",
+          "kind": "explicit"
+        }
+      ],
+      "motion_list_evidence": [
+        {
+          "path": "season3_eu/ymir work/monster2/ch_officer/motlist.txt",
+          "line": 15,
+          "text": "GENERAL BACK_DEAD 37.msa 100"
+        }
+      ]
+    },
+    {
+      "path": "season3_eu/ymir work/monster2/ch_officer/skipia_officer.gr2",
+      "sha256": "12e784e03b34e58f32d0d2300d1b39eff09d8d700964a3e1273ebdbfa0a3b4af",
+      "asset_type": "mob model/animation",
+      "usage_before": "production",
+      "usage_after": "production",
+      "cluster": "duplicate_bone_names",
+      "reader_site": "GR2ModelReader.cpp: Read / RuntimeSkeleton::Initialize",
+      "field": "Skeleton.Bones[].Name",
+      "before": "malformed",
+      "before_error": "skeleton: bone names must be nonempty and unique",
+      "after": "parsed",
+      "after_error": "",
+      "packed_native": "1",
+      "granny_load": "1",
+      "section_type_field_evidence": [
+        "BONE index=0 parent=-1 name=\"Bip01\" section:offset=0:1824 type=6:27584",
+        "BONE index=19 parent=2 name=\"rar_01\" section:offset=0:4788 type=6:27584",
+        "BONE index=20 parent=19 name=\"rar_02\" section:offset=0:4944 type=6:27584",
+        "BONE index=21 parent=20 name=\"rar_03\" section:offset=0:5100 type=6:27584",
+        "BONE index=22 parent=2 name=\"rar_01\" section:offset=0:5256 type=6:27584",
+        "BONE index=23 parent=22 name=\"rar_02\" section:offset=0:5412 type=6:27584",
+        "BONE index=24 parent=23 name=\"rar_03\" section:offset=0:5568 type=6:27584",
+        "MESH skipia_officer01 vertex_count=2678 indices=8673 index16=0 groups=1 section:offset=0:14452 type=6:28832",
+        "MESH skipia_officer02 vertex_count=264 indices=822 index16=0 groups=1 section:offset=0:13852 type=6:28832"
+      ],
+      "granny_reference_evidence": [],
+      "original_usage_evidence": [
+        {
+          "path": "season3_eu/ymir work/monster2/ch_officer/shape.msm",
+          "virtual_path": "d:/ymir work/monster2/ch_officer/shape.msm",
+          "line": 3,
+          "text": "BaseModelFileName     \"d:\\ymir work\\monster2\\ch_officer\\skipia_officer.GR2\"",
+          "kind": "explicit"
+        },
+        {
+          "path": "season3_eu/ymir work/monster2/ch_officer/ch_officer.msm",
+          "virtual_path": "d:/ymir work/monster2/ch_officer/ch_officer.msm",
+          "line": 3,
+          "text": "BaseModelFileName   \"d:\\ymir work\\monster2\\ch_officer\\skipia_officer.GR2\"",
+          "kind": "explicit"
+        }
+      ],
+      "motion_list_evidence": []
+    },
+    {
+      "path": "season3_eu/ymir work/monster2/ch_officer/skipia_officer_lod_01.gr2",
+      "sha256": "19cfc3b8718f5a0e4a224beba05c9d356afe0f87836ea0fdcbf1640c81a2aaf3",
+      "asset_type": "mob model/animation",
+      "usage_before": "production",
+      "usage_after": "production",
+      "cluster": "duplicate_bone_names",
+      "reader_site": "GR2ModelReader.cpp: Read / RuntimeSkeleton::Initialize",
+      "field": "Skeleton.Bones[].Name",
+      "before": "malformed",
+      "before_error": "skeleton: bone names must be nonempty and unique",
+      "after": "parsed",
+      "after_error": "",
+      "packed_native": "1",
+      "granny_load": "1",
+      "section_type_field_evidence": [
+        "BONE index=0 parent=-1 name=\"Bip01\" section:offset=0:1824 type=6:27584",
+        "BONE index=19 parent=2 name=\"rar_01\" section:offset=0:4788 type=6:27584",
+        "BONE index=20 parent=19 name=\"rar_02\" section:offset=0:4944 type=6:27584",
+        "BONE index=21 parent=20 name=\"rar_03\" section:offset=0:5100 type=6:27584",
+        "BONE index=22 parent=2 name=\"rar_01\" section:offset=0:5256 type=6:27584",
+        "BONE index=23 parent=22 name=\"rar_02\" section:offset=0:5412 type=6:27584",
+        "BONE index=24 parent=23 name=\"rar_03\" section:offset=0:5568 type=6:27584",
+        "MESH skipia_officer01 vertex_count=1956 indices=5982 index16=0 groups=1 section:offset=0:14452 type=6:28832",
+        "MESH skipia_officer02 vertex_count=264 indices=822 index16=0 groups=1 section:offset=0:13852 type=6:28832"
+      ],
+      "granny_reference_evidence": [],
+      "original_usage_evidence": [
+        {
+          "path": "season3_eu/ymir work/monster2/ch_officer/shape.msm",
+          "virtual_path": "d:/ymir work/monster2/ch_officer/shape.msm",
+          "line": 3,
+          "text": "BaseModelFileName     \"d:\\ymir work\\monster2\\ch_officer\\skipia_officer.GR2\"",
+          "kind": "implicit LOD via CRaceData::GetLODModelThing"
+        },
+        {
+          "path": "season3_eu/ymir work/monster2/ch_officer/ch_officer.msm",
+          "virtual_path": "d:/ymir work/monster2/ch_officer/ch_officer.msm",
+          "line": 3,
+          "text": "BaseModelFileName   \"d:\\ymir work\\monster2\\ch_officer\\skipia_officer.GR2\"",
+          "kind": "implicit LOD via CRaceData::GetLODModelThing"
+        }
+      ],
+      "motion_list_evidence": []
+    },
+    {
+      "path": "season3_eu/ymir work/zone/dungeon/haven_dungeon/skipia_boss.gr2",
+      "sha256": "116a77bd9c7cf4eba76e875d10e171ed424935a6bce93aacede19bbfb4da57d3",
+      "asset_type": "dungeon building/blocker",
+      "usage_before": "pack overridden raw",
+      "usage_after": "pack overridden raw",
+      "cluster": "overridden_bad_raw_size",
+      "reader_site": "GR2File.cpp: Inspect",
+      "field": "Header.FileSize at byte 36 (before sections)",
+      "before": "malformed",
+      "before_error": "declared file size differs from input",
+      "after": "malformed",
+      "after_error": "declared file size differs from input",
+      "packed_native": "1",
+      "granny_load": "1",
+      "section_type_field_evidence": [
+        "ERROR declared file size differs from input"
+      ],
+      "granny_reference_evidence": [],
+      "original_usage_evidence": [
+        {
+          "path": "Property/property/thief_dungeon/haven_dungeon/skipia_boss.prd",
+          "virtual_path": "property/thief_dungeon/haven_dungeon/skipia_boss.prd",
+          "line": 3,
+          "text": "dungeonblockfile\t\t\"d:/ymir work/zone/dungeon/haven_dungeon/skipia_boss.gr2\"",
+          "kind": "explicit"
+        }
+      ],
+      "motion_list_evidence": []
+    },
+    {
+      "path": "season3_eu/ymir work/zone/dungeon/haven_dungeon/skipia_passc.gr2",
+      "sha256": "9dd29e509376f4c159b6cbf4b6e09a9669ddc61545d7f2499c85e37f7f6274e2",
+      "asset_type": "dungeon building/blocker",
+      "usage_before": "pack overridden raw",
+      "usage_after": "pack overridden raw",
+      "cluster": "overridden_bad_raw_size",
+      "reader_site": "GR2File.cpp: Inspect",
+      "field": "Header.FileSize at byte 36 (before sections)",
+      "before": "malformed",
+      "before_error": "declared file size differs from input",
+      "after": "malformed",
+      "after_error": "declared file size differs from input",
+      "packed_native": "1",
+      "granny_load": "1",
+      "section_type_field_evidence": [
+        "ERROR declared file size differs from input"
+      ],
+      "granny_reference_evidence": [],
+      "original_usage_evidence": [
+        {
+          "path": "Property/property/thief_dungeon/haven_dungeon/skipia_passc.prd",
+          "virtual_path": "property/thief_dungeon/haven_dungeon/skipia_passc.prd",
+          "line": 3,
+          "text": "dungeonblockfile\t\t\"d:/ymir work/zone/dungeon/haven_dungeon/skipia_passc.gr2\"",
+          "kind": "explicit"
+        }
+      ],
+      "motion_list_evidence": []
+    },
+    {
+      "path": "season3_eu/ymir work/zone/dungeon/haven_dungeon/skipia_passl.gr2",
+      "sha256": "9a5117cdc48f26c6368645a05be1c5cf0afa943b1d72cf0f14363126bbcefd1b",
+      "asset_type": "dungeon building/blocker",
+      "usage_before": "pack overridden raw",
+      "usage_after": "pack overridden raw",
+      "cluster": "overridden_bad_raw_size",
+      "reader_site": "GR2File.cpp: Inspect",
+      "field": "Header.FileSize at byte 36 (before sections)",
+      "before": "malformed",
+      "before_error": "declared file size differs from input",
+      "after": "malformed",
+      "after_error": "declared file size differs from input",
+      "packed_native": "1",
+      "granny_load": "1",
+      "section_type_field_evidence": [
+        "ERROR declared file size differs from input"
+      ],
+      "granny_reference_evidence": [],
+      "original_usage_evidence": [
+        {
+          "path": "Property/property/thief_dungeon/haven_dungeon/skipia_passl.prd",
+          "virtual_path": "property/thief_dungeon/haven_dungeon/skipia_passl.prd",
+          "line": 3,
+          "text": "dungeonblockfile\t\t\"d:/ymir work/zone/dungeon/haven_dungeon/skipia_passl.gr2\"",
+          "kind": "explicit"
+        }
+      ],
+      "motion_list_evidence": []
+    },
+    {
+      "path": "season3_eu/ymir work/zone/dungeon/haven_dungeon/skipia_passp.gr2",
+      "sha256": "637ec934f30eadf02ccb355bb11b04b87e0fe084f370ce92819ce6983709e24f",
+      "asset_type": "dungeon building/blocker",
+      "usage_before": "pack overridden raw",
+      "usage_after": "pack overridden raw",
+      "cluster": "overridden_bad_raw_size",
+      "reader_site": "GR2File.cpp: Inspect",
+      "field": "Header.FileSize at byte 36 (before sections)",
+      "before": "malformed",
+      "before_error": "declared file size differs from input",
+      "after": "malformed",
+      "after_error": "declared file size differs from input",
+      "packed_native": "1",
+      "granny_load": "1",
+      "section_type_field_evidence": [
+        "ERROR declared file size differs from input"
+      ],
+      "granny_reference_evidence": [],
+      "original_usage_evidence": [
+        {
+          "path": "Property/property/thief_dungeon/haven_dungeon/skipia_passp.prd",
+          "virtual_path": "property/thief_dungeon/haven_dungeon/skipia_passp.prd",
+          "line": 3,
+          "text": "dungeonblockfile\t\t\"d:/ymir work/zone/dungeon/haven_dungeon/skipia_passp.gr2\"",
+          "kind": "explicit"
+        }
+      ],
+      "motion_list_evidence": []
+    },
+    {
+      "path": "season3_eu/ymir work/zone/dungeon/haven_dungeon/skipia_passt.gr2",
+      "sha256": "78acde64f36edd95c44cc3a6b6245ffdd2b6d3fc55f5a39469bc712b9ec8b186",
+      "asset_type": "dungeon building/blocker",
+      "usage_before": "pack overridden raw",
+      "usage_after": "pack overridden raw",
+      "cluster": "overridden_bad_raw_size",
+      "reader_site": "GR2File.cpp: Inspect",
+      "field": "Header.FileSize at byte 36 (before sections)",
+      "before": "malformed",
+      "before_error": "declared file size differs from input",
+      "after": "malformed",
+      "after_error": "declared file size differs from input",
+      "packed_native": "1",
+      "granny_load": "1",
+      "section_type_field_evidence": [
+        "ERROR declared file size differs from input"
+      ],
+      "granny_reference_evidence": [],
+      "original_usage_evidence": [
+        {
+          "path": "Property/property/thief_dungeon/haven_dungeon/skipia_passt.prd",
+          "virtual_path": "property/thief_dungeon/haven_dungeon/skipia_passt.prd",
+          "line": 3,
+          "text": "dungeonblockfile\t\t\"d:/ymir work/zone/dungeon/haven_dungeon/skipia_passt.gr2\"",
+          "kind": "explicit"
+        }
+      ],
+      "motion_list_evidence": []
+    }
+  ]
+}

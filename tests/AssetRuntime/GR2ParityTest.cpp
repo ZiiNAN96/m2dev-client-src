@@ -59,8 +59,8 @@ static void StaticParity(const std::filesystem::path& path)
         }
         for(std::size_t j=0;j<a.meshes.size();++j) {
             const auto& x=a.meshes[j]; const auto& y=b.meshes[j];
-            Check(x.name==y.name && x.vertexCount==y.vertexCount && x.indexCount==y.indexCount && x.sourceVertexStride==y.sourceVertexStride,"mesh counts/stride");
-            Check(x.vertexLayout==y.vertexLayout && x.deformation==y.deformation && x.indexWidth==y.indexWidth,"mesh layout/classification");
+            Check(x.name==y.name && x.vertexCount==y.vertexCount && x.indexCount==y.indexCount && x.sourceVertexStride==y.sourceVertexStride,"mesh counts/stride "+x.name+" native="+std::to_string(x.vertexCount)+","+std::to_string(x.indexCount)+","+std::to_string(x.sourceVertexStride)+" ref="+std::to_string(y.vertexCount)+","+std::to_string(y.indexCount)+","+std::to_string(y.sourceVertexStride));
+            Check(x.vertexLayout==y.vertexLayout && x.deformation==y.deformation && x.indexWidth==y.indexWidth,"mesh layout/classification "+x.name+" native="+std::to_string(int(x.vertexLayout))+","+std::to_string(int(x.deformation))+","+std::to_string(int(x.indexWidth))+" ref="+std::to_string(int(y.vertexLayout))+","+std::to_string(int(y.deformation))+","+std::to_string(int(y.indexWidth)));
             Check(x.materialBindings==y.materialBindings && x.materialGroups.size()==y.materialGroups.size(),"material bindings");
             Check(x.skin.boneNames==y.skin.boneNames && x.skin.meshToSkeleton==y.skin.meshToSkeleton,"mesh bone mapping");
             for(std::size_t k=0;k<x.materialGroups.size();++k) Check(x.materialGroups[k].materialIndex==y.materialGroups[k].materialIndex &&
@@ -104,11 +104,20 @@ static void AnimationParity(const std::filesystem::path& modelPath,const std::fi
     GR2::File modelFile(Bytes(modelPath)),clipFile(Bytes(clipPath)); auto model=GR2::Read(modelFile),clip=GR2::Read(clipFile);
     Check(model.modelData.size()==1 && clip.animations.size()==1,"animation fixture structure");
     const auto& skeleton=*model.modelData[0].skeleton; std::string error;
-    auto runtime=GR2::BindAnimation(clip.animations[0],clip.animationData[0],skeleton,error,finite?0:3); Check(bool(runtime),error);
+    auto runtime=GR2::BindAnimation(clip.animations[0],clip.animationData[0],skeleton,error,finite?0:3,model.models[0].name); Check(bool(runtime),error);
     const double loadMs=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-started).count();
     Reference reference(modelPath,clipPath);
     const auto* referenceAnimation=GrannyGetFileInfo(reference.animationFile)->Animations[0];
     Check(clip.animations[0].name==referenceAnimation->Name && clip.animations[0].duration==referenceAnimation->Duration && clip.animations[0].trackGroupCount==referenceAnimation->TrackGroupCount,"animation metadata");
+    std::size_t event=0;
+    if(referenceAnimation->TrackGroupCount) {
+        const auto* first=referenceAnimation->TrackGroups[0];
+        for(int t=0;t<first->TextTrackCount;++t) for(int e=0;e<first->TextTracks[t].EntryCount;++e) {
+            const auto& entry=first->TextTracks[t].Entries[e];const auto& own=clip.animations[0].textEvents.at(event++);
+            Check(own.time==entry.TimeStamp && own.text==entry.Text,"text annotation metadata/order");
+        }
+    }
+    Check(event==clip.animations[0].textEvents.size(),"text annotation count");
     for(std::size_t g=0;g<clip.animationData[0].groups.size();++g) {
         const auto& own=clip.animationData[0].groups[g]; const auto* ref=referenceAnimation->TrackGroups[g];
         Check(own.name==ref->Name && own.tracks.size()==ref->TransformTrackCount,"track group metadata");
@@ -147,6 +156,7 @@ static void AnimationParity(const std::filesystem::path& modelPath,const std::fi
             rotation=std::max(rotation,2*std::acos(std::clamp(std::abs(dot)/std::sqrt(la*lb),0.,1.)));
             for(unsigned c=0;c<9;++c) scale=std::max(scale,std::abs(double(local.scaleShear[c])-(&native->ScaleShear[0][0])[c]));
             const auto* wm=GrannyGetWorldPose4x4(reference.world,static_cast<int>(b)); const auto* cm=GrannyGetWorldPoseComposite4x4(reference.world,static_cast<int>(b));
+            Check(std::all_of(wm,wm+16,[](float x){return std::isfinite(x);})&&std::all_of(cm,cm+16,[](float x){return std::isfinite(x);}),"nonfinite reference pose/palette");
             for(unsigned c=0;c<16;++c) { world=std::max(world,std::abs(double(matrices[b][c])-wm[c])); composite=std::max(composite,std::abs(double(palette[b][c])-cm[c])); }
             std::copy_n(cm,16,referencePalette.matrices[b].begin());
         }
@@ -199,12 +209,62 @@ static void FirstUse(const std::filesystem::path& modelPath,const std::filesyste
     const auto end=std::chrono::steady_clock::now();
     std::cout<<"FIRST_USE "<<clipPath.string()<<" native_ms="<<std::chrono::duration<double,std::milli>(ownEnd-begin).count()<<" granny_import_ms="<<std::chrono::duration<double,std::milli>(end-ownEnd).count()<<'\n';
 }
+static void LookupParity()
+{
+    for(unsigned left=0;left<256;++left) for(unsigned right=0;right<256;++right) {
+        const char a[]{static_cast<char>(left),0},b[]{static_cast<char>(right),0};
+        Check(GR2::CompareTrackNames(a,b)==GrannyStringDifference(a,b),"signed encoded-name ordering parity");
+        const std::string pa=std::string("prefix")+a,pb=std::string("prefix")+b;
+        Check(GR2::CompareTrackNames(pa,pb)==GrannyStringDifference(pa.c_str(),pb.c_str()),"encoded suffix ordering parity");
+    }
+    for(int flags:{0,2}) for(int count=2;count<=64;++count) for(int duplicate=0;duplicate<count-1;++duplicate) {
+        std::vector<granny_transform_track> tracks(count);std::vector<std::string> names(count);GR2::TrackGroup own;own.accumulationFlags=flags;
+        for(int i=0;i<count;++i) {
+            names[i]=std::string(1,char(' '+(i==duplicate+1?duplicate:i)));tracks[i].Name=names[i].c_str();
+            GR2::TransformTrack track;track.name=names[i];own.tracks.push_back(track);
+        }
+        granny_track_group group{};group.TransformTrackCount=count;group.TransformTracks=tracks.data();group.Flags=flags;
+        int found=-1;Check(GrannyFindTrackByName(&group,names[duplicate].c_str(),&found),"SDK synthetic track lookup");
+        const auto* selected=GR2::FindTransformTrack(own,names[duplicate]);
+        Check(selected && selected-own.tracks.data()==found,"synthetic duplicate lookup parity");
+    }
+    std::cout<<"PASS 4032 sorted/unsorted duplicate lookups and 131072 encoded-name comparisons\n";
+}
+static void CompatibilityParity(const std::filesystem::path& root,Renderer::DiligentD3D11Backend& backend)
+{
+    LookupParity();
+    for(const char* model:{"metin2_patch_easter1/ymir work/pc/warrior/hair/hair_11_1.gr2",
+        "patch2/ymir work/npc2/historian/historian.gr2","metin2_patch_eu4/ymir work/npc2/halloween1/halloween1.gr2",
+        "season3_eu/ymir work/monster2/ch_officer/skipia_officer.gr2","season3_eu/ymir work/monster2/ch_officer/skipia_officer_lod_01.gr2",
+        "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief2_soldier2/redthief2_soldier2_lod_01.gr2"}) StaticParity(root/model);
+    AnimationParity(root/"metin2_patch_easter1/ymir work/pc/warrior/hair/hair_11_1.gr2",root/"PC/ymir work/pc/warrior/general/wait.gr2",backend);
+    const std::array<std::array<const char*,3>,7> pairs{{
+        {"NPC/ymir work/npc/doctor","doctor","die"},
+        {"metin2_patch_dragon_rock_mobs/ymir work/monster2/ogre_boss2","ogre_boss2","run"},
+        {"metin2_patch_dragon_rock_mobs/ymir work/monster2/crustacean_officer","crustacean_officer","run"},
+        {"metin2_patch_xmas/ymir work/npc2/pig_young1","pig_young1","walk"},
+        {"metin2_patch_eu4/ymir work/npc2/halloween1","halloween1","walk1"},
+        {"patch2/ymir work/npc2/historian","historian","run"},
+        {"season3_eu/ymir work/monster2/ch_officer","skipia_officer","37"}}};
+    for(const auto& pair:pairs) AnimationParity(root/pair[0]/(std::string(pair[1])+".gr2"),root/pair[0]/(std::string(pair[2])+".gr2"),backend);
+    AnimationParity(root/"Monster/ymir work/monster/skeleton_soldier_bow/skeleton_soldier_bow.gr2",root/"Monster/ymir work/monster/skeleton_soldier_bow/00.gr2",backend);
+}
 int main(int argc,char**argv)
 {
     try {
-        Check(argc==2,"asset root required"); std::filesystem::path root=argv[1];
+        Check(argc>=2,"asset root required"); std::filesystem::path root=argv[1];
         HWND window=CreateWindowW(L"STATIC",L"F2-X vertex parity",WS_OVERLAPPEDWINDOW,0,0,128,128,nullptr,nullptr,GetModuleHandleW(nullptr),nullptr);
         Renderer::DiligentD3D11Backend backend; Check(window&&backend.Initialize({window,128,128}),"Diligent parity backend");
+        if(argc==3) {
+            Check(std::string_view(argv[2])=="compatibility","unknown parity mode");CompatibilityParity(root,backend);
+            backend.Shutdown();DestroyWindow(window);
+            Check(liveDocuments==0&&GR2::liveReaderDocuments==0&&AR::GetLifetimeCounts().clips==0&&AR::GetLifetimeCounts().skeletons==0,"compatibility resources released");return 0;
+        }
+        if(argc>=4) {
+            if(std::string_view(argv[2])=="static") StaticParity(root/argv[3]);
+            else { Check(argc==5,"model and clip required");const std::string_view mode=argv[2];Check(mode=="animation"||mode=="animation-clamp","unknown animation mode");AnimationParity(root/argv[3],root/argv[4],backend,mode=="animation-clamp"); }
+            backend.Shutdown();DestroyWindow(window);return 0;
+        }
         for(const char* path:{"PC/ymir work/pc/warrior/warrior_novice.gr2","PC/ymir work/pc/warrior/hair/hair_1_1.gr2","item/ymir work/item/weapon/00010.gr2",
             "Monster/ymir work/monster/wolf/wolf.gr2","Monster/ymir work/monster/misterious_diseased_bosshost/misterious_diseased_bosshost.gr2",
             "NPC/ymir work/npc/horse/horse_normal.gr2","Zone/ymir work/zone/n/obj/snow.m/snow-004-house2.gr2","guild/ymir work/guild/facility/gongjakso/gongjakso.gr2"}) StaticParity(root/path);

@@ -88,8 +88,12 @@ template<std::size_t N> AnimationRuntime::Track<std::array<float,N>> ConvertCurv
     constexpr double tolerance=N==3?1e-5:N==4?5e-7:5e-7;
     auto subdivide=[&](auto&& self,double a,double b,const auto& va,const auto& vb,unsigned depth)->void {
         bool split=false;
-        for(float q:{.25f,.5f,.75f}) if(deviation(va,vb,SampleCurve<N>(curve,static_cast<float>(a+(b-a)*q),duration,boundary),q)>tolerance) split=true;
-        const double middle=(a+b)*.5;
+        for(float q:{.25f,.5f,.75f}) {
+            const float sampleTime=static_cast<float>(a+(b-a)*q);
+            const float weight=static_cast<float>((double(sampleTime)-a)/(b-a));
+            if(deviation(va,vb,SampleCurve<N>(curve,sampleTime,duration,boundary),weight)>tolerance) split=true;
+        }
+        const double middle=static_cast<float>((a+b)*.5);
         if(split && depth<16 && static_cast<float>(a)!=static_cast<float>(middle) && static_cast<float>(b)!=static_cast<float>(middle)) {
             auto vm=SampleCurve<N>(curve,static_cast<float>(middle),duration,boundary); self(self,a,middle,va,vm,depth+1); self(self,middle,b,vm,vb,depth+1);
         } else {
@@ -120,25 +124,87 @@ AnimationData ReadAnimation(Types& t,Object source,AnimationAsset& metadata,Cont
             const auto translation=t.Reals(sourceGroup,"LoopTranslation"); Require(translation.size()==3,"loop translation dimensions");
             std::copy(translation.begin(),translation.end(),group.loopTranslation.begin());
         }
-        if(t.Child(sourceGroup,"PeriodicLoop") || t.Child(sourceGroup,"RootMotion")) Unsupported("periodic or explicit root motion");
+        if(auto loop=t.Child(sourceGroup,"PeriodicLoop")) {
+            PeriodicLoop value;value.radius=t.Real(loop,"Radius");value.dAngle=t.Real(loop,"dAngle");value.dZ=t.Real(loop,"dZ");
+            auto vector=[&](const char* name,auto& out) {
+                const auto data=t.Reals(loop,name);Require(data.size()==3,"periodic loop vector dimension");
+                std::copy(data.begin(),data.end(),out.begin());
+            };
+            vector("BasisX",value.basisX);vector("BasisY",value.basisY);vector("Axis",value.axis);
+            group.periodicLoop=value;
+        }
+        if(t.Child(sourceGroup,"RootMotion")) Unsupported("explicit root motion");
         if(!t.Array(sourceGroup,"ScalarTracks").empty() || !t.Array(sourceGroup,"VectorTracks").empty()) Unsupported("scalar/vector animation tracks");
-        std::set<std::string> targets;
         auto tracks=t.Array(sourceGroup,"TransformTracks"); Require(tracks.size()<=65536,"animation track limit");
         for(auto track:tracks) {
-            TransformTrack value; value.name=t.Text(track,"Name"); Require(!value.name.empty()&&targets.insert(value.name).second,"duplicate/empty track target");
+            TransformTrack value; value.name=t.Text(track,"Name"); Require(!value.name.empty(),"empty track target");
             value.translation=ReadCurve(t,t.Child(track,"PositionCurve"),3,contents);
             value.rotation=ReadCurve(t,t.Child(track,"OrientationCurve"),4,contents);
             value.scale=ReadCurve(t,t.Child(track,"ScaleShearCurve"),9,contents);
             for(auto* curve:{&value.translation,&value.rotation,&value.scale}) Require(curve->knots.empty() || curve->knots.back()<=metadata.duration+1e-4f,"animation knot beyond duration");
             group.tracks.push_back(std::move(value));
         }
+        if(group.accumulationFlags&2) Require(std::is_sorted(group.tracks.begin(),group.tracks.end(),
+            [](const auto& a,const auto& b){return CompareTrackNames(a.name,b.name)<0;}),"unsorted track group marked sorted");
         if(result.groups.empty()) for(auto textTrack:t.Array(sourceGroup,"TextTracks")) for(auto entry:t.Array(textTrack,"Entries")) {
-            auto time=t.Real(entry,"TimeStamp"); Require(time>=0 && time<=metadata.duration,"invalid animation text time");
+            // Exporter text annotations can outlive a trimmed clip. They are
+            // retained metadata, not sampled curve keys; finite/nonnegative
+            // timestamps still apply, and curve duration checks stay strict.
+            auto time=t.Real(entry,"TimeStamp"); Require(time>=0,"invalid animation text time");
             metadata.textEvents.push_back({t.Text(entry,"Text"),time});
         }
         result.groups.push_back(std::move(group));
     }
     return result;
+}
+bool RootMotion::Delta(float elapsed,std::array<float,3>& translation,std::array<float,3>& rotation) const
+{
+    if(!std::isfinite(elapsed)) return false;
+    rotation={};
+    if(periodic) {
+        // These are per-second helix parameters, not per-animation displacement.
+        // The half-angle form avoids cancellation for very large-radius loops.
+        const auto& loop=*periodic;const double angle=double(loop.dAngle)*elapsed;
+        const double sine=std::sin(angle),half=std::sin(angle*.5);
+        for(unsigned i=0;i<3;++i) {
+            translation[i]=static_cast<float>(double(loop.radius)*(sine*loop.basisY[i]-2*half*half*loop.basisX[i])+double(loop.dZ)*elapsed*loop.axis[i]);
+            rotation[i]=static_cast<float>(angle*loop.axis[i]);
+        }
+    } else for(unsigned i=0;i<3;++i) translation[i]=velocity[i]*elapsed;
+    return std::all_of(translation.begin(),translation.end(),[](float x){return std::isfinite(x);}) &&
+        std::all_of(rotation.begin(),rotation.end(),[](float x){return std::isfinite(x);});
+}
+int CompareTrackNames(std::string_view a,std::string_view b) noexcept
+{
+    // GR2 sorts encoded names by signed 8-bit values, including the terminating
+    // zero. Specify that ordering explicitly on both MSVC and LP64 platforms.
+    auto byte=[](std::string_view text,std::size_t at) {
+        const int value=at<text.size()?static_cast<unsigned char>(text[at]):0;
+        return value<128?value:value-256;
+    };
+    for(std::size_t i=0;i<=std::min(a.size(),b.size());++i) {
+        const auto left=byte(a,i),right=byte(b,i);
+        if(left!=right) return left-right;
+        if(left==0) return 0;
+    }
+    return 0;
+}
+const TransformTrack* FindTransformTrack(const TrackGroup& group,std::string_view name)
+{
+    // GR2's sorted flag selects midpoint search. Equal names are legal;
+    // preserve the source order because the selected duplicate depends on it.
+    if(group.accumulationFlags&2) {
+        std::size_t first=0,last=group.tracks.size();
+        while(first<last) {
+            const auto middle=first+(last-first)/2;const auto& track=group.tracks[middle];
+            const auto order=CompareTrackNames(name,track.name);
+            if(order==0) return &track;
+            if(order<0) last=middle;else first=middle+1;
+        }
+        return nullptr;
+    }
+    for(const auto& track:group.tracks) if(track.name==name) return &track;
+    return nullptr;
 }
 std::shared_ptr<const AnimationRuntime::RuntimeAnimationClip> BindAnimation(const AnimationAsset& metadata,const AnimationData& data,
     const AnimationRuntime::RuntimeSkeleton& skeleton,std::string& error,unsigned boundary,std::string_view modelName)
@@ -153,9 +219,10 @@ std::shared_ptr<const AnimationRuntime::RuntimeAnimationClip> BindAnimation(cons
         Require(selected!=nullptr,"no matching animation track group");
         const auto& group=*selected;
         std::vector<AnimationRuntime::AnimationTrack> tracks; std::size_t keys=0;
-        for(const auto& source:group.tracks) {
-            const auto bone=[&]{ AnimationStallAudit::WorkScope mapping(AnimationStallAudit::Work::ClipBind); return skeleton.FindBone(source.name); }();
-            if(bone<0) continue;
+        for(std::size_t bone=0;bone<skeleton.Bones().size();++bone) {
+            const auto* selectedTrack=[&]{ AnimationStallAudit::WorkScope mapping(AnimationStallAudit::Work::ClipBind); return FindTransformTrack(group,skeleton.Bones()[bone].name); }();
+            if(!selectedTrack) continue;
+            const auto& source=*selectedTrack;
             AnimationStallAudit::WorkScope decode(AnimationStallAudit::Work::AnimationDecode);
             AnimationRuntime::AnimationTrack track; track.targetBone=static_cast<std::uint32_t>(bone);
             track.translation=ConvertCurve<3>(source.translation,metadata.duration,keys,boundary);

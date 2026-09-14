@@ -117,7 +117,7 @@ RuntimeSkeleton::RuntimeSkeleton(RuntimeSkeleton&& other) noexcept
 { ++liveSkeletons; }
 RuntimeSkeleton::~RuntimeSkeleton() { --liveSkeletons; }
 
-bool RuntimeSkeleton::Initialize(std::vector<SkeletonBone> bones, std::string& error)
+bool RuntimeSkeleton::Initialize(std::vector<SkeletonBone> bones, std::string& error, SourceSemantics semantics)
 {
     if (bones.empty() || bones.size() > 65536)
     {
@@ -131,7 +131,7 @@ bool RuntimeSkeleton::Initialize(std::vector<SkeletonBone> bones, std::string& e
     for (std::size_t i = 0; i < bones.size(); ++i)
     {
         auto& bone = bones[i];
-        if (bone.name.empty() || !names.insert(bone.name).second)
+        if (bone.name.empty() || (!names.insert(bone.name).second && semantics == SourceSemantics::NamedTree))
         {
             error = "bone names must be nonempty and unique";
             return false;
@@ -154,7 +154,7 @@ bool RuntimeSkeleton::Initialize(std::vector<SkeletonBone> bones, std::string& e
         const auto parent = static_cast<std::uint32_t>(bone.parent);
         for (unsigned shift = 0; shift < 32; shift += 8) hashByte(static_cast<unsigned char>(parent >> shift));
     }
-    if (roots != 1)
+    if (roots == 0 || (roots != 1 && semantics == SourceSemantics::NamedTree))
     {
         error = "skeleton requires exactly one connected root";
         return false;

@@ -1,0 +1,18 @@
+{
+  "build/f3a/release-build-final.log": "a810108224fe3349a4d3b25e9931f5f42a46e080ee0950729daebac6589752c8",
+  "build/f3a/debug-build-final.log": "df0a5819e953fbdbf1e68f299f3ba19f1eaf13be92b10b9b723d374ad65204eb",
+  "build/f3a/gcc-build-final.log": "f4f5a4bdf5d78bac955c2c12f3619d4bfbcb656a4d20c5a07ca9c3d9093fdaef",
+  "build/f3a/release-tests-final.log": "789951342896a2ed0b73e5a373962758ea92b4a6333b93ea74ee29581f8e6c9b",
+  "build/f3a/debug-tests-final.log": "a5d884f8f274503d2ec0bf67c26ecc2cc19c827e8a5bb710f7db34ab0e9a2c38",
+  "build/f3a/gcc-tests-final.log": "337a1ca34894dc7526dea070c67add78a20137d1dadfb34904e695576edf5127",
+  "build/f3a/root-cause-probe.log": "248ec1e2c9282459dd4101154e023c7c910707b7c740154cc969d94040c99753",
+  "build/f3a/packed-audit.tsv": "a2333307ef27c18af38a1afd3611962e9329d04d14b0960332ab5cbf830c2a62",
+  "build/f3a/packed-audit.log": "5badd270a29cf2d6a7237963b920aa598d264f526ef9b3694e3c9d6f4630d546",
+  "build/f3a/packed-audit-exit.txt": "df4e26a04a444901b95afef44e4a96cfae34690fff2ad2c66389c70079cdff2b",
+  "build/f3a/corpus-verified/files.tsv": "bb4e60a4bbdfab787b77a0ea41c77c6df05d9a6d6afc12da295350aa7e904b82",
+  "build/f3a/corpus-verified/summary.tsv": "b8c8e2df5a00754ddb2d55fe081a0f530be4315535b4966f8e9e437e7edbcf2c",
+  "build/f3a/corpus-verified.log": "c601b9309ea9c98232f5ff77867b5e8a6a1e3c92df7b12f1afa7dacf7fa64d2f",
+  "build/f3a/usage-review.log": "974d147a835f73b184dcbc19b85dfc5c2ae6d525e8fc3f066c127ef1f5ac0b93",
+  "build-c3x/windows/bin/Release/Metin2_Release.exe": "2b26a0f498d7ce5f00d73b8327a7ff5ebccb07ee8d09db08e7bf0e1f4bfc307e",
+  "build-c3x/windows/bin/Debug/Metin2_Debug.exe": "9160921769506b4d4cf55a882523b7ebba1ec89f22b4c5eeed9301335ba5b6d5"
+}

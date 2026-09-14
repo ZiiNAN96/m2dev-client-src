@@ -18,15 +18,22 @@ MeshData ReadMesh(Types& t,Object source,MeshAsset& mesh,ModelAsset& model,std::
     AnimationStallAudit::WorkScope audit(AnimationStallAudit::Work::Mesh);
     MeshData data; mesh.name=t.Text(source,"Name"); mesh.twoSided=mesh.name.starts_with("2x");
     if(!t.Array(source,"MorphTargets").empty()) Unsupported("mesh morph targets");
-    const auto vertices=t.Array(t.Child(source,"PrimaryVertexData"),"Vertices");
-    Require(!vertices.empty(),"empty mesh vertices");
+    const auto vertexData=t.Child(source,"PrimaryVertexData");
+    Require(bool(vertexData),"missing primary vertex data");
+    const auto vertices=t.Array(vertexData,"Vertices");
+    const auto* vertexMember=t.Find(vertexData,"Vertices");
+    Require(vertexMember!=nullptr,"missing vertex array");
+    const auto vertexType=vertexMember->kind==7?t.file.Pointer(t.Field(vertexData,"Vertices")):vertexMember->type;
+    const Object layout{vertexData.data,vertexType};
+    Require(bool(vertexType),"missing vertex layout");
     mesh.vertexCount=static_cast<std::uint32_t>(vertices.size());
-    const auto& type=t.Get(vertices[0].type); mesh.sourceVertexStride=static_cast<std::uint32_t>(type.size);
-    ++contents.vertexFormats[t.Describe(vertices[0].type)];
-    const auto* weights=t.Find(vertices[0],"BoneWeights"); const auto* joints=t.Find(vertices[0],"BoneIndices");
+    const auto& type=t.Get(vertexType); mesh.sourceVertexStride=static_cast<std::uint32_t>(type.size);
+    ++contents.vertexFormats[t.Describe(vertexType)];
+    const auto* weights=t.Find(layout,"BoneWeights"); const auto* joints=t.Find(layout,"BoneIndices");
     const bool weighted=weights!=nullptr;
     Require(weighted==(joints!=nullptr),"incomplete skin vertex layout");
-    const bool uv1=t.Find(vertices[0],"TextureCoordinates1")!=nullptr;
+    const bool uv1=t.Find(layout,"TextureCoordinates1")!=nullptr;
+    Require(t.Find(layout,"Position") && t.Find(layout,"Normal") && t.Find(layout,"TextureCoordinates0"),"incomplete vertex layout");
     for(const auto& member:type.members) {
         if(member.name=="Position"||member.name=="Normal") Require(member.kind==10&&member.width==3,"invalid position/normal layout");
         else if(member.name=="TextureCoordinates0"||member.name=="TextureCoordinates1") Require(member.kind==10&&member.width==2,"invalid UV layout");
@@ -68,11 +75,12 @@ MeshData ReadMesh(Types& t,Object source,MeshAsset& mesh,ModelAsset& model,std::
         data.vertices.push_back(vertex);
     }
     const auto topology=t.Child(source,"PrimaryTopology");
+    Require(bool(topology),"missing primary topology");
     const auto wide=t.Array(topology,"Indices"), narrow=t.Array(topology,"Indices16");
     Require(wide.empty()||narrow.empty(),"duplicate index streams");
     const auto& indices=wide.empty()?narrow:wide;
-    Require(!indices.empty() && indices.size()%3==0,"invalid triangle topology");
-    mesh.indexWidth=wide.empty()?IndexWidth::UInt16:IndexWidth::UInt32; mesh.indexCount=static_cast<std::uint32_t>(indices.size());
+    Require((!indices.empty() || vertices.empty()) && indices.size()%3==0,"invalid triangle topology");
+    mesh.indexWidth=indices.empty()?IndexWidth::Unknown:wide.empty()?IndexWidth::UInt16:IndexWidth::UInt32; mesh.indexCount=static_cast<std::uint32_t>(indices.size());
     for(auto index:indices) {
         const auto& layout=t.Get(index.type); Require(layout.size==(wide.empty()?2u:4u) && layout.members.size()==1,"invalid index element");
         std::uint32_t value;
@@ -86,7 +94,10 @@ MeshData ReadMesh(Types& t,Object source,MeshAsset& mesh,ModelAsset& model,std::
         Range(Product(static_cast<std::size_t>(first),3),Product(static_cast<std::size_t>(count),3),indices.size());
         mesh.materialGroups.push_back({material<0||std::size_t(material)>=mesh.materialBindings.size()?UINT32_MAX:std::uint32_t(material),std::uint32_t(first)*3,std::uint32_t(count)*3});
     }
-    Require(!mesh.materialGroups.empty(),"missing material groups");
+    Require(!mesh.materialGroups.empty() || (vertices.empty() && indices.empty()),"missing material groups");
+    // The SDK exposes no vertex layout for a zero-vertex record. Validate its
+    // serialized type above, then retain the same empty upload metadata.
+    if(vertices.empty()) { mesh.sourceVertexStride=0;mesh.vertexLayout=VertexLayout::Unknown;mesh.vertexAttributes=0; }
     return data;
 }
 }

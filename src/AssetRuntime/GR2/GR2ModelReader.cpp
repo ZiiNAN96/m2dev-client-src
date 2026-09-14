@@ -52,8 +52,8 @@ Contents Read(const File& f)
             for(const auto& b:model.skeleton->bones) bones.push_back({b.name,b.parentIndex,RuntimeTransform(b.localBind),b.inverseBind});
             if(!bones.empty()) {
                 auto runtime=std::make_shared<AnimationRuntime::RuntimeSkeleton>(); std::string error;
-                const bool valid=runtime->Initialize(std::move(bones),error);
-                if(!valid && (error.find("exactly one")!=std::string::npos || error.find("duplicate")!=std::string::npos)) Unsupported("runtime skeleton: "+error);
+                const bool valid=runtime->Initialize(std::move(bones),error,
+                    AnimationRuntime::RuntimeSkeleton::SourceSemantics::IndexedForest);
                 Require(valid,"skeleton: "+error); data.skeleton=std::move(runtime);
             }
         }

@@ -1,0 +1,1653 @@
+{
+  "date": "2026-09-14",
+  "milestone": "F3-B",
+  "result": "GO: production referenced unsupported = 0; fast regression and both smokes passed; stop before F3/4 Gate A",
+  "source_head": "500986389ef91742e0c7a6b96e67f4276aa4c791",
+  "client_head": "c63a542141741071bec798c17a205d12e362d0e1",
+  "source_before_hashes": {
+    "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client\\assets\\metin2_patch_dragon_rock_mobs\\ymir work\\monster2\\redthief_general\\back_damage.gr2": "083b0e312850d9df28d4f2cd4cfbcf82c45b9a5278c5ac494128803286aa157b",
+    "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client\\assets\\metin2_patch_dragon_rock_mobs\\ymir work\\monster2\\redthief_general\\normal_attack1.gr2": "3fd6ba470b8e96ac7d49aa10541cdee92c890d94388aea29aa920156a2a9cfd0",
+    "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client\\assets\\metin2_patch_dragon_rock_mobs\\ymir work\\monster2\\redthief_general\\wait1.gr2": "186dc1b5e9036b2386e869a51d49341557cd48f55f36480149c13b9fcd4a0525",
+    "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client\\assets\\metin2_patch_dragon_rock_mobs\\ymir work\\monster2\\redthief_general\\walk.gr2": "9f9a85e9bbc30c22133f17b673975046a468d0c9c93bb2f4f96697863c881099",
+    "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client\\pack\\metin2_patch_dragon_rock_mobs.pck": "cd2cd8dbb762011512816f32f9e17850a2fb61439d89725cb119a8c18017bfeb",
+    "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\src\\AssetRuntime\\GR2\\GR2AnimationReader.cpp": "f0d2f4ea755d10c548d327312afe326719e03d1d9288810cc55f536b8d8a8e56",
+    "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\src\\AssetRuntime\\GR2\\GR2AssetProvider.cpp": "be0a95020c7f4f9e0f3d128fc4ab5efa9eb41ff045f32548990175b0d9982232",
+    "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\src\\AssetRuntime\\GR2\\GR2AssetProvider.h": "ec3a86d6ab5e0ae0c279bf36ed78f1bf926a839ae129049a97df6eee4b537aa6",
+    "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\src\\AssetRuntime\\GR2\\GR2Compression.cpp": "3e567fcaaa8553d7b93bd6f8d8840fc09b4bf3b0bc7cd739e746d4bee6ae012c",
+    "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\src\\AssetRuntime\\GR2\\GR2File.cpp": "7d30ede4e9ebd89c706d1cee70f0f1ede4b72fd69387eea4d4c44f5cbda4d15c",
+    "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\src\\AssetRuntime\\GR2\\GR2File.h": "0a23b286bf54902bf5cbd0bae3cb9f8c7364a98dad58cf59dc5d6933d37a7273",
+    "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\src\\AssetRuntime\\GR2\\GR2MaterialReader.cpp": "c840ea2600f808a976bccaca61c296481923407282ea7fcf1a6e132ec91e2629",
+    "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\src\\AssetRuntime\\GR2\\GR2MeshReader.cpp": "7f32fd2618f006028477eaac0cdba6c223dfb8c6bd123f018a59a14e495953dc",
+    "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\src\\AssetRuntime\\GR2\\GR2ModelReader.cpp": "9c6e8ae6d446dbdd8ace8c62c8b148d83f89551b173e65022cb8c565c5903497",
+    "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\src\\AssetRuntime\\GR2\\GR2Reader.h": "223b3648f031c7bbf0f93a8c515db0254ca9d3496b8de47115d3dd2171781a42",
+    "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\src\\AssetRuntime\\GR2\\GR2Types.cpp": "655b3af6aeffb43aa3d20150e57e43180d28e1f0de4ab88720bf8d2ceed7be6c",
+    "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\src\\AssetRuntime\\GR2\\GR2Types.h": "7d160e4b698f2955af48f0a6ed902b2dd1b4830957a69ead21a385aff7348b36",
+    "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\src\\AssetRuntime\\GR2\\LICENSE-Boost.txt": "c9bff75738922193e67fa726fa225535870d2aa1059f91452c411736284ad566",
+    "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\src\\AnimationRuntime\\AnimationRuntime.cpp": "f73c02fcc3e454974e0df08911c4aa5c28ba2d05595a279a5f44e09516b8764d",
+    "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\src\\AnimationRuntime\\AnimationRuntime.h": "af25ef29589f4145c031fd7f864f6c6eb35322f404806e64fb2681715c458b85",
+    "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\src\\AnimationRuntime\\CMakeLists.txt": "ff725c9097597616ed4b330de0a638f9220f73b996782512e7a1a5edc10f4179"
+  },
+  "production_reader_runtime_files_unchanged_in_f3b": {
+    "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\src\\AssetRuntime\\GR2\\GR2AnimationReader.cpp": "f0d2f4ea755d10c548d327312afe326719e03d1d9288810cc55f536b8d8a8e56",
+    "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\src\\AssetRuntime\\GR2\\GR2AssetProvider.cpp": "be0a95020c7f4f9e0f3d128fc4ab5efa9eb41ff045f32548990175b0d9982232",
+    "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\src\\AssetRuntime\\GR2\\GR2AssetProvider.h": "ec3a86d6ab5e0ae0c279bf36ed78f1bf926a839ae129049a97df6eee4b537aa6",
+    "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\src\\AssetRuntime\\GR2\\GR2Compression.cpp": "3e567fcaaa8553d7b93bd6f8d8840fc09b4bf3b0bc7cd739e746d4bee6ae012c",
+    "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\src\\AssetRuntime\\GR2\\GR2File.cpp": "7d30ede4e9ebd89c706d1cee70f0f1ede4b72fd69387eea4d4c44f5cbda4d15c",
+    "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\src\\AssetRuntime\\GR2\\GR2File.h": "0a23b286bf54902bf5cbd0bae3cb9f8c7364a98dad58cf59dc5d6933d37a7273",
+    "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\src\\AssetRuntime\\GR2\\GR2MaterialReader.cpp": "c840ea2600f808a976bccaca61c296481923407282ea7fcf1a6e132ec91e2629",
+    "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\src\\AssetRuntime\\GR2\\GR2MeshReader.cpp": "7f32fd2618f006028477eaac0cdba6c223dfb8c6bd123f018a59a14e495953dc",
+    "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\src\\AssetRuntime\\GR2\\GR2ModelReader.cpp": "9c6e8ae6d446dbdd8ace8c62c8b148d83f89551b173e65022cb8c565c5903497",
+    "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\src\\AssetRuntime\\GR2\\GR2Reader.h": "223b3648f031c7bbf0f93a8c515db0254ca9d3496b8de47115d3dd2171781a42",
+    "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\src\\AssetRuntime\\GR2\\GR2Types.cpp": "655b3af6aeffb43aa3d20150e57e43180d28e1f0de4ab88720bf8d2ceed7be6c",
+    "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\src\\AssetRuntime\\GR2\\GR2Types.h": "7d160e4b698f2955af48f0a6ed902b2dd1b4830957a69ead21a385aff7348b36",
+    "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\src\\AssetRuntime\\GR2\\LICENSE-Boost.txt": "c9bff75738922193e67fa726fa225535870d2aa1059f91452c411736284ad566",
+    "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\src\\AnimationRuntime\\AnimationRuntime.cpp": "f73c02fcc3e454974e0df08911c4aa5c28ba2d05595a279a5f44e09516b8764d",
+    "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\src\\AnimationRuntime\\AnimationRuntime.h": "af25ef29589f4145c031fd7f864f6c6eb35322f404806e64fb2681715c458b85",
+    "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\src\\AnimationRuntime\\CMakeLists.txt": "ff725c9097597616ed4b330de0a638f9220f73b996782512e7a1a5edc10f4179"
+  },
+  "repair": {
+    "channels": 24,
+    "entirely_nan_scalars": 312,
+    "donor": "redthief_general/normal_attack1.gr2",
+    "strategy": "Copy existing constant authored channels selected by matching preserved finger posture; preserve all other logical bytes, knots, degree, tracks, duration and motion semantics. No claim of exact recovery of lost original keyframes."
+  },
+  "candidates": [
+    {
+      "model": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_boss/redthief_boss.gr2",
+      "clip": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_boss/back_damage.gr2",
+      "bones": "89",
+      "names_order": "0",
+      "parents": "0",
+      "bind_exact": "0",
+      "roots": "0:Bip01;",
+      "duration": "0.833333313",
+      "groups": "1",
+      "tracks": "90",
+      "matched_bones": "79",
+      "loop_translation": "0 0 0",
+      "periodic": "0",
+      "finite_clamp_poses": "5",
+      "status": "different skeleton",
+      "diagnostic": ""
+    },
+    {
+      "model": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_boss/redthief_boss.gr2",
+      "clip": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_boss/back_damage1.gr2",
+      "bones": "89",
+      "names_order": "0",
+      "parents": "0",
+      "bind_exact": "0",
+      "roots": "0:Bip01;",
+      "duration": "0.833333313",
+      "groups": "1",
+      "tracks": "90",
+      "matched_bones": "79",
+      "loop_translation": "0 0 0",
+      "periodic": "0",
+      "finite_clamp_poses": "5",
+      "status": "different skeleton",
+      "diagnostic": ""
+    },
+    {
+      "model": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_boss/redthief_boss.gr2",
+      "clip": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_boss/back_knockdown.gr2",
+      "bones": "89",
+      "names_order": "0",
+      "parents": "0",
+      "bind_exact": "0",
+      "roots": "0:Bip01;",
+      "duration": "0.966666639",
+      "groups": "1",
+      "tracks": "90",
+      "matched_bones": "79",
+      "loop_translation": "0 0 0",
+      "periodic": "0",
+      "finite_clamp_poses": "5",
+      "status": "different skeleton",
+      "diagnostic": ""
+    },
+    {
+      "model": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_boss/redthief_boss.gr2",
+      "clip": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_boss/front_damage.gr2",
+      "bones": "89",
+      "names_order": "0",
+      "parents": "0",
+      "bind_exact": "0",
+      "roots": "0:Bip01;",
+      "duration": "0.833333313",
+      "groups": "1",
+      "tracks": "90",
+      "matched_bones": "79",
+      "loop_translation": "0 0 0",
+      "periodic": "0",
+      "finite_clamp_poses": "5",
+      "status": "different skeleton",
+      "diagnostic": ""
+    },
+    {
+      "model": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_boss/redthief_boss.gr2",
+      "clip": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_boss/front_damage1.gr2",
+      "bones": "89",
+      "names_order": "0",
+      "parents": "0",
+      "bind_exact": "0",
+      "roots": "0:Bip01;",
+      "duration": "0.833333313",
+      "groups": "1",
+      "tracks": "90",
+      "matched_bones": "79",
+      "loop_translation": "0 0 0",
+      "periodic": "0",
+      "finite_clamp_poses": "5",
+      "status": "different skeleton",
+      "diagnostic": ""
+    },
+    {
+      "model": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_boss/redthief_boss.gr2",
+      "clip": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_boss/front_knockdown.gr2",
+      "bones": "89",
+      "names_order": "0",
+      "parents": "0",
+      "bind_exact": "0",
+      "roots": "0:Bip01;",
+      "duration": "1.5",
+      "groups": "1",
+      "tracks": "90",
+      "matched_bones": "79",
+      "loop_translation": "0 0 0",
+      "periodic": "0",
+      "finite_clamp_poses": "5",
+      "status": "different skeleton",
+      "diagnostic": ""
+    },
+    {
+      "model": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_boss2/redthief_boss2.gr2",
+      "clip": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_boss2/back_damage.gr2",
+      "bones": "95",
+      "names_order": "0",
+      "parents": "0",
+      "bind_exact": "0",
+      "roots": "0:Bip01;",
+      "duration": "1",
+      "groups": "1",
+      "tracks": "96",
+      "matched_bones": "72",
+      "loop_translation": "0 0 0",
+      "periodic": "0",
+      "finite_clamp_poses": "5",
+      "status": "different skeleton",
+      "diagnostic": ""
+    },
+    {
+      "model": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_boss2/redthief_boss2.gr2",
+      "clip": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_boss2/back_damage1.gr2",
+      "bones": "95",
+      "names_order": "0",
+      "parents": "0",
+      "bind_exact": "0",
+      "roots": "0:Bip01;",
+      "duration": "1",
+      "groups": "1",
+      "tracks": "96",
+      "matched_bones": "72",
+      "loop_translation": "0 0 0",
+      "periodic": "0",
+      "finite_clamp_poses": "5",
+      "status": "different skeleton",
+      "diagnostic": ""
+    },
+    {
+      "model": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_boss2/redthief_boss2.gr2",
+      "clip": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_boss2/back_knockdown.gr2",
+      "bones": "95",
+      "names_order": "0",
+      "parents": "0",
+      "bind_exact": "0",
+      "roots": "0:Bip01;",
+      "duration": "0.833333313",
+      "groups": "1",
+      "tracks": "96",
+      "matched_bones": "72",
+      "loop_translation": "0 0 0",
+      "periodic": "0",
+      "finite_clamp_poses": "5",
+      "status": "different skeleton",
+      "diagnostic": ""
+    },
+    {
+      "model": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_boss2/redthief_boss2.gr2",
+      "clip": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_boss2/front_damage.gr2",
+      "bones": "95",
+      "names_order": "0",
+      "parents": "0",
+      "bind_exact": "0",
+      "roots": "0:Bip01;",
+      "duration": "1",
+      "groups": "1",
+      "tracks": "96",
+      "matched_bones": "72",
+      "loop_translation": "0 0 0",
+      "periodic": "0",
+      "finite_clamp_poses": "5",
+      "status": "different skeleton",
+      "diagnostic": ""
+    },
+    {
+      "model": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_boss2/redthief_boss2.gr2",
+      "clip": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_boss2/front_damage1.gr2",
+      "bones": "95",
+      "names_order": "0",
+      "parents": "0",
+      "bind_exact": "0",
+      "roots": "0:Bip01;",
+      "duration": "1",
+      "groups": "1",
+      "tracks": "96",
+      "matched_bones": "72",
+      "loop_translation": "0 0 0",
+      "periodic": "0",
+      "finite_clamp_poses": "5",
+      "status": "different skeleton",
+      "diagnostic": ""
+    },
+    {
+      "model": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_boss2/redthief_boss2.gr2",
+      "clip": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_boss2/front_knockdown.gr2",
+      "bones": "95",
+      "names_order": "0",
+      "parents": "0",
+      "bind_exact": "0",
+      "roots": "0:Bip01;",
+      "duration": "0.833333313",
+      "groups": "1",
+      "tracks": "96",
+      "matched_bones": "72",
+      "loop_translation": "0 0 0",
+      "periodic": "0",
+      "finite_clamp_poses": "5",
+      "status": "different skeleton",
+      "diagnostic": ""
+    },
+    {
+      "model": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_bow/redthief_bow.gr2",
+      "clip": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_bow/back_damage.gr2",
+      "bones": "87",
+      "names_order": "0",
+      "parents": "0",
+      "bind_exact": "0",
+      "roots": "0:Bip01;",
+      "duration": "0.666666687",
+      "groups": "1",
+      "tracks": "89",
+      "matched_bones": "78",
+      "loop_translation": "0 0 0",
+      "periodic": "0",
+      "finite_clamp_poses": "5",
+      "status": "different skeleton",
+      "diagnostic": ""
+    },
+    {
+      "model": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_bow/redthief_bow.gr2",
+      "clip": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_bow/back_knockdown.gr2",
+      "bones": "87",
+      "names_order": "0",
+      "parents": "0",
+      "bind_exact": "0",
+      "roots": "0:Bip01;",
+      "duration": "1",
+      "groups": "1",
+      "tracks": "89",
+      "matched_bones": "78",
+      "loop_translation": "0 0 0",
+      "periodic": "0",
+      "finite_clamp_poses": "5",
+      "status": "different skeleton",
+      "diagnostic": ""
+    },
+    {
+      "model": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_bow/redthief_bow.gr2",
+      "clip": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_bow/front_damage.gr2",
+      "bones": "87",
+      "names_order": "0",
+      "parents": "0",
+      "bind_exact": "0",
+      "roots": "0:Bip01;",
+      "duration": "0.5",
+      "groups": "1",
+      "tracks": "89",
+      "matched_bones": "78",
+      "loop_translation": "0 0 0",
+      "periodic": "0",
+      "finite_clamp_poses": "5",
+      "status": "different skeleton",
+      "diagnostic": ""
+    },
+    {
+      "model": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_bow/redthief_bow.gr2",
+      "clip": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_bow/front_knockdown.gr2",
+      "bones": "87",
+      "names_order": "0",
+      "parents": "0",
+      "bind_exact": "0",
+      "roots": "0:Bip01;",
+      "duration": "1",
+      "groups": "1",
+      "tracks": "89",
+      "matched_bones": "78",
+      "loop_translation": "0 0 0",
+      "periodic": "0",
+      "finite_clamp_poses": "5",
+      "status": "different skeleton",
+      "diagnostic": ""
+    },
+    {
+      "model": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_general/redthief_general.gr2",
+      "clip": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_general/back_damage.gr2",
+      "bones": "91",
+      "names_order": "1",
+      "parents": "1",
+      "bind_exact": "1",
+      "roots": "0:Bip01;",
+      "duration": "NA",
+      "groups": "NA",
+      "tracks": "NA",
+      "matched_bones": "NA",
+      "loop_translation": "NA",
+      "periodic": "NA",
+      "finite_clamp_poses": "0",
+      "status": "rejected",
+      "diagnostic": "nonfinite float"
+    },
+    {
+      "model": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_general/redthief_general.gr2",
+      "clip": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_general/back_knockdown.gr2",
+      "bones": "91",
+      "names_order": "1",
+      "parents": "1",
+      "bind_exact": "1",
+      "roots": "0:Bip01;",
+      "duration": "1.16666663",
+      "groups": "1",
+      "tracks": "92",
+      "matched_bones": "89",
+      "loop_translation": "0 0 0",
+      "periodic": "0",
+      "finite_clamp_poses": "5",
+      "status": "compatible structure",
+      "diagnostic": ""
+    },
+    {
+      "model": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_general/redthief_general.gr2",
+      "clip": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_general/front_damage.gr2",
+      "bones": "91",
+      "names_order": "1",
+      "parents": "1",
+      "bind_exact": "1",
+      "roots": "0:Bip01;",
+      "duration": "NA",
+      "groups": "NA",
+      "tracks": "NA",
+      "matched_bones": "NA",
+      "loop_translation": "NA",
+      "periodic": "NA",
+      "finite_clamp_poses": "0",
+      "status": "rejected",
+      "diagnostic": "nonfinite float"
+    },
+    {
+      "model": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_general/redthief_general.gr2",
+      "clip": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_general/front_knockdown.gr2",
+      "bones": "91",
+      "names_order": "1",
+      "parents": "1",
+      "bind_exact": "1",
+      "roots": "0:Bip01;",
+      "duration": "1.16666663",
+      "groups": "1",
+      "tracks": "92",
+      "matched_bones": "89",
+      "loop_translation": "0 0 0",
+      "periodic": "0",
+      "finite_clamp_poses": "5",
+      "status": "compatible structure",
+      "diagnostic": ""
+    },
+    {
+      "model": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_magic/redthief_magic.gr2",
+      "clip": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_magic/back_damage.gr2",
+      "bones": "110",
+      "names_order": "0",
+      "parents": "0",
+      "bind_exact": "0",
+      "roots": "0:Bip01;",
+      "duration": "0.666666687",
+      "groups": "1",
+      "tracks": "111",
+      "matched_bones": "77",
+      "loop_translation": "0 0 0",
+      "periodic": "0",
+      "finite_clamp_poses": "5",
+      "status": "different skeleton",
+      "diagnostic": ""
+    },
+    {
+      "model": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_magic/redthief_magic.gr2",
+      "clip": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_magic/back_knockdown.gr2",
+      "bones": "110",
+      "names_order": "0",
+      "parents": "0",
+      "bind_exact": "0",
+      "roots": "0:Bip01;",
+      "duration": "1.16666663",
+      "groups": "1",
+      "tracks": "111",
+      "matched_bones": "77",
+      "loop_translation": "0 0 0",
+      "periodic": "0",
+      "finite_clamp_poses": "5",
+      "status": "different skeleton",
+      "diagnostic": ""
+    },
+    {
+      "model": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_magic/redthief_magic.gr2",
+      "clip": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_magic/front_damage.gr2",
+      "bones": "110",
+      "names_order": "0",
+      "parents": "0",
+      "bind_exact": "0",
+      "roots": "0:Bip01;",
+      "duration": "0.666666687",
+      "groups": "1",
+      "tracks": "111",
+      "matched_bones": "77",
+      "loop_translation": "0 0 0",
+      "periodic": "0",
+      "finite_clamp_poses": "5",
+      "status": "different skeleton",
+      "diagnostic": ""
+    },
+    {
+      "model": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_magic/redthief_magic.gr2",
+      "clip": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_magic/front_knockdown.gr2",
+      "bones": "110",
+      "names_order": "0",
+      "parents": "0",
+      "bind_exact": "0",
+      "roots": "0:Bip01;",
+      "duration": "1.33333337",
+      "groups": "1",
+      "tracks": "111",
+      "matched_bones": "77",
+      "loop_translation": "0 0 0",
+      "periodic": "0",
+      "finite_clamp_poses": "5",
+      "status": "different skeleton",
+      "diagnostic": ""
+    },
+    {
+      "model": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_officer/redthief_officer.gr2",
+      "clip": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_officer/back_damage.gr2",
+      "bones": "68",
+      "names_order": "0",
+      "parents": "0",
+      "bind_exact": "0",
+      "roots": "0:Bip01;",
+      "duration": "0.666666687",
+      "groups": "1",
+      "tracks": "69",
+      "matched_bones": "67",
+      "loop_translation": "0 0 0",
+      "periodic": "0",
+      "finite_clamp_poses": "5",
+      "status": "different skeleton",
+      "diagnostic": ""
+    },
+    {
+      "model": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_officer/redthief_officer.gr2",
+      "clip": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_officer/back_knockdown.gr2",
+      "bones": "68",
+      "names_order": "0",
+      "parents": "0",
+      "bind_exact": "0",
+      "roots": "0:Bip01;",
+      "duration": "1.16666663",
+      "groups": "1",
+      "tracks": "69",
+      "matched_bones": "67",
+      "loop_translation": "0 0 0",
+      "periodic": "0",
+      "finite_clamp_poses": "5",
+      "status": "different skeleton",
+      "diagnostic": ""
+    },
+    {
+      "model": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_officer/redthief_officer.gr2",
+      "clip": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_officer/front_damage.gr2",
+      "bones": "68",
+      "names_order": "0",
+      "parents": "0",
+      "bind_exact": "0",
+      "roots": "0:Bip01;",
+      "duration": "0.666666687",
+      "groups": "1",
+      "tracks": "69",
+      "matched_bones": "67",
+      "loop_translation": "0 0 0",
+      "periodic": "0",
+      "finite_clamp_poses": "5",
+      "status": "different skeleton",
+      "diagnostic": ""
+    },
+    {
+      "model": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_officer/redthief_officer.gr2",
+      "clip": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_officer/front_knockdown.gr2",
+      "bones": "68",
+      "names_order": "0",
+      "parents": "0",
+      "bind_exact": "0",
+      "roots": "0:Bip01;",
+      "duration": "1.33333337",
+      "groups": "1",
+      "tracks": "69",
+      "matched_bones": "67",
+      "loop_translation": "0 0 0",
+      "periodic": "0",
+      "finite_clamp_poses": "5",
+      "status": "different skeleton",
+      "diagnostic": ""
+    },
+    {
+      "model": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_soldier2/redthief_soldier2.gr2",
+      "clip": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_soldier2/back_damage.gr2",
+      "bones": "60",
+      "names_order": "0",
+      "parents": "0",
+      "bind_exact": "0",
+      "roots": "0:Bip01;",
+      "duration": "0.666666687",
+      "groups": "1",
+      "tracks": "61",
+      "matched_bones": "54",
+      "loop_translation": "0 0 0",
+      "periodic": "0",
+      "finite_clamp_poses": "5",
+      "status": "different skeleton",
+      "diagnostic": ""
+    },
+    {
+      "model": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_soldier2/redthief_soldier2.gr2",
+      "clip": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_soldier2/back_knockdown.gr2",
+      "bones": "60",
+      "names_order": "0",
+      "parents": "0",
+      "bind_exact": "0",
+      "roots": "0:Bip01;",
+      "duration": "1.10000002",
+      "groups": "1",
+      "tracks": "61",
+      "matched_bones": "54",
+      "loop_translation": "0 0 0",
+      "periodic": "0",
+      "finite_clamp_poses": "5",
+      "status": "different skeleton",
+      "diagnostic": ""
+    },
+    {
+      "model": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_soldier2/redthief_soldier2.gr2",
+      "clip": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_soldier2/front_damage.gr2",
+      "bones": "60",
+      "names_order": "0",
+      "parents": "0",
+      "bind_exact": "0",
+      "roots": "0:Bip01;",
+      "duration": "0.666666687",
+      "groups": "1",
+      "tracks": "61",
+      "matched_bones": "54",
+      "loop_translation": "0 0 0",
+      "periodic": "0",
+      "finite_clamp_poses": "5",
+      "status": "different skeleton",
+      "diagnostic": ""
+    },
+    {
+      "model": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_soldier2/redthief_soldier2.gr2",
+      "clip": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_soldier2/front_knockdown.gr2",
+      "bones": "60",
+      "names_order": "0",
+      "parents": "0",
+      "bind_exact": "0",
+      "roots": "0:Bip01;",
+      "duration": "1",
+      "groups": "3",
+      "tracks": "61",
+      "matched_bones": "54",
+      "loop_translation": "0 0 0",
+      "periodic": "0",
+      "finite_clamp_poses": "5",
+      "status": "different skeleton",
+      "diagnostic": ""
+    },
+    {
+      "model": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_general/redthief_general.gr2",
+      "clip": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_general/normal_attack1.gr2",
+      "bones": "91",
+      "names_order": "1",
+      "parents": "1",
+      "bind_exact": "1",
+      "roots": "0:Bip01;",
+      "duration": "1.5",
+      "groups": "1",
+      "tracks": "92",
+      "matched_bones": "89",
+      "loop_translation": "0 0 0",
+      "periodic": "0",
+      "finite_clamp_poses": "5",
+      "status": "compatible structure",
+      "diagnostic": ""
+    },
+    {
+      "model": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_general/redthief_general.gr2",
+      "clip": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_general/wait1.gr2",
+      "bones": "91",
+      "names_order": "1",
+      "parents": "1",
+      "bind_exact": "1",
+      "roots": "0:Bip01;",
+      "duration": "2",
+      "groups": "1",
+      "tracks": "92",
+      "matched_bones": "89",
+      "loop_translation": "0 0 0",
+      "periodic": "0",
+      "finite_clamp_poses": "5",
+      "status": "compatible structure",
+      "diagnostic": ""
+    },
+    {
+      "model": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_general/redthief_general.gr2",
+      "clip": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_general/walk.gr2",
+      "bones": "91",
+      "names_order": "1",
+      "parents": "1",
+      "bind_exact": "1",
+      "roots": "0:Bip01;",
+      "duration": "1.20000005",
+      "groups": "1",
+      "tracks": "92",
+      "matched_bones": "89",
+      "loop_translation": "-1.20401382e-05 -275.761261 -1.52587891e-05",
+      "periodic": "0",
+      "finite_clamp_poses": "5",
+      "status": "compatible structure",
+      "diagnostic": ""
+    },
+    {
+      "model": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_general/redthief_general.gr2",
+      "clip": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_general/front_standup.gr2",
+      "bones": "91",
+      "names_order": "1",
+      "parents": "1",
+      "bind_exact": "1",
+      "roots": "0:Bip01;",
+      "duration": "0.833333313",
+      "groups": "1",
+      "tracks": "92",
+      "matched_bones": "89",
+      "loop_translation": "0 0 0",
+      "periodic": "0",
+      "finite_clamp_poses": "5",
+      "status": "compatible structure",
+      "diagnostic": ""
+    }
+  ],
+  "donor_comparison": {
+    "preserved_source_channels": 48,
+    "preserved_source_nonconstant": 0,
+    "donors": {
+      "back_knockdown.gr2": {
+        "PositionCurve": {
+          "max_component_delta": 2.2888183629999998e-05,
+          "nonconstant": 0,
+          "channels": 16
+        },
+        "OrientationCurve": {
+          "max_component_delta": 0.49435246,
+          "nonconstant": 3,
+          "channels": 16
+        },
+        "ScaleShearCurve": {
+          "max_component_delta": 5.999999996841865e-08,
+          "nonconstant": 0,
+          "channels": 16
+        }
+      },
+      "front_dead.gr2": {
+        "PositionCurve": {
+          "max_component_delta": 2.28900000003307e-05,
+          "nonconstant": 0,
+          "channels": 16
+        },
+        "OrientationCurve": {
+          "max_component_delta": 0.61071232,
+          "nonconstant": 12,
+          "channels": 16
+        },
+        "ScaleShearCurve": {
+          "max_component_delta": 1.199999999368373e-07,
+          "nonconstant": 0,
+          "channels": 16
+        }
+      },
+      "front_knockdown.gr2": {
+        "PositionCurve": {
+          "max_component_delta": 2.2888183629999998e-05,
+          "nonconstant": 0,
+          "channels": 16
+        },
+        "OrientationCurve": {
+          "max_component_delta": 0.49435246,
+          "nonconstant": 3,
+          "channels": 16
+        },
+        "ScaleShearCurve": {
+          "max_component_delta": 5.999999996841865e-08,
+          "nonconstant": 0,
+          "channels": 16
+        }
+      },
+      "front_standup.gr2": {
+        "PositionCurve": {
+          "max_component_delta": 1.90999999993835e-05,
+          "nonconstant": 0,
+          "channels": 16
+        },
+        "OrientationCurve": {
+          "max_component_delta": 0.494352445,
+          "nonconstant": 0,
+          "channels": 16
+        },
+        "ScaleShearCurve": {
+          "max_component_delta": 1.7999999990525595e-07,
+          "nonconstant": 0,
+          "channels": 16
+        }
+      },
+      "normal_attack.gr2": {
+        "PositionCurve": {
+          "max_component_delta": 1.5260000000516527e-05,
+          "nonconstant": 0,
+          "channels": 16
+        },
+        "OrientationCurve": {
+          "max_component_delta": 7.399999998880524e-08,
+          "nonconstant": 6,
+          "channels": 16
+        },
+        "ScaleShearCurve": {
+          "max_component_delta": 5.999999996841865e-08,
+          "nonconstant": 0,
+          "channels": 16
+        }
+      },
+      "normal_attack1.gr2": {
+        "PositionCurve": {
+          "max_component_delta": 1.5260000000516527e-05,
+          "nonconstant": 0,
+          "channels": 16
+        },
+        "OrientationCurve": {
+          "max_component_delta": 6.000000007944095e-08,
+          "nonconstant": 0,
+          "channels": 16
+        },
+        "ScaleShearCurve": {
+          "max_component_delta": 5.999999996841865e-08,
+          "nonconstant": 0,
+          "channels": 16
+        }
+      },
+      "run.gr2": {
+        "PositionCurve": {
+          "max_component_delta": 2.28900000003307e-05,
+          "nonconstant": 0,
+          "channels": 16
+        },
+        "OrientationCurve": {
+          "max_component_delta": 0.160083294,
+          "nonconstant": 0,
+          "channels": 16
+        },
+        "ScaleShearCurve": {
+          "max_component_delta": 5.999999996841865e-08,
+          "nonconstant": 0,
+          "channels": 16
+        }
+      },
+      "wait.gr2": {
+        "PositionCurve": {
+          "max_component_delta": 1.5260000000516527e-05,
+          "nonconstant": 0,
+          "channels": 16
+        },
+        "OrientationCurve": {
+          "max_component_delta": 7.399999998880524e-08,
+          "nonconstant": 3,
+          "channels": 16
+        },
+        "ScaleShearCurve": {
+          "max_component_delta": 5.999999996841865e-08,
+          "nonconstant": 0,
+          "channels": 16
+        }
+      },
+      "wait1.gr2": {
+        "PositionCurve": {
+          "max_component_delta": 1.5260000000516527e-05,
+          "nonconstant": 0,
+          "channels": 16
+        },
+        "OrientationCurve": {
+          "max_component_delta": 7.399999998880524e-08,
+          "nonconstant": 0,
+          "channels": 16
+        },
+        "ScaleShearCurve": {
+          "max_component_delta": 5.999999996841865e-08,
+          "nonconstant": 0,
+          "channels": 16
+        }
+      },
+      "wait2.gr2": {
+        "PositionCurve": {
+          "max_component_delta": 1.9080000000393227e-05,
+          "nonconstant": 0,
+          "channels": 16
+        },
+        "OrientationCurve": {
+          "max_component_delta": 1.1900000007614153e-07,
+          "nonconstant": 3,
+          "channels": 16
+        },
+        "ScaleShearCurve": {
+          "max_component_delta": 1.199999999368373e-07,
+          "nonconstant": 0,
+          "channels": 16
+        }
+      },
+      "walk.gr2": {
+        "PositionCurve": {
+          "max_component_delta": 1.9073486369999998e-05,
+          "nonconstant": 0,
+          "channels": 16
+        },
+        "OrientationCurve": {
+          "max_component_delta": 1.1900000007614153e-07,
+          "nonconstant": 0,
+          "channels": 16
+        },
+        "ScaleShearCurve": {
+          "max_component_delta": 2.400000000957192e-07,
+          "nonconstant": 0,
+          "channels": 16
+        }
+      }
+    },
+    "damaged_channel_donor_confirmation": {
+      "wait1.gr2": {
+        "PositionCurve": 1.52587891e-05,
+        "OrientationCurve": 1.1900000007614153e-07,
+        "ScaleShearCurve": 1.49011612e-08
+      },
+      "walk.gr2": {
+        "PositionCurve": 1.5199999999992997e-05,
+        "OrientationCurve": 1.1900000007614153e-07,
+        "ScaleShearCurve": 1.199999999368373e-07
+      }
+    }
+  },
+  "selected_donor_channels": [
+    {
+      "donor": "normal_attack1.gr2",
+      "group": "Bip01",
+      "track": "Bip01 L Finger2",
+      "channel": "PositionCurve",
+      "nonfinite_source": "9",
+      "source_controls": "9",
+      "donor_degree": "0",
+      "donor_knots": "1",
+      "exact_constant": "1",
+      "value": "16.8015442 -2.05877686 -2.03469086 "
+    },
+    {
+      "donor": "normal_attack1.gr2",
+      "group": "Bip01",
+      "track": "Bip01 L Finger2",
+      "channel": "OrientationCurve",
+      "nonfinite_source": "12",
+      "source_controls": "12",
+      "donor_degree": "0",
+      "donor_knots": "1",
+      "exact_constant": "1",
+      "value": "0.123504393 -0.0444880798 0.640347183 0.756784618 "
+    },
+    {
+      "donor": "normal_attack1.gr2",
+      "group": "Bip01",
+      "track": "Bip01 L Finger2",
+      "channel": "ScaleShearCurve",
+      "nonfinite_source": "18",
+      "source_controls": "18",
+      "donor_degree": "0",
+      "donor_knots": "0",
+      "exact_constant": "1",
+      "value": "1 0 0 0 1 0 0 0 1 "
+    },
+    {
+      "donor": "normal_attack1.gr2",
+      "group": "Bip01",
+      "track": "Bip01 L Finger21",
+      "channel": "PositionCurve",
+      "nonfinite_source": "9",
+      "source_controls": "9",
+      "donor_degree": "0",
+      "donor_knots": "1",
+      "exact_constant": "1",
+      "value": "7.06658173 -7.62939453e-06 1.52587891e-05 "
+    },
+    {
+      "donor": "normal_attack1.gr2",
+      "group": "Bip01",
+      "track": "Bip01 L Finger21",
+      "channel": "OrientationCurve",
+      "nonfinite_source": "12",
+      "source_controls": "12",
+      "donor_degree": "0",
+      "donor_knots": "1",
+      "exact_constant": "1",
+      "value": "-9.71732828e-09 1.12968221e-08 0.652118742 0.758116841 "
+    },
+    {
+      "donor": "normal_attack1.gr2",
+      "group": "Bip01",
+      "track": "Bip01 L Finger21",
+      "channel": "ScaleShearCurve",
+      "nonfinite_source": "18",
+      "source_controls": "18",
+      "donor_degree": "0",
+      "donor_knots": "0",
+      "exact_constant": "1",
+      "value": "1 0 0 0 1 0 0 0 1 "
+    },
+    {
+      "donor": "normal_attack1.gr2",
+      "group": "Bip01",
+      "track": "Bip01 L Finger22",
+      "channel": "PositionCurve",
+      "nonfinite_source": "9",
+      "source_controls": "9",
+      "donor_degree": "0",
+      "donor_knots": "1",
+      "exact_constant": "1",
+      "value": "5.44212341 0 0 "
+    },
+    {
+      "donor": "normal_attack1.gr2",
+      "group": "Bip01",
+      "track": "Bip01 L Finger22",
+      "channel": "OrientationCurve",
+      "nonfinite_source": "12",
+      "source_controls": "12",
+      "donor_degree": "0",
+      "donor_knots": "1",
+      "exact_constant": "1",
+      "value": "-1.51126756e-08 -2.27389352e-09 0.782110691 0.623139322 "
+    },
+    {
+      "donor": "normal_attack1.gr2",
+      "group": "Bip01",
+      "track": "Bip01 L Finger22",
+      "channel": "ScaleShearCurve",
+      "nonfinite_source": "18",
+      "source_controls": "18",
+      "donor_degree": "0",
+      "donor_knots": "0",
+      "exact_constant": "1",
+      "value": "1 0 0 0 1 0 0 0 1 "
+    },
+    {
+      "donor": "normal_attack1.gr2",
+      "group": "Bip01",
+      "track": "Bip01 L Finger2Nub",
+      "channel": "PositionCurve",
+      "nonfinite_source": "9",
+      "source_controls": "9",
+      "donor_degree": "0",
+      "donor_knots": "1",
+      "exact_constant": "1",
+      "value": "5.9624939 -7.62939453e-06 7.62939453e-06 "
+    },
+    {
+      "donor": "normal_attack1.gr2",
+      "group": "Bip01",
+      "track": "Bip01 L Finger2Nub",
+      "channel": "OrientationCurve",
+      "nonfinite_source": "12",
+      "source_controls": "12",
+      "donor_degree": "0",
+      "donor_knots": "0",
+      "exact_constant": "1",
+      "value": "0 0 0 1 "
+    },
+    {
+      "donor": "normal_attack1.gr2",
+      "group": "Bip01",
+      "track": "Bip01 L Finger2Nub",
+      "channel": "ScaleShearCurve",
+      "nonfinite_source": "18",
+      "source_controls": "18",
+      "donor_degree": "0",
+      "donor_knots": "0",
+      "exact_constant": "1",
+      "value": "1 0 0 0 1 0 0 0 1 "
+    },
+    {
+      "donor": "normal_attack1.gr2",
+      "group": "Bip01",
+      "track": "Bip01 R Finger2",
+      "channel": "PositionCurve",
+      "nonfinite_source": "9",
+      "source_controls": "9",
+      "donor_degree": "0",
+      "donor_knots": "1",
+      "exact_constant": "1",
+      "value": "16.801548 -2.05878448 2.03469849 "
+    },
+    {
+      "donor": "normal_attack1.gr2",
+      "group": "Bip01",
+      "track": "Bip01 R Finger2",
+      "channel": "OrientationCurve",
+      "nonfinite_source": "12",
+      "source_controls": "12",
+      "donor_degree": "0",
+      "donor_knots": "1",
+      "exact_constant": "1",
+      "value": "-0.123504393 0.0444880798 0.640347183 0.756784618 "
+    },
+    {
+      "donor": "normal_attack1.gr2",
+      "group": "Bip01",
+      "track": "Bip01 R Finger2",
+      "channel": "ScaleShearCurve",
+      "nonfinite_source": "18",
+      "source_controls": "18",
+      "donor_degree": "0",
+      "donor_knots": "0",
+      "exact_constant": "1",
+      "value": "1 0 0 0 1 0 0 0 1 "
+    },
+    {
+      "donor": "normal_attack1.gr2",
+      "group": "Bip01",
+      "track": "Bip01 R Finger21",
+      "channel": "PositionCurve",
+      "nonfinite_source": "9",
+      "source_controls": "9",
+      "donor_degree": "0",
+      "donor_knots": "1",
+      "exact_constant": "1",
+      "value": "7.06658936 0 0 "
+    },
+    {
+      "donor": "normal_attack1.gr2",
+      "group": "Bip01",
+      "track": "Bip01 R Finger21",
+      "channel": "OrientationCurve",
+      "nonfinite_source": "12",
+      "source_controls": "12",
+      "donor_degree": "0",
+      "donor_knots": "1",
+      "exact_constant": "1",
+      "value": "2.10141504e-08 -3.23109681e-08 0.652118683 0.758116901 "
+    },
+    {
+      "donor": "normal_attack1.gr2",
+      "group": "Bip01",
+      "track": "Bip01 R Finger21",
+      "channel": "ScaleShearCurve",
+      "nonfinite_source": "18",
+      "source_controls": "18",
+      "donor_degree": "0",
+      "donor_knots": "0",
+      "exact_constant": "1",
+      "value": "1 0 0 0 1 0 0 0 1 "
+    },
+    {
+      "donor": "normal_attack1.gr2",
+      "group": "Bip01",
+      "track": "Bip01 R Finger22",
+      "channel": "PositionCurve",
+      "nonfinite_source": "9",
+      "source_controls": "9",
+      "donor_degree": "0",
+      "donor_knots": "1",
+      "exact_constant": "1",
+      "value": "5.44211197 0 0 "
+    },
+    {
+      "donor": "normal_attack1.gr2",
+      "group": "Bip01",
+      "track": "Bip01 R Finger22",
+      "channel": "OrientationCurve",
+      "nonfinite_source": "12",
+      "source_controls": "12",
+      "donor_degree": "0",
+      "donor_knots": "1",
+      "exact_constant": "1",
+      "value": "1.28387878e-08 1.18442822e-09 0.78211081 0.623139381 "
+    },
+    {
+      "donor": "normal_attack1.gr2",
+      "group": "Bip01",
+      "track": "Bip01 R Finger22",
+      "channel": "ScaleShearCurve",
+      "nonfinite_source": "18",
+      "source_controls": "18",
+      "donor_degree": "0",
+      "donor_knots": "0",
+      "exact_constant": "1",
+      "value": "1 0 0 0 1 0 0 0 1 "
+    },
+    {
+      "donor": "normal_attack1.gr2",
+      "group": "Bip01",
+      "track": "Bip01 R Finger2Nub",
+      "channel": "PositionCurve",
+      "nonfinite_source": "9",
+      "source_controls": "9",
+      "donor_degree": "0",
+      "donor_knots": "1",
+      "exact_constant": "1",
+      "value": "5.9624939 3.81469727e-06 0 "
+    },
+    {
+      "donor": "normal_attack1.gr2",
+      "group": "Bip01",
+      "track": "Bip01 R Finger2Nub",
+      "channel": "OrientationCurve",
+      "nonfinite_source": "12",
+      "source_controls": "12",
+      "donor_degree": "0",
+      "donor_knots": "0",
+      "exact_constant": "1",
+      "value": "0 0 0 1 "
+    },
+    {
+      "donor": "normal_attack1.gr2",
+      "group": "Bip01",
+      "track": "Bip01 R Finger2Nub",
+      "channel": "ScaleShearCurve",
+      "nonfinite_source": "18",
+      "source_controls": "18",
+      "donor_degree": "0",
+      "donor_knots": "1",
+      "exact_constant": "1",
+      "value": "0.99999994 -1.49011612e-08 -2.98023206e-08 -1.49011612e-08 1 1.49011612e-08 2.98023206e-08 -1.49011612e-08 -1 "
+    }
+  ],
+  "skeleton_inventory": {
+    "files": 9166,
+    "models": 4415,
+    "reader_rejected": 7,
+    "matching_structure": [
+      {
+        "file": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_general/redthief_general.gr2",
+        "model": "Bip01",
+        "bones": "91",
+        "names_order": "1",
+        "parents": "1",
+        "bind_exact": "1",
+        "roots": "0:Bip01;",
+        "status": "parsed"
+      },
+      {
+        "file": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_general/redthief_general_lod_01.gr2",
+        "model": "Bip01",
+        "bones": "91",
+        "names_order": "1",
+        "parents": "1",
+        "bind_exact": "1",
+        "roots": "0:Bip01;",
+        "status": "parsed"
+      }
+    ]
+  },
+  "poses": [
+    {
+      "native": {
+        "model": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_general/redthief_general.gr2",
+        "clip": "C:/Users/ZiiNAN/Documents/GitHub/m2dev-client-src/build/f3b/staged/back_damage.gr2",
+        "bones": "91",
+        "names_order": "1",
+        "parents": "1",
+        "bind_exact": "1",
+        "roots": "0:Bip01;",
+        "duration": "0.666666687",
+        "groups": "1",
+        "tracks": "92",
+        "matched_bones": "89",
+        "loop_translation": "0 0 0",
+        "periodic": "0",
+        "finite_clamp_poses": "5",
+        "status": "compatible structure",
+        "diagnostic": ""
+      },
+      "parity_output": [
+        "ANIMATION C:/Users/ZiiNAN/Documents/GitHub/m2dev-client-src/build/f3b/staged/back_damage.gr2 finite=1 native_load_bind_ms=24.4858 translation=1.04904e-05 rotation=1.31502e-06 scale=1.19209e-07 world=0.000184059 palette=0.000854492 root_motion=0 worst=Bip01 Ponytail13 t=0.600000 channel=0 native=12.958106 ref=12.958117",
+        "VERTEX cpu_pairs=27000 gpu_pairs=2700 position=0.000198364 normal=4.55976e-06"
+      ]
+    },
+    {
+      "native": {
+        "model": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_general/redthief_general_lod_01.gr2",
+        "clip": "C:/Users/ZiiNAN/Documents/GitHub/m2dev-client-src/build/f3b/staged/back_damage.gr2",
+        "bones": "91",
+        "names_order": "1",
+        "parents": "1",
+        "bind_exact": "1",
+        "roots": "0:Bip01;",
+        "duration": "0.666666687",
+        "groups": "1",
+        "tracks": "92",
+        "matched_bones": "89",
+        "loop_translation": "0 0 0",
+        "periodic": "0",
+        "finite_clamp_poses": "5",
+        "status": "compatible structure",
+        "diagnostic": ""
+      },
+      "parity_output": [
+        "ANIMATION C:/Users/ZiiNAN/Documents/GitHub/m2dev-client-src/build/f3b/staged/back_damage.gr2 finite=1 native_load_bind_ms=21.712 translation=1.04904e-05 rotation=1.31502e-06 scale=1.19209e-07 world=0.000184059 palette=0.000854492 root_motion=0 worst=Bip01 Ponytail13 t=0.600000 channel=0 native=12.958106 ref=12.958117",
+        "VERTEX cpu_pairs=15010 gpu_pairs=1501 position=0.000198364 normal=4.08292e-06"
+      ]
+    },
+    {
+      "native": {
+        "model": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief2_general/redthief2_general.gr2",
+        "clip": "C:/Users/ZiiNAN/Documents/GitHub/m2dev-client-src/build/f3b/staged/back_damage.gr2",
+        "bones": "71",
+        "names_order": "1",
+        "parents": "1",
+        "bind_exact": "1",
+        "roots": "0:Bip01;",
+        "duration": "0.666666687",
+        "groups": "1",
+        "tracks": "92",
+        "matched_bones": "69",
+        "loop_translation": "0 0 0",
+        "periodic": "0",
+        "finite_clamp_poses": "5",
+        "status": "compatible structure",
+        "diagnostic": ""
+      },
+      "parity_output": [
+        "ANIMATION C:/Users/ZiiNAN/Documents/GitHub/m2dev-client-src/build/f3b/staged/back_damage.gr2 finite=1 native_load_bind_ms=23.0479 translation=1.04904e-05 rotation=1.31502e-06 scale=1.19209e-07 world=0.000160217 palette=0.000793457 root_motion=0 worst=Bip01 Ponytail13 t=0.600000 channel=0 native=12.958106 ref=12.958117",
+        "VERTEX cpu_pairs=27000 gpu_pairs=2700 position=0.000198364 normal=4.55976e-06"
+      ]
+    },
+    {
+      "native": {
+        "model": "metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief2_general/redthief2_general_lod_01.gr2",
+        "clip": "C:/Users/ZiiNAN/Documents/GitHub/m2dev-client-src/build/f3b/staged/back_damage.gr2",
+        "bones": "71",
+        "names_order": "1",
+        "parents": "1",
+        "bind_exact": "1",
+        "roots": "0:Bip01;",
+        "duration": "0.666666687",
+        "groups": "1",
+        "tracks": "92",
+        "matched_bones": "69",
+        "loop_translation": "0 0 0",
+        "periodic": "0",
+        "finite_clamp_poses": "5",
+        "status": "compatible structure",
+        "diagnostic": ""
+      },
+      "parity_output": [
+        "ANIMATION C:/Users/ZiiNAN/Documents/GitHub/m2dev-client-src/build/f3b/staged/back_damage.gr2 finite=1 native_load_bind_ms=21.6409 translation=1.04904e-05 rotation=1.31502e-06 scale=1.19209e-07 world=0.000160217 palette=0.000793457 root_motion=0 worst=Bip01 Ponytail13 t=0.600000 channel=0 native=12.958106 ref=12.958117",
+        "VERTEX cpu_pairs=17630 gpu_pairs=1763 position=0.000198364 normal=4.02331e-06"
+      ]
+    }
+  ],
+  "smokes": {
+    "automatic_redthief": {
+      "path": "build/f3b/runtime-verified",
+      "exit": "PID=9508 ExitCode=0 Seconds=21.68",
+      "counters": {
+        "SourceTextures": "0",
+        "SourceBuffers": "0",
+        "SkinMeshes": "0",
+        "BoneRemaps": "0",
+        "BonePalettes": "0",
+        "PaletteUpdates": "3639",
+        "SkinPreparationFailures": "0",
+        "AllCPUDeformationCalls": "0",
+        "AllCPUDeformationVertices": "0",
+        "GPUFallbacks": "0",
+        "AssetDocuments": "0",
+        "AnimationInstances": "0",
+        "MeshBindings": "0",
+        "GR2ReaderResources": "0",
+        "NativeGR2Reads": "140",
+        "GrannyFileReads": "0",
+        "NativeAnimationDecodes": "8",
+        "NativeBoundClipHits": "34",
+        "NativeBoundClipBypasses": "0",
+        "NativePrewarmRequests": "0",
+        "NativePrewarmFailures": "0",
+        "NativePrewarmLimited": "0",
+        "IndependentAnimationInstances": "0",
+        "IndependentPoseSamples": "4932",
+        "ReferencePoseSamples": "0",
+        "AnimationRuntimeFailures": "0",
+        "ImportPoseSamples": "0",
+        "ImportedAnimationClips": "0",
+        "ImportedBindingWarnings": "0",
+        "ImportTotalMicroseconds": "0",
+        "ImportPeakMicroseconds": "0",
+        "RetainedImportKeyBytes": "0",
+        "PeakRetainedImportKeyBytes": "0",
+        "ImportCacheHits": "0",
+        "ImportCacheEvictions": "0",
+        "RuntimeSkeletons": "0",
+        "RuntimeAnimationClips": "0",
+        "PrototypeGeometry": "0",
+        "PrototypePalettes": "0",
+        "GPUFrames": "3630",
+        "BoneBufferWrittenBytes": "59473920",
+        "PrepareUs": "10973.3",
+        "CPUReferenceFrames": "0",
+        "CPUSkinUs": "0",
+        "CPUVertexBytes": "0",
+        "StaticSkinMeshes": "0"
+      }
+    },
+    "manual_login": {
+      "path": "build/f2x/runtime/f3b-login",
+      "exit": "PID=68456 ExitCode=0",
+      "counters": {
+        "SourceTextures": "0",
+        "SourceBuffers": "0",
+        "SkinMeshes": "0",
+        "BoneRemaps": "0",
+        "BonePalettes": "0",
+        "PaletteUpdates": "164864",
+        "SkinPreparationFailures": "0",
+        "AllCPUDeformationCalls": "0",
+        "AllCPUDeformationVertices": "0",
+        "GPUFallbacks": "0",
+        "AssetDocuments": "0",
+        "AnimationInstances": "0",
+        "MeshBindings": "0",
+        "GR2ReaderResources": "0",
+        "NativeGR2Reads": "907",
+        "GrannyFileReads": "0",
+        "NativeAnimationDecodes": "68",
+        "NativeBoundClipHits": "2863",
+        "NativeBoundClipBypasses": "0",
+        "NativePrewarmRequests": "328",
+        "NativePrewarmFailures": "0",
+        "NativePrewarmLimited": "0",
+        "IndependentAnimationInstances": "0",
+        "IndependentPoseSamples": "167276",
+        "ReferencePoseSamples": "0",
+        "AnimationRuntimeFailures": "0",
+        "ImportPoseSamples": "0",
+        "ImportedAnimationClips": "0",
+        "ImportedBindingWarnings": "0",
+        "ImportTotalMicroseconds": "0",
+        "ImportPeakMicroseconds": "0",
+        "RetainedImportKeyBytes": "0",
+        "PeakRetainedImportKeyBytes": "0",
+        "ImportCacheHits": "0",
+        "ImportCacheEvictions": "0",
+        "RuntimeSkeletons": "0",
+        "RuntimeAnimationClips": "0",
+        "PrototypeGeometry": "0",
+        "PrototypePalettes": "0",
+        "GPUFrames": "166557",
+        "BoneBufferWrittenBytes": "2683568128",
+        "PrepareUs": "279037",
+        "CPUReferenceFrames": "0",
+        "CPUSkinUs": "0",
+        "CPUVertexBytes": "0",
+        "StaticSkinMeshes": "0"
+      },
+      "user_confirmation": "alles super (Login -> Character Select -> Ingame, then normal exit)"
+    }
+  },
+  "files": {
+    "../m2dev-client/assets/metin2_patch_dragon_rock_mobs/ymir work/monster2/redthief_general/back_damage.gr2": {
+      "sha256": "2e0f34887edff2f4cfddbb97ae7d9f1a15236752f1330ddaf4f998f4479c51b4",
+      "bytes": 39732
+    },
+    "../m2dev-client/pack/metin2_patch_dragon_rock_mobs.pck": {
+      "sha256": "112383a062903dde39d555164aea7fd8abf1b06959212eda8680c4b04f46083b",
+      "bytes": 54488623
+    },
+    "build/f3b/before/back_damage.gr2": {
+      "sha256": "083b0e312850d9df28d4f2cd4cfbcf82c45b9a5278c5ac494128803286aa157b",
+      "bytes": 22364
+    },
+    "build/f3b/before/metin2_patch_dragon_rock_mobs.pck": {
+      "sha256": "cd2cd8dbb762011512816f32f9e17850a2fb61439d89725cb119a8c18017bfeb",
+      "bytes": 54488486
+    },
+    "build/f3b/repair.log": {
+      "sha256": "f67f192c5320da0e5da0bfe10be4bf5811f9d69d8e3345f684fd51572e61ecb5",
+      "bytes": 22212
+    },
+    "build/f3b/repair-negative-summary.log": {
+      "sha256": "2bbf4f5e08e03547e0f1ab3fdba768bbad6970e7cb915995611e9d644e2fe10f",
+      "bytes": 102
+    },
+    "build/f3b/skeleton-inventory.tsv": {
+      "sha256": "9246737ccb08f716880d83363c0172471b73c4a59d76c0c3596a7ded693c9c9a",
+      "bytes": 439504
+    },
+    "build/f3b/candidates-final-results.tsv": {
+      "sha256": "6c7801fa2ee8c3e892e48114c7cf892fffe4e8d12587c521cd3e9ddf33488d00",
+      "bytes": 8563
+    },
+    "build/f3b/donor-channels.tsv": {
+      "sha256": "0fb45a0eac1d832a0504ff15440f2a040c4ddf10ae6932943c2ac7bc8e975a05",
+      "bytes": 26327
+    },
+    "build/f3b/donor-channels.tsv.preserved.tsv": {
+      "sha256": "2bbd2d01c5ef555fe224279d117b35cc7c8750e3f12954762a578ce2773f845e",
+      "bytes": 54480
+    },
+    "build/f3b/pack-source-before.tsv": {
+      "sha256": "8ed0d623180f33808475098d7519ddee1d56cc2ca811e917d2a0381e75e90025",
+      "bytes": 156720
+    },
+    "build/f3b/pack-compare.tsv": {
+      "sha256": "a7c3513d964f06e1f8bf3e7d1a8f3725e00978802002e9caeef37c253b62da88",
+      "bytes": 156720
+    },
+    "build/f3b/pack-source-after.tsv": {
+      "sha256": "0c23e9384c1fffde9dfd00d1e590c2447a21b18afc14b0f120b9a040eca70184",
+      "bytes": 156720
+    },
+    "build/f3b/packed-audit.tsv": {
+      "sha256": "38d6cf132a54f3fae0158f0fbbd5b116cd81c17a3655a4ac568371643b71ef0d",
+      "bytes": 17760
+    },
+    "build/f3b/corpus/files.tsv": {
+      "sha256": "b7b04250a1e0545ea0a587636663164adf7f2338d68c3abde8b952635b245e4e",
+      "bytes": 600988
+    },
+    "build/f3b/corpus/summary.tsv": {
+      "sha256": "75ca157aeadc267696b1eb271cad3b7546574e392155b07b1af148908501b142",
+      "bytes": 1625
+    },
+    "tests/AssetRuntime/GR2ConstantChannelRepair.cpp": {
+      "sha256": "b4852af92cc2386df718046c578d6568377f65e446d5fe45c77027e68455f3c4",
+      "bytes": 8102
+    },
+    "tests/AssetRuntime/GR2RedthiefRepairTest.cpp": {
+      "sha256": "91aab0095c2c88598fe131ea72c1dbe3b7a941084f1941200a553458f233e9f8",
+      "bytes": 4613
+    },
+    "tests/AssetRuntime/GR2MotionCandidateAudit.cpp": {
+      "sha256": "2f9eaecc460cdad5573b8066e6c0ac4cc1b944cd5df5618a5c523c48c341bc79",
+      "bytes": 7700
+    },
+    "tests/AssetRuntime/GR2CurveDonorAudit.cpp": {
+      "sha256": "a76d375e64e1f7955d2a6b00a6b5ebe1a22d4d292876eefab9daf2e594ff8d84",
+      "bytes": 6680
+    },
+    "tests/AssetRuntime/PackContentAudit.cpp": {
+      "sha256": "52cf994077ad4f0cd703ccc8e3c0ebbc07c43f45b48fc573de18346421e9251d",
+      "bytes": 3168
+    },
+    "tests/AssetRuntime/GR2ParityTest.cpp": {
+      "sha256": "d7a324843626869a472e10cdb04e1a7aba1b25f8f9290e2f013d5e63fe5aeb94",
+      "bytes": 25627
+    },
+    "tests/AssetRuntime/CMakeLists.txt": {
+      "sha256": "af73ea942b2d5729ba3cb7f73b5cd8fa2ebe29d5730450dc15bd0c732f9e7050",
+      "bytes": 8096
+    },
+    "tests/AssetRuntime/redthief_runtime_entry.py": {
+      "sha256": "c76db18f48cd79d8f4490ef05a0703f65d372e194c5c53b9cbaf02449e5e1c02",
+      "bytes": 3182
+    },
+    "tests/AssetRuntime/run_redthief_smoke.ps1": {
+      "sha256": "05b28d2e94c632c59a64615a018a02cc623eba3bdec444cbe1102a36aa1aee90",
+      "bytes": 4590
+    },
+    "build/f3b/release-build.log": {
+      "sha256": "007f98f72fca15b8f9294d854e478c85ee63ca1e66159040ecd8fa911602afef",
+      "bytes": 26722
+    },
+    "build/f3b/release-tests.log": {
+      "sha256": "cdb479fca3bfbccd1109019fa0eab8ad3f582a85d9d1db706b3f580105282f41",
+      "bytes": 1719
+    },
+    "build/f3b/debug-build.log": {
+      "sha256": "a18772c21bf7e12a8c1003dd5fdf434d0c1c3c027bc83b989c3723583ff36993",
+      "bytes": 16150
+    },
+    "build/f3b/debug-tests.log": {
+      "sha256": "6eb47de8e95e5d9063e4cf8a0e5585a5c859130ecfcd6028ada4963f59ca6da9",
+      "bytes": 1719
+    },
+    "build/f3b/gcc-build.log": {
+      "sha256": "f944b7851905ddba426eb38578251c1caad18a2b008df1c31b79e848f1ef5a75",
+      "bytes": 4047
+    },
+    "build/f3b/gcc-tests.log": {
+      "sha256": "f8654f79a599b13a22e3d14b6b33dad00cd841e8d6d90b149d2879d3406bc811",
+      "bytes": 2713
+    },
+    "build-c3x/windows/bin/Release/Metin2_Release.exe": {
+      "sha256": "2b26a0f498d7ce5f00d73b8327a7ff5ebccb07ee8d09db08e7bf0e1f4bfc307e",
+      "bytes": 31077376
+    },
+    "build-c3x/windows/tests/AssetRuntime/Release/GR2RedthiefRepairTest.exe": {
+      "sha256": "5d6ee29a9abdc9481c37a98a4d0531693f1db744a9df39ed3a6bb510f8ac152d",
+      "bytes": 1452032
+    },
+    "build-c3x/windows/bin/Debug/Metin2_Debug.exe": {
+      "sha256": "9160921769506b4d4cf55a882523b7ebba1ec89f22b4c5eeed9301335ba5b6d5",
+      "bytes": 43006464
+    },
+    "build-c3x/windows/tests/AssetRuntime/Debug/GR2RedthiefRepairTest.exe": {
+      "sha256": "88a1ccc4b5f1fa846cfc717f3843bb5323bf7012c29a2f6f349c37140eddc797",
+      "bytes": 3367424
+    },
+    "build/f3b/runtime-verified/artifact.txt": {
+      "sha256": "62b989b9fd0380393c35860a9abc27da58aa4a7e99eb0077fa7299203cc99ed3",
+      "bytes": 185
+    },
+    "build/f3b/runtime-verified/exit.txt": {
+      "sha256": "0dfdc3051efffc1951cf80b6d5770307d3a19e52112bc8f23a992f8c8c4b84b0",
+      "bytes": 35
+    },
+    "build/f3b/runtime-verified/renderer-startup.log": {
+      "sha256": "d60cb58f79f02b272e7468c02d6774fc655d64aa91b7453bf1261fcd3b1a45af",
+      "bytes": 265
+    },
+    "build/f3b/runtime-verified/source-resource-audit.log": {
+      "sha256": "39a779f0fa6a1a5b66814722e2cd297f54778bc619f33a3eede6c81e983f9697",
+      "bytes": 1001
+    },
+    "build/f3b/runtime-verified/log/syserr.txt": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "build/f2x/runtime/f3b-login/artifact.txt": {
+      "sha256": "86447381899a9cd4b7c13b7370811dbaab3ec994ee537c4ffd29426f19fec510",
+      "bytes": 265
+    },
+    "build/f2x/runtime/f3b-login/exit.txt": {
+      "sha256": "9f0a6f01ef150a05ac6179ae4782744f3d62c0be69bf0b0d0d36bd26252951cc",
+      "bytes": 22
+    },
+    "build/f2x/runtime/f3b-login/renderer-startup.log": {
+      "sha256": "d60cb58f79f02b272e7468c02d6774fc655d64aa91b7453bf1261fcd3b1a45af",
+      "bytes": 265
+    },
+    "build/f2x/runtime/f3b-login/source-resource-audit.log": {
+      "sha256": "d573060aff1dd73a00ff6d61edab8f7d9046a2c6d631d96ae05a8b1fe8acc270",
+      "bytes": 1013
+    },
+    "build/f2x/runtime/f3b-login/log/syserr.txt": {
+      "sha256": "ea8cb78282f472924fd74dbba8e11e45e502a18bb9f3a269e14824eab5da3cc6",
+      "bytes": 34
+    },
+    "build/f3b/runtime-verified/redthief-smoke.log": {
+      "sha256": "9995c33cd07f2ee88946af9a4eaa7522af8e21504d8b8428b627668fcfea8c85",
+      "bytes": 422
+    },
+    "build/f3b/runtime-verified/f3b-redthief-0914_211323.jpg": {
+      "sha256": "64da83ef1dab5e73819c7d46c85362d39b06416b80e183137ce2645436dd8738",
+      "bytes": 1143519
+    },
+    "build/f2x/runtime/f3b-login/acceptance.txt": {
+      "sha256": "ab34cdbc715c63a9df8c02dae1e3f93d8c1d70d91409272f7929c6efab32adf1",
+      "bytes": 226
+    },
+    "docs/assets/phase-f3b-redthief-animation-repair.md": {
+      "sha256": "ff912927bc84f4ff08a0d6fc33e7e4fdf202dc9bf72236757608f55f5230c742",
+      "bytes": 19285
+    },
+    "docs/assets/phase-f3b-compatibility-results.json": {
+      "sha256": "8a523e04404d9c0d2093aee7a98a875b37562f472e8e85ae26210e842a3bf8cc",
+      "bytes": 115231
+    },
+    "docs/assets/phase-f3b-repair-plan.tsv": {
+      "sha256": "6abe25833c77748594330896aa9a91163d8975837e946e8bc8382259294968de",
+      "bytes": 958
+    },
+    "build/f3b/staged-parity-0.log": {
+      "sha256": "32c55633d07dc7454f9fda04d778f8fe38032f894179a9c3660ca22507370018",
+      "bytes": 642
+    },
+    "build/f3b/staged-parity-1.log": {
+      "sha256": "b4ea343ef5b3dda873f88178e44168c942275e5dfb4fb90239fec90f4b32cfa9",
+      "bytes": 641
+    },
+    "build/f3b/staged-parity-2.log": {
+      "sha256": "8f4fb51012ce4fbd86c0b7a7eb94acb2d186920d30955e4c1a6fdde8432704b0",
+      "bytes": 642
+    },
+    "build/f3b/staged-parity-3.log": {
+      "sha256": "fab42c02c4eb15f33be646201b8441603eacb1f1ea72db66b747308e01f7c7b2",
+      "bytes": 642
+    }
+  }
+}

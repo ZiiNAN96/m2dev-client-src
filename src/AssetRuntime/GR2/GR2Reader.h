@@ -15,15 +15,29 @@ struct Vertex
 struct MeshData { std::vector<Vertex> vertices; std::vector<std::uint32_t> indices; };
 struct Curve { std::uint32_t degree{}, dimension{}; std::vector<float> knots, controls; };
 struct TransformTrack { std::string name; Curve translation, rotation, scale; };
+struct PeriodicLoop
+{
+    float radius{},dAngle{},dZ{};
+    std::array<float,3> basisX{},basisY{},axis{};
+};
+struct RootMotion
+{
+    std::array<float,3> velocity{};
+    std::optional<PeriodicLoop> periodic;
+    bool Delta(float elapsed,std::array<float,3>& translation,std::array<float,3>& rotation) const;
+};
 struct TrackGroup
 {
     std::string name;
     LocalTransform initialPlacement;
     std::int32_t accumulationFlags{};
     std::array<float,3> loopTranslation{};
+    std::optional<PeriodicLoop> periodicLoop;
     std::vector<TransformTrack> tracks;
 };
 struct AnimationData { std::vector<TrackGroup> groups; };
+const TransformTrack* FindTransformTrack(const TrackGroup&,std::string_view name);
+int CompareTrackNames(std::string_view,std::string_view) noexcept;
 struct ModelData
 {
     LocalTransform initialPlacement;
