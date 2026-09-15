@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "Renderer/GraphicsConfig.h"
 #include "eterBase/Error.h"
 #include "eterlib/Camera.h"
 #include "eterlib/AttributeInstance.h"
@@ -283,6 +284,7 @@ void CPythonApplication::UpdateGame()
 
 bool CPythonApplication::Process()
 {
+    m_pySystem.FlushGraphicsSettings();
     if(AssetRuntime::AnimationStallAudit::fullCapture && !AssetRuntime::AnimationStallAudit::explicitPhase) {
         auto* actor=m_kChrMgr.GetMainInstancePtr();
         AssetRuntime::AnimationStallAudit::capturePhase=!m_pyNetworkStream.IsGamePhaseForDiagnostics()?0:
@@ -555,7 +557,7 @@ bool CPythonApplication::Process()
 						s_fAveRenderTime=(s_fAveRenderTime*(100.0f-fRatio)+std::max(16.0f, (float)m_dwCurRenderTime)*fRatio)/100.0f;
 
 
-						float fFar=25600.0f;
+						float fFar=Renderer::GetGraphicsRuntimeConfig().viewDistance;
 						float fNear=MIN_FOG;
 						double dbAvePow=double(1000.0f/s_fAveRenderTime);
 						double dbMaxPow=60.0;
@@ -571,7 +573,7 @@ bool CPythonApplication::Process()
 				else
 				{
 					// 10000 Æú¸®°ï º¸´Ù ÀûÀ»¶§´Â °¡Àå ¸Ö¸® º¸ÀÌ°Ô ÇÑ´Ù
-					m_pyBackground.SetViewDistanceSet(0, 25600.0f);
+					m_pyBackground.SetViewDistanceSet(0, Renderer::GetGraphicsRuntimeConfig().viewDistance);
 				}
 
 				++s_dwRenderFrameCount;

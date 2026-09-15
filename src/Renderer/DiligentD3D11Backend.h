@@ -1,6 +1,7 @@
 #pragma once
 
 #include "IRenderBackend.h"
+#include "GraphicsConfig.h"
 #include <memory>
 #include <vector>
 
@@ -21,6 +22,7 @@ public:
     bool Resize(uint32_t width, uint32_t height) override;
     void Shutdown() override;
     bool CaptureRGB(std::vector<uint8_t>& pixels,uint32_t& width,uint32_t& height);
+    const Graphics::GraphicsRuntimeConfig& GetGraphicsConfig() const { return m_graphicsConfig; }
 
 private:
     friend class BackendTestAccess;
@@ -29,5 +31,6 @@ private:
     friend class DiligentEffectRenderer; // ZiiNAN: Diligent effect rendering integration.
     struct Impl;
     std::unique_ptr<Impl> m_impl;
+    Graphics::GraphicsRuntimeConfig m_graphicsConfig;
 };
 }

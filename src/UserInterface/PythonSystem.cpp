@@ -2,6 +2,51 @@
 #include "PythonSystem.h"
 #include "Platform/PlatformFilesystem.h"
 #include "PythonApplication.h"
+#include "Graphics/GraphicsSettingsFile.h"
+#include "Renderer/GraphicsConfig.h"
+
+bool CPythonSystem::ApplyGraphicsSettings(Graphics::GraphicsSettings settings)
+{
+    return m_graphics.ApplyGraphicsSettings(settings);
+}
+
+bool CPythonSystem::ApplyGraphicsPreset(Graphics::GraphicsPreset preset)
+{
+    return m_graphics.ApplyGraphicsPreset(preset);
+}
+
+bool CPythonSystem::LoadGraphicsSettings()
+{
+    if (!m_graphics.IsOwnerThread()) return false;
+    std::string error;
+    const auto loaded = Graphics::LoadGraphicsSettingsFile(
+        Platform::Filesystem::Join(Platform::Filesystem::ConfigDirectory(), "graphics.cfg"),
+        Graphics::MigrateLegacy(m_Config.iShadowLevel, m_Config.iFogLevel), error);
+    m_graphics.LoadGraphicsSettings(loaded.settings);
+    if (!error.empty()) TraceError("Graphics Settings: %s", error.c_str());
+    return error.empty();
+}
+
+bool CPythonSystem::SaveGraphicsSettings()
+{
+    if (!m_graphics.IsOwnerThread()) return false;
+    std::string error;
+    const bool saved = Graphics::SaveGraphicsSettingsFile(
+        Platform::Filesystem::Join(Platform::Filesystem::ConfigDirectory(), "graphics.cfg"), GetGraphicsSettings(), error);
+    if (!saved) TraceError("Graphics Settings: %s", error.c_str());
+    return saved;
+}
+
+void CPythonSystem::FlushGraphicsSettings()
+{
+    if (!m_graphics.IsOwnerThread()) return;
+    const auto event = m_graphics.ConsumeChanges();
+    if (!event.fields) return;
+    Renderer::ApplyGraphicsRuntimeConfig(event.runtime);
+    if (event.Has(Graphics::ShadowsChanged)) CPythonBackground::Instance().RefreshShadowLevel();
+    if (event.Has(Graphics::ViewDistanceChanged))
+        CPythonBackground::Instance().SetViewDistanceSet(0, event.runtime.viewDistance);
+}
 
 #define DEFAULT_VALUE_ALWAYS_SHOW_NAME		true
 
@@ -214,24 +259,27 @@ int CPythonSystem::GetDistance()
 
 int CPythonSystem::GetShadowLevel()
 {
-	return m_Config.iShadowLevel;
+	return int(GetGraphicsSettings().shadows);
 }
 
 void CPythonSystem::SetShadowLevel(unsigned int level)
 {
-	m_Config.iShadowLevel = MIN(level, 5);
-	CPythonBackground::instance().RefreshShadowLevel();
+    auto settings = GetGraphicsSettings();
+    settings.shadows = static_cast<Graphics::ShadowQuality>(std::min(level, 5u));
+    ApplyGraphicsSettings(settings);
 }
 
 // MR-14: Fog update by Alaric
 int CPythonSystem::GetFogLevel()
 {
-	return m_Config.iFogLevel;
+	return GetGraphicsSettings().fogLevel;
 }
 
 void CPythonSystem::SetFogLevel(unsigned int level)
 {
-	m_Config.iFogLevel = MIN(level, 2);
+    auto settings = GetGraphicsSettings();
+    settings.fogLevel = int(std::min(level, 2u));
+    ApplyGraphicsSettings(settings);
 }
 // MR-14: -- END OF -- Fog update by Alaric
 
@@ -261,12 +309,19 @@ void CPythonSystem::SetSaveID(int iValue, const char * c_szSaveID)
 
 CPythonSystem::TConfig * CPythonSystem::GetConfig()
 {
+    // Compatibility mirror for the old Python config tuple; never a renderer source.
+    m_Config.iShadowLevel = GetShadowLevel();
+    m_Config.iFogLevel = GetFogLevel();
 	return &m_Config;
 }
 
 void CPythonSystem::SetConfig(TConfig * pNewConfig)
 {
 	m_Config = *pNewConfig;
+    auto settings = GetGraphicsSettings();
+    settings.shadows = static_cast<Graphics::ShadowQuality>(m_Config.iShadowLevel);
+    settings.fogLevel = m_Config.iFogLevel;
+    ApplyGraphicsSettings(settings);
 }
 
 void CPythonSystem::SetDefaultConfig()
@@ -297,6 +352,7 @@ void CPythonSystem::SetDefaultConfig()
 	m_Config.bAlwaysShowName	= DEFAULT_VALUE_ALWAYS_SHOW_NAME;
 	m_Config.bShowDamage		= true;
 	m_Config.bShowSalesText		= true;
+    m_OldConfig = m_Config;
 }
 
 bool CPythonSystem::IsWindowed()
@@ -386,8 +442,8 @@ bool CPythonSystem::LoadConfig()
 
 	while (fgets(buf, 256, fp))
 	{
-		if (sscanf(buf, " %s %s\n", command, value) == EOF)
-			break;
+		if (sscanf(buf, " %255s %255s", command, value) != 2)
+			continue;
 
 		if (!stricmp(command, "WIDTH"))
 			m_Config.width		= atoi(value);
@@ -412,7 +468,10 @@ bool CPythonSystem::LoadConfig()
 		else if (!stricmp(command, "IS_SAVE_ID"))
 			m_Config.isSaveID = atoi(value);
 		else if (!stricmp(command, "SAVE_ID"))
-			strncpy(m_Config.SaveID, value, 20);
+        {
+            strncpy(m_Config.SaveID, value, sizeof(m_Config.SaveID) - 1);
+            m_Config.SaveID[sizeof(m_Config.SaveID) - 1] = '\0';
+        }
 		else if (!stricmp(command, "PRE_LOADING_DELAY_TIME"))
 			g_iLoadingDelayTime = atoi(value);
 		else if (!stricmp(command, "WINDOWED"))
@@ -483,6 +542,9 @@ bool CPythonSystem::LoadConfig()
 
 bool CPythonSystem::SaveConfig()
 {
+    const bool graphicsSaved = SaveGraphicsSettings();
+    m_Config.iShadowLevel = GetShadowLevel();
+    m_Config.iFogLevel = GetFogLevel();
 	FILE *fp;
 
 	if (NULL == (fp = Platform::Filesystem::OpenCFile(Platform::Filesystem::Join(Platform::Filesystem::ConfigDirectory(), "metin2.cfg").c_str(), "wt")))
@@ -537,7 +599,7 @@ bool CPythonSystem::SaveConfig()
 	fprintf(fp, "\n");
 
 	fclose(fp);
-	return true;
+	return graphicsSaved;
 }
 
 bool CPythonSystem::LoadInterfaceStatus()
@@ -658,6 +720,7 @@ CPythonSystem::CPythonSystem()
 	SetDefaultConfig();
 
 	LoadConfig();
+	LoadGraphicsSettings();
 
 	ChangeSystem();
 

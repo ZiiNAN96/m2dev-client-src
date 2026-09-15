@@ -62,7 +62,7 @@ struct Instance {
     Instance(AssetPtr,const Matrix&,std::uint64_t stableId=0);
     ~Instance(){--liveInstances;}
     Instance(const Instance&)=delete;Instance& operator=(const Instance&)=delete;
-    bool Update(const Vec3& camera,std::span<const std::array<float,4>> planes={});
+    bool Update(const Vec3& camera,std::span<const std::array<float,4>> planes={},float distanceScale=1.f);
 };
 using ReadFile=std::function<bool(std::string_view,std::vector<std::byte>&)>;
 struct LoadResult { AssetPtr asset;std::string error;explicit operator bool()const{return bool(asset);} };

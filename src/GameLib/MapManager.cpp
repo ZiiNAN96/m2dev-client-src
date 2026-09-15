@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "Renderer/GraphicsConfig.h"
 #include "EterLib/DrawStateView.h"
 #include "EterLib/DrawState.h"
 #include "PackLib/PackManager.h"
@@ -8,18 +9,6 @@
 
 #include "PropertyLoader.h"
 
-// MR-14: Fog update by Alaric
-// Not the proper way to handle this but I'm lazy
-#ifdef _DEBUG
-	#undef _DEBUG
-	#include <python/python.h>
-	#define _DEBUG
-#else
-	#include <python/python.h>
-#endif
-
-#include "UserInterface/PythonSystem.h"
-// MR-14: -- END OF -- Fog update by Alaric
 
 //////////////////////////////////////////////////////////////////////////
 // 기본 함수
@@ -266,12 +255,11 @@ void CMapManager::BeginEnvironment()
 		const DWORD dwFogColor = mc_pcurEnvironmentData->FogColor;
 		DRAWSTATE.SetRenderState(Renderer::StateFogColor, dwFogColor);
 
-		const int iFogLevel = CPythonSystem::Instance().GetFogLevel(); // 2=Dense,1=Middle,0=Light
+		const auto& graphics = Renderer::GetGraphicsRuntimeConfig();
 
 		if (mc_pcurEnvironmentData->bDensityFog && (mc_pcurEnvironmentData->bFogLevel != 0))
 		{
-			const float fFogDensityLevel[3] = { 0.000006f, 0.000004f, 0.000002f };
-			float fDensity = mc_pcurEnvironmentData->bFogLevel * fFogDensityLevel[iFogLevel];
+			float fDensity = mc_pcurEnvironmentData->bFogLevel * graphics.fogDensity;
 
 			DRAWSTATE.SetRenderState(Renderer::StateFogVertexMode, Renderer::FogExp);			// pixel fog
 			DRAWSTATE.SetRenderState(Renderer::StateFogDensity, *((DWORD *) &fDensity));	// vertex fog
@@ -279,13 +267,12 @@ void CMapManager::BeginEnvironment()
 		}
 		else
 		{
-			const float fFogScaleLevel[3] = { 0.75f, 1.0f, 1.25f };
 
 			float fFogNear = mc_pcurEnvironmentData->GetFogNearDistance();
 			float fFogFar = mc_pcurEnvironmentData->GetFogFarDistance();
 
-			fFogNear *= fFogScaleLevel[iFogLevel];
-			fFogFar  *= fFogScaleLevel[iFogLevel];
+			fFogNear *= graphics.fogDistanceScale;
+			fFogFar  *= graphics.fogDistanceScale;
 
 
 			DRAWSTATE.SetRenderState(Renderer::StateFogVertexMode, Renderer::FogLinear);		// vertex fox

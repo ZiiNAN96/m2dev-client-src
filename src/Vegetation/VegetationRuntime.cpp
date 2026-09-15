@@ -52,9 +52,10 @@ bool ValidCompiledPath(std::string_view path,std::string_view ext){
 Instance::Instance(AssetPtr a,const Matrix& m,std::uint64_t id):asset(std::move(a)),transform(m),phase(WindPhase(m,id)){
     if(!asset||!ValidTransform(m))throw std::invalid_argument("invalid vegetation instance");++liveInstances;
 }
-bool Instance::Update(const Vec3& camera,std::span<const std::array<float,4>> planes){
+bool Instance::Update(const Vec3& camera,std::span<const std::array<float,4>> planes,float distanceScale){
     double squared=0;for(unsigned i=0;i<3;++i){const double d=double(camera[i])-transform[12+i];squared+=d*d;}
-    const float distance=static_cast<float>(std::sqrt(squared));
+    if(!std::isfinite(distanceScale)||distanceScale<=0){lod={};return false;}
+    const float distance=static_cast<float>(std::sqrt(squared))/distanceScale;
     if(!std::isfinite(distance)||distance>asset->metadata.cullDistance||!Visible(TransformBounds(asset->metadata.renderBounds,transform),planes)){lod={};return false;}
     lod=SelectLOD(asset->metadata,distance);return true;
 }

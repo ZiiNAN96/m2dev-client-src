@@ -331,8 +331,8 @@ PyObject * backgroundSetShadowLevel(PyObject * poSelf, PyObject * poArgs)
 	if (!PyTuple_GetInteger(poArgs, 0, &iLevel))
 		return Py_BadArgument();
 
-	CPythonBackground& rkBG = CPythonBackground::Instance();
-	rkBG.SetShadowLevel(iLevel);
+    if (iLevel < 0 || iLevel > 5) return Py_BadArgument();
+    CPythonSystem::Instance().SetShadowLevel(static_cast<unsigned>(iLevel));
 	return Py_BuildNone();
 }
 

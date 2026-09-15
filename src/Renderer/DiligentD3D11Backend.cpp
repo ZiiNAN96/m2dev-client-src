@@ -48,6 +48,8 @@ bool DiligentD3D11Backend::BeginFrame()
 {
     if (!m_impl || m_impl->suspended || m_impl->inFrame)
         return false;
+    const auto& config = GetGraphicsRuntimeConfig();
+    if (m_graphicsConfig.revision != config.revision) m_graphicsConfig = config;
     auto* target = m_impl->swapChain->GetCurrentBackBufferRTV();
     auto* depth = m_impl->swapChain->GetDepthBufferDSV();
     if (!target || !depth)

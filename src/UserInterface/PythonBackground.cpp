@@ -14,6 +14,7 @@
 #include "PythonNetworkStream.h"
 #include "PythonMiniMap.h"
 #include "PythonSystem.h"
+#include "Renderer/GraphicsConfig.h"
 
 std::string g_strEffectName = "d:/ymir work/effect/etc/direction/direction_land.mse";
 
@@ -71,7 +72,7 @@ void CPythonBackground::ReleaseCharacterShadowTexture()
 
 void CPythonBackground::RefreshShadowLevel()
 {
-	SetShadowLevel(CPythonSystem::Instance().GetShadowLevel());
+	SetShadowLevel(Renderer::GetGraphicsRuntimeConfig().legacyShadowLevel);
 }
 
 bool CPythonBackground::SetShadowLevel(int eLevel)
@@ -129,6 +130,7 @@ bool CPythonBackground::SetShadowLevel(int eLevel)
 
 void CPythonBackground::SelectViewDistanceNum(int eNum)
 {
+    if (eNum < 0 || eNum >= 5) return;
 	if (!m_pkMap)
 		return;
 	
@@ -156,6 +158,7 @@ void CPythonBackground::SelectViewDistanceNum(int eNum)
 
 void CPythonBackground::SetViewDistanceSet(int eNum, float fFarClip)
 {
+    if (eNum < 0 || eNum >= 5 || !std::isfinite(fFarClip) || fFarClip <= 0) return;
 	if (!m_pkMap)
 		return;
 	

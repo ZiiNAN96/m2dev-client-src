@@ -1,6 +1,7 @@
 #pragma once
 #include "Renderer/ResourceData.h"
 #include "Renderer/SkinningData.h"
+#include "Graphics/GraphicsSettings.h"
 #include <ostream>
 
 namespace Renderer
@@ -8,6 +9,7 @@ namespace Renderer
 // ZiiNAN: Removed final D3D9 compile-time dependency. Report actual CPU owners only.
 inline void WriteSourceResourceAudit(std::ostream& output)
 {
+    output << "GraphicsSettingsObjects=" << Graphics::liveSettingsStores << std::endl;
     output << "SourceTextures=" << liveSourceTextures
            << " SourceBuffers=" << liveSourceBuffers << std::endl;
     // ZiiNAN: GPU skinning static mesh data

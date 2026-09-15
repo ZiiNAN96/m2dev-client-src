@@ -1,4 +1,5 @@
 #pragma once
+#include "Graphics/GraphicsSettings.h"
 
 class CPythonSystem : public CSingleton<CPythonSystem>
 {
@@ -85,6 +86,13 @@ class CPythonSystem : public CSingleton<CPythonSystem>
 		virtual ~CPythonSystem();
 
 		void Clear();
+
+        const Graphics::GraphicsSettings& GetGraphicsSettings() const { return m_graphics.GetGraphicsSettings(); }
+        bool ApplyGraphicsSettings(Graphics::GraphicsSettings settings);
+        bool ApplyGraphicsPreset(Graphics::GraphicsPreset preset);
+        bool LoadGraphicsSettings();
+        bool SaveGraphicsSettings();
+        void FlushGraphicsSettings(); // Called once at the main-thread frame boundary.
 		void SetInterfaceHandler(PyObject * poHandler);
 		void DestroyInterfaceHandler();
 
@@ -158,6 +166,7 @@ class CPythonSystem : public CSingleton<CPythonSystem>
 		// MR-14: -- END OF -- Fog update by Alaric
 
 	protected:
+        Graphics::Store m_graphics;
 		TResolution						m_ResolutionList[RESOLUTION_MAX_NUM];
 		int								m_ResolutionCount;
 

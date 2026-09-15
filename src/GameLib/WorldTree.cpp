@@ -7,6 +7,7 @@
 #include "EterBase/Timer.h"
 #include "PackLib/PackManager.h"
 #include "Renderer/Diagnostics.h"
+#include "Renderer/GraphicsConfig.h"
 #include "Renderer/StaticObjectRenderData.h"
 #include <fstream>
 #include <algorithm>
@@ -43,6 +44,7 @@ Vegetation::RenderContext Context(bool blocker){
     Vegetation::RenderContext c;Math::Matrix view,projection;DRAWSTATE.GetTransform(Renderer::MatrixView,&view);DRAWSTATE.GetTransform(Renderer::MatrixProjection,&projection);std::memcpy(c.view.data(),&view,64);std::memcpy(c.projection.data(),&projection,64);
     if(auto*camera=CCameraManager::Instance().GetCurrentCamera()){const auto&e=camera->GetEye();c.camera={e.x,e.y,e.z};}
     c.time=CTimer::Instance().GetCurrentSecond();c.windStrength=World().windStrength;
+    c.distanceScale=Renderer::GetGraphicsRuntimeConfig().vegetationDistanceScale;
     auto&d=c.state;d.depthWrite=true;d.blend=blocker;d.sampling={true,true,true,true,true,true};d.cameraAlphaSampling=d.sampling;
     if(!blocker&&DRAWSTATE.GetRenderState(Renderer::StateFogEnable)){
         d.fog=static_cast<Renderer::TerrainFog>(DRAWSTATE.GetRenderState(Renderer::StateFogVertexMode));d.rangeFog=DRAWSTATE.GetRenderState(Renderer::StateRangeFogEnable)!=0;

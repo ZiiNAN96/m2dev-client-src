@@ -25,7 +25,7 @@ std::shared_ptr<const RenderAsset> Prepare(AssetPtr asset,::Renderer::IStaticObj
 bool Draw(Instance&instance,const RenderAsset&asset,::Renderer::IStaticObjectRenderer&renderer,const RenderContext&context){
     if(instance.asset!=asset.asset)return false;
     const auto previous=instance.lod.meshes;
-    if(!instance.Update(context.camera)){++statistics.culled;return false;}
+    if(!instance.Update(context.camera,{},context.distanceScale)){++statistics.culled;return false;}
     if(previous!=instance.lod.meshes)++statistics.lodChanges;
     const auto model=instance.asset->geometry.Model(0);
     for(unsigned slot=0;slot<5;++slot){const int index=instance.lod.meshes[slot];if(index<0)continue;

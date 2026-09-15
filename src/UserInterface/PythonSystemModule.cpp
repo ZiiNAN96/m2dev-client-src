@@ -1,5 +1,83 @@
 #include "StdAfx.h"
 #include "PythonSystem.h"
+#include "Renderer/GraphicsConfig.h"
+#ifdef M2_RENDERER_DIAGNOSTICS
+#include "PythonApplication.h"
+#include "../../tests/Graphics/GraphicsClientProbe.h"
+#endif
+
+PyObject* systemGetGraphicsSettings(PyObject*, PyObject*)
+{
+    const auto& s = CPythonSystem::Instance().GetGraphicsSettings();
+    return Py_BuildValue("{s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:f,s:i}",
+        "preset", int(s.preset), "style", int(s.style), "shadows", int(s.shadows),
+        "ambientOcclusion", int(s.ambientOcclusion), "water", int(s.water), "vegetation", int(s.vegetation),
+        "textures", int(s.textures), "hdr", int(s.hdr), "bloom", int(s.bloom), "modernSky", int(s.modernSky),
+        "highQualityFog", int(s.highQualityFog), "viewDistance", s.viewDistance, "fogLevel", s.fogLevel);
+}
+
+PyObject* systemApplyGraphicsSettings(PyObject*, PyObject* args)
+{
+    PyObject* values;
+    if (!PyArg_ParseTuple(args, "O!", &PyDict_Type, &values)) return nullptr;
+    auto s = CPythonSystem::Instance().GetGraphicsSettings();
+    PyObject *key, *value;
+    Py_ssize_t position = 0;
+    while (PyDict_Next(values, &position, &key, &value))
+    {
+        const char* name = PyString_AsString(key);
+        if (!name) return nullptr;
+        if (!strcmp(name, "viewDistance"))
+        {
+            const double distance = PyFloat_AsDouble(value);
+            if (PyErr_Occurred()) return nullptr;
+            s.viewDistance = static_cast<float>(distance);
+            continue;
+        }
+        const long number = PyInt_AsLong(value);
+        if (PyErr_Occurred()) return nullptr;
+        if (number < 0 || number > 5) { PyErr_SetString(PyExc_ValueError, "Invalid graphics option value"); return nullptr; }
+        if (!strcmp(name, "preset")) s.preset = static_cast<Graphics::GraphicsPreset>(number);
+        else if (!strcmp(name, "shadows")) s.shadows = static_cast<Graphics::ShadowQuality>(number);
+        else if (!strcmp(name, "style")) s.style = static_cast<Graphics::GraphicsStyle>(number);
+        else if (!strcmp(name, "ambientOcclusion")) s.ambientOcclusion = static_cast<Graphics::AmbientOcclusionQuality>(number);
+        else if (!strcmp(name, "water")) s.water = static_cast<Graphics::WaterQuality>(number);
+        else if (!strcmp(name, "vegetation")) s.vegetation = static_cast<Graphics::VegetationQuality>(number);
+        else if (!strcmp(name, "textures")) s.textures = static_cast<Graphics::TextureQuality>(number);
+        else if (!strcmp(name, "fogLevel")) s.fogLevel = int(number);
+        else if ((!strcmp(name, "hdr") || !strcmp(name, "bloom") || !strcmp(name, "modernSky") || !strcmp(name, "highQualityFog")) && number <= 1)
+        {
+            if (!strcmp(name, "hdr")) s.hdr = number != 0;
+            if (!strcmp(name, "bloom")) s.bloom = number != 0;
+            if (!strcmp(name, "modernSky")) s.modernSky = number != 0;
+            if (!strcmp(name, "highQualityFog")) s.highQualityFog = number != 0;
+        }
+        else { PyErr_SetString(PyExc_ValueError, "Unknown graphics option; use ApplyGraphicsPreset for presets"); return nullptr; }
+    }
+    return Py_BuildValue("i", int(CPythonSystem::Instance().ApplyGraphicsSettings(s)));
+}
+
+PyObject* systemApplyGraphicsPreset(PyObject*, PyObject* args)
+{
+    int preset;
+    if (!PyArg_ParseTuple(args, "i", &preset)) return nullptr;
+    return Py_BuildValue("i", int(CPythonSystem::Instance().ApplyGraphicsPreset(static_cast<Graphics::GraphicsPreset>(preset))));
+}
+
+PyObject* systemLoadGraphicsSettings(PyObject*, PyObject*)
+{ return Py_BuildValue("i", int(CPythonSystem::Instance().LoadGraphicsSettings())); }
+PyObject* systemSaveGraphicsSettings(PyObject*, PyObject*)
+{ return Py_BuildValue("i", int(CPythonSystem::Instance().SaveGraphicsSettings())); }
+
+PyObject* systemGetGraphicsRuntimeConfig(PyObject*, PyObject*)
+{
+    const auto& r = Renderer::GetGraphicsRuntimeConfig();
+    return Py_BuildValue("{s:K,s:f,s:f,s:f,s:f,s:i,s:i,s:i,s:i,s:i,s:i}",
+        "revision", static_cast<unsigned long long>(r.revision), "viewDistance", r.viewDistance,
+        "vegetationDistanceScale", r.vegetationDistanceScale, "fogDistanceScale", r.fogDistanceScale,
+        "fogDensity", r.fogDensity, "shadows", int(r.shadows), "ambientOcclusion", int(r.ambientOcclusion),
+        "hdr", int(r.hdr), "bloom", int(r.bloom), "modernSky", int(r.modernSky), "waterFrameMilliseconds", int(r.waterFrameMilliseconds));
+}
 
 PyObject * systemGetWidth(PyObject* poSelf, PyObject* poArgs)
 {
@@ -393,6 +471,15 @@ void initsystem()
 {
 	static PyMethodDef s_methods[] =
 	{
+        { "GetGraphicsSettings", systemGetGraphicsSettings, METH_VARARGS },
+        { "ApplyGraphicsSettings", systemApplyGraphicsSettings, METH_VARARGS },
+        { "ApplyGraphicsPreset", systemApplyGraphicsPreset, METH_VARARGS },
+        { "LoadGraphicsSettings", systemLoadGraphicsSettings, METH_VARARGS },
+        { "SaveGraphicsSettings", systemSaveGraphicsSettings, METH_VARARGS },
+        { "GetGraphicsRuntimeConfig", systemGetGraphicsRuntimeConfig, METH_VARARGS },
+#ifdef M2_RENDERER_DIAGNOSTICS
+        { "TestGraphicsWindow", systemTestGraphicsWindow, METH_VARARGS },
+#endif
 		// MR-14: Fog update by Alaric
 		{ "GetFogLevel",				systemGetFogLevel,				METH_VARARGS },
 		{ "SetFogLevel",				systemSetFogLevel,				METH_VARARGS },

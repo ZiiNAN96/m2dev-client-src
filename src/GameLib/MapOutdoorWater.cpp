@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "Renderer/GraphicsConfig.h"
 #include "EterLib/DrawState.h"
 #include "EterLib/ResourceManager.h"
 #include "EterLib/WorldRenderBridge.h"
@@ -45,7 +46,7 @@ void CMapOutdoor::RenderWater()
 	DRAWSTATE.SaveRenderState(Renderer::StateDiffuseMaterialSource, Renderer::MaterialColor1);
 	DRAWSTATE.SaveRenderState(Renderer::StateColorVertex, TRUE);
 
-	const auto waterFrame=(ELTimer_GetMSec()/70)%30;
+	const auto waterFrame=(ELTimer_GetMSec()/Renderer::GetGraphicsRuntimeConfig().waterFrameMilliseconds)%30;
 	DRAWSTATE.SetTexture(0, m_WaterInstances[waterFrame].GetTexturePointer()->GetTextureBinding());
 	WorldRenderBridge::Texture(m_WaterInstances[waterFrame].GetGraphicImagePointer());
 

@@ -19,6 +19,7 @@ std::shared_ptr<const RenderAsset> Prepare(AssetPtr,::Renderer::IStaticObjectRen
 struct RenderContext {
     Matrix view{Identity},projection{Identity};Vec3 camera{};
     float time{},windStrength{1};;
+    float distanceScale{1.f};
     ::Renderer::StaticObjectDraw state;
 };
 bool Draw(Instance&,const RenderAsset&,::Renderer::IStaticObjectRenderer&,const RenderContext&);
