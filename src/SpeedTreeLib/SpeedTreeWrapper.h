@@ -45,6 +45,7 @@
 #include <cstdint>
 
 #include "EterLib/GrpObjectInstance.h"
+#include "EterLib/GrpTreeInstance.h"
 #include "EterLib/GrpImageInstance.h"
 #include "Renderer/TreeRenderData.h" // ZiiNAN: Diligent SpeedTree rendering integration
 
@@ -65,7 +66,7 @@
 #pragma warning(push)
 #pragma warning(disable:4100)
 
-class CSpeedTreeWrapper : public CGraphicObjectInstance, public std::enable_shared_from_this<CSpeedTreeWrapper>
+class CSpeedTreeWrapper : public CWorldTreeInstance, public std::enable_shared_from_this<CSpeedTreeWrapper>
 {
 	using SpeedTreeWrapperPtr = std::shared_ptr <CSpeedTreeWrapper>;
 

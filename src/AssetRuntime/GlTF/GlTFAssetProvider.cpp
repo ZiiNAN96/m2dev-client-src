@@ -540,8 +540,16 @@ private:
     void ImportMaterials(const cgltf_data& data,ModelAsset& model,std::size_t& decoded)
     {
         std::vector<std::shared_ptr<const EncodedImage>> images(data.images_count);
+        std::vector<std::string> packImages(data.images_count);
         for(std::size_t i=0;i<data.images_count;++i) {
             const auto& source=data.images[i];
+            if(source.uri) {
+                const std::string path(source.uri);
+                Supported(!source.buffer_view&&path.starts_with("d:/ymir work/")&&path.ends_with(".dds")&&path.size()<=1024&&
+                    path.find("..") == std::string::npos&&path.find('\\')==std::string::npos&&path.find('%')==std::string::npos&&
+                    std::none_of(path.begin(),path.end(),[](unsigned char c){return c<32;}),"Only canonical DDS pack texture references are supported");
+                packImages[i]=path;continue; // Existing texture cache resolves this key; the provider performs no I/O.
+            }
             Supported(!source.uri && source.buffer_view && source.mime_type, "Images must be embedded GLB PNG/JPEG buffer views");
             const auto bytes=std::span<const std::byte>(View(source.buffer_view),source.buffer_view->size);
             Require(bytes.size()<=MaxAllocation-decoded, "Encoded image allocation limit exceeded"); decoded+=bytes.size();
@@ -573,8 +581,9 @@ private:
                 if(texture.texture) {
                     Require(texture.texture->image, "Base color texture has no image");
                     Supported(texture.texcoord==0 && (!texture.has_transform || !texture.transform.has_texcoord || texture.transform.texcoord==0), "Only TEXCOORD_0 is supported for base color");
-                    material.embeddedImages[0]=images[std::size_t(texture.texture->image-data.images)];
-                    material.textures[0]=material.embeddedImages[0]->id;
+                    const auto imageIndex=std::size_t(texture.texture->image-data.images);
+                    material.embeddedImages[0]=images[imageIndex];
+                    material.textures[0]=material.embeddedImages[0]?material.embeddedImages[0]->id:packImages[imageIndex];
                 }
             }
             model.materials.push_back(std::move(material));
@@ -702,7 +711,17 @@ private:
         const auto* joints=Attribute(primitive,cgltf_attribute_type_joints);
         const auto* weights=Attribute(primitive,cgltf_attribute_type_weights);
         const auto* tangents=Attribute(primitive,cgltf_attribute_type_tangent);
-        Supported(!Attribute(primitive,cgltf_attribute_type_color), "Vertex colors require a future material vertex-color channel");
+        const auto* colors=Attribute(primitive,cgltf_attribute_type_color);
+        const auto* uv1=Attribute(primitive,cgltf_attribute_type_texcoord,1);
+        const cgltf_accessor *pivots=nullptr,*flexibility=nullptr,*pitchCos=nullptr,*pitchSin=nullptr;
+        for(std::size_t a=0;a<primitive.attributes_count;++a) {
+            const auto& attr=primitive.attributes[a];if(!attr.name)continue;
+            const std::string_view name(attr.name);
+            if(name=="_ZIINAN_CARD_PITCH_COS"){Require(!pitchCos,"duplicate card pitch channel");pitchCos=attr.data;}
+            if(name=="_ZIINAN_CARD_PITCH_SIN"){Require(!pitchSin,"duplicate card pitch channel");pitchSin=attr.data;}
+            if(name=="_ZIINAN_PIVOT"){Require(!pivots,"duplicate pivot channel");pivots=attr.data;}
+            if(name=="_ZIINAN_FLEXIBILITY"){Require(!flexibility,"duplicate flexibility channel");flexibility=attr.data;}
+        }
         Require(positions, "Mesh primitive is missing POSITION");
         bool quantized=false;
         for(std::size_t i=0;i<data.extensions_used_count;++i) if(std::string_view(data.extensions_used[i])=="KHR_mesh_quantization") quantized=true;
@@ -723,11 +742,20 @@ private:
                 Require(floating || (quantized && signedSmall && accessor->normalized), "NORMAL/TANGENT must be float or normalized signed quantized data");
             else if(attribute.type==cgltf_attribute_type_texcoord)
                 Require(floating || (unsignedSmall && accessor->normalized) || (quantized && (signedSmall || unsignedSmall)), "Invalid TEXCOORD component type");
+            else if(attribute.type==cgltf_attribute_type_color)
+                Require(attribute.index==0&&(floating||(unsignedSmall&&accessor->normalized)),"Invalid COLOR_0 component type");
+            if(accessor==pivots||accessor==flexibility||accessor==pitchCos||accessor==pitchSin)Require(floating,"Auxiliary deformation channels require floats");
         }
         const auto p=Floats(positions,cgltf_type_vec3,decoded);
         const auto n=normals ? Floats(normals,cgltf_type_vec3,decoded) : std::vector<float>{};
         const auto t=uv ? Floats(uv,cgltf_type_vec2,decoded) : std::vector<float>{};
         const auto tangentValues=tangents ? Floats(tangents,cgltf_type_vec4,decoded) : std::vector<float>{};
+        const auto colorValues=colors?Floats(colors,colors->type==cgltf_type_vec3?cgltf_type_vec3:cgltf_type_vec4,decoded):std::vector<float>{};
+        const auto uv1Values=uv1?Floats(uv1,cgltf_type_vec2,decoded):std::vector<float>{};
+        const auto pivotValues=pivots?Floats(pivots,cgltf_type_vec3,decoded):std::vector<float>{};
+        const auto pitchCosValues=pitchCos?Floats(pitchCos,cgltf_type_vec3,decoded):std::vector<float>{};
+        const auto pitchSinValues=pitchSin?Floats(pitchSin,cgltf_type_vec3,decoded):std::vector<float>{};
+        const auto flexibilityValues=flexibility?Floats(flexibility,cgltf_type_scalar,decoded):std::vector<float>{};
         Require(positions->count*sizeof(Vertex)<=MaxAllocation-decoded,"Mesh vertex allocation limit exceeded");decoded+=positions->count*sizeof(Vertex);
         MeshData buffer;
         buffer.vertices.resize(positions->count);buffer.indices=Indices(primitive.indices,positions->count,decoded);
@@ -771,6 +799,19 @@ private:
         mesh.name=Name(node.name,Name(node.mesh->name,"mesh"))+"/"+std::to_string(model.meshes.size());
         mesh.vertexCount=static_cast<std::uint32_t>(buffer.vertices.size());mesh.indexCount=static_cast<std::uint32_t>(buffer.indices.size());
         mesh.vertexLayout=VertexLayout::PositionNormalUV;mesh.sourceVertexStride=sizeof(Vertex);
+        if(colors||uv1||pivots||flexibility||pitchCos||pitchSin) {
+            Require(buffer.vertices.size()*sizeof(MeshAsset::VertexExtras)<=MaxAllocation-decoded,"Auxiliary vertex allocation limit exceeded");decoded+=buffer.vertices.size()*sizeof(MeshAsset::VertexExtras);
+            mesh.vertexExtrasChannels=(colors?MeshAsset::ColorChannel:0)|(uv1?MeshAsset::UV1Channel:0)|(pivots?MeshAsset::PivotChannel:0)|(flexibility?MeshAsset::FlexibilityChannel:0)|(pitchCos?MeshAsset::CardPitchCosChannel:0)|(pitchSin?MeshAsset::CardPitchSinChannel:0);
+            mesh.vertexExtras.resize(buffer.vertices.size());
+            for(std::size_t v=0;v<buffer.vertices.size();++v){auto& extra=mesh.vertexExtras[v];
+                if(colors){const unsigned width=colors->type==cgltf_type_vec3?3:4;for(unsigned k=0;k<width;++k){extra.color[k]=colorValues[v*width+k];Require(extra.color[k]>=0&&extra.color[k]<=1,"Invalid vertex color");}}
+                if(uv1)extra.uv1={uv1Values[v*2],uv1Values[v*2+1]};
+                if(pivots){extra.pivot=Position(pivotValues.data()+v*3,transform);for(float f:extra.pivot)Require(std::isfinite(f)&&std::abs(f)<1e10f,"Invalid transformed pivot");}
+                if(flexibility){extra.flexibility=flexibilityValues[v];Require(extra.flexibility>=0&&extra.flexibility<=1,"Invalid flexibility");}
+                if(pitchCos)for(unsigned k=0;k<3;++k){extra.cardPitchCos[k]=pitchCosValues[v*3+k];Require(std::abs(extra.cardPitchCos[k])<=4,"Invalid card pitch cosine");}
+                if(pitchSin)for(unsigned k=0;k<3;++k){extra.cardPitchSin[k]=pitchSinValues[v*3+k];Require(std::abs(extra.cardPitchSin[k])<=4,"Invalid card pitch sine");}
+            }
+        }
         if(tangents) {
             Require(buffer.vertices.size()*sizeof(std::array<float,4>)<=MaxAllocation-decoded,"Tangent metadata allocation limit exceeded");
             decoded+=buffer.vertices.size()*sizeof(std::array<float,4>);

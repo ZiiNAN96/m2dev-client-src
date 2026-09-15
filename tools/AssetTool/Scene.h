@@ -38,6 +38,7 @@ struct Vertex {
     Vec2 uv{};
     Vec4 tangent{};
     std::vector<Influence> influences;
+    Vec4 color{1,1,1,1};Vec2 uv1{};Vec3 pivot{};float flexibility{};Vec3 cardPitchCos{},cardPitchSin{};
 };
 struct Mesh {
     std::string name;
@@ -45,6 +46,7 @@ struct Mesh {
     std::vector<std::uint32_t> indices;
     std::uint32_t material{};
     bool hasNormals{}, hasUV{}, hasTangents{}, skinned{};
+    bool hasVertexExtras{};
     Bounds bounds;
 };
 enum class AlphaMode { Opaque, Mask, Blend };
@@ -56,7 +58,7 @@ struct Material {
     float alphaCutoff{0.5f};
     bool doubleSided{};
 };
-struct Image { std::string name, mime; std::vector<std::uint8_t> bytes; std::uint32_t width{}, height{}; };
+struct Image { std::string name, mime; std::vector<std::uint8_t> bytes; std::uint32_t width{}, height{}; std::string packPath; };
 struct Node {
     std::string name;
     int parent{-1};

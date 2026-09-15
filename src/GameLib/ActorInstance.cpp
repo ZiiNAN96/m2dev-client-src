@@ -882,7 +882,8 @@ void CActorInstance::__CreateTree(const char * c_szFileName)
 	__DestroyTree();
 
 	CSpeedTreeForestRenderer& rkForest=CSpeedTreeForestRenderer::Instance();
-	m_pkTree=rkForest.CreateInstance(m_x, m_y, m_z, GetCaseCRC32(c_szFileName, strlen(c_szFileName)), c_szFileName);
+	m_pkTree=CreateWorldTree(m_x, m_y, m_z, GetCaseCRC32(c_szFileName, strlen(c_szFileName)), c_szFileName);
+	if (!m_pkTree) return;
 	m_pkTree->SetPosition(m_x, m_y, m_z);
 	m_pkTree->UpdateBoundingSphere();
 	m_pkTree->UpdateCollisionData();
@@ -893,7 +894,7 @@ void CActorInstance::__DestroyTree()
 	if (!m_pkTree)
 		return;
 
-	CSpeedTreeForestRenderer::Instance().DeleteInstance(m_pkTree);
+	DeleteWorldTree(m_pkTree);
 }
 
 void CActorInstance::__SetTreePosition(float fx, float fy, float fz)

@@ -12,6 +12,7 @@
 #include "SpeedTreeForest.h"
 #include "SpeedTreeConfig.h"
 #include <cfloat>
+#include "Vegetation/VegetationRenderer.h"
 
 using namespace std;
 
@@ -26,7 +27,7 @@ CSpeedTreeForest::CSpeedTreeForest() :
 					0.2f, 0.2f, 0.2f, 1.0f,  // ambient
 					0.8f, 0.8f, 0.8f, 1.0f } // diffuse
 {
-	CSpeedTreeRT::SetNumWindMatrices(c_nNumWindMatrices);
+    if(!Vegetation::NativeEnabled()){++Vegetation::statistics.referenceEntries;CSpeedTreeRT::SetNumWindMatrices(c_nNumWindMatrices);}
 
 	m_afForestExtents[0] = m_afForestExtents[1] = m_afForestExtents[2] = FLT_MAX;
 	m_afForestExtents[3] = m_afForestExtents[4] = m_afForestExtents[5] = -FLT_MAX;
@@ -131,6 +132,8 @@ void CSpeedTreeForest::DeleteInstance(SpeedTreeWrapperPtr pInstance)
 
 void CSpeedTreeForest::UpdateSystem(float fCurrentTime)
 {
+    if(Vegetation::NativeEnabled())return;
+    ++Vegetation::statistics.referenceEntries;
 	// 업데이트 할 때 한번
 	static float fLastTime = fCurrentTime;
 	float fElapsedTime = fCurrentTime - fLastTime;
@@ -159,6 +162,7 @@ void CSpeedTreeForest::AdjustExtents(float x, float y, float z)
 //	CSpeedTreeForest::SetWindStrength
 void CSpeedTreeForest::SetWindStrength(float fStrength)
 {
+    if(Vegetation::NativeEnabled())return;
 	if (m_fWindStrength == fStrength)
 		return;
 

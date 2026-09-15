@@ -1,3 +1,4 @@
+#include "WorldTree.h"
 #pragma once
 
 #include "SpeedTreeLib/SpeedTreeWrapper.h"
@@ -91,7 +92,7 @@ class CArea
 			CAttributeInstance *		pAttributeInstance;
 
 			// Data For Tree
-			CSpeedTreeForest::SpeedTreeWrapperPtr			pTree;
+			WorldTreePtr			pTree;
 
 			// Data For Normal Object or Building
 			BOOL						isShadowFlag;
@@ -153,7 +154,7 @@ class CArea
 			}
 		} TObjectInstance;
 
-		typedef std::vector<CSpeedTreeForest::SpeedTreeWrapperPtr>			TTreeInstanceVector;
+		typedef std::vector<WorldTreePtr>			TTreeInstanceVector;
 		typedef std::vector<CGraphicThingInstance *>		TThingInstanceVector;
 		typedef std::vector<CDungeonBlock *>				TDungeonBlockInstanceVector;
 		typedef std::vector<TObjectInstance *>				TObjectInstanceVector;

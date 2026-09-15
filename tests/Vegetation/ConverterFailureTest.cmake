@@ -1,0 +1,13 @@
+file(MAKE_DIRECTORY "${OUTPUT}")
+file(WRITE "${OUTPUT}/corrupt.spt" "not a SpeedTree file\n")
+foreach(name missing corrupt)
+    execute_process(COMMAND "${TOOL}" convert "${OUTPUT}/${name}.spt" "${OUTPUT}/${name}-output" "d:/ymir work/tree/${name}.spt"
+        RESULT_VARIABLE result OUTPUT_VARIABLE stdout ERROR_VARIABLE stderr TIMEOUT 10)
+    if(NOT result STREQUAL "1")
+        message(FATAL_ERROR "${name} SPT must exit 1 without a process crash: ${result}; ${stderr}")
+    endif()
+    if(EXISTS "${OUTPUT}/${name}-output/vegetation/registry.json")
+        message(FATAL_ERROR "Failed conversion published a registry")
+    endif()
+endforeach()
+message(STATUS "PASS: missing/corrupt source rejected, bounded exit 1, no registry published")

@@ -123,6 +123,17 @@ struct MeshAsset
     SkinningAsset skin;
     bool twoSided{};
     std::vector<std::array<float, 4>> tangents; // Optional transformed tangent + bitangent handedness metadata.
+    // Optional immutable vertex channels; consumed only by renderers that request them.
+    struct VertexExtras {
+        std::array<float,4> color{1,1,1,1};
+        std::array<float,2> uv1{};
+        std::array<float,3> pivot{};
+        float flexibility{};
+        std::array<float,3> cardPitchCos{},cardPitchSin{};
+    };
+    enum AuxiliaryChannel : std::uint32_t { ColorChannel=1, UV1Channel=2, PivotChannel=4, FlexibilityChannel=8, CardPitchCosChannel=16, CardPitchSinChannel=32 };
+    std::uint32_t vertexExtrasChannels{};
+    std::vector<VertexExtras> vertexExtras;
 };
 struct ModelAsset
 {

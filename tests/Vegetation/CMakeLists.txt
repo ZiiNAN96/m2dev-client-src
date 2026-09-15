@@ -1,0 +1,6 @@
+add_executable(VegetationRuntimeTest RuntimeTest.cpp)
+target_link_libraries(VegetationRuntimeTest PRIVATE VegetationRuntime M2FirstPartyArchitectureChecks)
+add_test(NAME Vegetation.Contracts COMMAND VegetationRuntimeTest)
+set_tests_properties(Vegetation.Contracts PROPERTIES TIMEOUT 20 LABELS "vegetation;portable;fast;hx")
+add_test(NAME Vegetation.Boundary COMMAND ${CMAKE_COMMAND} -DSOURCE_ROOT=${CMAKE_SOURCE_DIR} -P ${CMAKE_CURRENT_SOURCE_DIR}/BoundaryTest.cmake)
+set_tests_properties(Vegetation.Boundary PROPERTIES TIMEOUT 10 LABELS "vegetation;portable;fast;hx")

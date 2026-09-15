@@ -40,6 +40,7 @@
 #include "SpeedTreeForestRenderer.h"
 #include "SpeedTreeConfig.h"
 #include "TreeVertexData.h"
+#include "Vegetation/VegetationRenderer.h"
 
 ///////////////////////////////////////////////////////////////////////  
 //	CSpeedTreeForestRenderer::CSpeedTreeForestRenderer
@@ -63,6 +64,8 @@ CSpeedTreeForestRenderer::~CSpeedTreeForestRenderer()
 
 bool CSpeedTreeForestRenderer::InitializeLighting()
 {
+    if(Vegetation::NativeEnabled())return true;
+    ++Vegetation::statistics.referenceEntries;
 
 	const float c_afLightPosition[4] = { -0.707f, -0.300f, 0.707f, 0.0f };
 	const float	c_afLightAmbient[4] = { 0.5f, 0.5f, 0.5f, 1.0f };
@@ -118,6 +121,8 @@ void CSpeedTreeForestRenderer::UpdateCompundMatrix(const Math::Vector3& c_rEyeVe
 
 void CSpeedTreeForestRenderer::Render(unsigned long ulRenderBitVector)
 {
+    if(Vegetation::NativeEnabled())return;
+    ++Vegetation::statistics.referenceEntries;
     // ZiiNAN: Diligent SpeedTree rendering integration; exclude shadow/minimap passes.
     Renderer::TreeDrawScope treeScope(!(ulRenderBitVector & (Forest_RenderToShadow | Forest_RenderToMiniMap)));
 	UpdateSystem(CTimer::Instance().GetCurrentSecond());

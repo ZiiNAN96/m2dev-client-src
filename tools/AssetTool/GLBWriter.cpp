@@ -68,7 +68,9 @@ struct Writer {
         for (std::size_t i=0;i<images.size();++i) {
             const auto& input=src.images[i];
             images[i].name=Name(input.name); images[i].mime_type=Name(input.mime);
-            images[i].buffer_view=View(input.bytes.data(),input.bytes.size()); textures[i].image=&images[i];
+            if(!input.packPath.empty()){images[i].mime_type=nullptr;images[i].uri=Name(input.packPath);}
+            else images[i].buffer_view=View(input.bytes.data(),input.bytes.size());
+            textures[i].image=&images[i];
         }
         for (std::size_t i=0;i<materials.size();++i) {
             const auto& input=src.materials[i]; auto& m=materials[i];
@@ -84,7 +86,7 @@ struct Writer {
             mesh.name=Name(input.name); mesh.primitives=&p; mesh.primitives_count=1;
             p.type=cgltf_primitive_type_triangles; p.material=&materials.at(input.material);
             p.indices=Accessor(input.indices.data(),input.indices.size(),cgltf_type_scalar,cgltf_component_type_r_32u,4);
-            attrs.reserve(6);
+            attrs.reserve(12);
             auto add=[&](const char* name,cgltf_attribute_type type,cgltf_accessor* accessor) {
                 cgltf_attribute a{}; a.name=const_cast<char*>(name); a.type=type; a.data=accessor; attrs.push_back(a);
             };
@@ -105,6 +107,16 @@ struct Writer {
             if(input.hasNormals) add("NORMAL",cgltf_attribute_type_normal,Accessor(normals.data(),normals.size(),cgltf_type_vec3,cgltf_component_type_r_32f,12));
             if(input.hasUV) add("TEXCOORD_0",cgltf_attribute_type_texcoord,Accessor(uv.data(),uv.size(),cgltf_type_vec2,cgltf_component_type_r_32f,8));
             if(input.hasTangents) add("TANGENT",cgltf_attribute_type_tangent,Accessor(tangent.data(),tangent.size(),cgltf_type_vec4,cgltf_component_type_r_32f,16));
+            if(input.hasVertexExtras) {
+                std::vector<Vec4> colors;std::vector<Vec2> uv1;std::vector<Vec3> pivots,pitchCos,pitchSin;std::vector<float> flexibility;
+                for(const auto& v:input.vertices){colors.push_back(v.color);uv1.push_back(v.uv1);pivots.push_back(v.pivot);flexibility.push_back(v.flexibility);pitchCos.push_back(v.cardPitchCos);pitchSin.push_back(v.cardPitchSin);}
+                add("COLOR_0",cgltf_attribute_type_color,Accessor(colors.data(),colors.size(),cgltf_type_vec4,cgltf_component_type_r_32f,16));
+                add("TEXCOORD_1",cgltf_attribute_type_texcoord,Accessor(uv1.data(),uv1.size(),cgltf_type_vec2,cgltf_component_type_r_32f,8));attrs.back().index=1;
+                add("_ZIINAN_PIVOT",cgltf_attribute_type_custom,Accessor(pivots.data(),pivots.size(),cgltf_type_vec3,cgltf_component_type_r_32f,12));
+                add("_ZIINAN_FLEXIBILITY",cgltf_attribute_type_custom,Accessor(flexibility.data(),flexibility.size(),cgltf_type_scalar,cgltf_component_type_r_32f,4));
+                add("_ZIINAN_CARD_PITCH_COS",cgltf_attribute_type_custom,Accessor(pitchCos.data(),pitchCos.size(),cgltf_type_vec3,cgltf_component_type_r_32f,12));
+                add("_ZIINAN_CARD_PITCH_SIN",cgltf_attribute_type_custom,Accessor(pitchSin.data(),pitchSin.size(),cgltf_type_vec3,cgltf_component_type_r_32f,12));
+            }
             if(input.skinned) {
                 add("JOINTS_0",cgltf_attribute_type_joints,Accessor(jointIndices.data(),jointIndices.size(),cgltf_type_vec4,cgltf_component_type_r_16u,8));
                 add("WEIGHTS_0",cgltf_attribute_type_weights,Accessor(weights.data(),weights.size(),cgltf_type_vec4,cgltf_component_type_r_32f,16));

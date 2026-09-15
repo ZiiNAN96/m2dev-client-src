@@ -50,6 +50,7 @@
 #include "TreeRenderBridge.h" // ZiiNAN: Diligent SpeedTree rendering integration
 
 #include <filesystem>
+#include "Vegetation/VegetationRenderer.h"
 
 using namespace std;
 
@@ -287,6 +288,7 @@ CSpeedTreeWrapper::~CSpeedTreeWrapper()
 //	CSpeedTreeWrapper::LoadTree
 bool CSpeedTreeWrapper::LoadTree(const char * pszSptFile, const BYTE * c_pbBlock, unsigned int uiBlockSize, UINT nSeed, float fSize, float fSizeVariance)
 {
+    ++Vegetation::statistics.referenceEntries;
     bool bSuccess = false;
 	
 	// directx, so allow for flipping of the texture coordinate

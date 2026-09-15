@@ -43,6 +43,7 @@ struct SkinPoseBuffer
 struct Geometry final : StaticObjectGeometry
 {
     RefCntAutoPtr<IBuffer> vertices, indices;
+    RefCntAutoPtr<IBuffer> extras;
     std::shared_ptr<SkinMeshBuffers> skin;
     std::shared_ptr<SkinPoseBuffer> pose;
     std::vector<uint16_t> validationIndices;
@@ -62,7 +63,7 @@ struct Texture final : TerrainTexture
 {
     RefCntAutoPtr<ITexture> texture;
     RefCntAutoPtr<ISampler> sampler;
-    RefCntAutoPtr<IShaderResourceBinding> bindings[12];
+    RefCntAutoPtr<IShaderResourceBinding> bindings[24];
     RefCntAutoPtr<ISampler> cameraSampler;
     std::weak_ptr<Texture> cameraImage;
     TerrainSampling cameraSampling{};
@@ -85,6 +86,8 @@ struct Constants
     std::array<uint32_t,4> alphaModes;
     std::array<float,4> textureFactor; // ZiiNAN: Existing actor stage constant.
     std::array<float,4> spotPositionRange,spotAttenuation,spotAmbient,spotDiffuse,spotDirection,spotCone;
+    std::array<float,4> cardRight,cardForward,cardUp,wind,cardPitch;
+    std::array<uint32_t,4> vertexModes;
 };
 static_assert(sizeof(Constants)%16==0 && sizeof(StaticObjectVertex)==32);
 constexpr char shaderSource[] = R"(
@@ -98,6 +101,7 @@ cbuffer ObjectConstants {
  uint4 AlphaModes;
  float4 TextureFactor;
  float4 SpotPositionRange; float4 SpotAttenuation; float4 SpotAmbient; float4 SpotDiffuse; float4 SpotDirection; float4 SpotCone;
+ float4 CardRight; float4 CardForward; float4 CardUp; float4 Wind; float4 CardPitch; uint4 VertexModes;
 };
 Texture2D DiffuseTexture;
 SamplerState ObjectSampler;
@@ -152,7 +156,8 @@ float4 PS(Output i):SV_TARGET {
  if(Modes.w==1) color.rgb=saturate(color.rgb+TextureFactor.rgb);
  if(Modes.w==2) color.rgb*=TextureFactor.rgb;
  if(Modes.w==3) color.rgb=saturate(color.rgb+color.a*CameraAlphaTexture.Sample(CameraAlphaSampler,i.cameraUV).rgb);
- if(AlphaModes.w!=0) color.a=CameraAlphaTexture.Sample(CameraAlphaSampler,i.cameraUV).a;
+ if(AlphaModes.w!=0) {float mask=CameraAlphaTexture.Sample(CameraAlphaSampler,i.cameraUV).a;color.a=VertexModes.w!=0?color.a*mask:mask;}
+ if(VertexModes.y!=0) color.rgb*=CameraAlphaTexture.Sample(CameraAlphaSampler,i.cameraUV).rgb;
  // ZiiNAN: Native alpha test compares the 8-bit stage result, including filtered/factor alpha.
  float testedAlpha=floor(saturate(color.a)*255+0.5);
  if(AlphaModes.y==1 && testedAlpha<float(AlphaModes.z)) discard;
@@ -160,13 +165,29 @@ float4 PS(Output i):SV_TARGET {
  color.rgb=lerp(FogColor.rgb,color.rgb,i.fog);
  return color;
 }
+Output AuxiliaryVS(float3 position:ATTRIB0,float3 normal:ATTRIB1,float2 uv:ATTRIB2,
+                   float4 color:ATTRIB3,float2 uv1:ATTRIB4,float3 pivot:ATTRIB5,float flexibility:ATTRIB6,float3 pitchCos:ATTRIB7,float3 pitchSin:ATTRIB8) {
+ float3 offset=position-pivot;
+ float sway=sin(Wind.x*Wind.z+pivot.x*.013+pivot.y*.017)*Wind.y*flexibility;
+ if(VertexModes.x!=0) {
+   float2 rocked=float2(offset.x*cos(sway)-offset.z*sin(sway),offset.x*sin(sway)+offset.z*cos(sway));
+   offset.x=rocked.x;offset.z=rocked.y;
+   if(VertexModes.x==1)offset+=offset.z*(CardPitch.x*pitchCos+CardPitch.y*pitchSin);
+   position=pivot+offset.x*CardRight.xyz+offset.y*CardForward.xyz+offset.z*CardUp.xyz;
+ } else position.xy+=sway*position.z*CardRight.xy;
+ Output o=VS(position,normal,uv);o.diffuse=color;
+ if(VertexModes.y!=0)o.cameraUV=uv1;
+ if(VertexModes.x==1&&AlphaModes.w!=0)o.cameraUV=float2(0,0);
+ if(VertexModes.z!=0)o.fog=saturate((FogParameters.y-o.position.z)/(FogParameters.y-FogParameters.x));
+ return o;
+}
 )";
 }
 struct DiligentStaticObjectRenderer::Impl
 {
     DiligentD3D11Backend& backend;
     RefCntAutoPtr<IBuffer> constants;
-    RefCntAutoPtr<IPipelineState> pipelines[24];
+    RefCntAutoPtr<IPipelineState> pipelines[36];
     std::shared_ptr<Counters> counters=std::make_shared<Counters>();
     std::vector<std::weak_ptr<SkinMeshBuffers>> skinMeshes;
     std::vector<std::weak_ptr<SkinPoseBuffer>> skinPoses;
@@ -220,16 +241,23 @@ Output SkinningVS(float3 position:ATTRIB0, float3 normal:ATTRIB1, float2 uv:ATTR
             device->CreateShader(shader,&skinVS);
             if(!skinVS) return false;
         }
+        RefCntAutoPtr<IShader> auxiliaryVS;
+        shader.Source=shaderSource;shader.Desc.Name="Mesh auxiliary colors and card pivots";
+        shader.Desc.ShaderType=SHADER_TYPE_VERTEX;shader.EntryPoint="AuxiliaryVS";
+        device->CreateShader(shader,&auxiliaryVS);if(!auxiliaryVS)return false;
         LayoutElement layout[]={{0,0,3,VT_FLOAT32,False,0,32},{1,0,3,VT_FLOAT32,False,12,32},{2,0,2,VT_FLOAT32,False,24,32}};
         LayoutElement skinLayout[]={{0,0,3,VT_FLOAT32,False,0,40},{1,0,3,VT_FLOAT32,False,20,40},
             {2,0,2,VT_FLOAT32,False,32,40},{3,0,4,VT_UINT8,False,12,40},{4,0,4,VT_UINT8,False,16,40}};
+        LayoutElement auxiliaryLayout[]={{0,0,3,VT_FLOAT32,False,0,32},{1,0,3,VT_FLOAT32,False,12,32},{2,0,2,VT_FLOAT32,False,24,32},
+            {3,1,4,VT_FLOAT32,False,0,64},{4,1,2,VT_FLOAT32,False,16,64},{5,1,3,VT_FLOAT32,False,24,64},{6,1,1,VT_FLOAT32,False,36,64},{7,1,3,VT_FLOAT32,False,40,64},{8,1,3,VT_FLOAT32,False,52,64}};
         ShaderResourceVariableDesc variables[]={{SHADER_TYPE_PIXEL,"DiffuseTexture",SHADER_RESOURCE_VARIABLE_TYPE_MUTABLE},
             {SHADER_TYPE_PIXEL,"ObjectSampler",SHADER_RESOURCE_VARIABLE_TYPE_MUTABLE},
             {SHADER_TYPE_PIXEL,"CameraAlphaTexture",SHADER_RESOURCE_VARIABLE_TYPE_MUTABLE},
             {SHADER_TYPE_PIXEL,"CameraAlphaSampler",SHADER_RESOURCE_VARIABLE_TYPE_MUTABLE},
             {SHADER_TYPE_VERTEX,"SkinningPalette",SHADER_RESOURCE_VARIABLE_TYPE_MUTABLE}};
-        for(unsigned variant=0;variant<(gpuPrototype ? 24u : 12u);++variant) {
-            const bool skin=variant>=12;
+        for(unsigned variant=0;variant<36;++variant) {
+            const bool auxiliary=variant>=24;const bool skin=variant>=12&&!auxiliary;
+            if(skin&&!gpuPrototype)continue;
             const auto cull=variant%3;
             GraphicsPipelineStateCreateInfo info;
             info.PSODesc.Name="Static object opaque diffuse"; info.PSODesc.PipelineType=PIPELINE_TYPE_GRAPHICS;
@@ -247,8 +275,8 @@ Output SkinningVS(float3 position:ATTRIB0, float3 normal:ATTRIB1, float2 uv:ATTR
             blend.BlendEnable=(variant/3)%2!=0;
             blend.SrcBlend=blend.SrcBlendAlpha=BLEND_FACTOR_SRC_ALPHA;
             blend.DestBlend=blend.DestBlendAlpha=BLEND_FACTOR_INV_SRC_ALPHA;
-            g.InputLayout.LayoutElements=skin ? skinLayout : layout; g.InputLayout.NumElements=skin ? 5 : 3;
-            info.pVS=skin ? skinVS : vs; info.pPS=ps;
+            g.InputLayout.LayoutElements=auxiliary?auxiliaryLayout:(skin ? skinLayout : layout); g.InputLayout.NumElements=auxiliary?9:(skin ? 5 : 3);
+            info.pVS=auxiliary?auxiliaryVS:(skin ? skinVS : vs); info.pPS=ps;
             auto& pipeline=s.pipelines[variant];
             device->CreateGraphicsPipelineState(info,&pipeline);
             if(!pipeline) return false;
@@ -353,6 +381,10 @@ StaticObjectGeometryPtr DiligentStaticObjectRenderer::CreateGeometry(const Stati
         data.vertices.size()>std::numeric_limits<uint32_t>::max()/32 ||
        indexCount>std::numeric_limits<uint32_t>::max()/indexStride) return fail(__LINE__);
     for(const auto& vertex:data.vertices) for(float v:vertex) if(!std::isfinite(v)) return fail(__LINE__);
+    if(!data.vertexExtras.empty()) {
+        if(dynamic||data.vertexExtras.size()!=data.vertices.size())return fail(__LINE__);
+        for(const auto& e:data.vertexExtras){for(float f:e.color)if(!std::isfinite(f)||f<0||f>1)return fail(__LINE__);for(float f:e.uv1)if(!std::isfinite(f))return fail(__LINE__);for(float f:e.pivot)if(!std::isfinite(f))return fail(__LINE__);for(float f:e.cardPitchCos)if(!std::isfinite(f)||std::abs(f)>4)return fail(__LINE__);for(float f:e.cardPitchSin)if(!std::isfinite(f)||std::abs(f)>4)return fail(__LINE__);if(!std::isfinite(e.flexibility)||e.flexibility<0||e.flexibility>1)return fail(__LINE__);}
+    }
     // Indices are mesh-local; exact base/range is validated at submission.
     for(auto index:data.indices) if(index>=data.vertices.size()) return fail(__LINE__);
     for(auto index:data.indices32) if(index>=data.vertices.size()) return fail(__LINE__);
@@ -364,6 +396,11 @@ StaticObjectGeometryPtr DiligentStaticObjectRenderer::CreateGeometry(const Stati
         desc.CPUAccessFlags=dynamic ? CPU_ACCESS_WRITE : CPU_ACCESS_NONE;
         BufferData initial{data.vertices.data(),desc.Size};
         s.backend.m_impl->device->CreateBuffer(desc,dynamic ? nullptr : &initial,&result->vertices);
+        if(!data.vertexExtras.empty()) {
+            static_assert(sizeof(StaticObjectVertexExtras)==64);
+            desc.Name="Shared mesh auxiliary vertex channels";desc.Size=data.vertexExtras.size()*sizeof(StaticObjectVertexExtras);
+            initial={data.vertexExtras.data(),desc.Size};s.backend.m_impl->device->CreateBuffer(desc,&initial,&result->extras);if(!result->extras)return fail(__LINE__);
+        }
         desc.Name=wide ? "Static uint32 indices" : "Original static uint16 indices";
         desc.Size=indexCount*indexStride; desc.BindFlags=BIND_INDEX_BUFFER;
         desc.Usage=USAGE_IMMUTABLE; desc.CPUAccessFlags=CPU_ACCESS_NONE;
@@ -439,17 +476,19 @@ void DiligentStaticObjectRenderer::Draw(const StaticObjectGeometryPtr& geometry,
     auto& s=*m_impl;
     auto mesh=std::dynamic_pointer_cast<Geometry>(geometry);
     auto image=std::dynamic_pointer_cast<Texture>(texture);
-    auto cameraImage=draw.sphereMap ? std::dynamic_pointer_cast<Texture>(draw.sphereMap) :
+    auto cameraImage=draw.vertexShadow ? std::dynamic_pointer_cast<Texture>(draw.vertexShadow) : draw.sphereMap ? std::dynamic_pointer_cast<Texture>(draw.sphereMap) :
         (draw.cameraAlpha ? std::dynamic_pointer_cast<Texture>(draw.cameraAlpha) : image);
     const auto cull=static_cast<uint32_t>(draw.cull);
     const auto materialVariant=cull+(draw.blend ? 3 : 0)+(draw.depthWrite ? 0 : 6);
     const bool rigid=mesh && mesh->skin && draw.baseVertex>=mesh->skin->deformCount;
     const bool skin=mesh && mesh->skin && !rigid;
-    const auto variant=materialVariant+(skin ? 12 : 0);
+    const bool auxiliary=mesh&&mesh->extras;
+    const auto variant=materialVariant+(auxiliary?24:(skin ? 12 : 0));
     if(!s.backend.m_impl || !s.backend.m_impl->inFrame || !mesh || !image || !cameraImage ||
        mesh->counters!=s.counters || image->counters!=s.counters || cameraImage->counters!=s.counters ||
        cull>=3 || !s.pipelines[variant] || draw.alphaReference>255 || static_cast<uint32_t>(draw.alphaTest)>2 ||
        static_cast<uint32_t>(draw.actorStage)>3 || (draw.cameraAlpha && draw.sphereMap) ||
+       draw.cardMode>2 || (draw.vertexShadow&&(draw.cameraAlpha||draw.sphereMap)) ||
        (draw.actorStage==ActorMaterialStage::Specular && !draw.sphereMap) ||
        !draw.indexCount || draw.indexCount%3 || draw.firstIndex>mesh->IndexCount() ||
        draw.indexCount>mesh->IndexCount()-draw.firstIndex || !draw.vertexCount ||
@@ -518,7 +557,7 @@ void DiligentStaticObjectRenderer::Draw(const StaticObjectGeometryPtr& geometry,
         }
         // ZiiNAN: Diligent GPU skinning prototype
         RefCntAutoPtr<IShaderResourceBinding> skinBinding;
-        auto& binding=skin ? skinBinding : image->bindings[materialVariant];
+        auto& binding=skin ? skinBinding : image->bindings[materialVariant+(auxiliary?12:0)];
         if(!binding) {
             s.pipelines[variant]->CreateShaderResourceBinding(&binding,true);
             if(!binding) { s.Fail("mesh shader resource binding creation failed", __LINE__); return; }
@@ -549,6 +588,9 @@ void DiligentStaticObjectRenderer::Draw(const StaticObjectGeometryPtr& geometry,
             mapped->spotPositionRange=draw.spotPositionRange; mapped->spotAttenuation=draw.spotAttenuation;
             mapped->spotAmbient=draw.spotAmbient; mapped->spotDiffuse=draw.spotDiffuse;
             mapped->spotDirection=draw.spotDirection; mapped->spotCone=draw.spotCone;
+            mapped->cardRight=draw.cardRight;mapped->cardForward=draw.cardForward;mapped->cardUp=draw.cardUp;mapped->wind=draw.wind;
+            mapped->cardPitch=draw.cardPitch;
+            mapped->vertexModes={draw.cardMode,draw.vertexShadow?1u:0u,draw.cardFog?1u:0u,draw.modulateCameraAlpha?1u:0u};
             mapped->alphaModes={draw.factorAlphaOnly ? 4u : (draw.factorAlpha ? 3u : (draw.diffuseAlphaOnly ? 2u : uint32_t(draw.textureAlpha))),static_cast<uint32_t>(draw.alphaTest),draw.alphaReference,draw.cameraAlpha ? 1u : 0u};
         }
         b.context->SetPipelineState(s.pipelines[variant]);
@@ -556,7 +598,8 @@ void DiligentStaticObjectRenderer::Draw(const StaticObjectGeometryPtr& geometry,
         Viewport viewport{float(draw.viewport[0]),float(draw.viewport[1]),float(draw.viewport[2] ? draw.viewport[2] : extent.Width),float(draw.viewport[3] ? draw.viewport[3] : extent.Height),0,1};
         b.context->SetViewports(1,&viewport,extent.Width,extent.Height);
         IBuffer* vertex=rigid ? mesh->skin->rigidVertices : mesh->vertices; Uint64 offset=0;
-        b.context->SetVertexBuffers(0,1,&vertex,&offset,RESOURCE_STATE_TRANSITION_MODE_TRANSITION,SET_VERTEX_BUFFERS_FLAG_RESET);
+        if(auxiliary){IBuffer* buffers[]={vertex,mesh->extras};Uint64 offsets[]={0,0};b.context->SetVertexBuffers(0,2,buffers,offsets,RESOURCE_STATE_TRANSITION_MODE_TRANSITION,SET_VERTEX_BUFFERS_FLAG_RESET);}
+        else b.context->SetVertexBuffers(0,1,&vertex,&offset,RESOURCE_STATE_TRANSITION_MODE_TRANSITION,SET_VERTEX_BUFFERS_FLAG_RESET);
         b.context->SetIndexBuffer(mesh->indices,0,RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
         b.context->CommitShaderResources(binding,RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
         DrawIndexedAttribs attributes{draw.indexCount,mesh->indexType,DRAW_FLAG_VERIFY_ALL};

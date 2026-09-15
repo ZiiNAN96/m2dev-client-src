@@ -5,12 +5,18 @@ namespace Renderer
 {
 // Exactly the existing TPNT layout, not a new scene/mesh representation.
 using StaticObjectVertex = std::array<float, 8>;
+struct StaticObjectVertexExtras {
+    std::array<float,4> color{1,1,1,1};std::array<float,2> uv1{};
+    std::array<float,3> pivot{};float flexibility{};
+    std::array<float,3> cardPitchCos{},cardPitchSin{};
+};
 struct StaticObjectSource
 {
     std::vector<StaticObjectVertex> vertices;
     std::vector<uint16_t> indices;
     // ZiiNAN: Modern asset pipeline; exactly one index stream is populated.
     std::vector<uint32_t> indices32;
+    std::vector<StaticObjectVertexExtras> vertexExtras;
 };
 struct StaticObjectGeometry { virtual ~StaticObjectGeometry() = default; };
 using StaticObjectGeometryPtr = std::shared_ptr<StaticObjectGeometry>;
@@ -49,6 +55,13 @@ struct StaticObjectDraw
     std::array<float,4> spotPositionRange{},spotAttenuation{},spotAmbient{},spotDiffuse{},spotDirection{},spotCone{};
     std::array<uint32_t,4> viewport{};
     uint32_t firstIndex = 0, indexCount = 0, baseVertex = 0, vertexCount = 0;
+    // ZiiNAN: Vegetation runtime boundary; optional channels reuse this mesh/material renderer.
+    uint32_t cardMode=0; // 0 rigid, 1 camera-facing leaf, 2 upright billboard.
+    std::array<float,4> cardRight{1,0,0,0},cardForward{0,1,0,0},cardUp{0,0,1,0};
+    std::array<float,4> wind{}; // phase/time, amplitude, frequency, unused
+    std::array<float,4> cardPitch{};
+    bool cardFog{},modulateCameraAlpha{};
+    TerrainTexturePtr vertexShadow;
 };
 class IStaticObjectRenderer : public ITextureUploader
 {

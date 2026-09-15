@@ -1,3 +1,4 @@
+#include "WorldTree.h"
 #pragma once
 
 // class CActorInstance
@@ -820,7 +821,7 @@ class CActorInstance : public IActorInstance, public IFlyTargetableObject
 		THitDataMap					m_HitDataMap;
 
 		CActorInstance *			m_pkHorse;
-		CSpeedTreeForest::SpeedTreeWrapperPtr	m_pkTree;
+		WorldTreePtr	m_pkTree;
 
 
 	protected:

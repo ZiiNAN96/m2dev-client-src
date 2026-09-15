@@ -552,8 +552,8 @@ void CArea::__SetObjectInstance_SetTree(TObjectInstance * pObjectInstance, const
 void CArea::TObjectInstance::SetTree(float x, float y, float z, DWORD dwTreeCRC, const char* c_szTreeName)
 {
 	CSpeedTreeForestRenderer& rkForest=CSpeedTreeForestRenderer::Instance();
-	pTree=rkForest.CreateInstance(x, y, z, dwTreeCRC, c_szTreeName);
-	dwType = prt::PROPERTY_TYPE_TREE;
+	pTree=CreateWorldTree(x, y, z, dwTreeCRC, c_szTreeName);
+	dwType = pTree ? prt::PROPERTY_TYPE_TREE : prt::PROPERTY_TYPE_NONE;
 }
 
 void CArea::__SetObjectInstance_SetBuilding(TObjectInstance * pObjectInstance, const TObjectData * c_pData, CProperty * pProperty)
@@ -1108,7 +1108,7 @@ void CArea::__Clear_DestroyObjectInstance(TObjectInstance * pObjectInstance)
 	if (pObjectInstance->pTree)
 	{
 		pObjectInstance->pTree->Clear();
-		CSpeedTreeForestRenderer::Instance().DeleteInstance(pObjectInstance->pTree);
+		DeleteWorldTree(pObjectInstance->pTree);
 		pObjectInstance->pTree = NULL;
 	}
 

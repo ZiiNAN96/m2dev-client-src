@@ -3,7 +3,10 @@ param(
     [Parameter(Mandatory=$true)][string]$BuildDirectory,
     [ValidateSet('ziinan')][string]$AnimationRuntime = 'ziinan', [ValidateSet('ziinan')][string]$GR2Reader = 'ziinan', [switch]$Visible,
     [switch]$ProductionDefault,
-    [switch]$MultiMap
+    [switch]$MultiMap,
+    [ValidateSet('reference','ziinan')][string]$Vegetation = 'reference',
+    [string]$VegetationAssets = '',
+    [switch]$VegetationForest
 )
 $ErrorActionPreference = 'Stop'
 $source = (Resolve-Path -LiteralPath "$PSScriptRoot/../..").Path
@@ -29,6 +32,26 @@ if ($MultiMap) {
     $fixture = $fixture.Replace('int(seconds / 15)', 'int(seconds / 5)').Replace('int(seconds / 20)', 'int(seconds / 6)')
     $fixture = $fixture.Replace('seconds >= 27', 'seconds >= 9').Replace('seconds >= 52', 'seconds >= 17')
 }
+if ($VegetationForest) {
+    if (-not $MultiMap) { throw 'VegetationForest requires MultiMap.' }
+    $fixture = $fixture.Replace('("a1", 44000, 27200, 0))', '("trent", 14834, 9310, 0), ("a1", 44000, 27200, 0))')
+    $fixture = $fixture.Replace('step = min(2, int(seconds / 6))', 'step = min(4, int(seconds / 4))')
+    $fixture = $fixture.Replace('"far" if step == 1 else "near"', '("near", "medium", "far", "medium", "near")[step]')
+    $fixture = $fixture.Replace('self.camera = (6500, 35, 0) if step == 1 else (1000, 20, 0)', 'self.camera = ((1000, 20, 0), (3500, 27, 0), (6500, 35, 0), (3500, 27, 0), (1000, 20, 0))[step]')
+    $fixture = $fixture.Replace('if step == 1 and seconds >= 9', 'if step == 2 and seconds >= 10').Replace('if step == 2 and seconds >= 17', 'if step == 4 and seconds >= 17')
+    $phases = 4
+    $eventScript = @'
+background.SelectViewDistanceNum(background.DISTANCE0)
+            if name == 'a1':
+                for grade in (1, 2, 3, 0): background.SetXMasTree(grade)
+                log.write('event vegetation grades=1,2,3,0 map=a1\n')
+'@
+    $fixture = $fixture.Replace('background.SelectViewDistanceNum(background.DISTANCE0)', $eventScript)
+}
+if ($Vegetation -eq 'ziinan') {
+    $vegetationSource = (Resolve-Path -LiteralPath "$VegetationAssets/vegetation").Path
+    Copy-Item -LiteralPath $vegetationSource -Destination "$target/vegetation" -Recurse
+}
 Set-Content -LiteralPath "$target/test-root/root/prototype.py" -Value $fixture -Encoding utf8
 foreach ($package in Get-ChildItem -LiteralPath "$original/pack" -File) {
     if ($package.Name -ne 'root.pck') {
@@ -44,6 +67,7 @@ if ((Get-FileHash -LiteralPath "$target/Metin2_Release.exe" -Algorithm SHA256).H
 }
 $clientArguments = @('--renderer-diagnostics', "--animation-runtime=$AnimationRuntime", "--gr2-reader=$GR2Reader")
 if ($ProductionDefault) { $clientArguments = @('--renderer-diagnostics') }
+if ($Vegetation -eq 'ziinan') { $clientArguments += '--vegetation=ziinan' }
 "SourceBinary=$binary`nSHA256=$hash`nArguments=$($clientArguments -join ' ')`nAutomated fixture; login/window visuals are separate" |
     Set-Content -LiteralPath "$target/artifact.txt"
 $style = if ($Visible) { 'Normal' } else { 'Hidden' }
@@ -74,12 +98,14 @@ foreach ($scene in @('phase=0 map=a1 mount=20104 actors=6')) {
     if (-not $fixture.Contains($scene)) { throw "Required original scene missing: $scene" }
 }
 if ($MultiMap) {
-    foreach ($scene in @('phase=1 map=b1 mount=20104 actors=6','phase=2 map=a1 mount=20104 actors=6')) {
+    $requiredScenes = if ($VegetationForest) { @('phase=1 map=b1 mount=20104 actors=6','phase=2 map=trent mount=20104 actors=6','phase=3 map=a1 mount=20104 actors=6') } else { @('phase=1 map=b1 mount=20104 actors=6','phase=2 map=a1 mount=20104 actors=6') }
+    foreach ($scene in $requiredScenes) {
         if (-not $fixture.Contains($scene)) { throw "Required map transition missing: $scene" }
     }
 }
 foreach ($phase in 0..($phases-1)) {
-    foreach ($step in 0..2) {
+    $requiredSteps = if ($VegetationForest) { 0..4 } else { 0..2 }
+    foreach ($step in $requiredSteps) {
         if ($fixture -notmatch "transition phase=$phase step=$step") { throw 'Near/far/near sequence incomplete.' }
     }
     foreach ($distance in @('far', 'near')) {
@@ -100,6 +126,15 @@ if ($ProductionDefault) {
 if (-not $startup.Contains('Skinning=gpu') -or -not $startup.Contains('SkinningSelection=default')) { throw 'Production GPU default was not observed.' }
 if (-not $startup.Contains("AnimationRuntime=$AnimationRuntime")) { throw 'Requested animation runtime was not used.' }
 $audit = Get-Content -LiteralPath "$target/source-resource-audit.log" -Raw
+if ($Vegetation -eq 'ziinan') {
+    if (-not $startup.Contains('Vegetation=ziinan') -or -not $startup.Contains('VegetationSelection=explicit')) { throw 'Explicit native vegetation selection missing.' }
+    foreach ($field in @('VegetationAssets','VegetationInstances','VegetationRenderAssets','VegetationGeometry','VegetationInstanceBuffers','VegetationFailures','VegetationReferenceEntries')) {
+        if ($audit -notmatch "\b$field=0\b" -or $audit -match "\b$field=[1-9]") { throw "Native vegetation failure or resource leak: $field" }
+    }
+    foreach ($field in @('VegetationCreated','VegetationDraws','VegetationLODChanges','VegetationBranches','VegetationFronds','VegetationLeaves','VegetationBillboards')) {
+        if ($audit -notmatch "\b$field=[1-9][0-9]*\b") { throw "Vegetation coverage missing: $field" }
+    }
+}
 if ($ProductionDefault) {
     foreach ($field in @('GrannyFileReads','ReferencePoseSamples','ImportPoseSamples')) {
         if ($audit -notmatch "\b$field=0\b" -or $audit -match "\b$field=[1-9]") { throw "Production reference use: $field" }
@@ -147,4 +182,3 @@ Write-Output 'PASS: isolated original-asset render/map/lifetime smoke; login, re
 if (-not $startup.Contains("GR2Reader=$GR2Reader")) { throw 'Requested reader was not used.' }
 if ($GR2Reader -eq 'ziinan' -and ($audit -notmatch '\bNativeGR2Reads=[1-9][0-9]*' -or $audit -notmatch '\bGrannyFileReads=0\b' -or $audit -notmatch '\bImportPoseSamples=0\b')) { throw 'Direct GR2 read with zero Granny extraction was not proved.' }
 Write-Output 'PASS: F2-X reader route and zero retained reader resources.'
-

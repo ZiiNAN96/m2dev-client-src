@@ -459,6 +459,12 @@ bool Validate(Scene& scene, Report& report)
             return Fail(report, "material_texture", material.name, "Base texture index is out of range.");
     }
     for (auto& image : scene.images) {
+        if(!image.packPath.empty()) {
+            if(!image.packPath.starts_with("d:/ymir work/") || !image.packPath.ends_with(".dds") ||
+               image.packPath.find("..")!=std::string::npos || image.packPath.find('\\')!=std::string::npos || !image.bytes.empty())
+                return Fail(report,"pack_texture",image.name,"Expected a canonical DDS pack key without embedded bytes.");
+            continue;
+        }
         if (!image.width || !image.height || image.width > 8192 || image.height > 8192 || std::uint64_t(image.width) * image.height > 16777216)
             return Fail(report, "image_dimensions", image.name, "Image dimensions exceed the E1-X image limits or are zero.");
         if (image.bytes.empty() || image.bytes.size() > MaxImageBytes)
@@ -514,6 +520,10 @@ bool Validate(Scene& scene, Report& report)
             if (mesh.hasNormals && (!Finite(vertex.normal) || std::abs(LengthSquared(vertex.normal) - 1.0) > 1e-4))
                 return Fail(report, "vertex_normal", context, "Vertex " + std::to_string(v) + " normal must be finite and normalized to unit length.");
             if (mesh.hasUV && !Finite(vertex.uv)) return Fail(report, "vertex_uv", context, "Vertex UV is non-finite.");
+            if(mesh.hasVertexExtras && (!Finite(vertex.color)||!Finite(vertex.uv1)||!Finite(vertex.pivot)||!Finite(vertex.cardPitchCos)||!Finite(vertex.cardPitchSin)||
+               !std::isfinite(vertex.flexibility)||vertex.flexibility<0||vertex.flexibility>1||
+               std::any_of(vertex.color.begin(),vertex.color.end(),[](float f){return f<0||f>1;})))
+                return Fail(report,"vertex_extras",context,"Invalid auxiliary vertex channel.");
             if (mesh.hasTangents && (!Finite(vertex.tangent) || (vertex.tangent[3] != 1 && vertex.tangent[3] != -1) ||
                 std::abs(LengthSquared(Vec3{vertex.tangent[0],vertex.tangent[1],vertex.tangent[2]}) - 1.0) > 1e-4))
                 return Fail(report, "vertex_tangent", context, "Tangent must have a finite unit direction and handedness of +1 or -1.");

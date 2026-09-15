@@ -326,6 +326,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     Renderer::startupSkinningMode=rendererOptions.skinning;
     AssetRuntime::startupAnimationRuntime=rendererOptions.animationRuntime;
     AssetRuntime::startupGR2Reader=rendererOptions.gr2Reader;
+    Vegetation::mode=rendererOptions.vegetation;
+    rendererLog << "Vegetation=" << (Vegetation::NativeEnabled()?"ziinan":"reference") << '\n';
+    rendererLog << "VegetationSelection=" << (rendererOptions.vegetationSelected?"explicit":"default") << '\n';
     AssetRuntime::nativeGR2Prewarm=rendererOptions.gr2Prewarm;
     rendererLog << "GR2Reader=" << "ziinan" << std::endl;
     rendererLog << "GR2ReaderSelection=" << (rendererOptions.gr2ReaderSelected ? "explicit" : "default") << std::endl;
@@ -358,13 +361,23 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	auto szArgv = CommandLineToArgv (lpCmdLine, &nArgc);
 
     // ZiiNAN: Backend-neutral graphics resource ownership
-    const int result = Main(hInstance, lpCmdLine, rendererOptions.backend);
+    const int mainResult = Main(hInstance, lpCmdLine, rendererOptions.backend);
+    ClearNativeVegetation();
+    const int result = mainResult ? mainResult : (Vegetation::NativeEnabled()&&Vegetation::statistics.failures?6:0);
     AssetRuntime::AnimationStallAudit::Write();
     AssetRuntime::ClearAnimationRuntimeCaches();
     std::ofstream resourceLog;
     if(Renderer::verboseDiagnostics || rendererOptions.loadWarmupAudit) resourceLog.open("source-resource-audit.log",std::ios::trunc);
     Renderer::WriteSourceResourceAudit(resourceLog);
     resourceLog << "CollisionResources=" << GetCollisionInstanceCapacity() << '\n';
+    resourceLog << "VegetationAssets=" << Vegetation::liveAssets << " VegetationInstances=" << Vegetation::liveInstances
+        << " VegetationRenderAssets=" << Vegetation::liveRenderAssets << " VegetationGeometry=" << Vegetation::liveGeometry
+        << " VegetationInstanceBuffers=0 VegetationFailures=" << Vegetation::statistics.failures
+        << " VegetationReferenceEntries=" << Vegetation::statistics.referenceEntries
+        << " VegetationCreated=" << Vegetation::statistics.created << " VegetationDraws=" << Vegetation::statistics.submitted
+        << " VegetationLODChanges=" << Vegetation::statistics.lodChanges << '\n';
+    resourceLog << "VegetationBranches=" << Vegetation::statistics.parts[0] << " VegetationFronds=" << Vegetation::statistics.parts[1]
+        << " VegetationLeaves=" << Vegetation::statistics.parts[2] << " VegetationBillboards=" << Vegetation::statistics.parts[3] << '\n';
     // ZiiNAN: GPU skinning production path — summary only; per-frame CSV is opt-in.
     Renderer::WriteSkinningBenchmark();
     resourceLog << "AllCPUDeformationCalls=" << Renderer::skinningCpuCalls << " AllCPUDeformationVertices=" << Renderer::skinningCpuVertices

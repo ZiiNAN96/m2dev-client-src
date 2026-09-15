@@ -1,3 +1,4 @@
+#include "WorldTree.h"
 #pragma once
 
 #include "EterLib/SkyBox.h"
@@ -688,7 +689,7 @@ class CMapOutdoor : public CMapBase
 	private:
 		struct SXMasTree
 		{
-			CSpeedTreeForest::SpeedTreeWrapperPtr m_pkTree;
+			WorldTreePtr m_pkTree;
 			int m_iEffectID;
 		} m_kXMas;
 

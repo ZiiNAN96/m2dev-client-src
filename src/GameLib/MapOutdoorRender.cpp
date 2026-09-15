@@ -265,8 +265,10 @@ void CMapOutdoor::RenderCloud()
 
 void CMapOutdoor::RenderTree()
 {
-	if (IsVisiblePart(PART_TREE))
-		CSpeedTreeForestRenderer::Instance().Render();
+	if (IsVisiblePart(PART_TREE)) {
+        if(Vegetation::NativeEnabled())RenderNativeVegetation();
+        else CSpeedTreeForestRenderer::Instance().Render();
+    }
 }
 
 void CMapOutdoor::SetInverseViewAndDynamicShaodwMatrices()
@@ -353,6 +355,7 @@ struct FRenderPCBlocker
 	void operator () (CGraphicObjectInstance * pInstance)
 	{
         TreeCameraMaskScope treeMask(cameraAlpha);
+        VegetationCameraMaskScope vegetationMask(cameraAlpha);
 		pInstance->Show();
 		CGraphicThingInstance* pThingInstance = dynamic_cast <CGraphicThingInstance*> (pInstance);
 		if (pThingInstance != NULL)
