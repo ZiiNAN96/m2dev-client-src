@@ -12,6 +12,7 @@
 #include "Graphics/GraphicsEngine/interface/Sampler.h"
 #include "Graphics/GraphicsTools/interface/MapHelper.hpp"
 #include "Graphics/GraphicsTools/interface/ShaderMacroHelper.hpp"
+#include "Utilities/interface/DiligentFXShaderSourceStreamFactory.hpp"
 #include <map>
 #include <cstring>
 
@@ -40,6 +41,9 @@ struct UploadVertex { EffectVertex base; std::array<float,2> secondaryUV; };
 static_assert(sizeof(UploadVertex)==32);
 static_assert(sizeof(Constants)%16==0);
 constexpr char source[]=R"(
+#if EFFECT_HDR
+#include "SRGBUtilities.fxh"
+#endif
 cbuffer EffectConstants {
  row_major float4x4 World; row_major float4x4 View; row_major float4x4 Projection;
  row_major float4x4 TextureTransform;
@@ -106,7 +110,12 @@ float4 PS(Output i):SV_TARGET {
  }
 #endif
  if(Modes.w!=0 && !Compare(Alpha.w,floor(saturate(c.a)*255+0.5),float(Color.w))) discard;
- c.rgb=lerp(FogColor.rgb,c.rgb,i.fog); return c;
+ c.rgb=lerp(FogColor.rgb,c.rgb,i.fog);
+#if EFFECT_HDR
+ // Keep authored alpha/combiner rules, then enter the linear HDR world.
+ c.rgb=FastSRGBToLinear(c.rgb);
+#endif
+ return c;
 }
 )";
 BLEND_FACTOR Factor(uint32_t value,bool alpha,bool opaque)
@@ -131,7 +140,7 @@ struct DiligentEffectRenderer::Impl
     DiligentD3D11Backend& backend;
     RefCntAutoPtr<IBuffer> constants,vertices;
     RefCntAutoPtr<IShader> vs;
-    std::array<RefCntAutoPtr<IShader>,4> ps;
+    std::array<RefCntAutoPtr<IShader>,8> ps;
     struct Pipeline { RefCntAutoPtr<IPipelineState> state; RefCntAutoPtr<IShaderResourceBinding> bindings; };
     std::map<uint64_t,Pipeline> pipelines;
     std::map<EffectSampler,RefCntAutoPtr<ISampler>> samplers;
@@ -187,8 +196,10 @@ bool DiligentEffectRenderer::Initialize()
         shader.Desc.Name="Native CPU effect vertices"; shader.Desc.ShaderType=SHADER_TYPE_VERTEX; shader.EntryPoint="VS";
         {FirstUseAudit timing("shader","effect");s.backend.m_impl->device->CreateShader(shader,&s.vs);}
         shader.Desc.Name="Native effect texture factor alpha fog"; shader.Desc.ShaderType=SHADER_TYPE_PIXEL; shader.EntryPoint="PS";
-        for(unsigned variant=0;variant<4;++variant) {
+        for(unsigned variant=0;variant<8;++variant) {
             ShaderMacroHelper macros;macros.Add("EFFECT_TEXTURE",bool(variant&1));macros.Add("SECONDARY_TEXTURE",bool(variant&2));
+            macros.Add("EFFECT_HDR",bool(variant&4));
+            shader.pShaderSourceStreamFactory=&DiligentFXShaderSourceStreamFactory::GetInstance();
             shader.Macros=macros;{FirstUseAudit timing("shader","effect");s.backend.m_impl->device->CreateShader(shader,&s.ps[variant]);}
             if(!s.ps[variant])return false;
         }
@@ -250,6 +261,8 @@ void DiligentEffectRenderer::Draw(const EffectVertex* vertices,uint32_t count,co
     }
     try {
         auto& b=*s.backend.m_impl;
+        const bool hdr=!d.ui&&b.modern&&b.modern->HDRWorldActive();
+        if(hdr)b.modern->BindWorldTarget();
         uint32_t src=d.src,dst=d.dst;
         if(src==12) { src=5; dst=6; } else if(src==13) { src=6; dst=5; }
         // Original magmabublea.mse uses destination 13; original renderer readback matches INVSRCALPHA.
@@ -259,7 +272,7 @@ void DiligentEffectRenderer::Draw(const EffectVertex* vertices,uint32_t count,co
         const uint64_t key=uint64_t(d.strip)|(uint64_t(d.blend)<<1)|(uint64_t(d.depthTest)<<2)|(uint64_t(d.depthWrite)<<3)|
             (uint64_t(d.cull)<<4)|(uint64_t(d.depthFunction)<<6)|(uint64_t(src)<<10)|(uint64_t(dst)<<14)|
             (uint64_t(d.blendOp)<<18)|(uint64_t(d.opaqueTargetAlpha)<<21)|(uint64_t(d.lines)<<22)|(uint64_t(d.scissor)<<23)|
-            (uint64_t(d.colorWriteMask)<<24)|(uint64_t(d.textured)<<28)|(uint64_t(bool(secondary))<<29);
+            (uint64_t(d.colorWriteMask)<<24)|(uint64_t(d.textured)<<28)|(uint64_t(bool(secondary))<<29)|(uint64_t(hdr)<<30);
         auto& p=s.pipelines[key];
         if(!p.state) {
             GraphicsPipelineStateCreateInfo info;
@@ -273,7 +286,7 @@ void DiligentEffectRenderer::Draw(const EffectVertex* vertices,uint32_t count,co
             if(secondary){activeVariables.push_back(variables[2]);activeVariables.push_back(variables[3]);}
             info.PSODesc.ResourceLayout.Variables=activeVariables.data(); info.PSODesc.ResourceLayout.NumVariables=Uint32(activeVariables.size());
             auto& g=info.GraphicsPipeline; const auto& swap=b.swapChain->GetDesc();
-            g.NumRenderTargets=1; g.RTVFormats[0]=swap.ColorBufferFormat; g.DSVFormat=swap.DepthBufferFormat;
+            g.NumRenderTargets=1; g.RTVFormats[0]=hdr?TEX_FORMAT_RGBA16_FLOAT:swap.ColorBufferFormat; g.DSVFormat=swap.DepthBufferFormat;
             g.PrimitiveTopology=d.lines ? PRIMITIVE_TOPOLOGY_LINE_LIST : d.strip ? PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP : PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
             g.RasterizerDesc.CullMode=d.cull==0 ? CULL_MODE_NONE : CULL_MODE_BACK;
             g.RasterizerDesc.FrontCounterClockwise=d.cull==1; g.RasterizerDesc.DepthClipEnable=True;
@@ -285,7 +298,7 @@ void DiligentEffectRenderer::Draw(const EffectVertex* vertices,uint32_t count,co
             blend.SrcBlendAlpha=Factor(src,true,d.opaqueTargetAlpha); blend.DestBlendAlpha=Factor(dst,true,d.opaqueTargetAlpha);
             blend.BlendOp=blend.BlendOpAlpha=BLEND_OPERATION(d.blendOp);
             LayoutElement layout[]={{0,0,3,VT_FLOAT32,False,0,32},{1,0,4,VT_UINT8,True,12,32},{2,0,2,VT_FLOAT32,False,16,32},{3,0,2,VT_FLOAT32,False,24,32}};
-            g.InputLayout.LayoutElements=layout; g.InputLayout.NumElements=4; info.pVS=s.vs; info.pPS=s.ps[unsigned(d.textured)|unsigned(bool(secondary))<<1];
+            g.InputLayout.LayoutElements=layout; g.InputLayout.NumElements=4; info.pVS=s.vs; info.pPS=s.ps[unsigned(d.textured)|unsigned(bool(secondary))<<1|unsigned(hdr)<<2];
             {FirstUseAudit timing("pso","effect");b.device->CreateGraphicsPipelineState(info,&p.state);} if(!p.state) { s.Fail("effect pipeline creation failed", __LINE__); return; }
             for(auto stage:{SHADER_TYPE_VERTEX,SHADER_TYPE_PIXEL}) if(auto* v=p.state->GetStaticVariableByName(stage,"EffectConstants")) v->Set(s.constants);
             p.state->CreateShaderResourceBinding(&p.bindings,true); if(!p.bindings) { s.Fail("effect shader resource binding creation failed", __LINE__); return; }

@@ -19,14 +19,28 @@ files = [
     "PostProcess/Common/src/SamplerBlueNoiseErrorDistribution_128x128_OptimizedFor_2d2d2d2d_1spp.cpp",
     "PostProcess/ScreenSpaceAmbientOcclusion/interface/ScreenSpaceAmbientOcclusion.hpp",
     "PostProcess/ScreenSpaceAmbientOcclusion/src/ScreenSpaceAmbientOcclusion.cpp",
+    "PostProcess/Bloom/interface/Bloom.hpp",
+    "PostProcess/Bloom/src/Bloom.cpp",
     "Shaders/PostProcess/TemporalAntiAliasing/public/TemporalAntiAliasingStructures.fxh",
     "Utilities/interface/DiligentFXShaderSourceStreamFactory.hpp",
     "Utilities/src/DiligentFXShaderSourceStreamFactory.cpp",
     "License.txt",
 ]
-for group in ("Common", "PBR", "Shadows", "PostProcess/ScreenSpaceAmbientOcclusion"):
+for group in ("Common", "PBR", "Shadows", "PostProcess/ScreenSpaceAmbientOcclusion", "PostProcess/Bloom", "PostProcess/ToneMapping"):
     files.extend(str(p.relative_to(source)).replace("\\", "/")
                  for p in (source / "Shaders" / group).rglob("*") if p.is_file())
+
+# Only the atmosphere's physical tables and lookup helpers: no epipolar
+# screen-space sampling, shadowed shafts, luminance/history or demo frontend.
+atmosphere = "Shaders/PostProcess/EpipolarLightScattering/"
+files.extend(atmosphere + name for name in (
+    "public/EpipolarLightScatteringStructures.fxh",
+    "public/EpipolarLightScatteringFunctions.fxh",
+    "private/AtmosphereShadersCommon.fxh", "private/LookUpTables.fxh",
+    "private/ScatteringIntegrals.fxh", "private/Extinction.fxh",
+    "private/precompute/PrecomputeCommon.fxh",
+    "private/precompute/PrecomputeNetDensityToAtmTop.fx",
+    "private/precompute/PrecomputeSingleScattering.fx"))
 
 unused_frontends = {"RenderPBR.psh", "RenderPBR.vsh", "RenderUnshaded.psh", "BoundBox.psh", "EnvMap.psh"}
 files = sorted(set(relative for relative in files if Path(relative).name not in unused_frontends))
@@ -58,6 +72,29 @@ for relative in files:
         marker = "abs(f2DepthSlopeScaledBias.xy) ) + ShadowAttribs.fFixedDepthBias;"
         assert text.count(marker) == 1
         text = text.replace(marker, "abs(f2DepthSlopeScaledBias.xy) ) + ShadowAttribs.fFixedDepthBias * ShadowAttribs.Cascades[SamplingInfo.iCascadeIdx].f4CasterDepthBiasScale.x;")
+    if relative.endswith("Bloom.cpp"):
+        marker = "bool AllPSOsReady = PrepareShadersAndPSO(RenderAttribs, m_FeatureFlags) && RenderAttribs.pPostFXContext->IsPSOsReady();"
+        assert text.count(marker) == 1
+        text = text.replace(marker, marker + "\n    m_PSOsReady = AllPSOsReady;")
+        for include in ('#include "imgui.h"', '#include "ImGuiUtils.hpp"', '#include "ScreenSpaceReflection.hpp"'):
+            assert text.count(include) == 1
+            text = text.replace(include, "")
+        start = text.index("bool Bloom::UpdateUI(")
+        brace = text.index("{", start)
+        depth, end = 1, brace + 1
+        while depth:
+            depth += (text[end] == "{") - (text[end] == "}")
+            end += 1
+        text = text[:start] + text[end:]
+    if relative.endswith("Bloom.hpp"):
+        text, count = re.subn(r"    static bool UpdateUI\([^;]+;\n", "", text)
+        assert count == 1
+        marker = "    void Execute(const RenderAttributes& RenderAttribs);"
+        assert text.count(marker) == 1
+        text = text.replace(marker, marker + "\n    bool IsPSOsReady() const { return m_PSOsReady; }")
+        marker = "    CreateInfo    m_Settings;"
+        assert text.count(marker) == 1
+        text = text.replace(marker, marker + "\n    bool m_PSOsReady = false;")
     if relative.endswith("ScreenSpaceAmbientOcclusion.cpp"):
         marker = "bool AllPSOsReady = PrepareShadersAndPSO(RenderAttribs, m_FeatureFlags) && RenderAttribs.pPostFXContext->IsPSOsReady();"
         assert text.count(marker) == 1
@@ -91,3 +128,16 @@ for relative in files:
 # CMake consumes this explicit list, so stale files from an older subset are
 # never embedded. The list also makes the dependency closure reviewable.
 (destination / "shader-manifest.txt").write_text("\n".join(shader_manifest) + "\n", encoding="utf-8")
+
+# Preserve the pinned physical coefficient calculation verbatim apart from
+# owner/constant names. It needs neither the epipolar renderer nor its buffers.
+upstream = (source / "PostProcess/EpipolarLightScattering/src/EpipolarLightScattering.cpp").read_text(encoding="utf-8-sig")
+start = upstream.index("void EpipolarLightScattering::ComputeScatteringCoefficients(")
+body = upstream[upstream.index("{", start) + 1:upstream.index("    if (pDeviceCtx && m_pcbMediaAttribs)", start)]
+body = body.replace("m_MediaParams", "media").replace("m_PostProcessingAttribs", "settings")
+body = re.sub(r"\bPI_F\b", "3.14159265358979323846f", body)
+body = re.sub(r"\bPI\b", "3.14159265358979323846", body)
+generated = upstream[:upstream.index("#include")] + "\n#pragma once\ninline void InitializeAtmosphereCoefficients(AirScatteringAttribs& media, const EpipolarLightScatteringAttribs& settings)\n{" + body + "}\n"
+output = destination / "AtmosphereCoefficients.hpp"
+if not output.exists() or output.read_text(encoding="utf-8") != generated:
+    output.write_text(generated, encoding="utf-8", newline="\n")

@@ -38,8 +38,12 @@ class DiligentModernRenderer final : public IModernFrame
 public:
     explicit DiligentModernRenderer(DiligentD3D11Backend&);
     ~DiligentModernRenderer();
-    void Begin(const Graphics::SceneLighting&) override;
+    void Begin(const Graphics::SceneLighting&,bool deferToneMapping=false) override;
+    void SetCamera(const TerrainMatrices&) override;
     void End() override;
+    void FinishWorld() override;
+    bool HDRWorldActive() const;
+    void BindWorldTarget();
     bool BeginShadowCollection() override;
     void EndShadowCollection() override;
     bool ShadowCasterVisible(const std::array<float,3>&,float) const override;

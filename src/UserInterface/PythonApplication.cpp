@@ -2,6 +2,7 @@
 #include "Renderer/FirstUseAudit.h"
 #include "Renderer/GraphicsConfig.h"
 #include "Renderer/ModernFrame.h"
+#include "Graphics/AtmosphereConfig.h"
 #include "eterBase/Error.h"
 #include "eterlib/Camera.h"
 #include "eterlib/AttributeInstance.h"
@@ -247,11 +248,11 @@ void CPythonApplication::RenderGame()
 		m_pyGraphic.SetCursorPosition(lx, ly);
 	}
 
-	m_pyBackground.RenderSky();
-
-	m_pyBackground.RenderBeforeLensFlare();
-
-	m_pyBackground.RenderCloud();
+    if(!Renderer::modernFrame) {
+        m_pyBackground.RenderSky();
+        m_pyBackground.RenderBeforeLensFlare();
+        m_pyBackground.RenderCloud();
+    }
 
 	m_pyBackground.BeginEnvironment();
     if(Renderer::modernFrame) {
@@ -278,7 +279,17 @@ void CPythonApplication::RenderGame()
             light.fogNear=environment->GetFogNearDistance()*config.fogDistanceScale;
             light.fogFar=environment->GetFogFarDistance()*config.fogDistanceScale;
         }
-        Renderer::modernFrame->Begin(light);
+#ifdef M2_RENDERER_DIAGNOSTICS
+        if(Graphics::developmentSunState>=0)light=Graphics::WithDevelopmentSun(light,unsigned(Graphics::developmentSunState));
+#endif
+        Renderer::modernFrame->Begin(light,true);
+        Renderer::TerrainMatrices camera;
+        Math::Matrix view,projection;
+        DRAWSTATE.GetTransform(Renderer::MatrixView,&view);
+        DRAWSTATE.GetTransform(Renderer::MatrixProjection,&projection);
+        std::memcpy(camera.view.data(),&view,64);
+        std::memcpy(camera.projection.data(),&projection,64);
+        Renderer::modernFrame->SetCamera(camera);
     }
 	m_pyBackground.Render();
 
@@ -301,13 +312,14 @@ void CPythonApplication::RenderGame()
         }
         Renderer::modernFrame->End();
     }
+    if(Renderer::modernFrame)m_kChrMgr.RenderWorldTraces();
 	m_pyBackground.RenderWater();
 	m_pyBackground.RenderSnow();
 	m_pyBackground.RenderEffect();
 
 	m_pyBackground.EndEnvironment();
 
-	m_kEftMgr.Render();
+	m_kEftMgr.Render(Renderer::modernFrame?CEffectManager::RenderPass::World:CEffectManager::RenderPass::All);
     if(Renderer::modernFrame)Renderer::modernFrame->BeginForwardWorld();
 	m_pyItem.Render();
     if(Renderer::modernFrame)Renderer::modernFrame->EndForwardWorld();
@@ -319,7 +331,10 @@ void CPythonApplication::RenderGame()
     if(Renderer::modernFrame)Renderer::modernFrame->EndForwardWorld();
 	m_pyBackground.EndEnvironment();
 
-	m_pyBackground.RenderAfterLensFlare();
+    if(Renderer::modernFrame) {
+        Renderer::modernFrame->FinishWorld();
+        m_kEftMgr.Render(CEffectManager::RenderPass::Screen);
+    } else m_pyBackground.RenderAfterLensFlare();
     if(Renderer::skinningBenchmarkEnabled) Renderer::skinningBenchmarkCurrent.worldUs+=Renderer::PrototypeMicroseconds(benchmarkStart);
 }
 

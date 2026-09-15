@@ -1,4 +1,13 @@
 #pragma once
+#include "Graphics/AtmosphereConfig.h"
+static PyObject* systemTestGraphicsSun(PyObject*,PyObject* args)
+{
+    int state;
+    if(!PyArg_ParseTuple(args,"i",&state))return nullptr;
+    if(state < -1 || state > 2){PyErr_SetString(PyExc_ValueError,"Sun state must be -1 (map), 0, 1 or 2");return nullptr;}
+    Graphics::developmentSunState=state;
+    return Py_BuildNone();
+}
 // Only present when M2_BUILD_RENDERER_TESTS is enabled. The owned client performs
 // its own native window transitions; no cross-process control/elevation needed.
 static PyObject* systemTestGraphicsWindow(PyObject*, PyObject*)

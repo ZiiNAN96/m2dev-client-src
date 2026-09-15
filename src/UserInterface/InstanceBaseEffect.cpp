@@ -114,9 +114,9 @@ void CInstanceBase::ProcessDamage()
 	{
 		TraceError("ProcessDamage: DODGE or BLOCK");
 		if(bSelf)
-			rkEftMgr.CreateEffect(ms_adwCRCAffectEffect[EFFECT_DAMAGE_MISS],v3Pos,v3Rot);
+			rkEftMgr.MarkScreenOverlay(rkEftMgr.CreateEffect(ms_adwCRCAffectEffect[EFFECT_DAMAGE_MISS],v3Pos,v3Rot));
 		else
-			rkEftMgr.CreateEffect(ms_adwCRCAffectEffect[EFFECT_DAMAGE_TARGETMISS],v3Pos,v3Rot);
+			rkEftMgr.MarkScreenOverlay(rkEftMgr.CreateEffect(ms_adwCRCAffectEffect[EFFECT_DAMAGE_TARGETMISS],v3Pos,v3Rot));
 		//__AttachEffect(EFFECT_DAMAGE_MISS);
 		return;
 	}
@@ -211,6 +211,7 @@ void CInstanceBase::ProcessDamage()
 
 		DWORD effectResult = rkEftMgr.CreateEffect(ms_adwCRCAffectEffect[rdwCRCEft], Math::Vector3(matrix._41, matrix._42, matrix._43)
 			,v3Rot);
+        rkEftMgr.MarkScreenOverlay(effectResult);
 		TraceError("ProcessDamage: CreateEffect returned %u", effectResult);	
 		
 		textures.clear();

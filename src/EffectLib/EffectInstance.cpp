@@ -276,6 +276,7 @@ void CEffectInstance::__Initialize()
 	ReleaseAlwaysHidden();
 	
 	m_isAlive = FALSE;
+    m_screenOverlay=false;
 	m_dwFrame = 0;
 	m_pSoundInstanceVector = NULL;
 	m_fBoundingSphereRadius = 0.0f;

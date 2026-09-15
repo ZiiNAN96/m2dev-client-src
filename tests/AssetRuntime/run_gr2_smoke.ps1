@@ -8,6 +8,7 @@ param(
     [string]$VegetationAssets = 'build/hx/compiled',
     [switch]$VegetationForest,
     [switch]$Modern,
+    [switch]$HDRAtmosphere,
     [ValidateRange(0,2)][int]$AO=2,
     [ValidateRange(0,5)][int]$Shadows=4,
     [switch]$Benchmark
@@ -26,6 +27,10 @@ Copy-Item -LiteralPath $binary -Destination "$target/Metin2_Release.exe"
 Copy-Item -LiteralPath "$original/config" -Destination "$target/config" -Recurse
 if($Modern) { "VERSION 1`nPRESET 4`nSTYLE 1`nSHADOWS $Shadows`nAO $AO" | Set-Content -LiteralPath "$target/config/graphics.cfg" }
 elseif($Benchmark) { "VERSION 1`nPRESET 4`nSTYLE 0`nSHADOWS $Shadows`nAO $AO" | Set-Content -LiteralPath "$target/config/graphics.cfg" }
+if($HDRAtmosphere) {
+    if(-not $Modern){throw 'HDRAtmosphere requires Modern.'}
+    "BLOOM 1`nMODERN_SKY 1`nHIGH_QUALITY_FOG 1" | Add-Content -LiteralPath "$target/config/graphics.cfg"
+}
 Copy-Item -LiteralPath $rootTemplate -Destination "$target/test-root/root" -Recurse
 $fixture = Get-Content -LiteralPath "$PSScriptRoot/../AnimationRuntime/runtime_entry.py" -Raw
 $fixture = $fixture.Replace('chrmgr.CreateRace(0)', '').Replace('chrmgr.SelectRace(0)', '').Replace('chrmgr.LoadLocalRaceData("msm/warrior_m.msm")', '')

@@ -50,6 +50,8 @@ class CEffectInstance : public CGraphicObjectInstance
 			return m_pkEftData;
 		}
 
+        void SetScreenOverlay(bool value) { m_screenOverlay=value; }
+        bool IsScreenOverlay() const { return m_screenOverlay; }
 		void Clear();
 		BOOL isAlive();
 		void SetActive();
@@ -82,6 +84,7 @@ class CEffectInstance : public CGraphicObjectInstance
 		CEffectData * m_pkEftData;
         Renderer::EffectResources m_effectResources;
         bool m_effectCounted=false;
+        bool m_screenOverlay=false;
 
  		std::vector<CParticleSystemInstance*>	m_ParticleInstanceVector;
 		std::vector<CEffectMeshInstance*>		m_MeshInstanceVector;

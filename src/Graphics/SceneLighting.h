@@ -15,6 +15,8 @@ struct SceneLighting
     std::array<float,3> environmentColor{};
     std::array<float,3> fogColor{};
     float fogNear{},fogFar{1.f},fogDensity{};
+    float exposureBias{}; // Stops relative to the stable production exposure.
+    float skyIBLIntensity{}; // Optional directional atmosphere fill; map policy owns its strength.
     bool fogEnabled{},densityFog{};
 };
 
@@ -31,6 +33,8 @@ inline SceneLighting ValidateSceneLighting(SceneLighting light)
         for(auto& v:*values) v=nonnegative(v);
     if(!std::isfinite(light.fogNear)||!std::isfinite(light.fogFar)||light.fogNear>=light.fogFar)light.fogEnabled=false;
     light.fogDensity=nonnegative(light.fogDensity);
+    light.exposureBias=std::isfinite(light.exposureBias)?std::clamp(light.exposureBias,-3.f,3.f):0.f;
+    light.skyIBLIntensity=std::min(nonnegative(light.skyIBLIntensity),1.f);
     return light;
 }
 struct LegacyEnvironmentLight
@@ -41,6 +45,7 @@ struct LegacyEnvironmentLight
 inline SceneLighting ResolveLegacyEnvironmentLight(const LegacyEnvironmentLight& source)
 {
     SceneLighting light;light.sunDirection=source.direction;
+    light.skyIBLIntensity=.15f;
     // Legacy light strength multiplies diffuse reflectance directly. FX uses
     // irradiance with a 1/pi diffuse BRDF, so convert the authored unit once.
     light.sunIntensity=source.enabled?3.14159265358979323846f:0.f;

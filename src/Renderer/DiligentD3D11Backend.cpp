@@ -1,12 +1,28 @@
 #include "DiligentD3D11BackendInternal.h"
 #include "TerrainPresentation.h"
 #include "FirstUseAudit.h"
+#include "Diagnostics.h"
+#include <mutex>
 #include "AssetRuntime/AnimationStallAudit.h"
 #include "Graphics/GraphicsEngineD3D11/interface/EngineFactoryD3D11.h"
 #include "Graphics/GraphicsEngine/interface/Texture.h"
 
 namespace Renderer
 {
+namespace {
+void DILIGENT_CALL_TYPE AuditDiligentMessage(Diligent::DEBUG_MESSAGE_SEVERITY severity,
+    const char* message,const char* function,const char* file,int line)
+{
+    if(severity==Diligent::DEBUG_MESSAGE_SEVERITY_ERROR)++diligentErrorCount;
+    if(severity==Diligent::DEBUG_MESSAGE_SEVERITY_FATAL_ERROR)++diligentFatalCount;
+    if(severity<Diligent::DEBUG_MESSAGE_SEVERITY_WARNING)return;
+    try {
+        static std::mutex mutex;std::lock_guard lock(mutex);
+        std::ofstream log("diligent-diagnostics.log",std::ios::app);
+        log<<"severity="<<int(severity)<<" file="<<(file?file:"")<<':'<<line<<" function="<<(function?function:"")<<' '<<(message?message:"")<<'\n';
+    }catch(...){}
+}
+}
 DiligentD3D11Backend::DiligentD3D11Backend() = default;
 DiligentD3D11Backend::~DiligentD3D11Backend() { Shutdown(); }
 
@@ -20,6 +36,7 @@ bool DiligentD3D11Backend::Initialize(const InitializeInfo& info)
         auto* factory = Diligent::GetEngineFactoryD3D11();
         if (!factory)
             return false;
+        if(auditDiligentDiagnostics)factory->SetMessageCallback(AuditDiligentMessage);
         Diligent::EngineD3D11CreateInfo engineInfo;
         // A release bootstrap does not require the optional Windows debug layer.
         factory->CreateDeviceAndContextsD3D11(engineInfo, &state->device, &state->context);

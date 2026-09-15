@@ -21,7 +21,7 @@ struct Renderer::DiligentD3D11Backend::Impl
         return swapChain->GetDepthBufferDSV();
     }
     void BindTargets() {
-        if(modern&&modern->Active()){modern->BindTargets();return;}
+        if(modern&&(modern->Active()||modern->HDRWorldActive())){modern->BindTargets();return;}
         auto* target=swapChain->GetCurrentBackBufferRTV();
         context->SetRenderTargets(1,&target,DepthDSV(),Diligent::RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
     }

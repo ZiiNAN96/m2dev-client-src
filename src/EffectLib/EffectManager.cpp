@@ -94,7 +94,13 @@ struct CEffectManager_FEffectInstanceRender
 	}
 };
 
-void CEffectManager::Render()
+void CEffectManager::MarkScreenOverlay(DWORD instance)
+{
+    const auto found=m_kEftInstMap.find(instance);
+    if(found!=m_kEftInstMap.end())found->second->SetScreenOverlay(true);
+}
+
+void CEffectManager::Render(RenderPass pass)
 {
 	DRAWSTATE.SetTexture(0, NULL);
 	DRAWSTATE.SetTexture(1, NULL);
@@ -104,7 +110,8 @@ void CEffectManager::Render()
 		for (TEffectInstanceMap::iterator itor = m_kEftInstMap.begin(); itor != m_kEftInstMap.end();)
 		{
 			CEffectInstance * pEffectInstance = itor->second;
-			pEffectInstance->Render();
+            if(pass==RenderPass::All||pEffectInstance->IsScreenOverlay()==(pass==RenderPass::Screen))
+                pEffectInstance->Render();
 			++itor;
 		}
 	}
@@ -116,7 +123,8 @@ void CEffectManager::Render()
 		TEffectInstanceMap& rkMap_pkEftInstSrc=m_kEftInstMap;
 		TEffectInstanceMap::iterator i;
 		for (i=rkMap_pkEftInstSrc.begin(); i!=rkMap_pkEftInstSrc.end(); ++i)
-			s_kVct_pkEftInstSort.push_back(i->second);
+            if(pass==RenderPass::All||i->second->IsScreenOverlay()==(pass==RenderPass::Screen))
+                s_kVct_pkEftInstSort.push_back(i->second);
 
 		std::sort(s_kVct_pkEftInstSort.begin(), s_kVct_pkEftInstSort.end(), CEffectManager_LessEffectInstancePtrRenderOrder());
 		std::for_each(s_kVct_pkEftInstSort.begin(), s_kVct_pkEftInstSort.end(), CEffectManager_FEffectInstanceRender());

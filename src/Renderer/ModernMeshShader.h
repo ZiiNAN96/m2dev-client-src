@@ -10,8 +10,9 @@ inline constexpr char modernMeshShader[]=R"(
 #define PCF_FILTER_SIZE 3
 #define FILTER_ACROSS_CASCADES 1
 #include "Shadows.fxh"
-cbuffer Composite {CameraAttribs Camera;ShadowMapAttribs Shadows;float4 Options;float4 FogColor;float4 FogParameters;};
+cbuffer Composite {CameraAttribs Camera;ShadowMapAttribs Shadows;float4 Options;float4 FogColor;float4 FogParameters;float4 DiskDirection;float4 DiskRadiance;};
 Texture2DArray<float> ShadowMap;SamplerComparisonState ShadowSampler;Texture2D ScreenAO;
+Texture2D Sky;SamplerState SkySampler;
 #endif
 cbuffer ModernObject {
  row_major float4x4 World;
@@ -27,6 +28,7 @@ cbuffer ModernObject {
 };
 cbuffer ModernLighting {float4 SunDirection;float4 SunColor;float4 AmbientColor;float4 CameraPosition;float4 EnvironmentColor;};
 Texture2D PreintegratedBRDF;TextureCube IrradianceMap;SamplerState IBLSampler;
+TextureCube SkyIrradiance;TextureCube SkyEnvironment;
 #if GDX_SKIN
 cbuffer SkinningPalette {row_major float4x4 Bones[256];};
 #endif
@@ -125,7 +127,9 @@ ModernOutput ModernPS(ModernVertex i,bool front:SV_IsFrontFace) {
  o.direct=float4(ApplyDirectionalLightGGX(SunDirection.xyz,SunColor.rgb,reflectance,N,V),base.a);
  IBLSamplingInfo ibl=GetIBLSamplingInfo(reflectance,PreintegratedBRDF,IBLSampler,N,V);
  o.indirect=float4((GetLambertianIBL(reflectance,ibl,IrradianceMap,IBLSampler)*AmbientColor.rgb+
-                   GetSpecularIBL_GGX(reflectance,ibl,EnvironmentColor.rgb))*ao,base.a);
+                   GetSpecularIBL_GGX(reflectance,ibl,EnvironmentColor.rgb)+
+                   EnvironmentColor.w*(GetLambertianIBL(reflectance,ibl,SkyIrradiance,IBLSampler)+
+                   GetSpecularIBL_GGX(reflectance,ibl,SkyEnvironment,IBLSampler,5.0)))*ao,base.a);
  float3 emission=Emissive.rgb;
  if((Maps.x&32)!=0)emission*=FastSRGBToLinear(EmissiveMap.Sample(MaterialSampler,i.uv).rgb);
  // Game hit/selection tints remain game inputs. Add is unshadowed display
@@ -141,11 +145,16 @@ ModernOutput ModernPS(ModernVertex i,bool front:SV_IsFrontFace) {
   shadow=FilterShadowMap(Shadows,ShadowMap,ShadowSampler,light,ddx(light),ddy(light),abs(mul(float4(i.world,1),Camera.mView).z)).fLightAmount;
  }
  float screenAO=Options.y!=0?ScreenAO.Load(int3(int2(i.position.xy),0)).r:1;
- float3 result=FastLinearToSRGB(max(o.direct.rgb*shadow+o.indirect.rgb*screenAO+emission,0));
+ float3 result=max(o.direct.rgb*shadow+o.indirect.rgb*screenAO+emission,0);
  if(FogParameters.w!=0) {
   float distance=length(i.world-CameraPosition.xyz);
-  float visibility=FogParameters.w==2?exp(-distance*FogParameters.z):saturate((FogParameters.y-distance)/(FogParameters.y-FogParameters.x));
-  result=lerp(FogColor.rgb,result,saturate(visibility));
+  float progress=max(0,(distance-FogParameters.x)/max(1,FogParameters.y-FogParameters.x));
+  float visibility=FogParameters.w==2?exp(-distance*FogParameters.z):exp(-3*progress*progress);
+  if(Options.w==0)visibility=saturate(1-progress);
+  float3 ray=normalize(i.world-CameraPosition.xyz);
+  float3 sky=Sky.SampleLevel(SkySampler,float2(atan2(ray.y,ray.x)/(2*3.14159265359)+.5,1-saturate(ray.z)),0).rgb;
+  sky=lerp(sky,FogColor.rgb,.12*pow(1-saturate(ray.z),4));
+  result=lerp(sky,result,saturate(visibility));
  }
  return float4(result,base.a);
 #else

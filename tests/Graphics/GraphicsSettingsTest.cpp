@@ -31,7 +31,9 @@ void Presets()
             const GraphicsFeatures features{r};
             Check(features.ShadowsEnabled()==(style==GraphicsStyle::Modern&&i!=0)&&
                 features.AOQuality()==(style==GraphicsStyle::Modern?ao[i]:AmbientOcclusionQuality::Off), "style-gated FX shadows/AO");
-            Check(!features.UseHDR() && !features.UseBloom() && !features.UseModernSky(), "future feature gates");
+            Check(features.UseHDR()==(style==GraphicsStyle::Modern)&&
+                features.UseBloom()==(style==GraphicsStyle::Modern&&i>=2)&&
+                features.UseModernSky()==(style==GraphicsStyle::Modern), "Modern HDR/sky and highlight bloom presets");
             Check(r.water == WaterQuality::High && r.waterFrameMilliseconds == 70 && r.textures == TextureQuality::High, "existing water/texture path");
         }
     }

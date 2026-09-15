@@ -336,6 +336,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         AssetRuntime::AnimationStallAudit::Enable(rendererOptions.loadWarmupAudit);
     AssetRuntime::animationRuntimeErrorSink=[](const char* message) { TraceError("%s", message); };
     Renderer::verboseDiagnostics=rendererOptions.diagnostics && !rendererOptions.loadWarmupAudit;
+    Renderer::auditDiligentDiagnostics=true;
     rendererLog << "VerboseDiagnostics=" << Renderer::verboseDiagnostics << std::endl;
     rendererLog << "Skinning=" << (rendererOptions.skinning==Renderer::PrototypeSkinningMode::CPU ? "cpu" : "gpu") << std::endl;
     rendererLog << "SkinningSelection=" << (rendererOptions.skinningSelected ? "explicit" : "default") << std::endl;
@@ -350,7 +351,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
                 << " API=d3d11" << std::endl;
     if (rendererOptions.smokeTest)
     {
-        const int result = Renderer::RunRendererBootstrap(hInstance, rendererOptions);
+        int result = Renderer::RunRendererBootstrap(hInstance, rendererOptions);
+        rendererLog << "DiligentErrors=" << Renderer::diligentErrorCount << " DiligentFatals=" << Renderer::diligentFatalCount << std::endl;
+        if(Renderer::diligentErrorCount||Renderer::diligentFatalCount)result=5;
         rendererLog << "ExitCode=" << result << std::endl;
         return result;
     }
@@ -364,7 +367,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     Renderer::LogClientLifecycle("Start");
     const int mainResult = Main(hInstance, lpCmdLine, rendererOptions.backend);
     ClearNativeVegetation();
-    const int result = mainResult ? mainResult : (Vegetation::statistics.failures?6:0);
+    const int result = mainResult ? mainResult : (Vegetation::statistics.failures?6:(Renderer::diligentErrorCount||Renderer::diligentFatalCount?5:0));
     AssetRuntime::AnimationStallAudit::Write();
     AssetRuntime::ClearAnimationRuntimeCaches();
     std::ofstream resourceLog;
@@ -421,6 +424,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	SAFE_FREE_GLOBAL (szArgv);
     if(result == 4) rendererLog << "ERROR: Renderer initialization failed; no fallback." << std::endl;
     if(result == 5) rendererLog << "ERROR: Renderer frame/resize failed; no fallback." << std::endl;
+    resourceLog << "DiligentErrors=" << Renderer::diligentErrorCount << " DiligentFatals=" << Renderer::diligentFatalCount << std::endl;
     rendererLog << "ExitCode=" << result << std::endl;
 	return result;
 }

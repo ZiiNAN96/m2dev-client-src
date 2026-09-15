@@ -3,7 +3,8 @@ param(
     [Parameter(Mandatory=$true)][string]$BuildDirectory,
     [switch]$Visible,
     [switch]$PrepareOnly,
-    [switch]$Modern
+    [switch]$Modern,
+    [switch]$HDRAtmosphere
 )
 $ErrorActionPreference='Stop'
 $source=(Resolve-Path -LiteralPath "$PSScriptRoot/../..").Path
@@ -15,6 +16,10 @@ New-Item -ItemType Directory -Path "$target/test-root","$target/pack","$target/l
 Copy-Item -LiteralPath "$build/bin/Release/Metin2_Release.exe" -Destination "$target/Metin2_Release.exe"
 Copy-Item -LiteralPath "$original/config" -Destination "$target/config" -Recurse
 if($Modern) { "VERSION 1`nPRESET 4`nSTYLE 1`nSHADOWS 4`nAO 2" | Set-Content -LiteralPath "$target/config/graphics.cfg" }
+if($HDRAtmosphere) {
+    if(-not $Modern){throw 'HDRAtmosphere requires Modern.'}
+    "BLOOM 1`nMODERN_SKY 1`nHIGH_QUALITY_FOG 1" | Add-Content -LiteralPath "$target/config/graphics.cfg"
+}
 Copy-Item -LiteralPath "$original/assets/root" -Destination "$target/test-root/root" -Recurse
 Copy-Item -LiteralPath "$PSScriptRoot/character_runtime_entry.py" -Destination "$target/test-root/root/prototype.py"
 Copy-Item -LiteralPath "$PSScriptRoot/fixtures/f5x" -Destination "$target/test-root/root/f5x" -Recurse

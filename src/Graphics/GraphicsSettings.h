@@ -61,7 +61,7 @@ struct GraphicsFeatures
     bool ShadowsEnabled() const { return config.shadows != ShadowQuality::Off; }
     bool UseHDR() const { return config.hdr; }
     bool UseBloom() const { return config.bloom; }
-    bool UseModernSky() const { return config.modernSky; }
+    bool UseModernSky() const { return config.style==GraphicsStyle::Modern; }
     AmbientOcclusionQuality AOQuality() const { return config.ambientOcclusion; }
 };
 

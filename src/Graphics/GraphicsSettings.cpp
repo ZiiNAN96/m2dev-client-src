@@ -70,6 +70,10 @@ GraphicsSettings PresetSettings(GraphicsPreset preset, GraphicsStyle style)
         break;
     case GraphicsPreset::Custom: break;
     }
+    if(s.style==GraphicsStyle::Modern) {
+        s.hdr=true;
+        if(s.preset==GraphicsPreset::Medium)s.modernSky=s.highQualityFog=true;
+    }
     return s;
 }
 
@@ -111,11 +115,13 @@ GraphicsRuntimeConfig Resolve(const GraphicsSettings& requested, std::uint64_t r
     r.fogDistanceScale = fogScale[s.fogLevel]; r.fogDensity = fogDensity[s.fogLevel];
     r.shadowTextureSize = s.shadows == ShadowQuality::Ultra ? 2048 : s.shadows == ShadowQuality::High ? 1024 : 512;
     if(s.style==GraphicsStyle::Modern) {
+        r.hdr=true;r.bloom=s.bloom;r.modernSky=s.modernSky;r.highQualityFog=s.highQualityFog;
         r.shadows=s.shadows;r.ambientOcclusion=s.ambientOcclusion;
         r.shadowTextureSize=s.shadows==ShadowQuality::Ultra?2048:s.shadows==ShadowQuality::High?1536:
             (s.shadows==ShadowQuality::Medium||s.shadows==ShadowQuality::LegacySolo)?1024:512;
     }
-    // HDR/bloom/sky/water changes remain outside G-DX.
+    // HDR is intrinsic to Modern. The stored legacy HDR bit is retained for
+    // config compatibility; water and texture selection remain unchanged.
     return r;
 }
 

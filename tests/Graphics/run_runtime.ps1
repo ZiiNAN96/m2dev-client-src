@@ -13,7 +13,7 @@ foreach($run in 1..2) {
     if(Test-Path -LiteralPath "$target/g0x-failure.log") {throw (Get-Content -LiteralPath "$target/g0x-failure.log" -Raw)}
     $logName=if($run -eq 1){'g0x-settings.log'}else{'g0x-restart.log'}
     $log=Get-Content -LiteralPath "$target/$logName" -Raw
-    $expectedSteps=if($run -eq 1){12}else{2}
+    $expectedSteps=if($run -eq 1){14}else{2}
     if($log -notmatch "PASS steps=$expectedSteps frames=[1-9][0-9]* screenshots=$expectedSteps restart=") {throw 'Settings/UI sequence did not complete.'}
     $audit=Get-Content -LiteralPath "$target/source-resource-audit.log" -Raw
     foreach($field in @('GraphicsSettingsObjects','SourceTextures','SourceBuffers','VegetationAssets','VegetationInstances','VegetationRenderAssets','VegetationGeometry','VegetationFailures','AssetDocuments','CollisionResources')) {

@@ -49,7 +49,7 @@ int main()
             const auto center=(height/2*width+width/2)*3;
             std::cout<<"center="<<unsigned(pixels[center])<<','<<unsigned(pixels[center+1])<<','<<unsigned(pixels[center+2])<<" background="<<unsigned(pixels[0])<<'\n';
             Check(pixels[center]>150,"FX PBR direct sun and ambient produce lit center pixel");
-            Check(pixels[0]<40,"background preserved");
+            Check(pixels[0]<pixels[center],"new atmosphere remains below the lit material");
             backend.EndFrame();backend.Present();meshRenderer.ReleaseBindings();
             std::array<std::array<float,6>,289> terrainVertices{};
             for(unsigned y=0;y<17;++y)for(unsigned x=0;x<17;++x)terrainVertices[y*17+x]={float(x)/4-2,float(y)/4-2,-2,0,0,1};

@@ -479,6 +479,7 @@ void initsystem()
         { "GetGraphicsRuntimeConfig", systemGetGraphicsRuntimeConfig, METH_VARARGS },
 #ifdef M2_RENDERER_DIAGNOSTICS
         { "TestGraphicsWindow", systemTestGraphicsWindow, METH_VARARGS },
+        { "TestGraphicsSun", systemTestGraphicsSun, METH_VARARGS },
 #endif
 		// MR-14: Fog update by Alaric
 		{ "GetFogLevel",				systemGetFogLevel,				METH_VARARGS },

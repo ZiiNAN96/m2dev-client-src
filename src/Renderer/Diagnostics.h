@@ -1,5 +1,6 @@
 #pragma once
 #include <fstream>
+#include <atomic>
 
 namespace Renderer
 {
@@ -10,6 +11,8 @@ inline constexpr bool defaultVerboseDiagnostics = true;
 inline constexpr bool defaultVerboseDiagnostics = false;
 #endif
 inline bool verboseDiagnostics = defaultVerboseDiagnostics;
+inline bool auditDiligentDiagnostics=false;
+inline std::atomic<unsigned> diligentErrorCount{},diligentFatalCount{};
 
 // Called only at the first existing failure of a renderer instance. Diagnostics
 // must never turn a recoverable logging problem into another render failure.

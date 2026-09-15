@@ -28,6 +28,7 @@ add_library(M2DiligentFX STATIC
     "${m2_fx_dir}/PostProcess/Common/src/PostFXContext.cpp"
     "${m2_fx_dir}/PostProcess/Common/src/PostFXRenderTechnique.cpp"
     "${m2_fx_dir}/PostProcess/ScreenSpaceAmbientOcclusion/src/ScreenSpaceAmbientOcclusion.cpp"
+    "${m2_fx_dir}/PostProcess/Bloom/src/Bloom.cpp"
     "${m2_fx_dir}/Utilities/src/DiligentFXShaderSourceStreamFactory.cpp"
 )
 target_include_directories(M2DiligentFX PUBLIC "${m2_fx_dir}"
@@ -38,6 +39,7 @@ target_include_directories(M2DiligentFX PUBLIC "${m2_fx_dir}"
     "${m2_fx_dir}/Components/interface"
     "${m2_fx_dir}/PostProcess/Common/interface"
     "${m2_fx_dir}/PostProcess/ScreenSpaceAmbientOcclusion/interface"
+    "${m2_fx_dir}/PostProcess/Bloom/interface"
 )
 target_link_libraries(M2DiligentFX PUBLIC Diligent-GraphicsTools
     PRIVATE Diligent-BuildSettings)

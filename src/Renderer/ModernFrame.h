@@ -1,5 +1,6 @@
 #pragma once
 #include "Graphics/SceneLighting.h"
+#include "TerrainRenderData.h"
 #include <cstdint>
 namespace Renderer
 {
@@ -11,14 +12,18 @@ struct ModernFrameStats
 {
     std::uint64_t frames{},meshDraws{},terrainDraws{},shadowDraws{},lightUploads{},lightBufferCreations{},psoCount{},targetBytes{};
     double shadowSubmitMilliseconds{},aoSubmitMilliseconds{};
+    double atmosphereSubmitMilliseconds{},bloomSubmitMilliseconds{},toneMapSubmitMilliseconds{},compositeSubmitMilliseconds{};
+    std::uint64_t hdrTargetBytes{},atmosphereTargetBytes{},toneMappedFrames{};
     unsigned meshShaderVariants{},terrainShaderVariants{};
 };
 class IModernFrame
 {
 public:
     virtual ~IModernFrame()=default;
-    virtual void Begin(const Graphics::SceneLighting&)=0;
+    virtual void Begin(const Graphics::SceneLighting&,bool deferToneMapping=false)=0;
+    virtual void SetCamera(const TerrainMatrices&)=0;
     virtual void End()=0;
+    virtual void FinishWorld()=0;
     virtual bool BeginShadowCollection()=0;
     virtual void EndShadowCollection()=0;
     virtual bool ShadowCasterVisible(const std::array<float,3>& center,float radius) const=0;

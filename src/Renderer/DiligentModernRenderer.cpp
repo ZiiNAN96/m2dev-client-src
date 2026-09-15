@@ -1,5 +1,7 @@
 #include "DiligentModernRenderer.h"
 #include "DiligentD3D11BackendInternal.h"
+#include "DiligentAtmosphere.h"
+#include "Graphics/AtmosphereConfig.h"
 #include "ModernMeshShader.h"
 #include "ModernTerrainShader.h"
 #include "GraphicsConfig.h"
@@ -8,6 +10,7 @@
 #include "Components/interface/ShadowMapManager.hpp"
 #include "PostProcess/Common/interface/PostFXContext.hpp"
 #include "PostProcess/ScreenSpaceAmbientOcclusion/interface/ScreenSpaceAmbientOcclusion.hpp"
+#include "PostProcess/Bloom/interface/Bloom.hpp"
 #include "Utilities/interface/DiligentFXShaderSourceStreamFactory.hpp"
 #include "Graphics/GraphicsTools/interface/MapHelper.hpp"
 #include "Graphics/GraphicsTools/interface/ShaderMacroHelper.hpp"
@@ -22,6 +25,7 @@
 namespace Diligent::HLSL
 {
 #include "Shaders/PostProcess/ScreenSpaceAmbientOcclusion/public/ScreenSpaceAmbientOcclusionStructures.fxh"
+#include "Shaders/PostProcess/Bloom/public/BloomStructures.fxh"
 }
 
 namespace Renderer
@@ -49,7 +53,8 @@ struct TerrainConstants {
     std::array<float,4> factor,fogColor,fogParameters;
     uint4 modes;
 };
-struct CompositeConstants {CameraAttribs camera;ShadowMapAttribs shadows;float4 options,fogColor,fogParameters;};
+struct CompositeConstants {CameraAttribs camera;ShadowMapAttribs shadows;float4 options,fogColor,fogParameters,sunDirection,sunRadiance;};
+struct ToneConstants {float4 exposure;};
 float4 Vector(const std::array<float,4>& a) {return {a[0],a[1],a[2],a[3]};}
 constexpr char compositeShader[]=R"(
 #include "BasicStructures.fxh"
@@ -58,18 +63,34 @@ constexpr char compositeShader[]=R"(
 #define PCF_FILTER_SIZE 3
 #define FILTER_ACROSS_CASCADES 1
 #include "Shadows.fxh"
-cbuffer Composite {CameraAttribs Camera;ShadowMapAttribs Shadows;float4 Options;float4 FogColor;float4 FogParameters;};
+cbuffer Composite {CameraAttribs Camera;ShadowMapAttribs Shadows;float4 Options;float4 FogColor;float4 FogParameters;float4 SunDirection;float4 SunRadiance;};
 Texture2D Direct;Texture2D Indirect;Texture2D Emission;Texture2D Depth;Texture2D AO;Texture2D Background;
+Texture2D Sky;SamplerState SkySampler;
 Texture2DArray<float> ShadowMap;SamplerComparisonState ShadowSampler;
 float4 CompositeVS(uint id:SV_VertexID):SV_POSITION {
  return float4(id==2?3:-1,id==1?3:-1,0,1);
 }
 float4 CompositePS(float4 pixel:SV_POSITION):SV_TARGET {
  int2 coord=int2(pixel.xy);float depth=Depth.Load(int3(coord,0)).r;
- if(depth>=1)return Background.Load(int3(coord,0));
  float2 uv=pixel.xy*Camera.f4ViewportSize.zw;
  float4 world=mul(float4(TexUVToNormalizedDeviceXY(uv),DepthToNormalizedDeviceZ(depth),1),Camera.mViewProjInv);
- world/=world.w;float shadow=1;
+ world/=world.w;
+ float3 ray=normalize(world.xyz-Camera.f4Position.xyz);
+ float2 skyUV=float2(atan2(ray.y,ray.x)/(2*3.14159265359)+.5,1-saturate(ray.z));
+ float3 sky=Sky.SampleLevel(SkySampler,skyUV,0).rgb;
+ // Retain the map's authored horizon tint. Both sky and distance fog sample
+ // this identical horizon, avoiding a separate flat fog colour boundary.
+ sky=lerp(sky,FogColor.rgb,.12*pow(1-saturate(ray.z),4));
+ if(depth>=1) {
+  if(Options.z==0)return float4(FastSRGBToLinear(Background.Load(int3(coord,0)).rgb),1);
+  // A 32 arc-minute disk in sky space; the direction is opposite the rays.
+  float angularRadius=.00465421134;
+  float cosine=dot(ray,-SunDirection.xyz);
+  float edge=max(fwidth(cosine),1e-7);
+  float disk=smoothstep(cos(angularRadius)-edge,cos(angularRadius)+edge,cosine);
+  return float4(sky+SunRadiance.rgb*disk*8,1);
+ }
+ float shadow=1;
  if(Options.x!=0) {
   float3 light=mul(world,Shadows.mWorldToLightView).xyz;
   float cameraZ=abs(mul(world,Camera.mView).z);
@@ -77,20 +98,36 @@ float4 CompositePS(float4 pixel:SV_POSITION):SV_TARGET {
  }
  float ao=Options.y!=0?AO.Load(int3(coord,0)).r:1;
  float3 linearColor=Direct.Load(int3(coord,0)).rgb*shadow+Indirect.Load(int3(coord,0)).rgb*ao+Emission.Load(int3(coord,0)).rgb;
- float3 color=FastLinearToSRGB(max(linearColor,0));
+ float3 color=max(linearColor,0);
  if(FogParameters.w!=0) {
   float distance=length(world.xyz-Camera.f4Position.xyz);
-  float amount=FogParameters.w==2?exp(-distance*FogParameters.z):saturate((FogParameters.y-distance)/(FogParameters.y-FogParameters.x));
-  color=lerp(FogColor.rgb,color,saturate(amount));
+  float progress=max(0,(distance-FogParameters.x)/max(1,FogParameters.y-FogParameters.x));
+  float amount=FogParameters.w==2?exp(-distance*FogParameters.z):exp(-3*progress*progress);
+  if(Options.w==0)amount=saturate(1-progress);
+  color=lerp(sky,color,saturate(amount));
  }
  return float4(color,1);
+}
+)";
+constexpr char toneShader[]=R"(
+#include "ShaderUtilities.fxh"
+#define TONE_MAPPING_MODE TONE_MAPPING_MODE_REINHARD
+#include "ToneMapping.fxh"
+cbuffer Tone {float4 Exposure;}
+Texture2D Scene;
+float4 ToneVS(uint id:SV_VertexID):SV_POSITION {return float4(id==2?3:-1,id==1?3:-1,0,1);}
+float4 TonePS(float4 pixel:SV_POSITION):SV_TARGET {
+ ToneMappingAttribs settings=(ToneMappingAttribs)0;
+ settings.fMiddleGray=1;settings.fLuminanceSaturation=1;
+ float3 mapped=ToneMap(Scene.Load(int3(int2(pixel.xy),0)).rgb,settings,1/Exposure.x);
+ return float4(FastLinearToSRGB(mapped),1);
 }
 )";
 }
 struct DiligentModernRenderer::Impl
 {
     DiligentD3D11Backend& backend;
-    bool active{},forward{},hasCamera{},hasDepth{},shadowsPrepared{};
+    bool active{},forward{},hasCamera{},hasDepth{},shadowsPrepared{},worldOpen{},deferToneMapping{},sceneReady{};
     std::array<ViewFrustum,4> shadowFrusta;
     bool PrepareShadows();
     ModernFrameStats stats;
@@ -99,6 +136,7 @@ struct DiligentModernRenderer::Impl
     Graphics::GraphicsRuntimeConfig config;
     CameraAttribs camera{};
     RefCntAutoPtr<ITexture> depth,background,white,motion;
+    RefCntAutoPtr<ITexture> hdrScene;
     RefCntAutoPtr<ITexture> brdf,unitEnvironment;
     RefCntAutoPtr<ISampler> iblSampler;
     std::array<RefCntAutoPtr<ITexture>,4> surfaces;
@@ -110,11 +148,15 @@ struct DiligentModernRenderer::Impl
     std::array<RefCntAutoPtr<IShader>,18> vertexShaders,pixelShaders;
     std::array<RefCntAutoPtr<IShader>,4> terrainVS,terrainPS;
     Pipeline composite;
+    Pipeline tone;
+    RefCntAutoPtr<IBuffer> toneCB;
+    std::unique_ptr<DiligentAtmosphere> atmosphere;
     std::unique_ptr<ShadowMapManager> shadow;
     unsigned shadowSize{},cascades{};
     ShadowMapAttribs shadowAttribs{};
     std::unique_ptr<PostFXContext> post;
     std::unique_ptr<ScreenSpaceAmbientOcclusion> ao;
+    std::unique_ptr<Bloom> bloom;
     std::vector<ModernMeshSubmission> casters;
     std::vector<ModernMeshSubmission> transparent;
     std::vector<ModernTerrainSubmission> terrainCasters;
@@ -140,7 +182,8 @@ struct DiligentModernRenderer::Impl
         width=swap.Width;height=swap.Height;
         depth=Texture(TEX_FORMAT_R24G8_TYPELESS,"G-DX shared scene depth",BIND_DEPTH_STENCIL|BIND_SHADER_RESOURCE);
         background=Texture(TEX_FORMAT_RGBA8_UNORM,"G-DX background",BIND_RENDER_TARGET|BIND_SHADER_RESOURCE);
-        for(unsigned i=0;i<4;++i)surfaces[i]=Texture(i==3?TEX_FORMAT_RGBA16_FLOAT:TEX_FORMAT_RGBA8_UNORM,
+        hdrScene=Texture(TEX_FORMAT_RGBA16_FLOAT,"G56 HDR world scene",BIND_RENDER_TARGET|BIND_SHADER_RESOURCE);
+        for(unsigned i=0;i<4;++i)surfaces[i]=Texture(TEX_FORMAT_RGBA16_FLOAT,
             "G-DX direct/indirect/emission/normal",BIND_RENDER_TARGET|BIND_SHADER_RESOURCE);
         motion=Texture(TEX_FORMAT_RG16_FLOAT,"G-DX spatial AO scratch (history disabled)",BIND_RENDER_TARGET|BIND_SHADER_RESOURCE);
         white=Texture(TEX_FORMAT_R8_UNORM,"G-DX neutral AO",BIND_RENDER_TARGET|BIND_SHADER_RESOURCE);
@@ -148,6 +191,7 @@ struct DiligentModernRenderer::Impl
         State().context->ClearRenderTarget(white->GetDefaultView(TEXTURE_VIEW_RENDER_TARGET),one,RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
         State().context->ClearRenderTarget(motion->GetDefaultView(TEXTURE_VIEW_RENDER_TARGET),zero,RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
         composite.srb.Release();
+        tone.srb.Release();
     }
     RefCntAutoPtr<IShader> Shader(const char* source,const char* entry,SHADER_TYPE stage,const ShaderMacroArray& macros={}) {
         FirstUseAudit timing("shader",entry);
@@ -266,8 +310,11 @@ struct DiligentModernRenderer::Impl
         Set(pipeline.srb,SHADER_TYPE_PIXEL,"ModernLighting",lightCB);
         Set(pipeline.srb,SHADER_TYPE_PIXEL,"PreintegratedBRDF",brdf->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE));
         Set(pipeline.srb,SHADER_TYPE_PIXEL,"IrradianceMap",unitEnvironment->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE));
+        Set(pipeline.srb,SHADER_TYPE_PIXEL,"SkyIrradiance",atmosphere->Irradiance());
+        Set(pipeline.srb,SHADER_TYPE_PIXEL,"SkyEnvironment",atmosphere->PrefilteredEnvironment());
         Set(pipeline.srb,SHADER_TYPE_PIXEL,"IBLSampler",iblSampler);
         if(forwardPass) {
+            Set(pipeline.srb,SHADER_TYPE_PIXEL,"Sky",atmosphere->Sky());Set(pipeline.srb,SHADER_TYPE_PIXEL,"SkySampler",atmosphere->Sampler());
             Set(pipeline.srb,SHADER_TYPE_PIXEL,"Composite",compositeCB);
             Set(pipeline.srb,SHADER_TYPE_PIXEL,"ShadowMap",shadow->GetSRV());Set(pipeline.srb,SHADER_TYPE_PIXEL,"ShadowSampler",shadowSampler);
             auto* aoTexture=config.ambientOcclusion!=Graphics::AmbientOcclusionQuality::Off&&ao?ao->GetAmbientOcclusionSRV():white->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE);
@@ -350,34 +397,44 @@ DiligentModernRenderer::~DiligentModernRenderer() {
            <<" psoCount="<<stats.psoCount<<" meshShaderVariants="<<stats.meshShaderVariants
            <<" terrainShaderVariants="<<stats.terrainShaderVariants<<" ownedTargetBytes="<<stats.targetBytes
            <<" shadowCpuSubmitMs="<<stats.shadowSubmitMilliseconds<<" aoCpuSubmitMs="<<stats.aoSubmitMilliseconds
+           <<" hdrTargetBytes="<<stats.hdrTargetBytes<<" atmosphereTargetBytes="<<stats.atmosphereTargetBytes
+           <<" atmosphereCpuSubmitMs="<<stats.atmosphereSubmitMilliseconds<<" bloomCpuSubmitMs="<<stats.bloomSubmitMilliseconds
+           <<" toneMapCpuSubmitMs="<<stats.toneMapSubmitMilliseconds<<" compositeCpuSubmitMs="<<stats.compositeSubmitMilliseconds
+           <<" toneMappedFrames="<<stats.toneMappedFrames
            <<" ModernRenderers="<<liveModernRenderers<<'\n';
     }catch(...){}
 }
 ModernFrameStats DiligentModernRenderer::Stats() const {return impl_->stats;}
 bool DiligentModernRenderer::Active() const {return impl_->active||impl_->forward;}
-void DiligentModernRenderer::BeginForwardWorld() {impl_->forward=impl_->hasCamera&&impl_->hasDepth&&!impl_->active;}
+void DiligentModernRenderer::BeginForwardWorld() {impl_->forward=impl_->hasCamera&&impl_->hasDepth&&!impl_->active;if(impl_->forward){impl_->worldOpen=true;BindWorldTarget();}}
 void DiligentModernRenderer::EndForwardWorld() {
     auto& s=*impl_;s.forward=false;
     for(auto& pair:s.pipelines)for(auto stage:{SHADER_TYPE_VERTEX,SHADER_TYPE_PIXEL})
         for(const char* name:{"BaseMap","NormalMap","RoughnessMap","MetallicMap","AOMap","EmissiveMap","SkinningPalette","ScreenAO","ShadowMap","CameraAlphaTexture"})Impl::Set(pair.second.srb,stage,name,nullptr);
+    if(!s.deferToneMapping)FinishWorld();
 }
-void DiligentModernRenderer::ResetFrame() {shadowCasterCollection=false;impl_->active=impl_->forward=impl_->hasDepth=false;impl_->casters.clear();impl_->terrainCasters.clear();impl_->transparent.clear();}
+void DiligentModernRenderer::ResetFrame() {shadowCasterCollection=false;impl_->worldOpen=impl_->sceneReady=impl_->active=impl_->forward=impl_->hasDepth=false;impl_->casters.clear();impl_->terrainCasters.clear();impl_->transparent.clear();}
+bool DiligentModernRenderer::HDRWorldActive() const {return impl_->worldOpen&&!impl_->active;}
+void DiligentModernRenderer::BindWorldTarget() {
+    auto& s=*impl_;auto* target=s.hdrScene->GetDefaultView(TEXTURE_VIEW_RENDER_TARGET);
+    s.State().context->SetRenderTargets(1,&target,DepthView(),RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
+}
 ITextureView* DiligentModernRenderer::DepthView() const {return impl_->hasDepth?impl_->depth->GetDefaultView(TEXTURE_VIEW_DEPTH_STENCIL):nullptr;}
 void DiligentModernRenderer::BindTargets() {
     auto& s=*impl_;
-    if(s.forward){auto* target=s.State().swapChain->GetCurrentBackBufferRTV();s.State().context->SetRenderTargets(1,&target,DepthView(),RESOURCE_STATE_TRANSITION_MODE_TRANSITION);return;}
+    if(s.forward||HDRWorldActive()){BindWorldTarget();return;}
     if(!s.active)return;ITextureView* targets[4];
     for(unsigned i=0;i<4;++i)targets[i]=s.surfaces[i]->GetDefaultView(TEXTURE_VIEW_RENDER_TARGET);
     s.State().context->SetRenderTargets(4,targets,DepthView(),RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
 }
 void DiligentModernRenderer::ReleaseWindowResources() {
     shadowCasterCollection=false;
-    auto& s=*impl_;s.active=s.forward=s.hasDepth=false;s.casters.clear();s.composite.srb.Release();s.depth.Release();s.background.Release();s.motion.Release();s.white.Release();
+    auto& s=*impl_;s.worldOpen=s.sceneReady=s.active=s.forward=s.hasDepth=false;s.casters.clear();s.composite.srb.Release();s.tone.srb.Release();s.hdrScene.Release();s.depth.Release();s.background.Release();s.motion.Release();s.white.Release();s.bloom.reset();
     for(auto& texture:s.surfaces)texture.Release();s.post.reset();s.ao.reset();s.terrainCasters.clear();s.transparent.clear();
 }
-void DiligentModernRenderer::Begin(const Graphics::SceneLighting& light) {
+void DiligentModernRenderer::Begin(const Graphics::SceneLighting& light,bool deferToneMapping) {
     shadowCasterCollection=false;impl_->shadowsPrepared=false;
-    auto& s=*impl_;s.active=s.forward=false;s.hasDepth=false;s.config=GetGraphicsRuntimeConfig();s.casters.clear();s.terrainCasters.clear();s.transparent.clear();
+    auto& s=*impl_;s.sceneReady=s.worldOpen=s.active=s.forward=false;s.deferToneMapping=deferToneMapping;s.hasDepth=false;s.config=GetGraphicsRuntimeConfig();s.casters.clear();s.terrainCasters.clear();s.transparent.clear();
     if(s.config.style!=Graphics::GraphicsStyle::Modern)return;
     s.Resources();s.IBL();
     if(loadingPrewarm) {
@@ -389,10 +446,15 @@ void DiligentModernRenderer::Begin(const Graphics::SceneLighting& light) {
     auto& state=s.State();
     CopyTextureAttribs copy;copy.pSrcTexture=state.swapChain->GetCurrentBackBufferRTV()->GetTexture();copy.pDstTexture=s.background;
     copy.SrcTextureTransitionMode=copy.DstTextureTransitionMode=RESOURCE_STATE_TRANSITION_MODE_TRANSITION;state.context->CopyTexture(copy);
+    const auto atmosphereStart=std::chrono::steady_clock::now();
+    if(!s.atmosphere)s.atmosphere=std::make_unique<DiligentAtmosphere>(state.device,state.context);
+    s.atmosphere->Prepare(s.lighting,s.config.modernSky);
+    s.stats.atmosphereSubmitMilliseconds+=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-atmosphereStart).count();
     float clear[]{0,0,0,0};for(auto& target:s.surfaces)state.context->ClearRenderTarget(target->GetDefaultView(TEXTURE_VIEW_RENDER_TARGET),clear,RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
     state.context->ClearDepthStencil(s.depth->GetDefaultView(TEXTURE_VIEW_DEPTH_STENCIL),CLEAR_DEPTH_FLAG,1,0,RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
     s.active=s.hasDepth=true;BindTargets();Viewport viewport{0,0,float(s.width),float(s.height),0,1};state.context->SetViewports(1,&viewport,s.width,s.height);
 }
+void DiligentModernRenderer::SetCamera(const TerrainMatrices& matrices){impl_->Camera(matrices);}
 void DiligentModernRenderer::Impl::Camera(const TerrainMatrices& matrices) {
     auto& s=*this;
     if(!s.hasCamera){
@@ -410,7 +472,7 @@ void DiligentModernRenderer::Impl::Camera(const TerrainMatrices& matrices) {
         s.Buffer(s.lightCB,sizeof(LightConstants),"G-DX single sun buffer");
         const auto& l=s.lighting;LightConstants light{{l.sunDirection[0],l.sunDirection[1],l.sunDirection[2],0},
             {l.sunColor[0]*l.sunIntensity,l.sunColor[1]*l.sunIntensity,l.sunColor[2]*l.sunIntensity,0},
-            {l.ambient[0],l.ambient[1],l.ambient[2],0},s.camera.f4Position,{l.environmentColor[0],l.environmentColor[1],l.environmentColor[2],0}};
+            {l.ambient[0],l.ambient[1],l.ambient[2],0},s.camera.f4Position,{l.environmentColor[0],l.environmentColor[1],l.environmentColor[2],l.skyIBLIntensity}};
         light.camera.w=Matrix(matrices.projection)._34<0?1.f:-1.f;
         MapHelper<LightConstants> mapped(s.State().context,s.lightCB,MAP_WRITE,MAP_FLAG_DISCARD);Require(bool(mapped),"G-DX light map");*mapped=light;s.hasCamera=true;++s.stats.lightUploads;
     }
@@ -513,10 +575,9 @@ void DiligentModernRenderer::End() {
     s.stats.shadowSubmitMilliseconds+=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-shadowStart).count();
     const auto aoStart=std::chrono::steady_clock::now();
     const bool useAO=s.hasCamera&&s.config.ambientOcclusion!=Graphics::AmbientOcclusionQuality::Off;
-    if(useAO){
+    if(useAO||s.config.bloom||loadingPrewarm){
         FirstUseAudit timing("fx-total","PostFX-SSAO-first",!s.post||!s.ao);
         if(!s.post){PostFXContext::CreateInfo ci;ci.PackMatrixRowMajor=true;s.post=std::make_unique<PostFXContext>(state.device,ci);}
-        if(!s.ao)s.ao=std::make_unique<ScreenSpaceAmbientOcclusion>(state.device,ScreenSpaceAmbientOcclusion::CreateInfo{});
         s.post->PrepareResources(state.device,{s.frame,s.width,s.height,s.width,s.height},PostFXContext::FEATURE_FLAG_NONE);
         s.Buffer(s.cameraCB,2*sizeof(CameraAttribs),"G-DX shared current/previous camera");
         {MapHelper<CameraAttribs> camera(state.context,s.cameraCB,MAP_WRITE,MAP_FLAG_DISCARD);Require(bool(camera),"G-DX camera map");camera[0]=camera[1]=s.camera;}
@@ -525,6 +586,9 @@ void DiligentModernRenderer::End() {
         attributes.pMotionVectorsSRV=s.motion->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE);attributes.pCameraAttribsCB=s.cameraCB;
         s.post->Execute(attributes);
         Require(s.post->IsPSOsReady(),"FX shared PostFX pipelines are unavailable");
+    }
+    if(useAO){
+        if(!s.ao)s.ao=std::make_unique<ScreenSpaceAmbientOcclusion>(state.device,ScreenSpaceAmbientOcclusion::CreateInfo{});
         const auto flags=s.config.ambientOcclusion==Graphics::AmbientOcclusionQuality::SSAO?ScreenSpaceAmbientOcclusion::FEATURE_FLAG_HALF_RESOLUTION:ScreenSpaceAmbientOcclusion::FEATURE_FLAG_NONE;
         s.ao->PrepareResources(state.device,state.context,s.post.get(),flags);
         HLSL::ScreenSpaceAmbientOcclusionAttribs settings;settings.EffectRadius=120.f;
@@ -533,16 +597,19 @@ void DiligentModernRenderer::End() {
         settings.ResetAccumulation=TRUE;settings.TemporalStabilityFactor=0;
         ScreenSpaceAmbientOcclusion::RenderAttributes aoAttributes;
         aoAttributes.pDevice=state.device;aoAttributes.pDeviceContext=state.context;aoAttributes.pPostFXContext=s.post.get();
-        aoAttributes.pDepthBufferSRV=attributes.pCurrDepthBufferSRV;aoAttributes.pNormalBufferSRV=s.surfaces[3]->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE);aoAttributes.pSSAOAttribs=&settings;
+        aoAttributes.pDepthBufferSRV=s.depth->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE);aoAttributes.pNormalBufferSRV=s.surfaces[3]->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE);aoAttributes.pSSAOAttribs=&settings;
         s.ao->Execute(aoAttributes);Require(s.ao->IsPSOsReady(),"FX SSAO pipelines are unavailable; placeholder AO is not accepted");
         aoView=s.ao->GetAmbientOcclusionSRV();Require(aoView!=nullptr,"FX AO output");
     }
     s.stats.aoSubmitMilliseconds+=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-aoStart).count();
-    s.stats.targetBytes=std::uint64_t(s.width)*s.height*33+std::uint64_t(size)*size*count*4+256*256*4;
+    s.stats.hdrTargetBytes=std::uint64_t(s.width)*s.height*8;
+    s.stats.atmosphereTargetBytes=s.atmosphere->TargetBytes();
+    s.stats.targetBytes=std::uint64_t(s.width)*s.height*53+std::uint64_t(size)*size*count*4+256*256*4+s.stats.atmosphereTargetBytes;
+    const auto compositeStart=std::chrono::steady_clock::now();
     if(!s.composite.pso){
         GraphicsPipelineStateCreateInfo ci;ci.PSODesc.Name="G-DX direct shadow / indirect AO composition";ci.PSODesc.PipelineType=PIPELINE_TYPE_GRAPHICS;
         ci.PSODesc.ResourceLayout.DefaultVariableType=SHADER_RESOURCE_VARIABLE_TYPE_DYNAMIC;
-        ci.GraphicsPipeline.NumRenderTargets=1;ci.GraphicsPipeline.RTVFormats[0]=TEX_FORMAT_RGBA8_UNORM;
+        ci.GraphicsPipeline.NumRenderTargets=1;ci.GraphicsPipeline.RTVFormats[0]=TEX_FORMAT_RGBA16_FLOAT;
         ci.GraphicsPipeline.PrimitiveTopology=PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;ci.GraphicsPipeline.RasterizerDesc.CullMode=CULL_MODE_NONE;
         ci.GraphicsPipeline.DepthStencilDesc.DepthEnable=False;
         auto vs=s.Shader(compositeShader,"CompositeVS",SHADER_TYPE_VERTEX),ps=s.Shader(compositeShader,"CompositePS",SHADER_TYPE_PIXEL);
@@ -552,8 +619,10 @@ void DiligentModernRenderer::End() {
     Require(bool(s.composite.srb),"G-DX composition binding");
     s.Buffer(s.compositeCB,sizeof(CompositeConstants),"G-DX composition constants");
     {MapHelper<CompositeConstants> data(state.context,s.compositeCB,MAP_WRITE,MAP_FLAG_DISCARD);Require(bool(data),"G-DX composition map");
-        data->camera=s.camera;data->shadows=s.shadowAttribs;data->options={useShadows?1.f:0.f,useAO?1.f:0.f,0,0};
-        data->fogColor={s.lighting.fogColor[0],s.lighting.fogColor[1],s.lighting.fogColor[2],1};
+        data->camera=s.camera;data->shadows=s.shadowAttribs;data->options={useShadows?1.f:0.f,useAO?1.f:0.f,s.hasCamera?1.f:0.f,s.config.highQualityFog?1.f:0.f};
+        data->fogColor={std::pow(s.lighting.fogColor[0],2.2f),std::pow(s.lighting.fogColor[1],2.2f),std::pow(s.lighting.fogColor[2],2.2f),1};
+        data->sunDirection={s.lighting.sunDirection[0],s.lighting.sunDirection[1],s.lighting.sunDirection[2],0};
+        data->sunRadiance={s.lighting.sunColor[0]*s.lighting.sunIntensity,s.lighting.sunColor[1]*s.lighting.sunIntensity,s.lighting.sunColor[2]*s.lighting.sunIntensity,0};
         data->fogParameters={s.lighting.fogNear,s.lighting.fogFar,s.lighting.fogDensity,s.lighting.fogEnabled?(s.lighting.densityFog?2.f:1.f):0.f};}
     Impl::Set(s.composite.srb,SHADER_TYPE_PIXEL,"Composite",s.compositeCB);
     const char* names[]{"Direct","Indirect","Emission"};
@@ -562,11 +631,13 @@ void DiligentModernRenderer::End() {
     Impl::Set(s.composite.srb,SHADER_TYPE_PIXEL,"Background",s.background->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE));
     Impl::Set(s.composite.srb,SHADER_TYPE_PIXEL,"AO",aoView);Impl::Set(s.composite.srb,SHADER_TYPE_PIXEL,"ShadowMap",s.shadow->GetSRV());
     Impl::Set(s.composite.srb,SHADER_TYPE_PIXEL,"ShadowSampler",s.shadowSampler);
-    auto* target=state.swapChain->GetCurrentBackBufferRTV();state.context->SetRenderTargets(1,&target,nullptr,RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
+    Impl::Set(s.composite.srb,SHADER_TYPE_PIXEL,"Sky",s.atmosphere->Sky());Impl::Set(s.composite.srb,SHADER_TYPE_PIXEL,"SkySampler",s.atmosphere->Sampler());
+    auto* target=s.hdrScene->GetDefaultView(TEXTURE_VIEW_RENDER_TARGET);state.context->SetRenderTargets(1,&target,nullptr,RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
     Viewport viewport{0,0,float(s.width),float(s.height),0,1};state.context->SetViewports(1,&viewport,s.width,s.height);
     state.context->SetPipelineState(s.composite.pso);state.context->CommitShaderResources(s.composite.srb,RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
     state.context->Draw(DrawAttribs{3,DRAW_FLAG_VERIFY_ALL});
-    s.active=false;
+    s.active=false;s.worldOpen=s.sceneReady=true;
+    s.stats.compositeSubmitMilliseconds+=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-compositeStart).count();
     state.context->SetRenderTargets(1,&target,DepthView(),RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
     for(const auto& item:s.transparent)s.DrawMesh(item,false,s.camera.mViewProj,true);
     s.transparent.clear();
@@ -576,5 +647,47 @@ void DiligentModernRenderer::End() {
     for(auto& pair:s.pipelines)for(auto stage:{SHADER_TYPE_VERTEX,SHADER_TYPE_PIXEL})
         for(const char* name:{"BaseMap","NormalMap","RoughnessMap","MetallicMap","AOMap","EmissiveMap","SkinningPalette","ScreenAO","ShadowMap","CameraAlphaTexture"})Impl::Set(pair.second.srb,stage,name,nullptr);
     for(auto& pair:s.terrainPipelines)for(const char* name:{"ColorTexture","AlphaTexture"})Impl::Set(pair.second.srb,SHADER_TYPE_PIXEL,name,nullptr);
+    if(!s.deferToneMapping)FinishWorld();
+}
+
+void DiligentModernRenderer::FinishWorld() {
+    auto& s=*impl_;if(!s.worldOpen||!s.sceneReady)return;auto& state=s.State();
+    state.context->SetRenderTargets(0,nullptr,nullptr,RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
+    ITextureView* source=s.hdrScene->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE);
+    const auto config=Graphics::ResolveAtmosphere(s.lighting,s.config);
+    if(s.config.bloom||loadingPrewarm) {
+        const auto start=std::chrono::steady_clock::now();FirstUseAudit timing("fx-total","bloom-first",!s.bloom);
+        if(!s.bloom)s.bloom=std::make_unique<Bloom>(state.device,Bloom::CreateInfo{});
+        s.bloom->PrepareResources(state.device,state.context,s.post.get(),Bloom::FEATURE_FLAG_NONE);
+        HLSL::BloomAttribs settings;settings.Threshold=config.bloomThreshold;settings.Intensity=config.bloomIntensity;
+        settings.SoftTreshold=.05f;settings.Radius=config.bloomRadius;
+        Bloom::RenderAttributes attributes;attributes.pDevice=state.device;attributes.pDeviceContext=state.context;
+        attributes.pPostFXContext=s.post.get();attributes.pColorBufferSRV=source;attributes.pBloomAttribs=&settings;
+        s.bloom->Execute(attributes);Require(s.bloom->IsPSOsReady(),"G56 FX Bloom pipelines unavailable");
+        if(s.config.bloom)source=s.bloom->GetBloomTextureSRV();
+        s.stats.bloomSubmitMilliseconds+=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-start).count();
+    }
+    const auto start=std::chrono::steady_clock::now();
+    if(!s.tone.pso) {
+        auto vs=s.Shader(toneShader,"ToneVS",SHADER_TYPE_VERTEX),ps=s.Shader(toneShader,"TonePS",SHADER_TYPE_PIXEL);
+        GraphicsPipelineStateCreateInfo ci;ci.PSODesc.Name="G56 Diligent tone mapping SDR output";ci.PSODesc.PipelineType=PIPELINE_TYPE_GRAPHICS;
+        ci.PSODesc.ResourceLayout.DefaultVariableType=SHADER_RESOURCE_VARIABLE_TYPE_DYNAMIC;
+        ci.GraphicsPipeline.NumRenderTargets=1;ci.GraphicsPipeline.RTVFormats[0]=state.swapChain->GetDesc().ColorBufferFormat;
+        ci.GraphicsPipeline.PrimitiveTopology=PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;ci.GraphicsPipeline.RasterizerDesc.CullMode=CULL_MODE_NONE;
+        ci.GraphicsPipeline.DepthStencilDesc.DepthEnable=False;ci.pVS=vs;ci.pPS=ps;
+        {FirstUseAudit timing("pso",ci.PSODesc.Name);state.device->CreateGraphicsPipelineState(ci,&s.tone.pso);}Require(bool(s.tone.pso),"G56 tone mapping PSO");
+    }
+    if(!s.tone.srb)s.tone.pso->CreateShaderResourceBinding(&s.tone.srb,true);
+    s.Buffer(s.toneCB,sizeof(ToneConstants),"G56 fixed exposure");
+    {MapHelper<ToneConstants> data(state.context,s.toneCB,MAP_WRITE,MAP_FLAG_DISCARD);Require(bool(data),"G56 exposure map");data->exposure={config.exposure,0,0,0};}
+    Impl::Set(s.tone.srb,SHADER_TYPE_PIXEL,"Tone",s.toneCB);Impl::Set(s.tone.srb,SHADER_TYPE_PIXEL,"Scene",source);
+    auto* target=state.swapChain->GetCurrentBackBufferRTV();state.context->SetRenderTargets(1,&target,nullptr,RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
+    Viewport viewport{0,0,float(s.width),float(s.height),0,1};state.context->SetViewports(1,&viewport,s.width,s.height);
+    state.context->SetPipelineState(s.tone.pso);state.context->CommitShaderResources(s.tone.srb,RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
+    state.context->Draw(DrawAttribs{3,DRAW_FLAG_VERIFY_ALL});
+    Impl::Set(s.tone.srb,SHADER_TYPE_PIXEL,"Scene",nullptr);
+    s.worldOpen=s.forward=false;++s.stats.toneMappedFrames;
+    state.context->SetRenderTargets(1,&target,DepthView(),RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
+    s.stats.toneMapSubmitMilliseconds+=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-start).count();
 }
 }
