@@ -1,0 +1,167 @@
+"""G1-X bounded native client proof. Server login acceptance remains separate."""
+import app, background, builtins, chr, chrmgr, grp, item, json, mouseModule, player
+import playersettingmodule, systemSetting, time, ui, uisystemoption, wndMgr
+
+width, height = systemSetting.GetWidth(), systemSetting.GetHeight()
+wndMgr.SetScreenSize(width, height)
+app.Create("G1-X Material System / Classic + Modern", width, height, 1)
+app.SetMouseHandler(mouseModule.mouseController)
+wndMgr.SetMouseHandler(mouseModule.mouseController)
+assert mouseModule.mouseController.Create()
+app.SetCameraMaxDistance(20000.0)
+app.SetHairColorEnable(True)
+assert app.LoadLocaleData(app.GetLocalePath())
+playersettingmodule.__LoadGameNPC()
+playersettingmodule.__LoadGameEffect()
+item.LoadItemTable(app.GetLocalePath() + "/item_proto")
+for phase in ("INIT", "WARRIOR", "ASSASSIN", "SURA", "SHAMAN"):
+    playersettingmodule.LoadGameData(phase)
+chrmgr.CreateRace(65000)
+chrmgr.SelectRace(65000)
+chrmgr.LoadLocalRaceData("f5x/character.msm")
+chrmgr.SetPathName("f5x/")
+chrmgr.RegisterMotionMode(chr.MOTION_MODE_GENERAL)
+for motion, name in ((chr.MOTION_WAIT, "idle"), (chr.MOTION_WALK, "walk"), (chr.MOTION_NORMAL_ATTACK, "attack")):
+    chrmgr.RegisterMotionData(chr.MOTION_MODE_GENERAL, motion, name + ".msa", 100)
+try:
+    with builtins.old_open("g1x-expected.json") as stream:
+        expected = json.load(stream)
+except FileNotFoundError:
+    expected = None
+if expected:
+    assert systemSetting.GetGraphicsSettings() == expected, "Persisted settings changed after restart"
+log = builtins.old_open("g1x-restart.log" if expected else "g1x-materials.log", "w")
+
+
+class World(ui.Window):
+    def __init__(self):
+        ui.Window.__init__(self)
+        self.SetSize(width, height)
+        self.Show()
+        self.step = -1
+        self.frames = 0
+        self.shots = set()
+        self.map = None
+        self.started = 0
+        self.options = uisystemoption.OptionDialog()
+        self.options.SetPosition(15, 80)
+        self.options.Show()
+        self.options.OpenGraphics()
+        self.options.graphicsDialog.SetPosition(350, 80)
+
+    def Load(self, name):
+        chr.Destroy()
+        if self.map:
+            background.Destroy()
+        background.Initialize()
+        x, y = (44000, 27200) if name == "a1" else (69642, 54848)
+        background.LoadMap("metin2_map_" + name, float(x), float(y), 0.0)
+        background.SetViewDistanceSet(background.DISTANCE0, 24000.0)
+        background.SelectViewDistanceNum(background.DISTANCE0)
+        self.position = (x, y, background.GetHeight(x, y))
+        for index, (race, kind) in enumerate(((0, 6), (9003, 1), (101, 0), (691, 0), (20101, 1), (0, 6), (65000, 0))):
+            vid = 58100 + index
+            mount = 20104 if index == 5 else 0
+            chr.CreateInstance(vid, {"horse": mount})
+            chr.SelectInstance(vid)
+            chr.SetVirtualID(vid)
+            chr.SetInstanceType(kind)
+            chr.SetRace(race)
+            if kind == 6:
+                chr.ChangeShape(0)
+                chr.SetHair(1001)
+                chr.SetWeapon(19)
+                chr.SetMotionMode(chr.MOTION_MODE_HORSE_ONEHAND_SWORD if mount else chr.MOTION_MODE_ONEHAND_SWORD)
+            else:
+                chr.SetArmor(0)
+                chr.SetMotionMode(chr.MOTION_MODE_GENERAL)
+            chr.SetLoopMotion(chr.MOTION_WAIT)
+            px = x + index * 220
+            chr.SetPixelPosition(int(px), int(y), int(background.GetHeight(px, y)))
+            chr.Show()
+        player.SetMainCharacterIndex(58100)
+        self.map = name
+        log.write("map=%s actors=7 player/mob/building/weapon/hair/mount/GLB\n" % name)
+
+    def OnUpdate(self):
+        if time.monotonic() - self.started >= 2 and (self.step < 0 or self.step in self.shots):
+            self.step += 1
+            if self.step >= (2 if expected else 12):
+                app.Exit()
+                return
+            stage = self.step
+            name = "b1" if stage in (7, 8) else "a1"
+            if name != self.map:
+                self.Load(name)
+            modern = bool(expected) or stage in (2, 3, 4, 5, 8, 9, 10, 11)
+            self.options.graphicsDialog.style.SelectItem(int(modern))
+            assert systemSetting.GetGraphicsSettings()["style"] == int(modern)
+            if stage in (5, 6):
+                result = systemSetting.TestGraphicsWindow()
+                assert all(result.values())
+                log.write("window style=%s result=%s\n" % ("Modern" if modern else "Classic", json.dumps(result, sort_keys=True)))
+            for vid in (58100, 58102, 58106):
+                chr.SelectInstance(vid)
+                if stage in (3, 10):
+                    chr.SetLoopMotion(chr.MOTION_WALK)
+                elif stage in (4, 8):
+                    chr.SetLoopMotion(chr.MOTION_COMBO_ATTACK_1 if vid == 58100 else chr.MOTION_NORMAL_ATTACK)
+                else:
+                    chr.SetLoopMotion(chr.MOTION_WAIT)
+            self.camera = (6000, 35, 0) if stage in (0, 7, 9) else (1900, 20, 0)
+            if stage in (2, 6):
+                self.options.Show()
+                self.options.OpenGraphics()
+            else:
+                self.options.Close()
+            if stage == 11 or expected:
+                assert systemSetting.SaveGraphicsSettings()
+                with builtins.old_open("g1x-expected.json", "w") as stream:
+                    json.dump(systemSetting.GetGraphicsSettings(), stream)
+            log.write("step=%d map=%s style=%s\n" % (stage, name, "Modern" if modern else "Classic"))
+            log.flush()
+            self.started = time.monotonic()
+        x, y, z = self.position
+        app.SetCenterPosition(x, -y, z + 100)
+        app.SetCamera(*self.camera, 0.0)
+        background.Update(x, -y, z)
+        chr.Update()
+
+    def OnRender(self):
+        x, y, z = self.position
+        grp.SetPositionCamera(x, -y, z + 100, *self.camera)
+        app.RenderGame()
+        grp.SetInterfaceRenderState()
+        self.frames += 1
+
+
+class Capture(ui.Window):
+    def __init__(self, world):
+        ui.Window.__init__(self, "TOP_MOST")
+        self.world = world
+        self.Show()
+
+    def OnRender(self):
+        world = self.world
+        if 0 <= world.step < (2 if expected else 12) and world.step not in world.shots and time.monotonic() - world.started > .7:
+            success, path = grp.SaveScreenShotToPath("g1x-%02d-" % world.step)
+            assert success, "Native screenshot failed"
+            world.shots.add(world.step)
+            log.write("image=%s\n" % path)
+            log.flush()
+
+
+world = World()
+capture = Capture(world)
+app.Loop()
+chr.Destroy()
+background.Destroy()
+world.options.Close()
+world.options.Destroy()
+world.options = None
+capture.Hide()
+capture.Destroy()
+world.Hide()
+world.Destroy()
+log.write("PASS steps=%d frames=%d screenshots=%d restart=%d\n" % (world.step, world.frames, len(world.shots), bool(expected)))
+log.close()

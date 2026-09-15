@@ -8,6 +8,7 @@
 #include "Renderer/DiligentStaticObjectRenderer.h"
 #include "Renderer/DiligentActorRenderer.h"
 #include "Renderer/AssetMaterialRenderData.h"
+#include "Renderer/GraphicsConfig.h"
 #include "Renderer/SkinningBenchmark.h"
 #include "GlTFFixtures.h"
 #include <algorithm>
@@ -47,7 +48,9 @@ int main(int argc, char** argv)
     HWND window = nullptr;
     try {
         const bool offline = argc == 3 && std::string_view(argv[2]) == "--offline-asset";
-        Check(argc == 2 || offline, "Expected GLB path and optional --offline-asset");
+        const bool modern = argc == 3 && std::string_view(argv[2]) == "--modern";
+        Check(argc == 2 || offline || modern, "Expected GLB path and optional --offline-asset/--modern");
+        if(modern){Graphics::GraphicsSettings s;s.style=Graphics::GraphicsStyle::Modern;Renderer::ApplyGraphicsRuntimeConfig(Graphics::Resolve(s,1));}
         CPackManager packs;
         CResourceManager resources;
         for (const auto extension : ModelExtensions()) resources.RegisterResourceNewFunctionPointer(extension.data(), NewModel);
@@ -131,6 +134,12 @@ int main(int argc, char** argv)
                                 std::memcpy(draw.matrices.view.data(), &view,64); std::memcpy(draw.matrices.projection.data(), &projection,64);
                                 draw.normalTransform = identity; draw.ambient = {.85f,.85f,.85f,1};
                                 Renderer::ApplyAssetMaterial(palette.GetMaterialRef(group->mtrlIndex).GetAsset(), draw);
+                                if(modern){
+                                    draw.material=palette.GetMaterialRef(group->mtrlIndex).GetRenderMaterial(uploader);
+                                    Math::Matrix world;std::memcpy(&world,draw.matrices.world.data(),64);Math::Matrix normal=world*view;
+                                    Math::MatrixInverse(&normal,nullptr,&normal);Math::MatrixTranspose(&normal,&normal);std::memcpy(draw.normalTransform.data(),&normal,64);
+                                    draw.ambient={.2f,.2f,.2f,1};draw.diffuse={1.2f,1.2f,1.2f,1};draw.lightDirection={.4f,.5f,1,0};
+                                }
                                 draw.firstIndex=group->idxPos; draw.indexCount=group->triCount*3;
                                 draw.baseVertex=node->pMesh->GetVertexBasePosition(); draw.vertexCount=node->pMesh->GetVertexCount();
                                 if (special) specialRenderer.Draw(&instance,geometry,textures[group->mtrlIndex],draw);
@@ -151,6 +160,7 @@ int main(int argc, char** argv)
                 instance.Clear(); textures.clear(); geometry.reset(); second.Clear(); thing.Clear();
             }
             resources.DestroyDeletingList(); resources.Destroy(); renderer.ReleaseBindings(); specialRenderer.ReleaseBindings();
+            renderer.ResetFrame();specialRenderer.ResetFrame();
             Check(liveDocuments==0 && liveAnimationInstances==0 && liveMeshBindings==0, "All GLB document/session/binding owners released");
             Check(renderer.LiveGeometryCount()==0 && renderer.LiveTextureCount()==0 && specialRenderer.LiveGeometryCount()==0 && specialRenderer.LiveTextureCount()==0, "All GLB GPU resources released");
             Check(Renderer::skinningCpuCalls==0 && Renderer::skinningFallbacks==0, "No CPU skinning or hidden fallback");
@@ -158,6 +168,7 @@ int main(int argc, char** argv)
             Renderer::actorRenderer = nullptr;
         }
         backend.Shutdown(); DestroyWindow(window); window=nullptr;
+        if(modern)Check(Renderer::pbrDraws>0 && Renderer::liveMaterialRuntimeObjects==0 && Renderer::livePBRBindings==0 && Renderer::livePBRPipelines==0,"PBR used and every material owner released");
         std::cout << "PASS real GLB resource cache -> AssetRuntime -> model/mesh/material -> normal static Diligent buffers/draws; 3 camera readbacks; resize/suspend/restore; owners/GPU resources=0\n";
         return 0;
     } catch (const std::exception& error) {

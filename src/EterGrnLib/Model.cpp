@@ -390,6 +390,7 @@ bool CGrannyModel::CaptureStaticObjectSource()
     static_assert(sizeof(Renderer::StaticObjectVertex) == sizeof(TPNTVertex));
     auto source = std::make_shared<Renderer::StaticObjectSource>();
     source->vertices.resize(m_rigidVtxCount);
+    source->materialVertices.resize(m_rigidVtxCount);
     const bool wide = m_indexWidth == AssetRuntime::IndexWidth::UInt32;
     if (wide) source->indices32.resize(m_idxCount);
     else source->indices.resize(m_idxCount);
@@ -399,6 +400,12 @@ bool CGrannyModel::CaptureStaticObjectSource()
         // Preserve conversion and offsets while the source AssetHandle is alive.
         if (!m_meshs[i].NEW_LoadVertices(source->vertices.data()) ||
             !m_meshs[i].LoadIndices(indices, m_indexWidth)) return false;
+        const auto& mesh=m_asset.Get()->meshes[i];
+        const auto base=m_meshs[i].GetVertexBasePosition();
+        for(std::size_t v=0;v<mesh.vertexCount;++v) {
+            auto& output=source->materialVertices[base+v];
+            output=mesh.materialVertices.empty()?AssetRuntime::MaterialVertex{{},{source->vertices[base+v][6],source->vertices[base+v][7]}}:mesh.materialVertices[v];
+        }
     }
     m_staticObjectSource = std::move(source);
     return true;
@@ -416,6 +423,7 @@ bool CGrannyModel::CaptureActorSource(bool attachment)
     source->vertexCount=static_cast<uint32_t>(vertexCount);
     source->deformVertexCount=static_cast<uint32_t>(m_deformVtxCount);
     source->rigidVertices.resize(m_rigidVtxCount);
+    source->materialVertices.resize(vertexCount);
     const bool wide = m_indexWidth == AssetRuntime::IndexWidth::UInt32;
     if (wide) source->indices32.resize(m_idxCount);
     else source->indices.resize(m_idxCount);
@@ -423,6 +431,18 @@ bool CGrannyModel::CaptureActorSource(bool attachment)
     for(int i=0;i<GetMeshCount();++i) {
         if(!m_meshs[i].LoadIndices(indices, m_indexWidth)) return false;
         if(m_rigidVtxCount && !m_meshs[i].NEW_LoadVertices(source->rigidVertices.data())) return false;
+        const auto& mesh=m_asset.Get()->meshes[i];
+        const auto base=m_meshs[i].GetVertexBasePosition()+(mesh.deformation==AssetRuntime::Deformation::Rigid?m_deformVtxCount:0);
+        if(!mesh.materialVertices.empty())
+            std::copy(mesh.materialVertices.begin(),mesh.materialVertices.end(),source->materialVertices.begin()+base);
+        else {
+            std::vector<TPNTVertex> vertices(mesh.vertexCount);
+            const auto document=m_asset.GetDocument();
+            if(document->CopyVertices(m_asset.Index(),i,AssetRuntime::VertexLayout::PositionNormalUV,
+                std::as_writable_bytes(std::span(vertices)))!=AssetRuntime::AssetError::None)return false;
+            const auto* values=reinterpret_cast<const Renderer::StaticObjectVertex*>(vertices.data());
+            for(std::size_t v=0;v<mesh.vertexCount;++v)source->materialVertices[base+v].uv={values[v][6],values[v][7]};
+        }
     }
     m_actorSource=std::move(source);
     return true;

@@ -35,6 +35,7 @@ StaticObjectGeometryPtr DiligentActorRenderer::CreateGeometry(const ActorModelSo
     else source.vertices.resize(data.vertexCount);
     source.indices=data.indices;
     source.indices32=data.indices32;
+    source.materialVertices=data.materialVertices;
     auto geometry=data.IsRigid() ? m_meshes.UploadGeometry(source) : m_meshes.UploadDynamicGeometry(source);
     if(geometry) ++m_indexUploads;
     if(geometry && part!=ActorPart::Body) m_attachmentGeometry.emplace_back(geometry);
@@ -55,6 +56,8 @@ void DiligentActorRenderer::Draw(const void* actor, const StaticObjectGeometryPt
     const auto before=m_meshes.DrawCount();
     m_meshes.Draw(geometry,texture,draw);
     if(m_meshes.DrawCount()!=before) {
+        if(part!=ActorPart::Body)TrackAttachmentTexture(texture);
+        if(category==ActorCategory::Mount)TrackMountTexture(texture);
         m_actors.emplace(actor,category); ++m_partDraws[uint32_t(part)];
         if(category==ActorCategory::Mount) ++m_mountDraws;
         if(part!=ActorPart::Body) m_attachmentParts[actor]|=1u<<uint32_t(part);

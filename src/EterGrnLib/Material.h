@@ -3,6 +3,7 @@
 #include "AssetRuntime/AssetRuntime.h"
 #include <windows.h>
 #include "Renderer/DrawStateTypes.h"
+#include "Renderer/MaterialRuntime.h"
 
 #include "Eterlib/ReferenceObject.h"
 #include "Eterlib/Ref.h"
@@ -61,6 +62,7 @@ class CGrannyMaterial : public CReferenceObject
 
         TextureBinding GetTextureBinding(int stage) const;
         const AssetRuntime::MaterialAsset& GetAsset() const { return m_asset; }
+        Renderer::MaterialRuntimePtr GetRenderMaterial(Renderer::ITextureUploader&);
 
 		// MR-12: Fix specular isolation issue
 		float					GetSpecularPower() const;
@@ -87,11 +89,11 @@ class CGrannyMaterial : public CReferenceObject
 		CGraphicImage::TRef		m_roImage[2];
 		EType					m_eType;
 
-		float					m_fSpecularPower;
-		BOOL					m_bSpecularEnable;
+		float					m_fSpecularPower{};
+		BOOL					m_bSpecularEnable{};
 		bool					m_bTwoSideRender;
 		DWORD					m_dwLastCullRenderStateForTwoSideRendering;
-		BYTE					m_bSphereMapIndex;
+		BYTE					m_bSphereMapIndex{};
 		
 
 		void (CGrannyMaterial::*m_pfnApplyRenderState)();
@@ -100,6 +102,14 @@ class CGrannyMaterial : public CReferenceObject
 	private:
 		AssetRuntime::MaterialAsset m_asset;
 		const AssetRuntime::MaterialAsset* m_sourceAsset{};
+        AssetRuntime::PBRMaterialData m_resolvedMaterial;
+        struct RuntimeEntry {
+            Renderer::ITextureUploader* uploader{};
+            std::weak_ptr<const void> lifetime;
+            Renderer::MaterialRuntimePtr material;
+            std::array<CGraphicImage::TRef,AssetRuntime::MaterialMapCount> images;
+        };
+        std::vector<RuntimeEntry> m_runtimeMaterials;
 
 		enum
 		{

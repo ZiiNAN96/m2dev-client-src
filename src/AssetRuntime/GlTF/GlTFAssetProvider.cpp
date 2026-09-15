@@ -600,6 +600,8 @@ private:
             const auto& source=data.materials[i];
             MaterialAsset material;
             material.name=Name(source.name,"material-"+std::to_string(i));
+            // Metallic/roughness is glTF's default model even when its JSON block is absent.
+            material.model=MaterialModel::PBRMetallicRoughness;
             material.explicitRenderState=true;
             material.culling=source.double_sided ? Culling::None : Culling::Clockwise;
             Require(source.alpha_mode==cgltf_alpha_mode_opaque || source.alpha_mode==cgltf_alpha_mode_mask || source.alpha_mode==cgltf_alpha_mode_blend, "Invalid alpha mode");
@@ -620,10 +622,41 @@ private:
                     material.textures[0]=material.embeddedImages[0]?material.embeddedImages[0]->id:packImages[imageIndex];
                 }
             }
+            auto& p=material.pbr;
+            p.metallic=1;p.roughness=1;
+            p.baseColor=material.baseColorFactor;
+            p.alpha=material.blending?AlphaMode::Blend:material.alphaTest?AlphaMode::Mask:AlphaMode::Opaque;
+            p.alphaCutoff=material.alphaCutoff;p.doubleSided=source.double_sided;
+            if(source.has_pbr_metallic_roughness) {
+                p.metallic=source.pbr_metallic_roughness.metallic_factor;
+                p.roughness=source.pbr_metallic_roughness.roughness_factor;
+            }
+            std::copy_n(source.emissive_factor,3,p.emissive.begin());
+            p.normalScale=source.normal_texture.scale;p.occlusionStrength=source.occlusion_texture.scale;
+            const cgltf_texture_view* views[]={&source.pbr_metallic_roughness.base_color_texture,
+                &source.normal_texture,&source.pbr_metallic_roughness.metallic_roughness_texture,
+                &source.occlusion_texture,&source.emissive_texture};
+            for(unsigned slot=0;slot<MaterialMapCount;++slot) {
+                const auto& view=*views[slot];if(!view.texture)continue;
+                Require(view.texture->image,"Material texture has no image");
+                Supported(view.texcoord==0&&(!view.has_transform||!view.transform.has_texcoord||view.transform.texcoord==0),
+                    "G1 material maps require TEXCOORD_0; bake additional UV sets offline");
+                const auto imageIndex=std::size_t(view.texture->image-data.images);
+                auto& map=p.maps[slot];map.image=images[imageIndex];map.path=map.image?map.image->id:packImages[imageIndex];
+                if(view.has_transform) {
+                    const auto& t=view.transform;const float c=std::cos(t.rotation),s=std::sin(t.rotation);
+                    map.uvTransform={c*t.scale[0],-s*t.scale[1],t.offset[0],s*t.scale[0],c*t.scale[1],t.offset[1]};
+                }
+            }
+            // Unknown optional material models retain the existing base-color approximation.
+            // Required unsupported extensions are rejected by the document validation.
+            if(source.unlit||source.has_pbr_specular_glossiness)material.model=MaterialModel::Legacy;
+            p=ValidateMaterial(p);
             model.materials.push_back(std::move(material));
         }
         MaterialAsset fallback;
         fallback.name="default";fallback.explicitRenderState=true;fallback.alphaTest=false;
+        fallback.model=MaterialModel::PBRMetallicRoughness;fallback.pbr.metallic=1;fallback.pbr.roughness=1;
         model.materials.push_back(std::move(fallback));
     }
     void ImportSkeleton(const cgltf_data& data,const NodeGraph& graph,ModelAsset& model,std::size_t& decoded)
@@ -912,6 +945,13 @@ private:
                 tangent=Normalize(tangent);
                 mesh.tangents.push_back({tangent[0],tangent[1],tangent[2],determinant<0 ? -handedness : handedness});
             }
+        }
+        Require(buffer.vertices.size()*sizeof(MaterialVertex)<=MaxAllocation-decoded,"Material vertex allocation limit exceeded");
+        decoded+=buffer.vertices.size()*sizeof(MaterialVertex);
+        mesh.materialVertices.resize(buffer.vertices.size());
+        for(std::size_t v=0;v<buffer.vertices.size();++v) {
+            if(tangents)mesh.materialVertices[v].tangent=mesh.tangents[v];
+            if(uv)mesh.materialVertices[v].uv={t[v*2],t[v*2+1]};
         }
         // The converted PNT stream always carries UV0; untextured input without UVs receives zero UVs.
         mesh.vertexAttributes=VertexAttribute::Position|VertexAttribute::Normal|VertexAttribute::UV0;

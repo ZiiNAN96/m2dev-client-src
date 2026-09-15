@@ -22,17 +22,6 @@ namespace
 {
 using namespace Renderer;
 std::ofstream diagnostics;
-TerrainTexturePtr LoadActorTexture(ActorInstanceData& data,const std::string& name,ActorPart part,ActorCategory category)
-{
-    if(name.empty()) return {};
-    auto& texture=data.textures[name];
-    if(!texture) {
-        texture=LoadStaticObjectTextureFile(name.c_str(),*actorRenderer);
-        if(texture && part!=ActorPart::Body) actorRenderer->TrackAttachmentTexture(texture);
-        if(texture && category==ActorCategory::Mount) actorRenderer->TrackMountTexture(texture);
-    }
-    return texture;
-}
 // ZiiNAN: Bounded, read-only evidence for rejected native states, never per-frame logging.
 struct ActorStateDiagnostic : CGraphicBase
 {
@@ -120,16 +109,12 @@ void Submit(void* context, const void* nativeInstance, ActorPart part, const Act
     auto& material=palette.GetMaterialRef(native.material);
     const auto& materialAsset=material.GetAsset();
     ApplyAssetMaterial(materialAsset,draw);
+    draw.material=material.GetRenderMaterial(*actorRenderer);
     // OneTexture's opacity pass uses the same native stage-0 image, not a synthetic second mask.
-    auto load=[&](const std::string& name) -> TerrainTexturePtr {
-        return LoadActorTexture(data,name,part,category);
-    };
-    const auto texture=materialAsset.explicitRenderState && material.GetImagePointer(0) ?
-        material.GetImagePointer(0)->GetAssetTexture(*actorRenderer) : load(materialAsset.textures[0]);
+    const auto texture=draw.material->classicDiffuse;
     if(!texture) { Report(actor,*instance,"ERROR: actor diffuse texture upload"); return; }
     if(draw.actorStage==ActorMaterialStage::Specular) {
-        const auto* sphere=material.GetSphereMapImage();
-        draw.sphereMap=sphere ? load(sphere->GetFileName()) : TerrainTexturePtr{};
+        draw.sphereMap=draw.material->classicSphere;
         if(!draw.sphereMap) { Report(actor,*instance,"excluded: missing native sphere map"); return; }
     }
     const auto* world=instance->GetStaticObjectWorldMatrix(native.mesh);
@@ -178,13 +163,12 @@ bool PrepareAnimatedActorResources(CActorInstance& actor)
         auto& palette=instance->GetStaticObjectMaterialPalette();
         for(uint32_t materialIndex=0;materialIndex<palette.GetMaterialCount();++materialIndex) {
             auto& material=palette.GetMaterialRef(materialIndex);
-            const auto& asset=material.GetAsset();
-            const auto texture=asset.explicitRenderState && material.GetImagePointer(0) ?
-                material.GetImagePointer(0)->GetAssetTexture(*actorRenderer) :
-                LoadActorTexture(data,asset.textures[0],part,parts.category);
+            const auto runtime=material.GetRenderMaterial(*actorRenderer);
+            const auto texture=runtime->classicDiffuse;
+            if(texture && part!=ActorPart::Body)actorRenderer->TrackAttachmentTexture(texture);
+            if(texture && parts.category==ActorCategory::Mount)actorRenderer->TrackMountTexture(texture);
             if(!texture) return false;
-            if(const auto* sphere=material.IsSpecularEnabled() ? material.GetSphereMapImage() : nullptr)
-                if(!LoadActorTexture(data,sphere->GetFileName(),part,parts.category)) return false;
+            if(material.IsSpecularEnabled() && !runtime->classicSphere) return false;
         }
     }
     return true;

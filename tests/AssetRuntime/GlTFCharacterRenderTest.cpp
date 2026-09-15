@@ -1,3 +1,6 @@
+#if defined(_DEBUG)
+#include <crtdbg.h>
+#endif
 #include "EterGrnLib/StdAfx.h"
 #include "EterGrnLib/Thing.h"
 #include "EterGrnLib/ModelInstance.h"
@@ -11,6 +14,7 @@
 #include "Renderer/DiligentActorRenderer.h"
 #include "Renderer/DiligentD3D11BackendInternal.h"
 #include "Renderer/AssetMaterialRenderData.h"
+#include "Renderer/GraphicsConfig.h"
 #include "Renderer/SkinningBenchmark.h"
 #include <fstream>
 #include <filesystem>
@@ -48,6 +52,7 @@ static void Draw(CGrannyModelInstance& actor,DiligentActorRenderer& renderer,con
     Check(bool(data.geometry),"normal actor geometry");
     StaticObjectDraw draw;std::memcpy(draw.matrices.view.data(),&view,64);std::memcpy(draw.matrices.projection.data(),&projection,64);
     draw.ambient={.95f,.95f,.95f,1};draw.diffuse={0,0,0,1};draw.normalizeNormals=true;
+    if(GetGraphicsRuntimeConfig().usePBR){draw.ambient={.18f,.18f,.18f,1};draw.diffuse={1.2f,1.2f,1.2f,1};draw.lightDirection={.4f,.5f,1,0};}
     auto& materials=actor.GetStaticObjectMaterialPalette();
     for(int m=0;m<model->GetMeshCount();++m) {
         const auto* mesh=model->GetMeshPointer(m);const auto* world=actor.GetStaticObjectWorldMatrix(m);
@@ -56,6 +61,7 @@ static void Draw(CGrannyModelInstance& actor,DiligentActorRenderer& renderer,con
         draw.baseVertex=mesh->GetVertexBasePosition();draw.vertexCount=mesh->GetVertexCount();
         for(auto* group=mesh->GetTriGroupNodeList(CGrannyMaterial::TYPE_DIFFUSE_PNT);group;group=group->pNextTriGroupNode) {
             auto& material=materials.GetMaterialRef(group->mtrlIndex);ApplyAssetMaterial(material.GetAsset(),draw);
+            if(GetGraphicsRuntimeConfig().usePBR)draw.material=material.GetRenderMaterial(renderer);
             auto* image=material.GetImagePointer(0);Check(image,"embedded image goes through normal texture cache");
             auto texture=image->GetAssetTexture(renderer);Check(bool(texture),"texture uploaded");
             draw.firstIndex=group->idxPos;draw.indexCount=group->triCount*3;renderer.Draw(&actor,data.geometry,texture,draw);
@@ -84,9 +90,16 @@ static void Numeric(DiligentD3D11Backend& backend,CGrannyModelInstance& actor)
 }
 int main(int argc,char** argv)
 {
+#if defined(_DEBUG)
+    _CrtSetReportMode(_CRT_ASSERT,_CRTDBG_MODE_FILE);
+    _CrtSetReportFile(_CRT_ASSERT,_CRTDBG_FILE_STDERR);
+#endif
+    std::cout << std::unitbuf;
     HWND window=nullptr;
     try {
-        Check(argc==2,"character fixture path");CPackManager packs;CResourceManager resources;
+        Check(argc==2||(argc==3&&std::string_view(argv[2])=="--modern"),"character fixture path and optional --modern");
+        if(argc==3){Graphics::GraphicsSettings s;s.style=Graphics::GraphicsStyle::Modern;ApplyGraphicsRuntimeConfig(Graphics::Resolve(s,1));}
+        CPackManager packs;CResourceManager resources;
         for(const auto extension:AssetRuntime::ModelExtensions())resources.RegisterResourceNewFunctionPointer(extension.data(),NewThing);
         window=CreateWindowW(L"STATIC",L"F5-X shared production actor proof",WS_OVERLAPPEDWINDOW,0,0,960,640,nullptr,nullptr,GetModuleHandleW(nullptr),nullptr);
         DiligentD3D11Backend backend;Check(window&&backend.Initialize({window,960,640}),"native Diligent backend");
@@ -121,7 +134,7 @@ int main(int argc,char** argv)
                 }
                 std::cout<<"Multi-instance draws="<<renderer.DrawCount()<<" geometry wrappers="<<livePrototypeGeometry
                     <<" shared mesh buffers="<<livePrototypeStaticMeshes<<" textures="<<renderer.LiveTextureCount()<<'\n';
-                Check(renderer.DrawCount()==40&&livePrototypeStaticMeshes==1&&renderer.LiveTextureCount()==1,"20 actors share immutable mesh buffers and texture, all primitives draw");
+                Check(renderer.DrawCount()==40&&livePrototypeStaticMeshes==1&&renderer.LiveTextureCount()==(argc==3?2u:1u),"20 actors share immutable mesh buffers and texture, all primitives draw");
                 std::vector<std::uint8_t> rgb;unsigned w{},h{};Check(backend.CaptureRGB(rgb,w,h),"20 actors native readback");Save(rgb,w,h,"f5x-20-actors.bmp");
                 backend.EndFrame();backend.Present();renderer.ReleaseBindings();
                 {
@@ -156,6 +169,7 @@ int main(int argc,char** argv)
                 mapping.Clear();actors.clear();shared.Clear();thing.Clear();
             }
             resources.DestroyDeletingList();resources.Destroy();renderer.ReleaseBindings();
+            renderer.ResetFrame();
             Check(renderer.LiveGeometryCount()==0&&renderer.LiveTextureCount()==0&&livePrototypeGeometry==0&&livePrototypePalettes==0,"GPU geometry/palettes/textures released");
             actorRenderer=nullptr;actorWorldFrame=false;
         }
@@ -163,6 +177,7 @@ int main(int argc,char** argv)
         Check(AssetRuntime::liveDocuments==0&&AssetRuntime::liveAnimationInstances==0&&AssetRuntime::liveMeshBindings==0&&
             AnimationRuntime::GetLifetimeCounts().clips==0&&AnimationRuntime::GetLifetimeCounts().skeletons==0,"all GLB and animation lifetime counts zero");
         Check(skinningCpuCalls==0&&skinningFallbacks==0&&liveSkinMeshes==0&&liveBoneRemaps==0&&liveBonePalettes==0,"CPU deformation=0 fallback=0 skin resources=0");
+        if(argc==3)Check(pbrDraws>0 && liveMaterialRuntimeObjects==0 && livePBRBindings==0 && livePBRPipelines==0,"PBR used and every material owner released");
         std::cout<<"PASS F5-X native normal actor/GPU renderer, 6 clips, 20 actors, readbacks, numeric parity, cache sharing, lifecycle, resources=0\n";return 0;
     } catch(const std::exception& error) {std::cerr<<"FAIL "<<error.what()<<'\n';if(window)DestroyWindow(window);return 1;}
 }

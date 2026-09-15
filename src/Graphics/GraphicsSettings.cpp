@@ -102,6 +102,7 @@ GraphicsRuntimeConfig Resolve(const GraphicsSettings& requested, std::uint64_t r
 {
     const auto s = Validate(requested);
     GraphicsRuntimeConfig r;
+    r.usePBR=s.style==GraphicsStyle::Modern;
     r.revision = revision; r.style = s.style; r.legacyShadowLevel = int(s.shadows);
     r.vegetation = s.vegetation; r.viewDistance = s.viewDistance;
     constexpr float vegetationScale[]{.65f, .85f, 1.f, 1.25f};

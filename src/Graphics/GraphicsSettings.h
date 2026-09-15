@@ -40,6 +40,7 @@ struct GraphicsSettings
 
 struct GraphicsRuntimeConfig
 {
+    bool usePBR{};
     std::uint64_t revision{};
     GraphicsStyle style{GraphicsStyle::Classic};
     ShadowQuality shadows{ShadowQuality::Off}; // No dynamic shadow renderer in the current D3D11 path.
@@ -62,6 +63,7 @@ struct GraphicsFeatures
     bool UseHDR() const { return config.hdr; }
     bool UseBloom() const { return config.bloom; }
     bool UseModernSky() const { return config.modernSky; }
+    bool UsePBR() const { return config.usePBR; }
     AmbientOcclusionQuality AOQuality() const { return config.ambientOcclusion; }
 };
 

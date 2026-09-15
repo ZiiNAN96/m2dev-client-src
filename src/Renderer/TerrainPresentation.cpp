@@ -116,6 +116,9 @@ public:
         // ZiiNAN: Native map/instance owners must release their tree resources first.
         vegetationWorldFrame=false;
         // ZiiNAN: Actors must already be destroyed by the existing application teardown.
+        // Retire the last frame's weak material bindings after native resource owners are gone.
+        if(m_actors) { m_actors->ReleaseBindings(); m_actors->ResetFrame(); }
+        if(m_objects) { m_objects->ReleaseBindings(); m_objects->ResetFrame(); }
         if(m_diagnostics && m_actors)
         {
             m_diagnostics << "shutdown actor_geometry=" << m_actors->LiveGeometryCount()

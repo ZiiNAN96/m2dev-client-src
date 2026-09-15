@@ -3,6 +3,7 @@
 #include "Thing.h"
 #include "ThingInstance.h"
 #include "AssetRuntime/Providers.h"
+#include "PackLib/PackManager.h"
 
 CGraphicThing::CGraphicThing(const char* fileName) : CResource(fileName)
 {
@@ -100,6 +101,14 @@ bool CGraphicThing::OnLoad(int size, const void* bytes)
         TraceError("Asset Runtime load failed: %s error=%s detail=%s", GetFileName(),
             AssetRuntime::ErrorName(loaded.error), loaded.diagnostic.c_str());
         return false;
+    }
+    // Optional asset-local metadata is resolved once, before any material palettes exist.
+    if(loaded.asset.ModelCount()) {
+        TPackFile metadata;
+        const auto path=GetFileNameString()+".zmat";
+        if(CPackManager::Instance().GetFile(path.c_str(),metadata) &&
+           !loaded.asset.Get()->ApplyMaterialOverrides({reinterpret_cast<const char*>(metadata.data()),metadata.size()}))
+            TraceError("Material override rejected; legacy material retained: %s",path.c_str());
     }
     m_asset = std::move(loaded.asset);
     if (!LoadModels() || !LoadMotions()) {

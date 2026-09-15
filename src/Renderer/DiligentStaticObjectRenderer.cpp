@@ -1,5 +1,7 @@
 #include "DiligentStaticObjectRenderer.h"
 #include "GpuSkinningShader.h"
+#include "PBRShader.h"
+#include "GraphicsConfig.h"
 #include "AssetRuntime/AnimationStallAudit.h"
 #include "ActorRenderData.h"
 #include "DiligentD3D11BackendInternal.h"
@@ -25,6 +27,7 @@ struct Counters { uint32_t geometry=0, textures=0; };
 struct SkinMeshBuffers
 {
     RefCntAutoPtr<IBuffer> vertices, indices, rigidVertices;
+    RefCntAutoPtr<IBuffer> materialVertices;
     std::vector<std::shared_ptr<const StaticSkinnedMeshData>> meshes;
     std::vector<std::shared_ptr<const BoneRemap>> remaps;
     std::vector<uint16_t> validationIndices;
@@ -44,6 +47,7 @@ struct Geometry final : StaticObjectGeometry
 {
     RefCntAutoPtr<IBuffer> vertices, indices;
     RefCntAutoPtr<IBuffer> extras;
+    RefCntAutoPtr<IBuffer> materialVertices;
     std::shared_ptr<SkinMeshBuffers> skin;
     std::shared_ptr<SkinPoseBuffer> pose;
     std::vector<uint16_t> validationIndices;
@@ -62,6 +66,7 @@ struct Geometry final : StaticObjectGeometry
 struct Texture final : TerrainTexture
 {
     RefCntAutoPtr<ITexture> texture;
+    RefCntAutoPtr<ITextureView> linearView, srgbView;
     RefCntAutoPtr<ISampler> sampler;
     RefCntAutoPtr<IShaderResourceBinding> bindings[24];
     RefCntAutoPtr<ISampler> cameraSampler;
@@ -90,6 +95,29 @@ struct Constants
     std::array<uint32_t,4> vertexModes;
 };
 static_assert(sizeof(Constants)%16==0 && sizeof(StaticObjectVertex)==32);
+struct PBRConstants
+{
+    TerrainMatrices matrices;
+    std::array<float,16> normal;
+    std::array<float,4> ambient,diffuse,direction,fogColor,fogParameters,baseColor,emissive,factors;
+    std::array<std::array<float,4>,10> uvRows;
+    std::array<uint32_t,4> flags,alpha;
+    std::array<float,4> fade;
+    std::array<float,16> camera;
+};
+static_assert(sizeof(PBRConstants)%16==0&&sizeof(AssetRuntime::MaterialVertex)==24);
+struct PBRBinding
+{
+    unsigned maps{},srgb{};
+    std::array<std::shared_ptr<Texture>,AssetRuntime::MaterialMapCount> images;
+    std::weak_ptr<const MaterialRuntime> material;
+    RefCntAutoPtr<IShaderResourceBinding> bindings[24];
+    IShaderResourceVariable* palettes[24]{};
+    IShaderResourceVariable* cameraVariables[24]{};
+    IShaderResourceVariable* cameraSamplers[24]{};
+    PBRBinding(){++livePBRBindings;}
+    ~PBRBinding(){--livePBRBindings;}
+};
 constexpr char shaderSource[] = R"(
 cbuffer ObjectConstants {
  row_major float4x4 World; row_major float4x4 View; row_major float4x4 Projection;
@@ -188,6 +216,10 @@ struct DiligentStaticObjectRenderer::Impl
     DiligentD3D11Backend& backend;
     RefCntAutoPtr<IBuffer> constants;
     RefCntAutoPtr<IPipelineState> pipelines[36];
+    RefCntAutoPtr<IPipelineState> pbrPipelines[24];
+    RefCntAutoPtr<IBuffer> pbrConstants;
+    RefCntAutoPtr<ISampler> pbrSampler;
+    std::unordered_map<const MaterialRuntime*,std::unique_ptr<PBRBinding>> pbrBindings;
     std::shared_ptr<Counters> counters=std::make_shared<Counters>();
     std::vector<std::weak_ptr<SkinMeshBuffers>> skinMeshes;
     std::vector<std::weak_ptr<SkinPoseBuffer>> skinPoses;
@@ -201,10 +233,18 @@ struct DiligentStaticObjectRenderer::Impl
         if (first) LogRendererFailure("DiligentStaticObjectRenderer.cpp", this, reason, line);
     }
     explicit Impl(DiligentD3D11Backend& b):backend(b) {}
+    ~Impl(){for(const auto& pipeline:pbrPipelines)if(pipeline)--livePBRPipelines;}
+    bool InitializePBR(bool gpu);
+    void DrawPBR(const std::shared_ptr<Geometry>&,const std::shared_ptr<Texture>&,
+        const StaticObjectDraw&,bool skin,bool rigid,unsigned variant);
 };
+#include "DiligentPBRMaterial.inl"
 DiligentStaticObjectRenderer::DiligentStaticObjectRenderer(DiligentD3D11Backend& b):m_impl(std::make_unique<Impl>(b)) {}
 DiligentStaticObjectRenderer::~DiligentStaticObjectRenderer() = default;
-void DiligentStaticObjectRenderer::ResetFrame() { m_impl->draws=0; }
+void DiligentStaticObjectRenderer::ResetFrame() {
+    m_impl->draws=0;
+    std::erase_if(m_impl->pbrBindings,[](const auto& item){return item.second->material.expired();});
+}
 bool DiligentStaticObjectRenderer::Failed() const { return m_impl->failed; }
 uint32_t DiligentStaticObjectRenderer::DrawCount() const { return m_impl->draws; }
 uint32_t DiligentStaticObjectRenderer::LiveGeometryCount() const { return m_impl->counters->geometry; }
@@ -283,7 +323,7 @@ Output SkinningVS(float3 position:ATTRIB0, float3 normal:ATTRIB1, float2 uv:ATTR
             for(auto stage:{SHADER_TYPE_VERTEX,SHADER_TYPE_PIXEL})
                 if(auto* variable=pipeline->GetStaticVariableByName(stage,"ObjectConstants")) variable->Set(s.constants);
         }
-        return true;
+        return s.InitializePBR(gpuPrototype);
     } catch(...) { s.Fail("initialization exception", __LINE__); return false; }
 }
 StaticObjectGeometryPtr DiligentStaticObjectRenderer::UploadGeometry(const StaticObjectSource& data)
@@ -326,6 +366,18 @@ bool DiligentStaticObjectRenderer::PreparePrototype(StaticObjectGeometryPtr& geo
                 BufferDesc desc; desc.Name="Shared original PWNT"; desc.Size=vertices.size()*sizeof(SkinningVertex);
                 desc.Usage=USAGE_IMMUTABLE; desc.BindFlags=BIND_VERTEX_BUFFER;
                 BufferData initial{vertices.data(),desc.Size}; device->CreateBuffer(desc,&initial,&shared->vertices);
+                std::vector<AssetRuntime::MaterialVertex> materialVertices;
+                if(source&&!source->materialVertices.empty())materialVertices=source->materialVertices;
+                else {
+                    materialVertices.resize(shared->vertexCount);
+                    for(std::size_t i=0;i<vertices.size();++i)materialVertices[i].uv={vertices[i].uv[0],vertices[i].uv[1]};
+                    if(source)for(std::size_t i=0;i<source->rigidVertices.size();++i)
+                        materialVertices[vertices.size()+i].uv={source->rigidVertices[i][6],source->rigidVertices[i][7]};
+                }
+                if(materialVertices.size()!=shared->vertexCount)return false;
+                desc.Name="Shared PBR tangent and UV stream";desc.Size=materialVertices.size()*sizeof(AssetRuntime::MaterialVertex);
+                initial={materialVertices.data(),desc.Size};device->CreateBuffer(desc,&initial,&shared->materialVertices);
+                if(!shared->materialVertices)return false;
                 if(source && !source->rigidVertices.empty()) {
                     desc.Name="Shared rigid attachment PNT"; desc.Size=source->rigidVertices.size()*sizeof(StaticObjectVertex);
                     initial={source->rigidVertices.data(),desc.Size}; device->CreateBuffer(desc,&initial,&shared->rigidVertices);
@@ -350,6 +402,7 @@ bool DiligentStaticObjectRenderer::PreparePrototype(StaticObjectGeometryPtr& geo
             mesh=std::make_shared<Geometry>();
             mesh->skin=shared; ++livePrototypeGeometry;
             mesh->pose=pose; mesh->vertices=shared->vertices; mesh->indices=shared->indices;
+            mesh->materialVertices=shared->materialVertices;
             mesh->vertexCount=shared->vertexCount; mesh->validationIndices=shared->validationIndices;
             mesh->counters=s.counters; ++s.counters->geometry;
         }
@@ -396,6 +449,17 @@ StaticObjectGeometryPtr DiligentStaticObjectRenderer::CreateGeometry(const Stati
         desc.CPUAccessFlags=dynamic ? CPU_ACCESS_WRITE : CPU_ACCESS_NONE;
         BufferData initial{data.vertices.data(),desc.Size};
         s.backend.m_impl->device->CreateBuffer(desc,dynamic ? nullptr : &initial,&result->vertices);
+        auto materialVertices=data.materialVertices;
+        if(materialVertices.empty()) {
+            materialVertices.resize(data.vertices.size());
+            for(std::size_t i=0;i<data.vertices.size();++i)materialVertices[i].uv={data.vertices[i][6],data.vertices[i][7]};
+        }
+        if(materialVertices.size()!=data.vertices.size())return fail(__LINE__);
+        for(const auto& v:materialVertices){for(float f:v.tangent)if(!std::isfinite(f))return fail(__LINE__);for(float f:v.uv)if(!std::isfinite(f))return fail(__LINE__);}
+        desc.Name="PBR tangent and UV stream";desc.Size=materialVertices.size()*sizeof(AssetRuntime::MaterialVertex);
+        desc.Usage=USAGE_IMMUTABLE;desc.CPUAccessFlags=CPU_ACCESS_NONE;
+        initial={materialVertices.data(),desc.Size};s.backend.m_impl->device->CreateBuffer(desc,&initial,&result->materialVertices);
+        if(!result->materialVertices)return fail(__LINE__);
         if(!data.vertexExtras.empty()) {
             static_assert(sizeof(StaticObjectVertexExtras)==64);
             desc.Name="Shared mesh auxiliary vertex channels";desc.Size=data.vertexExtras.size()*sizeof(StaticObjectVertexExtras);
@@ -463,10 +527,24 @@ TerrainTexturePtr DiligentStaticObjectRenderer::UploadTexture(const TerrainTextu
         TextureDesc desc;
         desc.Name="Original map object diffuse"; desc.Type=RESOURCE_DIM_TEX_2D;
         desc.Width=data.width; desc.Height=data.height; desc.MipLevels=static_cast<uint32_t>(mips.size());
-        desc.Format=format; desc.Usage=USAGE_IMMUTABLE; desc.BindFlags=BIND_SHADER_RESOURCE;
+        TEXTURE_FORMAT srgb=TEX_FORMAT_UNKNOWN,storage=format;
+        switch(format) {
+        case TEX_FORMAT_RGBA8_UNORM:storage=TEX_FORMAT_RGBA8_TYPELESS;srgb=TEX_FORMAT_RGBA8_UNORM_SRGB;break;
+        case TEX_FORMAT_BGRA8_UNORM:storage=TEX_FORMAT_BGRA8_TYPELESS;srgb=TEX_FORMAT_BGRA8_UNORM_SRGB;break;
+        case TEX_FORMAT_BGRX8_UNORM:storage=TEX_FORMAT_BGRX8_TYPELESS;srgb=TEX_FORMAT_BGRX8_UNORM_SRGB;break;
+        case TEX_FORMAT_BC1_UNORM:storage=TEX_FORMAT_BC1_TYPELESS;srgb=TEX_FORMAT_BC1_UNORM_SRGB;break;
+        case TEX_FORMAT_BC2_UNORM:storage=TEX_FORMAT_BC2_TYPELESS;srgb=TEX_FORMAT_BC2_UNORM_SRGB;break;
+        case TEX_FORMAT_BC3_UNORM:storage=TEX_FORMAT_BC3_TYPELESS;srgb=TEX_FORMAT_BC3_UNORM_SRGB;break;
+        default:break;
+        }
+        desc.Format=storage; desc.Usage=USAGE_IMMUTABLE; desc.BindFlags=BIND_SHADER_RESOURCE;
         TextureData initial{mips.data(),desc.MipLevels};
         s.backend.m_impl->device->CreateTexture(desc,&initial,&result->texture);
         if(!result->texture) return fail(__LINE__);
+        TextureViewDesc view;view.ViewType=TEXTURE_VIEW_SHADER_RESOURCE;view.Format=format;
+        result->texture->CreateView(view,&result->linearView);
+        if(!result->linearView)return fail(__LINE__);
+        if(srgb!=TEX_FORMAT_UNKNOWN){view.Format=srgb;result->texture->CreateView(view,&result->srgbView);if(!result->srgbView)return fail(__LINE__);}
         result->counters=s.counters; ++s.counters->textures;
         return result;
     } catch(...) { return fail(__LINE__); }
@@ -514,6 +592,9 @@ void DiligentStaticObjectRenderer::Draw(const StaticObjectGeometryPtr& geometry,
        (skin && draw.vertexCount>mesh->skin->deformCount-draw.baseVertex)) { s.Fail("rigid/deform vertex range or rigid buffer mismatch", __LINE__); return; }
     for(size_t i=draw.firstIndex;i<size_t(draw.firstIndex)+draw.indexCount;++i)
         if(mesh->IndexAt(i)>=draw.vertexCount) { s.Fail("mesh-local index exceeds draw vertex count", __LINE__); return; }
+    if(draw.material && !auxiliary && Graphics::GraphicsFeatures{GetGraphicsRuntimeConfig()}.UsePBR()) {
+        s.DrawPBR(mesh,cameraImage,draw,skin,rigid,materialVariant+(skin?12:0));return;
+    }
     try {
         auto& b=*s.backend.m_impl;
         if(!image->sampler || !(image->sampling==draw.sampling) || image->anisotropic!=draw.anisotropic || image->maxAnisotropy!=draw.maxAnisotropy) {
@@ -561,9 +642,9 @@ void DiligentStaticObjectRenderer::Draw(const StaticObjectGeometryPtr& geometry,
         if(!binding) {
             s.pipelines[variant]->CreateShaderResourceBinding(&binding,true);
             if(!binding) { s.Fail("mesh shader resource binding creation failed", __LINE__); return; }
-            binding->GetVariableByName(SHADER_TYPE_PIXEL,"DiffuseTexture")->Set(image->texture->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE));
+            binding->GetVariableByName(SHADER_TYPE_PIXEL,"DiffuseTexture")->Set(image->linearView);
             binding->GetVariableByName(SHADER_TYPE_PIXEL,"ObjectSampler")->Set(image->sampler);
-            binding->GetVariableByName(SHADER_TYPE_PIXEL,"CameraAlphaTexture")->Set(cameraImage->texture->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE));
+            binding->GetVariableByName(SHADER_TYPE_PIXEL,"CameraAlphaTexture")->Set(cameraImage->linearView);
             binding->GetVariableByName(SHADER_TYPE_PIXEL,"CameraAlphaSampler")->Set(image->cameraSampler);
             if(skin) binding->GetVariableByName(SHADER_TYPE_VERTEX,"SkinningPalette")->Set(mesh->pose->buffer);
         }

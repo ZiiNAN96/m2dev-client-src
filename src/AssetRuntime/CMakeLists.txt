@@ -1,4 +1,4 @@
-add_library(AssetRuntime STATIC AssetRuntime.cpp)
+add_library(AssetRuntime STATIC AssetRuntime.cpp MaterialData.cpp)
 target_include_directories(AssetRuntime PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/..")
 target_compile_features(AssetRuntime PUBLIC cxx_std_20)
 target_link_libraries(AssetRuntime PRIVATE M2FirstPartyArchitectureChecks)

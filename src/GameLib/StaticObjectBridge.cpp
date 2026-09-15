@@ -17,7 +17,7 @@ using namespace Renderer;
 struct ModelResources
 {
     StaticObjectGeometryPtr geometry;
-    std::unordered_map<std::string,TerrainTexturePtr> textures;
+    std::unordered_map<const CGraphicImage*,TerrainTexturePtr> cameraTextures;
 };
 struct ObjectResources
 {
@@ -332,9 +332,8 @@ void SubmitStaticMapObject(CGraphicThingInstance& thing, StaticMapObjectPass pas
         }
         if(!resource.geometry) { Report(thing,"ERROR: geometry upload"); return; }
         if(pass==StaticMapObjectPass::CameraBlocker) {
-            const std::string name=cameraAlpha->GetFileName();
-            auto& mask=resource.textures[name];
-            if(!mask) mask=LoadStaticObjectTextureFile(name.c_str(),*renderer);
+            auto& mask=resource.cameraTextures[cameraAlpha];
+            if(!mask) mask=LoadStaticObjectTextureFile(cameraAlpha->GetFileName(),*renderer);
             if(!mask) { Report(thing,"ERROR: camera alpha upload"); return; }
             common.cameraAlpha=mask;
         }
@@ -354,10 +353,8 @@ void SubmitStaticMapObject(CGraphicThingInstance& thing, StaticMapObjectPass pas
             draw.baseVertex=node->pMesh->GetVertexBasePosition(); draw.vertexCount=mesh.vertexCount;
             for(auto* group=node->pMesh->GetTriGroupNodeList(CGrannyMaterial::TYPE_DIFFUSE_PNT);group;group=group->pNextTriGroupNode) {
                 auto& material=palette.GetMaterialRef(group->mtrlIndex);
-                const auto& name=material.GetAsset().textures[0];
-                auto& texture=resource.textures[name];
-                if(!texture) texture=material.GetAsset().explicitRenderState && material.GetImagePointer(0) ?
-                    material.GetImagePointer(0)->GetAssetTexture(*renderer) : LoadStaticObjectTextureFile(name.c_str(),*renderer);
+                draw.material=material.GetRenderMaterial(*renderer);
+                const auto texture=draw.material->classicDiffuse;
                 if(!texture) { Report(thing,"ERROR: texture upload"); return; }
                 draw.cull=material.GetAsset().culling==AssetRuntime::Culling::None ? StaticObjectCull::None : common.cull;
                 ApplyAssetMaterial(material.GetAsset(),draw);
@@ -400,16 +397,16 @@ void SubmitSpecialThing(void* context,const void* native,const Renderer::ActorNa
     if(group.material>=palette.GetMaterialCount()) { fail("ERROR: special thing material index"); return; }
     auto& material=palette.GetMaterialRef(group.material);
     const auto load=[&](CGraphicImage* image) -> TerrainTexturePtr {
-        if(!image) return {}; auto& texture=data.textures[image->GetFileName()];
+        if(!image) return {}; auto& texture=data.cameraTextures[image];
         if(!texture) texture=LoadStaticObjectTextureFile(image->GetFileName(),*actorRenderer); return texture;
     };
-    auto texture=material.GetAsset().explicitRenderState && material.GetImagePointer(0) ?
-        material.GetImagePointer(0)->GetAssetTexture(*actorRenderer) : load(material.GetImagePointer(0));
+    draw.material=material.GetRenderMaterial(*actorRenderer);
+    const auto texture=draw.material->classicDiffuse;
     if(!texture) { fail("ERROR: special thing diffuse image"); return; }
     if(c.cameraAlpha) { draw.cameraAlpha=load(c.cameraAlpha); if(!draw.cameraAlpha) { fail("ERROR: special thing camera mask"); return; } }
     ApplyAssetMaterial(material.GetAsset(),draw);
     if(draw.actorStage==ActorMaterialStage::Specular) {
-        draw.sphereMap=load(material.GetSphereMapImage()); if(!draw.sphereMap) { fail("ERROR: special thing sphere image"); return; }
+        draw.sphereMap=draw.material->classicSphere; if(!draw.sphereMap) { fail("ERROR: special thing sphere image"); return; }
     }
     const auto* world=instance->GetStaticObjectWorldMatrix(group.mesh);
     if(!world) { fail("ERROR: special thing matrix"); return; }

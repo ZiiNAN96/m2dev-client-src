@@ -1,4 +1,5 @@
 #pragma once
+#include "MaterialData.h"
 
 #include <array>
 #include <atomic>
@@ -72,6 +73,9 @@ struct EncodedImage
 };
 struct MaterialAsset
 {
+    MaterialModel model{MaterialModel::Legacy};
+    PBRMaterialData pbr;
+    // Existing fields below are the preserved LegacyMaterialData contract.
     std::string name;
     std::array<AssetId, 2> textures;
     std::array<AssetId, 2> matchingTextures;
@@ -125,6 +129,7 @@ struct MeshAsset
     SkinningAsset skin;
     bool twoSided{};
     std::vector<std::array<float, 4>> tangents; // Optional transformed tangent + bitangent handedness metadata.
+    std::vector<MaterialVertex> materialVertices;
     // Optional immutable vertex channels; consumed only by renderers that request them.
     struct VertexExtras {
         std::array<float,4> color{1,1,1,1};
@@ -271,6 +276,8 @@ PoseResult EvaluatePose(PoseEvaluator& evaluator, const PoseRequest& request = {
 class AssetDocument
 {
 public:
+    // Load-time only, before model handles are handed to render/animation consumers.
+    bool ApplyMaterialOverrides(std::string_view text);
     explicit AssetDocument(AssetId id) : id_(std::move(id)) { ++liveDocuments; }
     virtual ~AssetDocument() { --liveDocuments; }
     AssetDocument(const AssetDocument&) = delete;
