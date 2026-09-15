@@ -9,6 +9,9 @@
 #include "Renderer/Diagnostics.h"
 #include "Renderer/GraphicsConfig.h"
 #include "Renderer/StaticObjectRenderData.h"
+#ifdef M2_RENDERER_DIAGNOSTICS
+#include "../../tests/Lighting/LightingProofState.h"
+#endif
 #include <fstream>
 #include <algorithm>
 #include <cmath>
@@ -44,6 +47,9 @@ Vegetation::RenderContext Context(bool blocker){
     Vegetation::RenderContext c;Math::Matrix view,projection;DRAWSTATE.GetTransform(Renderer::MatrixView,&view);DRAWSTATE.GetTransform(Renderer::MatrixProjection,&projection);std::memcpy(c.view.data(),&view,64);std::memcpy(c.projection.data(),&projection,64);
     if(auto*camera=CCameraManager::Instance().GetCurrentCamera()){const auto&e=camera->GetEye();c.camera={e.x,e.y,e.z};}
     c.time=CTimer::Instance().GetCurrentSecond();c.windStrength=World().windStrength;
+#ifdef M2_RENDERER_DIAGNOSTICS
+    if(Renderer::lightingProofFrozen)c.time=1.25f;
+#endif
     c.distanceScale=Renderer::GetGraphicsRuntimeConfig().vegetationDistanceScale;
     auto&d=c.state;d.depthWrite=true;d.blend=blocker;d.sampling={true,true,true,true,true,true};d.cameraAlphaSampling=d.sampling;
     if(!blocker&&DRAWSTATE.GetRenderState(Renderer::StateFogEnable)){

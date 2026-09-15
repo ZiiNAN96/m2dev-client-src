@@ -11,6 +11,7 @@
 #include "Renderer/DiligentStaticObjectRenderer.h"
 #include "Renderer/AssetMaterialRenderData.h"
 #include "Renderer/GraphicsConfig.h"
+#include "Renderer/SceneLightingRuntime.h"
 #include <chrono>
 #include <fstream>
 #include <filesystem>
@@ -56,6 +57,7 @@ static void Channels(DiligentD3D11Backend& backend,DiligentStaticObjectRenderer&
 {
     Check(backend.Resize(128,128),"channel framebuffer");
     StaticObjectSource source;source.vertices={{{-.9f,-.9f,.5f,0,0,-1,0,0}},{{-.9f,.9f,.5f,0,0,-1,0,1}},{{.9f,.9f,.5f,0,0,-1,1,1}},{{.9f,-.9f,.5f,0,0,-1,1,0}}};source.indices={0,1,2,0,2,3};
+    source.indices={0,2,1,0,3,2}; // Same front winding as the production glTF/GR2 geometry.
     auto geometry=renderer.UploadGeometry(source);Check(bool(geometry),"channel geometry");
     auto material=std::make_shared<MaterialRuntime>();material->parameters.roughness=1;material->parameters.metallic=1;material->parameters.emissive={1,1,1};
     auto color=Pixel(renderer,{128,128,128,255});auto data=Pixel(renderer,{32,64,192,255});
@@ -63,7 +65,11 @@ static void Channels(DiligentD3D11Backend& backend,DiligentStaticObjectRenderer&
     material->classicDiffuse=color;material->maps={color,{},data,data,color};
     StaticObjectDraw draw;draw.material=material;draw.matrices={identity,identity,identity};draw.normalTransform=identity;
     draw.cull=StaticObjectCull::None;draw.vertexCount=4;draw.indexCount=6;draw.ambient={.2f,.2f,.2f,1};draw.diffuse={1,1,1,1};draw.lightDirection={0,0,-1,0};
-    const auto run=[&](MaterialDebugView mode){materialDebugView=mode;Check(backend.BeginFrame(),"channel frame");backend.Clear({true,ClearColor{0,0,0,1}});renderer.Draw(geometry,color,draw);Check(!renderer.Failed(),"channel production PBR draw");auto rgb=Capture(backend);backend.EndFrame();backend.Present();return rgb;};
+    const auto run=[&](MaterialDebugView mode){
+        Graphics::SceneLighting light;light.sun.direction={draw.lightDirection[0],draw.lightDirection[1],draw.lightDirection[2]};
+        light.sun.color={draw.diffuse[0],draw.diffuse[1],draw.diffuse[2]};
+        light.ambientSkyColor=light.ambientGroundColor={draw.ambient[0],draw.ambient[1],draw.ambient[2]};sceneLighting.Set(light);
+        materialDebugView=mode;Check(backend.BeginFrame(),"channel frame");backend.Clear({true,ClearColor{0,0,0,1}});renderer.Draw(geometry,color,draw);Check(!renderer.Failed(),"channel production PBR draw");auto rgb=Capture(backend);backend.EndFrame();backend.Present();return rgb;};
     Style(true);
     for(const auto [mode,expected]:{std::pair{MaterialDebugView::BaseColor,128},std::pair{MaterialDebugView::Roughness,64},std::pair{MaterialDebugView::Metallic,192},std::pair{MaterialDebugView::Occlusion,32},std::pair{MaterialDebugView::Emissive,128}}){
         auto rgb=run(mode);Check(std::abs(int(rgb[(64*128+64)*3])-expected)<=2,"sRGB roundtrip / linear G roughness, B metallic, R AO channels");
@@ -133,18 +139,24 @@ static void Channels(DiligentD3D11Backend& backend,DiligentStaticObjectRenderer&
     draw.material.reset();material.reset();color.reset();data.reset();geometry.reset();renderer.ReleaseBindings();renderer.ResetFrame();
     Check(renderer.LiveGeometryCount()==0&&renderer.LiveTextureCount()==0&&liveMaterialRuntimeObjects==0&&livePBRBindings==0,"channel resources released");
 }
-static void Balls(DiligentD3D11Backend& backend,DiligentStaticObjectRenderer& renderer,CResourceManager& resources,const char* path)
+static void Balls(DiligentD3D11Backend& backend,DiligentStaticObjectRenderer& renderer,CResourceManager& resources,const char* path,bool lighting=false)
 {
+    Graphics::SceneLighting light;light.sun.direction={-.35f,-.6f,1};light.sun.intensity=1.6f;sceneLighting.Set(light);
     Check(backend.Resize(960,640),"balls framebuffer");StaticObjectLoadScope loadScope;
     CGraphicThing::TRef thing(resources.GetResourcePointer(path));Check(!thing.IsNull()&&!thing->IsEmpty(),"PBR GLB through normal ResourceManager/provider");
     auto* model=thing->GetModelPointer(0);Check(model&&model->GetStaticObjectSource(),"normal immutable mesh capture");
     CGrannyModelInstance instance;instance.SetMainModelPointer(model,nullptr);Math::Matrix world;Math::MatrixIdentity(&world);instance.DeformNoSkin(&world);
     auto geometry=renderer.UploadGeometry(*model->GetStaticObjectSource());Check(bool(geometry),"material balls GPU upload");
     Math::Vector3 eye(370,-900,400),target(0,0,170),up(0,0,1);Math::Matrix view,projection;
+    if(lighting)eye={300,-1400,500};
     Math::MatrixLookAtRH(&view,&eye,&target,&up);Math::MatrixPerspectiveFovRH(&projection,.62f,1.5f,1,2500);
     std::vector<std::uint8_t> classic,modern;
-    for(unsigned mode=0;mode<8;++mode){
-        Style(mode!=0);materialDebugView=mode<=1?MaterialDebugView::Lit:static_cast<MaterialDebugView>(mode-1);
+    for(unsigned mode=0;mode<(lighting?5u:8u);++mode){
+        Style(mode!=0);materialDebugView=lighting||mode<=1?MaterialDebugView::Lit:static_cast<MaterialDebugView>(mode-1);
+        if(lighting&&mode){
+            const Graphics::LightVector directions[]={{0,-1,.35f},{1,0,.35f},{0,1,.35f},{0,0,1}};
+            light.sun.direction=directions[mode-1];sceneLighting.Set(light);
+        }
         Check(backend.BeginFrame(),"material proof frame");renderer.ResetFrame();backend.Clear({true,ClearColor{.035f,.045f,.06f,1}});
         auto& palette=instance.GetStaticObjectMaterialPalette();unsigned draws=0;
         for(auto* node=model->GetMeshNodeList(CGrannyMesh::TYPE_RIGID,CGrannyMaterial::TYPE_DIFFUSE_PNT);node;node=node->pNextMeshNode){
@@ -158,7 +170,7 @@ static void Balls(DiligentD3D11Backend& backend,DiligentStaticObjectRenderer& re
                 draw.firstIndex=group->idxPos;draw.indexCount=group->triCount*3;renderer.Draw(geometry,draw.material->classicDiffuse,draw);++draws;
             }
         }
-        Check(draws==6&&!renderer.Failed(),"six production material groups");auto rgb=Capture(backend,"g1x-balls-"+std::to_string(mode)+".bmp");
+        Check(draws==(lighting?8u:6u)&&!renderer.Failed(),"production material groups");auto rgb=Capture(backend,(lighting?"g2x-balls-":"g1x-balls-")+std::to_string(mode)+".bmp");
         if(mode==0)classic=rgb;if(mode==1)modern=rgb;
         backend.EndFrame();backend.Present();renderer.ReleaseBindings();
     }
@@ -176,13 +188,13 @@ int main(int argc,char** argv)
     std::cout << std::unitbuf;
     HWND window=nullptr;
     try {
-        Check(argc==2,"material balls fixture");CPackManager packs;CResourceManager resources;
+        Check(argc==2||(argc==3&&std::string_view(argv[2])=="--lighting"),"material balls fixture / optional lighting proof");CPackManager packs;CResourceManager resources;
         resources.RegisterResourceNewFunctionPointer("png",NewImage);
         for(auto extension:AssetRuntime::ModelExtensions())resources.RegisterResourceNewFunctionPointer(extension.data(),NewThing);
         window=CreateWindowW(L"STATIC",L"G1 production material proof",WS_OVERLAPPEDWINDOW,0,0,960,640,nullptr,nullptr,GetModuleHandleW(nullptr),nullptr);
         DiligentD3D11Backend backend;Check(window&&backend.Initialize({window,960,640}),"Diligent backend");
         {DiligentStaticObjectRenderer renderer(backend);Check(renderer.Initialize(),"production PBR/Classic pipelines");staticObjectRenderer=&renderer;
-            Channels(backend,renderer);BadOptionalMaps(renderer);Balls(backend,renderer,resources,argv[1]);staticObjectRenderer=nullptr;}
+            if(argc==2){Channels(backend,renderer);BadOptionalMaps(renderer);}Balls(backend,renderer,resources,argv[1],argc==3);staticObjectRenderer=nullptr;}
         backend.Shutdown();DestroyWindow(window);window=nullptr;
         Check(liveMaterialRuntimeObjects==0&&livePBRBindings==0&&livePBRPipelines==0&&AssetRuntime::liveDocuments==0,"all material/PSO/document owners zero");
         std::cout<<"PASS production PBR channels, six materials, live style, no per-frame creation, resources=0\n";return 0;

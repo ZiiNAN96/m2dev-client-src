@@ -1,6 +1,7 @@
 #include "DiligentStaticObjectRenderer.h"
 #include "GpuSkinningShader.h"
 #include "PBRShader.h"
+#include "SceneLightingShader.h"
 #include "GraphicsConfig.h"
 #include "AssetRuntime/AnimationStallAudit.h"
 #include "ActorRenderData.h"
@@ -68,7 +69,7 @@ struct Texture final : TerrainTexture
     RefCntAutoPtr<ITexture> texture;
     RefCntAutoPtr<ITextureView> linearView, srgbView;
     RefCntAutoPtr<ISampler> sampler;
-    RefCntAutoPtr<IShaderResourceBinding> bindings[24];
+    RefCntAutoPtr<IShaderResourceBinding> bindings[36];
     RefCntAutoPtr<ISampler> cameraSampler;
     std::weak_ptr<Texture> cameraImage;
     TerrainSampling cameraSampling{};
@@ -99,7 +100,7 @@ struct PBRConstants
 {
     TerrainMatrices matrices;
     std::array<float,16> normal;
-    std::array<float,4> ambient,diffuse,direction,fogColor,fogParameters,baseColor,emissive,factors;
+    std::array<float,4> fogColor,fogParameters,baseColor,emissive,factors;
     std::array<std::array<float,4>,10> uvRows;
     std::array<uint32_t,4> flags,alpha;
     std::array<float,4> fade;
@@ -135,7 +136,11 @@ Texture2D DiffuseTexture;
 SamplerState ObjectSampler;
 Texture2D CameraAlphaTexture;
 SamplerState CameraAlphaSampler;
-struct Output { float4 position:SV_POSITION; float2 uv:TEXCOORD0; float4 diffuse:COLOR0; float fog:TEXCOORD1; float2 cameraUV:TEXCOORD2; };
+struct Output { float4 position:SV_POSITION; float2 uv:TEXCOORD0; float4 diffuse:COLOR0; float fog:TEXCOORD1; float2 cameraUV:TEXCOORD2;
+#ifdef MODERN_VEGETATION
+ float3 worldNormal:TEXCOORD3;
+#endif
+};
 Output VS(float3 position:ATTRIB0, float3 normal:ATTRIB1, float2 uv:ATTRIB2) {
  Output o;
  float4 eye=mul(mul(float4(position,1),World),View);
@@ -173,9 +178,16 @@ Output VS(float3 position:ATTRIB0, float3 normal:ATTRIB1, float2 uv:ATTRIB2) {
  o.fog=saturate(o.fog);
  return o;
 }
-float4 PS(Output i):SV_TARGET {
+float4 PS(Output i,bool front:SV_IsFrontFace):SV_TARGET {
  float4 color=DiffuseTexture.Sample(ObjectSampler,i.uv);
+#ifdef MODERN_VEGETATION
+ float3 n=LightingNormal(i.worldNormal,float3(0,0,1));if(!front)n=-n;
+ float3 base=(VertexModes.w&2)?color.rgb:LightingToLinear(color.rgb);
+ // Native vegetation COLOR_0 is a linear modulation factor, like glTF colors.
+ color.rgb=SceneDiffuse(base*i.diffuse.rgb,n);
+#else
  color.rgb*=i.diffuse.rgb;
+#endif
  if(AlphaModes.x==0) color.a*=i.diffuse.a;
  if(AlphaModes.x==2) color.a=i.diffuse.a;
  // ZiiNAN: Exact legacy factor/fade and stage-1 actor operations, before fog.
@@ -184,12 +196,22 @@ float4 PS(Output i):SV_TARGET {
  if(Modes.w==1) color.rgb=saturate(color.rgb+TextureFactor.rgb);
  if(Modes.w==2) color.rgb*=TextureFactor.rgb;
  if(Modes.w==3) color.rgb=saturate(color.rgb+color.a*CameraAlphaTexture.Sample(CameraAlphaSampler,i.cameraUV).rgb);
- if(AlphaModes.w!=0) {float mask=CameraAlphaTexture.Sample(CameraAlphaSampler,i.cameraUV).a;color.a=VertexModes.w!=0?color.a*mask:mask;}
- if(VertexModes.y!=0) color.rgb*=CameraAlphaTexture.Sample(CameraAlphaSampler,i.cameraUV).rgb;
+ if(AlphaModes.w!=0) {float mask=CameraAlphaTexture.Sample(CameraAlphaSampler,i.cameraUV).a;color.a=(VertexModes.w&1)!=0?color.a*mask:mask;}
+ if(VertexModes.y!=0) {
+#ifdef MODERN_VEGETATION
+   float3 shadow=CameraAlphaTexture.Sample(CameraAlphaSampler,i.cameraUV).rgb;
+   color.rgb*=(VertexModes.w&4)?shadow:LightingToLinear(shadow);
+#else
+   color.rgb*=CameraAlphaTexture.Sample(CameraAlphaSampler,i.cameraUV).rgb;
+#endif
+ }
  // ZiiNAN: Native alpha test compares the 8-bit stage result, including filtered/factor alpha.
  float testedAlpha=floor(saturate(color.a)*255+0.5);
  if(AlphaModes.y==1 && testedAlpha<float(AlphaModes.z)) discard;
  if(AlphaModes.y==2 && testedAlpha<=float(AlphaModes.z)) discard;
+#ifdef MODERN_VEGETATION
+ color.rgb=LightingToSRGB(color.rgb);
+#endif
  color.rgb=lerp(FogColor.rgb,color.rgb,i.fog);
  return color;
 }
@@ -197,6 +219,16 @@ Output AuxiliaryVS(float3 position:ATTRIB0,float3 normal:ATTRIB1,float2 uv:ATTRI
                    float4 color:ATTRIB3,float2 uv1:ATTRIB4,float3 pivot:ATTRIB5,float flexibility:ATTRIB6,float3 pitchCos:ATTRIB7,float3 pitchSin:ATTRIB8) {
  float3 offset=position-pivot;
  float sway=sin(Wind.x*Wind.z+pivot.x*.013+pivot.y*.017)*Wind.y*flexibility;
+#ifdef MODERN_VEGETATION
+ float3x3 deform=float3x3(1,0,0,0,1,0,sway*CardRight.x,sway*CardRight.y,1);
+ if(VertexModes.x!=0) {
+   float3x3 rock=float3x3(cos(sway),0,sin(sway),0,1,0,-sin(sway),0,cos(sway));
+   float3 pitch=VertexModes.x==1?CardPitch.x*pitchCos+CardPitch.y*pitchSin:float3(0,0,0);
+   float3x3 tilt=float3x3(1,0,0,0,1,0,pitch.x,pitch.y,1+pitch.z);
+   deform=mul(mul(rock,tilt),float3x3(CardRight.xyz,CardForward.xyz,CardUp.xyz));
+ }
+ float3 transformedNormal=LightingTransformNormal(normal,mul(deform,(float3x3)World));
+#endif
  if(VertexModes.x!=0) {
    float2 rocked=float2(offset.x*cos(sway)-offset.z*sin(sway),offset.x*sin(sway)+offset.z*cos(sway));
    offset.x=rocked.x;offset.z=rocked.y;
@@ -204,6 +236,9 @@ Output AuxiliaryVS(float3 position:ATTRIB0,float3 normal:ATTRIB1,float2 uv:ATTRI
    position=pivot+offset.x*CardRight.xyz+offset.y*CardForward.xyz+offset.z*CardUp.xyz;
  } else position.xy+=sway*position.z*CardRight.xy;
  Output o=VS(position,normal,uv);o.diffuse=color;
+#ifdef MODERN_VEGETATION
+ o.worldNormal=transformedNormal;
+#endif
  if(VertexModes.y!=0)o.cameraUV=uv1;
  if(VertexModes.x==1&&AlphaModes.w!=0)o.cameraUV=float2(0,0);
  if(VertexModes.z!=0)o.fog=saturate((FogParameters.y-o.position.z)/(FogParameters.y-FogParameters.x));
@@ -215,7 +250,7 @@ struct DiligentStaticObjectRenderer::Impl
 {
     DiligentD3D11Backend& backend;
     RefCntAutoPtr<IBuffer> constants;
-    RefCntAutoPtr<IPipelineState> pipelines[36];
+    RefCntAutoPtr<IPipelineState> pipelines[48];
     RefCntAutoPtr<IPipelineState> pbrPipelines[24];
     RefCntAutoPtr<IBuffer> pbrConstants;
     RefCntAutoPtr<ISampler> pbrSampler;
@@ -233,7 +268,8 @@ struct DiligentStaticObjectRenderer::Impl
         if (first) LogRendererFailure("DiligentStaticObjectRenderer.cpp", this, reason, line);
     }
     explicit Impl(DiligentD3D11Backend& b):backend(b) {}
-    ~Impl(){for(const auto& pipeline:pbrPipelines)if(pipeline)--livePBRPipelines;}
+    ~Impl(){for(const auto& pipeline:pbrPipelines)if(pipeline)--livePBRPipelines;
+        for(unsigned i=36;i<48;++i)if(pipelines[i])--liveLightingPipelines;}
     bool InitializePBR(bool gpu);
     void DrawPBR(const std::shared_ptr<Geometry>&,const std::shared_ptr<Texture>&,
         const StaticObjectDraw&,bool skin,bool rigid,unsigned variant);
@@ -285,6 +321,12 @@ Output SkinningVS(float3 position:ATTRIB0, float3 normal:ATTRIB1, float2 uv:ATTR
         shader.Source=shaderSource;shader.Desc.Name="Mesh auxiliary colors and card pivots";
         shader.Desc.ShaderType=SHADER_TYPE_VERTEX;shader.EntryPoint="AuxiliaryVS";
         device->CreateShader(shader,&auxiliaryVS);if(!auxiliaryVS)return false;
+        const std::string modernVegetationSource=std::string("#define MODERN_VEGETATION\n")+sceneLightingShader+shaderSource;
+        RefCntAutoPtr<IShader> modernVegetationVS,modernVegetationPS;
+        shader.Source=modernVegetationSource.c_str();shader.Desc.Name="G2 vegetation world normals";
+        device->CreateShader(shader,&modernVegetationVS);
+        shader.Desc.ShaderType=SHADER_TYPE_PIXEL;shader.EntryPoint="PS";shader.Desc.Name="G2 vegetation scene lighting";
+        device->CreateShader(shader,&modernVegetationPS);if(!modernVegetationVS||!modernVegetationPS)return false;
         LayoutElement layout[]={{0,0,3,VT_FLOAT32,False,0,32},{1,0,3,VT_FLOAT32,False,12,32},{2,0,2,VT_FLOAT32,False,24,32}};
         LayoutElement skinLayout[]={{0,0,3,VT_FLOAT32,False,0,40},{1,0,3,VT_FLOAT32,False,20,40},
             {2,0,2,VT_FLOAT32,False,32,40},{3,0,4,VT_UINT8,False,12,40},{4,0,4,VT_UINT8,False,16,40}};
@@ -295,7 +337,7 @@ Output SkinningVS(float3 position:ATTRIB0, float3 normal:ATTRIB1, float2 uv:ATTR
             {SHADER_TYPE_PIXEL,"CameraAlphaTexture",SHADER_RESOURCE_VARIABLE_TYPE_MUTABLE},
             {SHADER_TYPE_PIXEL,"CameraAlphaSampler",SHADER_RESOURCE_VARIABLE_TYPE_MUTABLE},
             {SHADER_TYPE_VERTEX,"SkinningPalette",SHADER_RESOURCE_VARIABLE_TYPE_MUTABLE}};
-        for(unsigned variant=0;variant<36;++variant) {
+        for(unsigned variant=0;variant<48;++variant) {
             const bool auxiliary=variant>=24;const bool skin=variant>=12&&!auxiliary;
             if(skin&&!gpuPrototype)continue;
             const auto cull=variant%3;
@@ -307,7 +349,7 @@ Output SkinningVS(float3 position:ATTRIB0, float3 normal:ATTRIB1, float2 uv:ATTR
             g.NumRenderTargets=1; g.RTVFormats[0]=swap.ColorBufferFormat; g.DSVFormat=swap.DepthBufferFormat;
             g.PrimitiveTopology=PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
             g.RasterizerDesc.CullMode=cull==0 ? CULL_MODE_NONE : CULL_MODE_BACK;
-            g.RasterizerDesc.FrontCounterClockwise=cull==1;
+            g.RasterizerDesc.FrontCounterClockwise=variant>=36?cull!=2:cull==1;
             g.RasterizerDesc.DepthClipEnable=True;
             g.DepthStencilDesc.DepthEnable=True; g.DepthStencilDesc.DepthWriteEnable=variant%12<6;
             g.DepthStencilDesc.DepthFunc=COMPARISON_FUNC_LESS_EQUAL;
@@ -316,12 +358,13 @@ Output SkinningVS(float3 position:ATTRIB0, float3 normal:ATTRIB1, float2 uv:ATTR
             blend.SrcBlend=blend.SrcBlendAlpha=BLEND_FACTOR_SRC_ALPHA;
             blend.DestBlend=blend.DestBlendAlpha=BLEND_FACTOR_INV_SRC_ALPHA;
             g.InputLayout.LayoutElements=auxiliary?auxiliaryLayout:(skin ? skinLayout : layout); g.InputLayout.NumElements=auxiliary?9:(skin ? 5 : 3);
-            info.pVS=auxiliary?auxiliaryVS:(skin ? skinVS : vs); info.pPS=ps;
+            info.pVS=variant>=36?modernVegetationVS:(auxiliary?auxiliaryVS:(skin ? skinVS : vs)); info.pPS=variant>=36?modernVegetationPS:ps;
             auto& pipeline=s.pipelines[variant];
             device->CreateGraphicsPipelineState(info,&pipeline);
             if(!pipeline) return false;
             for(auto stage:{SHADER_TYPE_VERTEX,SHADER_TYPE_PIXEL})
                 if(auto* variable=pipeline->GetStaticVariableByName(stage,"ObjectConstants")) variable->Set(s.constants);
+            if(variant>=36){++liveLightingPipelines;pipeline->GetStaticVariableByName(SHADER_TYPE_PIXEL,"SceneLightingConstants")->Set(s.backend.m_impl->lightBuffer);}
         }
         return s.InitializePBR(gpuPrototype);
     } catch(...) { s.Fail("initialization exception", __LINE__); return false; }
@@ -561,7 +604,8 @@ void DiligentStaticObjectRenderer::Draw(const StaticObjectGeometryPtr& geometry,
     const bool rigid=mesh && mesh->skin && draw.baseVertex>=mesh->skin->deformCount;
     const bool skin=mesh && mesh->skin && !rigid;
     const bool auxiliary=mesh&&mesh->extras;
-    const auto variant=materialVariant+(auxiliary?24:(skin ? 12 : 0));
+    const bool modernVegetation=auxiliary&&Graphics::GraphicsFeatures{GetGraphicsRuntimeConfig()}.UsePBR();
+    const auto variant=materialVariant+(modernVegetation?36:(auxiliary?24:(skin ? 12 : 0)));
     if(!s.backend.m_impl || !s.backend.m_impl->inFrame || !mesh || !image || !cameraImage ||
        mesh->counters!=s.counters || image->counters!=s.counters || cameraImage->counters!=s.counters ||
        cull>=3 || !s.pipelines[variant] || draw.alphaReference>255 || static_cast<uint32_t>(draw.alphaTest)>2 ||
@@ -597,6 +641,7 @@ void DiligentStaticObjectRenderer::Draw(const StaticObjectGeometryPtr& geometry,
     }
     try {
         auto& b=*s.backend.m_impl;
+        if(modernVegetation&&!b.SyncSceneLighting()){s.Fail("vegetation scene lighting upload",__LINE__);return;}
         if(!image->sampler || !(image->sampling==draw.sampling) || image->anisotropic!=draw.anisotropic || image->maxAnisotropy!=draw.maxAnisotropy) {
             image->sampler.Release();
             SamplerDesc sampler;
@@ -638,13 +683,13 @@ void DiligentStaticObjectRenderer::Draw(const StaticObjectGeometryPtr& geometry,
         }
         // ZiiNAN: Diligent GPU skinning prototype
         RefCntAutoPtr<IShaderResourceBinding> skinBinding;
-        auto& binding=skin ? skinBinding : image->bindings[materialVariant+(auxiliary?12:0)];
+        auto& binding=skin ? skinBinding : image->bindings[materialVariant+(modernVegetation?24:(auxiliary?12:0))];
         if(!binding) {
             s.pipelines[variant]->CreateShaderResourceBinding(&binding,true);
             if(!binding) { s.Fail("mesh shader resource binding creation failed", __LINE__); return; }
-            binding->GetVariableByName(SHADER_TYPE_PIXEL,"DiffuseTexture")->Set(image->linearView);
+            binding->GetVariableByName(SHADER_TYPE_PIXEL,"DiffuseTexture")->Set(modernVegetation&&image->srgbView?image->srgbView:image->linearView);
             binding->GetVariableByName(SHADER_TYPE_PIXEL,"ObjectSampler")->Set(image->sampler);
-            binding->GetVariableByName(SHADER_TYPE_PIXEL,"CameraAlphaTexture")->Set(cameraImage->linearView);
+            binding->GetVariableByName(SHADER_TYPE_PIXEL,"CameraAlphaTexture")->Set(modernVegetation&&cameraImage->srgbView?cameraImage->srgbView:cameraImage->linearView);
             binding->GetVariableByName(SHADER_TYPE_PIXEL,"CameraAlphaSampler")->Set(image->cameraSampler);
             if(skin) binding->GetVariableByName(SHADER_TYPE_VERTEX,"SkinningPalette")->Set(mesh->pose->buffer);
         }
@@ -671,7 +716,8 @@ void DiligentStaticObjectRenderer::Draw(const StaticObjectGeometryPtr& geometry,
             mapped->spotDirection=draw.spotDirection; mapped->spotCone=draw.spotCone;
             mapped->cardRight=draw.cardRight;mapped->cardForward=draw.cardForward;mapped->cardUp=draw.cardUp;mapped->wind=draw.wind;
             mapped->cardPitch=draw.cardPitch;
-            mapped->vertexModes={draw.cardMode,draw.vertexShadow?1u:0u,draw.cardFog?1u:0u,draw.modulateCameraAlpha?1u:0u};
+            mapped->vertexModes={draw.cardMode,draw.vertexShadow?1u:0u,draw.cardFog?1u:0u,
+                (draw.modulateCameraAlpha?1u:0u)|(modernVegetation&&image->srgbView?2u:0u)|(modernVegetation&&cameraImage->srgbView?4u:0u)};
             mapped->alphaModes={draw.factorAlphaOnly ? 4u : (draw.factorAlpha ? 3u : (draw.diffuseAlphaOnly ? 2u : uint32_t(draw.textureAlpha))),static_cast<uint32_t>(draw.alphaTest),draw.alphaReference,draw.cameraAlpha ? 1u : 0u};
         }
         b.context->SetPipelineState(s.pipelines[variant]);
@@ -687,6 +733,7 @@ void DiligentStaticObjectRenderer::Draw(const StaticObjectGeometryPtr& geometry,
         attributes.FirstIndexLocation=draw.firstIndex;
         attributes.BaseVertex=draw.baseVertex-(rigid ? mesh->skin->deformCount : 0);
         b.context->DrawIndexed(attributes); ++s.draws;
+        if(modernVegetation)++modernVegetationDraws;
     } catch(...) { s.Fail("mesh draw exception", __LINE__); }
 }
 void DiligentStaticObjectRenderer::ReleaseBindings()

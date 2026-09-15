@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "Renderer/GraphicsConfig.h"
+#include "Renderer/SceneLightingRuntime.h"
 #include "EterLib/DrawStateView.h"
 #include "EterLib/DrawState.h"
 #include "PackLib/PackManager.h"
@@ -78,6 +79,8 @@ void CMapManager::Create()
 
 void CMapManager::Destroy()
 {
+    Renderer::sceneLighting.Set({});
+    mc_pcurEnvironmentData=nullptr;
 	stl_wipe_second(m_EnvironmentDataMap);
 
 	if (m_pkMap)
@@ -90,6 +93,7 @@ void CMapManager::Destroy()
 
 void CMapManager::Clear()
 {
+    Renderer::sceneLighting.Set({});
 	if (m_pkMap)
 		m_pkMap->Clear();
 }
@@ -222,6 +226,19 @@ bool CMapManager::GetWaterHeight(int iX, int iY, long * plWaterHeight)
 //////////////////////////////////////////////////////////////////////////
 void CMapManager::BeginEnvironment()
 {
+    if(m_pkMap && mc_pcurEnvironmentData) {
+        const auto& light=mc_pcurEnvironmentData->DirLights[ENV_DIRLIGHT_BACKGROUND];
+        Graphics::MapLighting input;
+        input.direction={light.Direction.x,light.Direction.y,light.Direction.z};
+        input.diffuse={light.Diffuse.r,light.Diffuse.g,light.Diffuse.b};
+        input.ambient={light.Ambient.r,light.Ambient.g,light.Ambient.b};
+        const auto& material=mc_pcurEnvironmentData->Material;
+        input.materialDiffuse={material.Diffuse.r,material.Diffuse.g,material.Diffuse.b};
+        input.materialAmbient={material.Ambient.r,material.Ambient.g,material.Ambient.b};
+        input.materialEmissive={material.Emissive.r,material.Emissive.g,material.Emissive.b};
+        input.sunEnabled=mc_pcurEnvironmentData->bDirLightsEnable[ENV_DIRLIGHT_BACKGROUND];
+        Renderer::sceneLighting.SetMap(input);
+    } else Renderer::sceneLighting.Set({});
 	if (!m_pkMap)
 		return;
 

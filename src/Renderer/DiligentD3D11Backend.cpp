@@ -35,6 +35,7 @@ bool DiligentD3D11Backend::Initialize(const InitializeInfo& info)
             return false;
         const auto& adapter=state->device->GetAdapterInfo();
         graphicsCapabilities={adapter.Texture.MaxTexture2DDimension,adapter.Memory.LocalMemory};
+        if(!state->SyncSceneLighting())return false;
         m_impl = std::move(state);
         return true;
     }

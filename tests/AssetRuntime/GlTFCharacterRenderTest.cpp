@@ -127,6 +127,7 @@ int main(int argc,char** argv)
                     backend.EndFrame();backend.Present();renderer.ReleaseBindings();Numeric(backend,actor);
                 }
                 eye={900,-1400,1000};target={0,160,80};Math::MatrixLookAtRH(&view,&eye,&target,&up);Math::MatrixPerspectiveFovRH(&projection,.70f,1.5f,1,4000);
+                const auto lightUpdatesBefore=lightBufferUpdates.load();
                 Check(backend.BeginFrame(),"multi-instance frame");renderer.ResetFrame();++actorFrameSerial;backend.Clear({true,ClearColor{.04f,.05f,.07f,1}});
                 for(int i=0;i<20;++i) {
                     auto& actor=*actors[i];actor.SetLocalTime(0);actor.SetMotionPointer(thing->GetMotionPointer(i%6),0,i%6<3?0:1,1);actor.SetLocalTime(.08f*i);
@@ -135,6 +136,7 @@ int main(int argc,char** argv)
                 std::cout<<"Multi-instance draws="<<renderer.DrawCount()<<" geometry wrappers="<<livePrototypeGeometry
                     <<" shared mesh buffers="<<livePrototypeStaticMeshes<<" textures="<<renderer.LiveTextureCount()<<'\n';
                 Check(renderer.DrawCount()==40&&livePrototypeStaticMeshes==1&&renderer.LiveTextureCount()==(argc==3?2u:1u),"20 actors share immutable mesh buffers and texture, all primitives draw");
+                if(argc==3){Check(liveLightBuffers==1&&lightBufferUpdates==lightUpdatesBefore,"20 animated actors share one warm scene light buffer without uploads");std::cout<<"SceneLightBuffers=1 additionalUploadsFor20Actors=0\n";}
                 std::vector<std::uint8_t> rgb;unsigned w{},h{};Check(backend.CaptureRGB(rgb,w,h),"20 actors native readback");Save(rgb,w,h,"f5x-20-actors.bmp");
                 backend.EndFrame();backend.Present();renderer.ReleaseBindings();
                 {

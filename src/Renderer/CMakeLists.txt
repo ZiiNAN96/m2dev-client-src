@@ -1,5 +1,6 @@
 add_library(M2RendererInterface INTERFACE)
 target_include_directories(M2RendererInterface INTERFACE "${PROJECT_SOURCE_DIR}/src")
+target_link_libraries(M2RendererInterface INTERFACE M2GraphicsSettings)
 
 # ZiiNAN: Cross-platform bootstrap
 if(M2_BUILD_WINDOWS_CLIENT)

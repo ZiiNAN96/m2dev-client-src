@@ -3,6 +3,7 @@
 #include "Renderer/SkinningData.h"
 #include "Graphics/GraphicsSettings.h"
 #include "Renderer/MaterialRuntime.h"
+#include "Renderer/SceneLightingRuntime.h"
 #include <ostream>
 
 namespace Renderer
@@ -11,6 +12,10 @@ namespace Renderer
 inline void WriteSourceResourceAudit(std::ostream& output)
 {
     output << "GraphicsSettingsObjects=" << Graphics::liveSettingsStores << std::endl;
+    output << "SceneLightingResources=" << liveSceneLightingResources << " LightBuffers=" << liveLightBuffers
+           << " LightingPipelines=" << liveLightingPipelines
+           << " LightBufferUpdates=" << lightBufferUpdates << " SceneLightingRevision=" << sceneLighting.Revision()
+           << " ModernTerrainDraws=" << modernTerrainDraws << " ModernVegetationDraws=" << modernVegetationDraws << std::endl;
     output << "MaterialRuntimeObjects=" << liveMaterialRuntimeObjects << " PBRBindings=" << livePBRBindings
            << " PBRPipelines=" << livePBRPipelines << " MaterialCreations=" << materialRuntimeCreations
            << " PBRDraws=" << pbrDraws << " PBREnabledSamplesPerDrawSum=" << pbrTextureSamples

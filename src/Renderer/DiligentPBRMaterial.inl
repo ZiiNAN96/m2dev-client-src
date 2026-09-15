@@ -2,23 +2,27 @@
 bool DiligentStaticObjectRenderer::Impl::InitializePBR(bool gpu)
 {
     auto* device=backend.m_impl->device.RawPtr();
-    BufferDesc buffer;buffer.Name="G1 material/light constants";buffer.Size=sizeof(PBRConstants);
+    BufferDesc buffer;buffer.Name="PBR material/transform constants";buffer.Size=sizeof(PBRConstants);
     buffer.Usage=USAGE_DYNAMIC;buffer.BindFlags=BIND_UNIFORM_BUFFER;buffer.CPUAccessFlags=CPU_ACCESS_WRITE;
     device->CreateBuffer(buffer,nullptr,&pbrConstants);if(!pbrConstants)return false;
     SamplerDesc sampler;sampler.MinFilter=sampler.MagFilter=sampler.MipFilter=FILTER_TYPE_LINEAR;
     sampler.AddressU=sampler.AddressV=TEXTURE_ADDRESS_WRAP;
     device->CreateSampler(sampler,&pbrSampler);if(!pbrSampler)return false;
-    ShaderCreateInfo shader;shader.SourceLanguage=SHADER_SOURCE_LANGUAGE_HLSL;shader.Source=pbrShader;
+    const std::string litSource=std::string(sceneLightingShader)+pbrShader;
+    ShaderCreateInfo shader;shader.SourceLanguage=SHADER_SOURCE_LANGUAGE_HLSL;shader.Source=litSource.c_str();
     shader.Desc.Name="G1 PBR rigid";shader.Desc.ShaderType=SHADER_TYPE_VERTEX;shader.EntryPoint="PBRVS";
     RefCntAutoPtr<IShader> vs,skinVS,ps;device->CreateShader(shader,&vs);
     shader.Desc.Name="G1 metallic roughness GGX";shader.Desc.ShaderType=SHADER_TYPE_PIXEL;shader.EntryPoint="PBRPS";
     device->CreateShader(shader,&ps);if(!vs||!ps)return false;
-    const std::string skinned=std::string(pbrShader)+gpuSkinningShader+R"(
+    const std::string skinned=litSource+gpuSkinningShader+R"(
 POutput PBRSkinVS(float3 position:ATTRIB0,float3 normal:ATTRIB1,float2 oldUV:ATTRIB2,
  uint4 weights:ATTRIB3,uint4 indices:ATTRIB4,float4 tangent:ATTRIB5,float2 uv:ATTRIB6) {
  float3 p,n,unused,t;SkinVertex(position,normal,weights,indices,p,n);
  SkinVertex(float3(0,0,0),tangent.xyz,weights,indices,unused,t);
- return PBRVS(p,n,oldUV,float4(t,tangent.w),uv);
+ float3x3 skinMatrix=0;
+ [unroll]for(uint k=0;k<4;++k)if(weights[k]!=0)skinMatrix+=float(weights[k])*(1.0/255.0)*(float3x3)Bones[indices[k]];
+ n=LightingTransformNormal(normal,skinMatrix);
+ return PBRVS(p,n,oldUV,float4(t,tangent.w*(determinant(skinMatrix)<0?-1:1)),uv);
 })";
     if(gpu){shader.Source=skinned.c_str();shader.Desc.Name="G1 PBR GPU skinned";shader.Desc.ShaderType=SHADER_TYPE_VERTEX;shader.EntryPoint="PBRSkinVS";device->CreateShader(shader,&skinVS);if(!skinVS)return false;}
     LayoutElement rigidLayout[]={{0,0,3,VT_FLOAT32,False,0,32},{1,0,3,VT_FLOAT32,False,12,32},{2,0,2,VT_FLOAT32,False,24,32},
@@ -41,7 +45,9 @@ POutput PBRSkinVS(float3 position:ATTRIB0,float3 normal:ATTRIB1,float2 oldUV:ATT
         g.NumRenderTargets=1;g.RTVFormats[0]=swap.ColorBufferFormat;g.DSVFormat=swap.DepthBufferFormat;
         g.PrimitiveTopology=PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
         g.RasterizerDesc.CullMode=variant%3==0?CULL_MODE_NONE:CULL_MODE_BACK;
-        g.RasterizerDesc.FrontCounterClockwise=variant%3==1;g.RasterizerDesc.DepthClipEnable=True;
+        // Disabling culling must not reverse the definition of a front face.
+        // The normal asset triangle convention is the same as CullClockwise.
+        g.RasterizerDesc.FrontCounterClockwise=variant%3!=2;g.RasterizerDesc.DepthClipEnable=True;
         g.DepthStencilDesc.DepthEnable=True;g.DepthStencilDesc.DepthWriteEnable=variant%12<6;
         g.DepthStencilDesc.DepthFunc=COMPARISON_FUNC_LESS_EQUAL;
         auto& blend=g.BlendDesc.RenderTargets[0];blend.BlendEnable=(variant/3)%2!=0;
@@ -51,6 +57,7 @@ POutput PBRSkinVS(float3 position:ATTRIB0,float3 normal:ATTRIB1,float2 oldUV:ATT
         auto& pipeline=pbrPipelines[variant];device->CreateGraphicsPipelineState(info,&pipeline);if(!pipeline)return false;
         ++livePBRPipelines;
         for(auto stage:{SHADER_TYPE_VERTEX,SHADER_TYPE_PIXEL})if(auto* v=pipeline->GetStaticVariableByName(stage,"PBRConstants"))v->Set(pbrConstants);
+        if(auto* v=pipeline->GetStaticVariableByName(SHADER_TYPE_PIXEL,"SceneLightingConstants"))v->Set(backend.m_impl->lightBuffer);
         if(auto* v=pipeline->GetStaticVariableByName(SHADER_TYPE_PIXEL,"PMaterialSampler"))v->Set(pbrSampler);
     }
     return true;
@@ -61,6 +68,7 @@ void DiligentStaticObjectRenderer::Impl::DrawPBR(const std::shared_ptr<Geometry>
 {
     try {
         auto& b=*backend.m_impl;const auto& runtime=*draw.material;const auto& p=runtime.parameters;
+        if(!b.SyncSceneLighting()){Fail("scene lighting upload",__LINE__);return;}
         if(!pbrPipelines[variant]||!mesh->materialVertices){Fail("missing PBR pipeline or material vertex stream",__LINE__);return;}
         auto& owned=pbrBindings[draw.material.get()];
         if(!owned || owned->material.lock()!=draw.material){
@@ -111,7 +119,6 @@ void DiligentStaticObjectRenderer::Impl::DrawPBR(const std::shared_ptr<Geometry>
             mapped->matrices=draw.matrices;mapped->normal=draw.normalTransform;
             const auto& size=b.swapChain->GetDesc();const auto width=draw.viewport[2]?draw.viewport[2]:size.Width,height=draw.viewport[3]?draw.viewport[3]:size.Height;
             for(unsigned row=0;row<4;++row){mapped->matrices.projection[row*4]+=draw.matrices.projection[row*4+3]/width;mapped->matrices.projection[row*4+1]-=draw.matrices.projection[row*4+3]/height;}
-            mapped->ambient=draw.ambient;mapped->diffuse=draw.diffuse;mapped->direction=draw.lightDirection;
             mapped->fogColor=draw.fogColor;mapped->fogParameters=draw.fogParameters;
             mapped->baseColor=p.baseColor;mapped->emissive={p.emissive[0],p.emissive[1],p.emissive[2],0};
             if(!runtime.authored && draw.actorStage==ActorMaterialStage::Modulate)

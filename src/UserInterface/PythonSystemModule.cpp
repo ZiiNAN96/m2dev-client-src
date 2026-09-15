@@ -4,6 +4,7 @@
 #ifdef M2_RENDERER_DIAGNOSTICS
 #include "PythonApplication.h"
 #include "../../tests/Graphics/GraphicsClientProbe.h"
+#include "../../tests/Lighting/LightingClientProbe.h"
 #endif
 
 PyObject* systemGetGraphicsSettings(PyObject*, PyObject*)
@@ -479,6 +480,8 @@ void initsystem()
         { "GetGraphicsRuntimeConfig", systemGetGraphicsRuntimeConfig, METH_VARARGS },
 #ifdef M2_RENDERER_DIAGNOSTICS
         { "TestGraphicsWindow", systemTestGraphicsWindow, METH_VARARGS },
+        { "SetLightingProof", systemSetLightingProof, METH_VARARGS },
+        { "GetLightingProof", systemGetLightingProof, METH_VARARGS },
 #endif
 		// MR-14: Fog update by Alaric
 		{ "GetFogLevel",				systemGetFogLevel,				METH_VARARGS },
