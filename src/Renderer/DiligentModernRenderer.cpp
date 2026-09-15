@@ -1,6 +1,7 @@
 #include "DiligentModernRenderer.h"
 #include "DiligentD3D11BackendInternal.h"
 #include "DiligentAtmosphere.h"
+#include "DiligentWater.h"
 #include "Graphics/AtmosphereConfig.h"
 #include "ModernMeshShader.h"
 #include "ModernTerrainShader.h"
@@ -150,6 +151,8 @@ struct DiligentModernRenderer::Impl
     std::unique_ptr<PostFXContext> post;
     std::unique_ptr<ScreenSpaceAmbientOcclusion> ao;
     std::unique_ptr<Bloom> bloom;
+    std::unique_ptr<DiligentWater> water;
+    bool waterStarted{},waterFinished{},waterWarmed{};
     std::vector<ModernMeshSubmission> casters;
     std::vector<ModernMeshSubmission> transparent;
     std::vector<ModernTerrainSubmission> terrainCasters;
@@ -393,7 +396,7 @@ struct DiligentModernRenderer::Impl
 
 DiligentModernRenderer::DiligentModernRenderer(DiligentD3D11Backend& backend):impl_(std::make_unique<Impl>(backend)) {++liveModernRenderers;}
 DiligentModernRenderer::~DiligentModernRenderer() {
-    const auto stats=impl_->stats;impl_.reset();--liveModernRenderers;
+    const auto stats=Stats();impl_.reset();--liveModernRenderers;
     if(verboseDiagnostics)try {
         std::ofstream log("gdx-renderer.log",std::ios::app);
         log<<"frames="<<stats.frames<<" meshDraws="<<stats.meshDraws<<" terrainDraws="<<stats.terrainDraws
@@ -407,10 +410,20 @@ DiligentModernRenderer::~DiligentModernRenderer() {
            <<" toneMappedFrames="<<stats.toneMappedFrames
            <<" legacyMaterialDraws="<<stats.legacyMaterialDraws<<" pbrMaterialDraws="<<stats.pbrMaterialDraws
            <<" authoredShimmerDraws="<<stats.authoredShimmerDraws
+           <<" waterFrames="<<stats.waterFrames<<" waterDraws="<<stats.waterDraws<<" ssrFrames="<<stats.ssrFrames
+           <<" ssrFallbacks="<<stats.ssrFallbacks<<" waterTargetBytes="<<stats.waterTargetBytes
+           <<" waterResourceCreations="<<stats.waterResourceCreations<<" waterCpuSubmitMs="<<stats.waterSubmitMilliseconds
+           <<" ssrCpuSubmitMs="<<stats.ssrSubmitMilliseconds<<" WaterRenderers="<<liveWaterRenderers
            <<" ModernRenderers="<<liveModernRenderers<<'\n';
     }catch(...){}
 }
-ModernFrameStats DiligentModernRenderer::Stats() const {return impl_->stats;}
+ModernFrameStats DiligentModernRenderer::Stats() const {
+    auto result=impl_->stats;if(impl_->water){const auto w=impl_->water->Stats();
+        result.waterFrames=w.frames;result.waterDraws=w.draws;result.ssrFrames=w.ssrFrames;result.ssrFallbacks=w.ssrFallbacks;
+        result.waterTargetBytes=w.targetBytes;result.waterResourceCreations=w.resourceCreations;
+        result.waterSubmitMilliseconds=w.waterCpuMilliseconds;result.ssrSubmitMilliseconds=w.ssrCpuMilliseconds;}
+    return result;
+}
 bool DiligentModernRenderer::Active() const {return impl_->active||impl_->forward;}
 void DiligentModernRenderer::BeginForwardWorld() {impl_->forward=impl_->hasCamera&&impl_->hasDepth&&!impl_->active;if(impl_->forward){impl_->worldOpen=true;BindWorldTarget();}}
 void DiligentModernRenderer::EndForwardWorld() {
@@ -419,7 +432,7 @@ void DiligentModernRenderer::EndForwardWorld() {
         for(const char* name:{"BaseMap","NormalMap","RoughnessMap","MetallicMap","AOMap","EmissiveMap","SkinningPalette","ScreenAO","ShadowMap","CameraAlphaTexture"})Impl::Set(pair.second.srb,stage,name,nullptr);
     if(!s.deferToneMapping)FinishWorld();
 }
-void DiligentModernRenderer::ResetFrame() {shadowCasterCollection=false;impl_->worldOpen=impl_->sceneReady=impl_->active=impl_->forward=impl_->hasDepth=false;impl_->casters.clear();impl_->terrainCasters.clear();impl_->transparent.clear();}
+void DiligentModernRenderer::ResetFrame() {shadowCasterCollection=false;impl_->worldOpen=impl_->sceneReady=impl_->active=impl_->forward=impl_->hasDepth=false;impl_->casters.clear();impl_->terrainCasters.clear();impl_->transparent.clear();if(impl_->water)impl_->water->ResetFrame();impl_->waterStarted=impl_->waterFinished=false;}
 bool DiligentModernRenderer::HDRWorldActive() const {return impl_->worldOpen&&!impl_->active;}
 void DiligentModernRenderer::BindWorldTarget() {
     auto& s=*impl_;auto* target=s.hdrScene->GetDefaultView(TEXTURE_VIEW_RENDER_TARGET);
@@ -437,6 +450,7 @@ void DiligentModernRenderer::ReleaseWindowResources() {
     shadowCasterCollection=false;
     auto& s=*impl_;s.worldOpen=s.sceneReady=s.active=s.forward=s.hasDepth=false;s.casters.clear();s.composite.srb.Release();s.tone.srb.Release();s.hdrScene.Release();s.depth.Release();s.background.Release();s.motion.Release();s.white.Release();s.bloom.reset();
     for(auto& texture:s.surfaces)texture.Release();s.post.reset();s.ao.reset();s.terrainCasters.clear();s.transparent.clear();
+    if(s.water)s.water->ReleaseWindowResources();s.waterWarmed=false;
 }
 void DiligentModernRenderer::Begin(const Graphics::SceneLighting& light,bool deferToneMapping) {
     shadowCasterCollection=false;impl_->shadowsPrepared=false;
@@ -455,6 +469,8 @@ void DiligentModernRenderer::Begin(const Graphics::SceneLighting& light,bool def
     const auto atmosphereStart=std::chrono::steady_clock::now();
     if(!s.atmosphere)s.atmosphere=std::make_unique<DiligentAtmosphere>(state.device,state.context);
     s.atmosphere->Prepare(s.lighting,s.config.modernSky);
+    if(!s.water)s.water=std::make_unique<DiligentWater>(state.device,state.context);
+    s.water->Prepare(s.width,s.height,s.config);s.waterStarted=s.waterFinished=false;
     s.stats.atmosphereSubmitMilliseconds+=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-atmosphereStart).count();
     float clear[]{0,0,0,0};for(auto& target:s.surfaces)state.context->ClearRenderTarget(target->GetDefaultView(TEXTURE_VIEW_RENDER_TARGET),clear,RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
     state.context->ClearDepthStencil(s.depth->GetDefaultView(TEXTURE_VIEW_DEPTH_STENCIL),CLEAR_DEPTH_FLAG,1,0,RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
@@ -473,7 +489,7 @@ void DiligentModernRenderer::Impl::Camera(const TerrainMatrices& matrices) {
         }
         s.camera.mViewProj=s.camera.mView*s.camera.mProj;s.camera.mViewInv=s.camera.mView.Inverse();s.camera.mProjInv=s.camera.mProj.Inverse();s.camera.mViewProjInv=s.camera.mViewProj.Inverse();
         s.camera.f4Position={s.camera.mViewInv._41,s.camera.mViewInv._42,s.camera.mViewInv._43,1};
-        s.camera.f4ViewportSize={float(s.width),float(s.height),1.f/s.width,1.f/s.height};s.camera.fHandness=-1;s.camera.uiFrameIndex=s.frame;
+        s.camera.f4ViewportSize={float(s.width),float(s.height),1.f/s.width,1.f/s.height};s.camera.fHandness=-1;s.camera.uiFrameIndex=waterTestSeconds>=0?0:s.frame;
         s.camera.mProj.GetNearFarClipPlanes(s.camera.fNearPlaneZ,s.camera.fFarPlaneZ,false);
         s.Buffer(s.lightCB,sizeof(LightConstants),"G-DX single sun buffer");
         const auto& l=s.lighting;LightConstants light{{l.sunDirection[0],l.sunDirection[1],l.sunDirection[2],0},
@@ -581,10 +597,10 @@ void DiligentModernRenderer::End() {
     s.stats.shadowSubmitMilliseconds+=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-shadowStart).count();
     const auto aoStart=std::chrono::steady_clock::now();
     const bool useAO=s.hasCamera&&s.config.ambientOcclusion!=Graphics::AmbientOcclusionQuality::Off;
-    if(useAO||s.config.bloom||loadingPrewarm){
+    if(useAO||s.config.bloom||Graphics::ResolveWater(s.config).ssr||loadingPrewarm){
         FirstUseAudit timing("fx-total","PostFX-SSAO-first",!s.post||!s.ao);
         if(!s.post){PostFXContext::CreateInfo ci;ci.PackMatrixRowMajor=true;s.post=std::make_unique<PostFXContext>(state.device,ci);}
-        s.post->PrepareResources(state.device,{s.frame,s.width,s.height,s.width,s.height},PostFXContext::FEATURE_FLAG_NONE);
+        s.post->PrepareResources(state.device,{waterTestSeconds>=0?0:s.frame,s.width,s.height,s.width,s.height},PostFXContext::FEATURE_FLAG_NONE);
         s.Buffer(s.cameraCB,2*sizeof(CameraAttribs),"G-DX shared current/previous camera");
         {MapHelper<CameraAttribs> camera(state.context,s.cameraCB,MAP_WRITE,MAP_FLAG_DISCARD);Require(bool(camera),"G-DX camera map");camera[0]=camera[1]=s.camera;}
         PostFXContext::RenderAttributes attributes;attributes.pDevice=state.device;attributes.pDeviceContext=state.context;
@@ -655,8 +671,28 @@ void DiligentModernRenderer::End() {
     if(!s.deferToneMapping)FinishWorld();
 }
 
+void DiligentModernRenderer::DrawWater(const EffectVertex* vertices,unsigned count,const EffectDraw& draw) {
+    auto& s=*impl_;if(!s.worldOpen||!s.sceneReady||!s.water||s.waterFinished)return;
+    if(!s.waterStarted) {
+        WaterFrameInputs input;input.camera=s.camera;input.shadows=s.shadowAttribs;input.lighting=s.lighting;
+        input.scene=s.hdrScene->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE);input.depth=s.depth->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE);
+        input.normal=s.surfaces[3]->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE);
+        input.sky=s.atmosphere->Sky();input.skySampler=s.atmosphere->Sampler();input.shadow=s.shadow->GetSRV();input.shadowSampler=s.shadowSampler;
+        input.shadowsEnabled=s.config.shadows!=Graphics::ShadowQuality::Off&&s.lighting.sunIntensity>0;
+        s.water->Begin(input);s.waterStarted=true;
+    }
+    s.water->Draw(vertices,count,draw);
+}
+void DiligentModernRenderer::FinishWater() {
+    auto& s=*impl_;if(s.waterFinished||!s.worldOpen||!s.sceneReady||!s.water)return;
+    // Prime all water/SSR passes during Modern initialization, even on dry maps.
+    if(!s.waterStarted&&(!s.waterWarmed||s.water->NeedsPrewarm()||loadingPrewarm))DrawWater(nullptr,0,{});
+    if(s.waterStarted)s.water->Finish(s.post.get(),s.cameraCB,s.motion->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE));
+    s.waterFinished=s.waterWarmed=true;BindWorldTarget();
+}
 void DiligentModernRenderer::FinishWorld() {
     auto& s=*impl_;if(!s.worldOpen||!s.sceneReady)return;auto& state=s.State();
+    FinishWater();
     state.context->SetRenderTargets(0,nullptr,nullptr,RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
     ITextureView* source=s.hdrScene->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE);
     const auto config=Graphics::ResolveAtmosphere(s.lighting,s.config);

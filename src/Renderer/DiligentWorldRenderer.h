@@ -1,6 +1,7 @@
 #pragma once
 #include "WorldRenderData.h"
 #include "DiligentEffectRenderer.h"
+#include "ModernFrame.h"
 
 namespace Renderer
 {
@@ -22,7 +23,8 @@ public:
     void Draw(const EffectVertex* v,uint32_t count,const TerrainTexturePtr& texture,const EffectDraw& draw,WorldPart part) override
     {
         if(uint32_t(part)>=m_counts.size()) { ReportFailure(); return; }
-        m_draws.Draw(v,count,texture,draw,EffectPart::Mesh);
+        if(part==WorldPart::Water&&modernFrame)modernFrame->DrawWater(v,count,draw);
+        else m_draws.Draw(v,count,texture,draw,EffectPart::Mesh);
         if(Failed()) return;
         ++m_counts[uint32_t(part)];
         if(part==WorldPart::Water) m_waterVertices+=count;

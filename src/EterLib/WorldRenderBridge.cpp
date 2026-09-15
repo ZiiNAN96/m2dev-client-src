@@ -3,6 +3,7 @@
 #include "EterLib/DrawStateView.h"
 #include "WorldRenderBridge.h"
 #include "Renderer/Diagnostics.h"
+#include "Renderer/ModernFrame.h"
 #include "MaterialStateSnapshot.h"
 #include "DrawState.h"
 #include "GrpImage.h"
@@ -58,6 +59,12 @@ void WorldRenderBridge::Submit(const Renderer::EffectVertex* vertices,uint32_t c
     EffectDraw draw; draw.strip=strip; std::string error;
     if(!CaptureMaterialState(draw,error) || !EffectDrawValid(draw,count)) {
         Report("unsupported material "+error+" color="+std::to_string(draw.colorOp)+" coords="+std::to_string(draw.textureCoordinates),true); return;
+    }
+    if(part==WorldPart::Water&&modernFrame) {
+        // Modern owns shared normal/scene resources. Do not upload redundant
+        // legacy animation frames into the special-world texture cache.
+        worldRenderer->Draw(vertices,count,{},draw,part);
+        Report("modern water geometry",false);return;
     }
     const auto bound=DrawStateView().GetTextureBinding(0);
     draw.textured=bool(bound);

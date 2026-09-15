@@ -1,5 +1,14 @@
 #pragma once
 #include "Graphics/AtmosphereConfig.h"
+#include "Renderer/WaterDiagnostics.h"
+static PyObject* systemTestWaterTime(PyObject*,PyObject* args)
+{
+    double seconds;int view=0;if(!PyArg_ParseTuple(args,"d|i",&seconds,&view))return nullptr;
+    if(view<0||view>4){PyErr_SetString(PyExc_ValueError,"Water diagnostic view must be 0..4");return nullptr;}
+    Renderer::waterTestSeconds=std::isfinite(seconds)?seconds:-1;
+    Renderer::waterTestView=unsigned(view);
+    return Py_BuildNone();
+}
 static PyObject* systemTestGraphicsSun(PyObject*,PyObject* args)
 {
     int state;

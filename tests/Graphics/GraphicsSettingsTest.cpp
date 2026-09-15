@@ -21,7 +21,7 @@ void Presets()
         Check(s == PresetSettings(p) && s == Validate(s), "deterministic complete preset");
         Check(s.preset == p && s.shadows == shadow[i] && s.ambientOcclusion == ao[i], "preset shadow/AO");
         Check(s.viewDistance == distance[i] && int(s.vegetation) == i, "preset view/vegetation");
-        Check(s.water == (i == 0 ? WaterQuality::Low : i == 1 ? WaterQuality::Medium : WaterQuality::High), "preset water");
+        Check(int(s.water) == i, "preset water");
         Check(s.textures == (i == 0 ? TextureQuality::Medium : i == 3 ? TextureQuality::Ultra : TextureQuality::High), "preset texture");
         Check(s.hdr == (i >= 2) && s.bloom == (i >= 2) && s.modernSky == (i >= 2), "preset HDR/bloom/sky flags");
         Check(s.style == GraphicsStyle::Classic && s.fogLevel == 0, "presets retain classic by default");
@@ -34,7 +34,7 @@ void Presets()
             Check(features.UseHDR()==(style==GraphicsStyle::Modern)&&
                 features.UseBloom()==(style==GraphicsStyle::Modern&&i>=2)&&
                 features.UseModernSky()==(style==GraphicsStyle::Modern), "Modern HDR/sky and highlight bloom presets");
-            Check(r.water == WaterQuality::High && r.waterFrameMilliseconds == 70 && r.textures == TextureQuality::High, "existing water/texture path");
+            Check(r.water == (style==GraphicsStyle::Modern?static_cast<WaterQuality>(i):WaterQuality::High) && r.waterFrameMilliseconds == 70 && r.textures == TextureQuality::High, "style-gated water quality / unchanged Classic animation");
         }
     }
     for (int shadowLevel = 0; shadowLevel <= 5; ++shadowLevel)
@@ -70,7 +70,7 @@ void Custom()
 void Invalid()
 {
     const auto legacy = MigrateLegacy(2, 1);
-    auto loaded = LoadGraphicsSettings("VERSION 1\nPRESET 99\nSTYLE -1\nSHADOWS 99\nAO 3\nWATER 3\nVEGETATION -8\nTEXTURES 999\nHDR 8\nBLOOM nope\nMODERN_SKY -1\nHIGH_QUALITY_FOG 42\nFOG_LEVEL 8\nVIEW_DISTANCE nan\n", legacy);
+    auto loaded = LoadGraphicsSettings("VERSION 1\nPRESET 99\nSTYLE -1\nSHADOWS 99\nAO 3\nWATER 4\nVEGETATION -8\nTEXTURES 999\nHDR 8\nBLOOM nope\nMODERN_SKY -1\nHIGH_QUALITY_FOG 42\nFOG_LEVEL 8\nVIEW_DISTANCE nan\n", legacy);
     Check(loaded.settings == legacy && loaded.invalidValues == 13, "all invalid values use migration defaults");
     for (auto text : {"VIEW_DISTANCE inf", "VIEW_DISTANCE 1e1000", "VIEW_DISTANCE 100oops", "SHADOWS 99999999999999999999999", "HDR", "SHADOWS 2 garbage"})
         Check(LoadGraphicsSettings(text, legacy).settings == legacy, "malformed token fallback");

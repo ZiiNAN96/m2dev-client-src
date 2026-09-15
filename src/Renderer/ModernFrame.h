@@ -4,6 +4,7 @@
 #include <cstdint>
 namespace Renderer
 {
+struct EffectVertex;struct EffectDraw;
 inline unsigned liveModernRenderers{};
 // Scoped game traversal: visibility is tested against light cascades, without
 // changing the camera's visibility state or submitting color/effect draws.
@@ -15,6 +16,8 @@ struct ModernFrameStats
     double atmosphereSubmitMilliseconds{},bloomSubmitMilliseconds{},toneMapSubmitMilliseconds{},compositeSubmitMilliseconds{};
     std::uint64_t hdrTargetBytes{},atmosphereTargetBytes{},toneMappedFrames{};
     std::uint64_t legacyMaterialDraws{},pbrMaterialDraws{},authoredShimmerDraws{};
+    std::uint64_t waterFrames{},waterDraws{},ssrFrames{},ssrFallbacks{},waterTargetBytes{},waterResourceCreations{};
+    double waterSubmitMilliseconds{},ssrSubmitMilliseconds{};
     unsigned meshShaderVariants{},terrainShaderVariants{};
 };
 class IModernFrame
@@ -25,6 +28,8 @@ public:
     virtual void SetCamera(const TerrainMatrices&)=0;
     virtual void End()=0;
     virtual void FinishWorld()=0;
+    virtual void DrawWater(const EffectVertex*,unsigned,const EffectDraw&)=0;
+    virtual void FinishWater()=0;
     virtual bool BeginShadowCollection()=0;
     virtual void EndShadowCollection()=0;
     virtual bool ShadowCasterVisible(const std::array<float,3>& center,float radius) const=0;

@@ -21,12 +21,14 @@ files = [
     "PostProcess/ScreenSpaceAmbientOcclusion/src/ScreenSpaceAmbientOcclusion.cpp",
     "PostProcess/Bloom/interface/Bloom.hpp",
     "PostProcess/Bloom/src/Bloom.cpp",
+    "PostProcess/ScreenSpaceReflection/interface/ScreenSpaceReflection.hpp",
+    "PostProcess/ScreenSpaceReflection/src/ScreenSpaceReflection.cpp",
     "Shaders/PostProcess/TemporalAntiAliasing/public/TemporalAntiAliasingStructures.fxh",
     "Utilities/interface/DiligentFXShaderSourceStreamFactory.hpp",
     "Utilities/src/DiligentFXShaderSourceStreamFactory.cpp",
     "License.txt",
 ]
-for group in ("Common", "PBR", "Shadows", "PostProcess/ScreenSpaceAmbientOcclusion", "PostProcess/Bloom", "PostProcess/ToneMapping"):
+for group in ("Common", "PBR", "Shadows", "PostProcess/ScreenSpaceAmbientOcclusion", "PostProcess/ScreenSpaceReflection", "PostProcess/Bloom", "PostProcess/ToneMapping"):
     files.extend(str(p.relative_to(source)).replace("\\", "/")
                  for p in (source / "Shaders" / group).rglob("*") if p.is_file())
 
@@ -53,6 +55,43 @@ for relative in files:
             assert include in shader_names, f"Missing FX shader dependency: {relative} -> {include}"
         shader_manifest.append((destination / relative).absolute().as_posix())
     text = re.sub(r'"(?:\.\./)+DiligentCore/', '"', text)
+    if relative.endswith("SSR_ComputeTemporalAccumulation.fx"):
+        marker = "    float4 Position = VSOut.f4PixelPos;"
+        assert text.count(marker) == 1
+        # A true spatial-only mode: avoid even reading unavailable history.
+        # Merely lerping history by zero can still propagate NaNs or history-
+        # dependent variance through the upstream disocclusion branch.
+        text = text.replace(marker, marker + '''
+    if (g_SSRAttribs.TemporalRadianceStabilityFactor == 0.0 &&
+        g_SSRAttribs.TemporalVarianceStabilityFactor == 0.0)
+    {
+        PSOutput Spatial;
+        Spatial.Radiance = SampleCurrRadiance(int2(Position.xy));
+        Spatial.Variance = SampleCurrVariance(int2(Position.xy));
+        return Spatial;
+    }
+''')
+    if relative.endswith("ScreenSpaceReflection.cpp"):
+        marker = "bool AllPSOsReady = PrepareShadersAndPSO(RenderAttribs, m_FeatureFlags) && RenderAttribs.pPostFXContext->IsPSOsReady();"
+        assert text.count(marker) == 1
+        text = text.replace(marker, marker + "\n    m_PSOsReady = AllPSOsReady;")
+        for include in ('#include "imgui.h"', '#include "ImGuiUtils.hpp"'):
+            assert text.count(include) == 1
+            text = text.replace(include, "")
+        start = text.index("bool ScreenSpaceReflection::UpdateUI(")
+        brace = text.index("{", start)
+        depth, end = 1, brace + 1
+        while depth:
+            depth += (text[end] == "{") - (text[end] == "}")
+            end += 1
+        text = text[:start] + text[end:]
+    if relative.endswith("ScreenSpaceReflection.hpp"):
+        text, count = re.subn(r"    static bool UpdateUI\([^;]+;\n", "", text)
+        assert count == 1
+        text = text.replace("    void Execute(const RenderAttributes& RenderAttribs);",
+            "    void Execute(const RenderAttributes& RenderAttribs);\n    bool IsPSOsReady() const { return m_PSOsReady; }")
+        text = text.replace("    CreateInfo    m_Settings;", "    CreateInfo    m_Settings;\n    bool m_PSOsReady = false;")
+        text = text.replace("    ITextureView* GetSSRRadianceSRV() const;", "    ITextureView* GetSSRRadianceSRV() const;\n    ITextureView* GetIntersectionRadianceSRV() const { return m_Resources[RESOURCE_IDENTIFIER_RADIANCE].GetTextureSRV(); }\n    ITextureView* GetRoughnessSRV() const { return m_Resources[RESOURCE_IDENTIFIER_ROUGHNESS].GetTextureSRV(); }")
     if relative.endswith("ShadowMapManager.hpp"):
         marker = "        float              fPartitioningFactor = 0.95f;"
         assert text.count(marker) == 1

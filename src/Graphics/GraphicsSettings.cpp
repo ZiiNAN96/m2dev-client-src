@@ -63,6 +63,7 @@ GraphicsSettings PresetSettings(GraphicsPreset preset, GraphicsStyle style)
         s.hdr = s.bloom = s.modernSky = true;
         break;
     case GraphicsPreset::Ultra:
+        s.water = WaterQuality::Ultra;
         s.shadows = ShadowQuality::Ultra; s.ambientOcclusion = AmbientOcclusionQuality::GTAO;
         s.vegetation = VegetationQuality::Ultra; s.textures = TextureQuality::Ultra;
         s.hdr = s.bloom = s.modernSky = true;
@@ -84,7 +85,7 @@ GraphicsSettings Validate(GraphicsSettings s)
     s.style = Enum(s.style, d.style, 1);
     s.shadows = Enum(s.shadows, d.shadows, 5);
     s.ambientOcclusion = Enum(s.ambientOcclusion, d.ambientOcclusion, 2);
-    s.water = Enum(s.water, d.water, 2);
+    s.water = Enum(s.water, d.water, 3);
     s.vegetation = Enum(s.vegetation, d.vegetation, 3);
     s.textures = Enum(s.textures, d.textures, 2);
     s.fogLevel = std::clamp(s.fogLevel, 0, 2);
@@ -115,6 +116,7 @@ GraphicsRuntimeConfig Resolve(const GraphicsSettings& requested, std::uint64_t r
     r.fogDistanceScale = fogScale[s.fogLevel]; r.fogDensity = fogDensity[s.fogLevel];
     r.shadowTextureSize = s.shadows == ShadowQuality::Ultra ? 2048 : s.shadows == ShadowQuality::High ? 1024 : 512;
     if(s.style==GraphicsStyle::Modern) {
+        r.water=s.water;
         r.hdr=true;r.bloom=s.bloom;r.modernSky=s.modernSky;
         r.shadows=s.shadows;r.ambientOcclusion=s.ambientOcclusion;
         r.shadowTextureSize=s.shadows==ShadowQuality::Ultra?2048:s.shadows==ShadowQuality::High?1536:
@@ -160,8 +162,8 @@ LoadResult LoadGraphicsSettings(std::string_view text, const GraphicsSettings& d
         }
         int parsed{};
         if (!Integer(value, parsed)) { ++result.invalidValues; continue; }
-        const int max = key == "PRESET" ? 4 : key == "SHADOWS" ? 5 : key == "VEGETATION" ? 3 :
-            key == "AO" || key == "WATER" || key == "TEXTURES" || key == "FOG_LEVEL" ? 2 : 1;
+        const int max = key == "PRESET" ? 4 : key == "SHADOWS" ? 5 : key == "VEGETATION" || key == "WATER" ? 3 :
+            key == "AO" || key == "TEXTURES" || key == "FOG_LEVEL" ? 2 : 1;
         if (parsed < 0 || parsed > max) { ++result.invalidValues; continue; }
         if (key == "PRESET") s.preset = static_cast<GraphicsPreset>(parsed);
         else if (key == "STYLE") s.style = static_cast<GraphicsStyle>(parsed);

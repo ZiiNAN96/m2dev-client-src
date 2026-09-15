@@ -42,6 +42,8 @@ public:
     void SetCamera(const TerrainMatrices&) override;
     void End() override;
     void FinishWorld() override;
+    void DrawWater(const EffectVertex*,unsigned,const EffectDraw&) override;
+    void FinishWater() override;
     bool HDRWorldActive() const;
     void BindWorldTarget();
     bool BeginShadowCollection() override;

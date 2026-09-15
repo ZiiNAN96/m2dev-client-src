@@ -19,7 +19,7 @@ enum class GraphicsStyle { Classic, Modern };
 // Keep all six existing shadow modes, including old configs with solo shadows.
 enum class ShadowQuality { Off, Low, LegacySolo, Medium, High, Ultra };
 enum class AmbientOcclusionQuality { Off, SSAO, GTAO };
-enum class WaterQuality { Low, Medium, High };
+enum class WaterQuality { Low, Medium, High, Ultra };
 enum class VegetationQuality { Low, Medium, High, Ultra };
 enum class TextureQuality { Medium, High, Ultra };
 

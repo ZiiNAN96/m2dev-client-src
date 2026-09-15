@@ -307,8 +307,8 @@ void CPythonApplication::RenderGame()
         }
         Renderer::modernFrame->End();
     }
-    if(Renderer::modernFrame)m_kChrMgr.RenderWorldTraces();
 	m_pyBackground.RenderWater();
+    if(Renderer::modernFrame){Renderer::modernFrame->FinishWater();m_kChrMgr.RenderWorldTraces();}
 	m_pyBackground.RenderSnow();
 	m_pyBackground.RenderEffect();
 
