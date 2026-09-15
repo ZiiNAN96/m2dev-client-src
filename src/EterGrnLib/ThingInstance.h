@@ -56,7 +56,8 @@ class CGraphicThingInstance : public CGraphicObjectInstance
 
 		void		RegisterModelThing(int iModelThing, CGraphicThing * pModelThing);
 		void		RegisterLODThing(int iModelThing, CGraphicThing * pModelThing);
-		void		RegisterMotionThing(DWORD dwMotionKey, CGraphicThing * pMotionThing);
+		void		RegisterMotionThing(DWORD dwMotionKey, CGraphicThing * pMotionThing, int clipIndex=0);
+        int GetMotionClipIndex(DWORD key) const;
 
 		bool		SetModelInstance(int iDstModelInstance, int iSrcModelThing, int iSrcModel,int iSkelInstance = DONTUSEVALUE);
 		void		SetEndStopMotion();
@@ -139,6 +140,7 @@ class CGraphicThingInstance : public CGraphicObjectInstance
 		std::vector<CGrannyLODController *>		m_LODControllerVector;
 		std::vector<TModelThingSet>				m_modelThingSetVector;
 		std::map<DWORD, CGraphicThing::TRef *>	m_roMotionThingMap;
+        std::map<DWORD, int> m_motionClipIndices;
 
 	protected:
 		virtual void		OnUpdateCollisionData(const CStaticCollisionDataVector * pscdVector);

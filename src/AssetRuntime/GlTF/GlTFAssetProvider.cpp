@@ -1,6 +1,7 @@
 #include "GlTFAssetProvider.h"
 #include "GlTFJsonValidation.h"
 #include "cgltf.h"
+#include "AssetRuntime/RuntimeAnimationInstance.h"
 #include <algorithm>
 #include <bit>
 #include <cmath>
@@ -500,13 +501,42 @@ public:
             }
         }
         Require(!model.meshes.empty(), "Active GLB scene has no mesh primitives");
+        if(skeleton_) {
+            std::size_t vertices=0;bool rigid=false,skinned=false;
+            for(const auto& mesh:model.meshes) {
+                vertices+=mesh.vertexCount;rigid|=mesh.deformation==Deformation::Rigid;skinned|=mesh.deformation==Deformation::Skinned;
+            }
+            Supported(vertices<=65535,"F5-X character exceeds the existing GPU combined 16-bit vertex range; split offline");
+            model.deformation=rigid&&skinned?Deformation::Mixed:skinned?Deformation::Skinned:Deformation::Rigid;
+        }
         models_.push_back(std::move(model));
     }
     AssetError CopyVertices(std::size_t model,std::size_t mesh,VertexLayout layout,std::span<std::byte> output) const override
     {
         if(model!=0 || mesh>=meshes_.size()) return AssetError::InvalidHandle;
         if(released_) return AssetError::UploadDataReleased;
-        if(layout!=VertexLayout::PositionNormalUV) return AssetError::UnsupportedLayout;
+        if(layout!=VertexLayout::PositionNormalUV && layout!=VertexLayout::WeightedPositionNormalUV) return AssetError::UnsupportedLayout;
+        if(layout==VertexLayout::WeightedPositionNormalUV) {
+            const auto& vertices=meshes_[mesh].vertices;
+            const auto& skin=models_[0].meshes[mesh].skin;
+            if(skin.jointIndices.size()!=vertices.size()) return AssetError::UnsupportedLayout;
+            if(output.size()<vertices.size()*40) return AssetError::BufferTooSmall;
+            for(std::size_t v=0;v<vertices.size();++v) {
+                // Deterministic largest-remainder quantization to the production
+                // UNORM8 convention; byte weights always total exactly 255.
+                std::array<std::uint8_t,4> weights{},joints{};std::array<float,4> remainder{};unsigned total=0;
+                for(unsigned k=0;k<4;++k) {
+                    const float scaled=skin.jointWeights[v][k]*255;
+                    weights[k]=static_cast<std::uint8_t>(std::floor(scaled));total+=weights[k];
+                    remainder[k]=scaled-weights[k];joints[k]=static_cast<std::uint8_t>(skin.jointIndices[v][k]);
+                }
+                while(total<255) {const auto k=std::size_t(std::max_element(remainder.begin(),remainder.end())-remainder.begin());++weights[k];remainder[k]=-1;++total;}
+                auto* out=output.data()+v*40;
+                std::memcpy(out,vertices[v].position.data(),12);std::memcpy(out+12,weights.data(),4);std::memcpy(out+16,joints.data(),4);
+                std::memcpy(out+20,vertices[v].normal.data(),12);std::memcpy(out+32,vertices[v].uv.data(),8);
+            }
+            return AssetError::None;
+        }
         const auto& values=meshes_[mesh].vertices;
         if(output.size()<values.size()*sizeof(Vertex)) return AssetError::BufferTooSmall;
         std::memcpy(output.data(),values.data(),values.size()*sizeof(Vertex));
@@ -534,8 +564,12 @@ public:
     std::unique_ptr<PoseEvaluator> CreatePose(const ModelHandle& model) const override { return CreateAnimationInstance(model); }
     std::unique_ptr<AnimationInstance> CreateAnimationInstance(const ModelHandle& model) const override
     {
-        return model && model.GetDocument().get()==this && model.Get()->renderable ? std::make_unique<StaticAnimation>(model) : nullptr;
+        if(!model || model.Index()!=0 || model.GetDocument().get()!=this || !model.Get()->renderable) return {};
+        if(skeleton_) return std::make_unique<RuntimeAnimationInstance>(model,skeleton_,clips_);
+        return std::make_unique<StaticAnimation>(model);
     }
+    const AR::RuntimeSkeleton* RuntimeSkeleton(std::size_t model) const override {return model==0?skeleton_.get():nullptr;}
+    const AR::RuntimeAnimationClip* RuntimeClip(std::size_t clip) const override {return clip<clips_->size()?(*clips_)[clip].get():nullptr;}
 private:
     void ImportMaterials(const cgltf_data& data,ModelAsset& model,std::size_t& decoded)
     {
@@ -594,58 +628,78 @@ private:
     }
     void ImportSkeleton(const cgltf_data& data,const NodeGraph& graph,ModelAsset& model,std::size_t& decoded)
     {
-        Supported(data.skins_count<=1, "Multiple skins require a future runtime skeleton association and are unsupported in E1-X");
+        Supported(data.skins_count<=1, "F5-X supports one skin per document; multiple skins require explicit asset splitting");
         model.skeleton.emplace();
         auto& skeleton=*model.skeleton;
-        if(!data.skins_count) {
+        if(!data.skins_count && !data.animations_count) {
             skeleton.name="static-root";skeleton.rootIndex=0;
-            BoneAsset root;root.id=0;root.name="root";root.inverseBind=Identity;skeleton.bones.push_back(root);
+            BoneAsset bone;bone.id=0;bone.name="root";bone.inverseBind=Identity;skeleton.bones.push_back(bone);
             return;
         }
-        const auto& source=data.skins[0];
-        model.renderable=false;
-        Require(source.joints_count>0 && source.joints_count<=MaxObjects, "Invalid skin joint count");
-        skeleton.name=Name(source.name,"skin");
-        skeleton.sourceRootNode=source.skeleton ? static_cast<std::int32_t>(source.skeleton-data.nodes) : -1;
-        std::vector<BoneId> nodeToBone(data.nodes_count,-1);
-        for(std::size_t i=0;i<source.joints_count;++i) {
-            Require(source.joints[i], "Missing skin joint node");
-            const auto index=std::size_t(source.joints[i]-data.nodes);
-            Require(index<data.nodes_count && nodeToBone[index]<0, "Duplicate or invalid skin joint node");
-            if(source.skeleton) {
-                const cgltf_node* ancestor=source.joints[i];
-                while(ancestor && ancestor!=source.skeleton) ancestor=ancestor->parent;
-                Require(ancestor, "Skin skeleton root is not an ancestor of every joint");
+        // Node-only animations from the existing offline exporter use the same
+        // runtime hierarchy, with rigid mesh-to-node bindings and no skin joints.
+        const cgltf_skin emptySkin{};
+        const auto& skin=data.skins_count?data.skins[0]:emptySkin;
+        Require(!data.skins_count || (skin.joints_count>0 && skin.joints_count<=163),"Skin requires 1..163 joints for the existing production GPU palette");
+        Supported(data.nodes_count<=163,"F5-X joint and hierarchy node palette exceeds the production limit of 163 entries");
+        skeleton.name=Name(skin.name,"skin");
+        skeleton.sourceRootNode=skin.skeleton?static_cast<std::int32_t>(skin.skeleton-data.nodes):-1;
+        nodeToBone_.assign(data.nodes_count,-1);
+        std::vector<std::size_t> order;
+        // Keep every skin joint at its original index. Append real hierarchy nodes in
+        // source order; this preserves animated ancestors without synthetic roots.
+        for(std::size_t i=0;i<skin.joints_count;++i) {
+            Require(skin.joints[i],"Missing skin joint node");
+            const auto node=std::size_t(skin.joints[i]-data.nodes);
+            Require(node<data.nodes_count && nodeToBone_[node]<0,"Duplicate or invalid skin joint node");
+            Require(std::find(graph.selected.begin(),graph.selected.end(),node)!=graph.selected.end(),"Skin joint is outside the active scene");
+            if(skin.skeleton) {
+                const cgltf_node* ancestor=skin.joints[i];
+                while(ancestor && ancestor!=skin.skeleton) ancestor=ancestor->parent;
+                Require(ancestor,"Skin skeleton root is not an ancestor of every joint");
             }
-            nodeToBone[index]=static_cast<BoneId>(i);
+            nodeToBone_[node]=static_cast<BoneId>(order.size());order.push_back(node);
+        }
+        for(std::size_t i=0;i<data.nodes_count;++i) if(nodeToBone_[i]<0) {
+            nodeToBone_[i]=static_cast<BoneId>(order.size());order.push_back(i);
         }
         std::vector<float> inverse;
-        if(source.inverse_bind_matrices) {
-            Require(source.inverse_bind_matrices->count==source.joints_count && source.inverse_bind_matrices->component_type==cgltf_component_type_r_32f,
-                "Inverse bind matrices must match skin joint count");
-            inverse=Floats(source.inverse_bind_matrices,cgltf_type_mat4,decoded);
-        }
-        for(std::size_t i=0;i<source.joints_count;++i) {
-            const auto* node=source.joints[i];
-            const auto nodeIndex=std::size_t(node-data.nodes);
-            BoneAsset bone;
-            bone.id=static_cast<BoneId>(i);bone.sourceNodeIndex=static_cast<std::int32_t>(nodeIndex);
-            bone.name=Name(node->name,"joint-"+std::to_string(i));
-            Matrix4 local=graph.local[nodeIndex];
-            for(auto* parent=node->parent;parent;parent=parent->parent) {
-                const auto index=std::size_t(parent-data.nodes);
-                if(nodeToBone[index]>=0) { bone.parentIndex=nodeToBone[index];break; }
-                local=Multiply(local,graph.local[index]);
+        if(skin.inverse_bind_matrices) {
+            Require(skin.inverse_bind_matrices->count==skin.joints_count && skin.inverse_bind_matrices->component_type==cgltf_component_type_r_32f,
+                "Inverse bind matrix count must match the joint count and use FLOAT MAT4");
+            inverse=Floats(skin.inverse_bind_matrices,cgltf_type_mat4,decoded);
+        } // glTF specifies identity matrices when this optional accessor is absent.
+        std::vector<AR::SkeletonBone> runtime;
+        for(std::size_t i=0;i<order.size();++i) {
+            const auto nodeIndex=order[i];const auto& node=data.nodes[nodeIndex];
+            BoneAsset bone;bone.id=static_cast<BoneId>(i);bone.sourceNodeIndex=static_cast<std::int32_t>(nodeIndex);
+            bone.name=Name(node.name,"node-"+std::to_string(nodeIndex));
+            bone.parentIndex=node.parent?nodeToBone_[node.parent-data.nodes]:-1;
+            bone.localBindMatrix=ConvertMatrix(graph.local[nodeIndex]);bone.hasLocalBindMatrix=true;
+            AR::LocalTransform local;
+            if(node.has_matrix) {
+                local.translation={bone.localBindMatrix[12],bone.localBindMatrix[13],bone.localBindMatrix[14]};
+                for(unsigned row=0;row<3;++row) for(unsigned col=0;col<3;++col)
+                    local.scaleShear[row*3+col]=bone.localBindMatrix[row*4+col];
+            } else {
+                local.translation=Position(node.translation,Basis);
+                local.rotation={node.rotation[0],-node.rotation[2],node.rotation[1],node.rotation[3]};
+                local.scaleShear={node.scale[0],0,0,0,node.scale[2],0,0,0,node.scale[1]};
             }
-            bone.localBindMatrix=ConvertMatrix(local);bone.hasLocalBindMatrix=true;
-            bone.localBind.position={bone.localBindMatrix[12],bone.localBindMatrix[13],bone.localBindMatrix[14]};
+            bone.localBind.flags=7;bone.localBind.position=local.translation;bone.localBind.orientation=local.rotation;bone.localBind.scaleShear=local.scaleShear;
             Matrix4 matrix=Identity;
-            if(!inverse.empty()) std::copy_n(inverse.data()+i*16,16,matrix.begin());
+            if(i<skin.joints_count && !inverse.empty()) std::copy_n(inverse.data()+i*16,16,matrix.begin());
+            Require(matrix[3]==0 && matrix[7]==0 && matrix[11]==0 && matrix[15]==1 && std::abs(Determinant(matrix))>1e-20f,
+                "Inverse bind matrix must be finite, affine and invertible");
             bone.inverseBind=ConvertMatrix(matrix);
             if(skeleton.sourceRootNode==bone.sourceNodeIndex) skeleton.rootIndex=bone.id;
+            runtime.push_back({bone.name,bone.parentIndex,local,bone.inverseBind});
             skeleton.bones.push_back(std::move(bone));
         }
-        if(skeleton.rootIndex<0) for(const auto& bone:skeleton.bones) if(bone.parentIndex<0) { skeleton.rootIndex=bone.id;break; }
+        if(skeleton.rootIndex<0) for(const auto& bone:skeleton.bones) if(bone.parentIndex<0) {skeleton.rootIndex=bone.id;break;}
+        auto translated=std::make_shared<AR::RuntimeSkeleton>();std::string error;
+        Require(translated->Initialize(std::move(runtime),error,AR::RuntimeSkeleton::SourceSemantics::IndexedForest),"RuntimeSkeleton: "+error);
+        skeleton_=std::move(translated);
     }
     void ImportAnimations(const cgltf_data& data,ModelAsset& model,std::size_t& decoded)
     {
@@ -654,7 +708,8 @@ private:
             Require(source.samplers_count>0 && source.samplers_count<=MaxObjects && source.channels_count>0 && source.channels_count<=MaxObjects,
                 "Invalid animation sampler/channel count");
             AnimationAsset animation;
-            animation.name=Name(source.name,"animation-"+std::to_string(i));animation.metadataOnly=true;
+            animation.name=Name(source.name,"animation-"+std::to_string(i));animation.metadataOnly=false;
+            std::vector<AR::AnimationTrack> tracks;
             std::vector<std::vector<float>> times(source.samplers_count);
             for(std::size_t s=0;s<source.samplers_count;++s) {
                 const auto& sampler=source.samplers[s];
@@ -662,6 +717,7 @@ private:
                     sampler.output->component_type==cgltf_component_type_r_32f, "Animation samples must be float accessors");
                 Require(sampler.interpolation==cgltf_interpolation_type_linear || sampler.interpolation==cgltf_interpolation_type_step ||
                     sampler.interpolation==cgltf_interpolation_type_cubic_spline, "Invalid animation interpolation");
+                Supported(sampler.interpolation!=cgltf_interpolation_type_cubic_spline,"CUBICSPLINE is unsupported; export LINEAR or STEP explicitly");
                 times[s]=Floats(sampler.input,cgltf_type_scalar,decoded);
                 float previous=-1;
                 for(float time:times[s]) { Require(time>=0 && time>previous, "Animation key times must be nonnegative and strictly increasing");previous=time; }
@@ -674,6 +730,8 @@ private:
                 AnimationChannelAsset metadata;
                 metadata.targetNode=static_cast<std::int32_t>(channel.target_node-data.nodes);
                 metadata.targetName=Name(channel.target_node->name,"node-"+std::to_string(metadata.targetNode));
+                Require(metadata.targetNode>=0 && std::size_t(metadata.targetNode)<nodeToBone_.size(),"Unknown animation target node");
+                Supported(!channel.target_node->has_matrix,"Animation targets must use TRS, not a matrix");
                 cgltf_type shape=cgltf_type_vec3;
                 if(channel.target_path==cgltf_animation_path_type_translation) metadata.path=AnimationPath::Translation;
                 else if(channel.target_path==cgltf_animation_path_type_rotation) { metadata.path=AnimationPath::Rotation;shape=cgltf_type_vec4; }
@@ -683,6 +741,10 @@ private:
                 const auto multiplier=sampler.interpolation==cgltf_interpolation_type_cubic_spline ? 3u : 1u;
                 Require(sampler.output->count==keys*multiplier, "Animation output count differs from key count");
                 const auto output=Floats(sampler.output,shape,decoded);
+                const auto runtimeKeySize=metadata.path==AnimationPath::Rotation?sizeof(AR::Keyframe<AR::Quaternion>):
+                    metadata.path==AnimationPath::Scale?sizeof(AR::Keyframe<AR::ScaleShear>):sizeof(AR::Keyframe<AR::Vector3>);
+                Require(keys<=(MaxAllocation-decoded)/runtimeKeySize,"Runtime animation key allocation budget exceeded");
+                decoded+=keys*runtimeKeySize;
                 if(shape==cgltf_type_vec4) for(std::size_t key=0;key<keys;++key) {
                     const auto start=(key*multiplier+(multiplier==3 ? 1 : 0))*4;
                     double length=0;for(std::size_t component=0;component<4;++component) length+=double(output[start+component])*output[start+component];
@@ -693,10 +755,30 @@ private:
                     sampler.interpolation==cgltf_interpolation_type_step ? AnimationInterpolation::Step : AnimationInterpolation::Linear;
                 for(const auto& existing:animation.channels) Require(existing.targetNode!=metadata.targetNode || existing.path!=metadata.path,
                     "Repeated animation target node/path");
+                const auto bone=static_cast<std::uint32_t>(nodeToBone_[metadata.targetNode]);
+                auto track=std::find_if(tracks.begin(),tracks.end(),[&](const auto& item){return item.targetBone==bone;});
+                if(track==tracks.end()) {tracks.push_back({});track=std::prev(tracks.end());track->targetBone=bone;}
+                const auto interpolation=sampler.interpolation==cgltf_interpolation_type_step?AR::Interpolation::Step:AR::Interpolation::Linear;
+                const auto& keyTimes=times[std::size_t(channel.sampler-source.samplers)];
+                for(std::size_t k=0;k<keys;++k) {
+                    if(metadata.path==AnimationPath::Translation) {
+                        track->translation.interpolation=interpolation;
+                        track->translation.keys.push_back({keyTimes[k],Position(output.data()+k*3,Basis)});
+                    } else if(metadata.path==AnimationPath::Rotation) {
+                        track->rotation.interpolation=interpolation==AR::Interpolation::Linear?AR::Interpolation::SphericalLinear:interpolation;
+                        track->rotation.keys.push_back({keyTimes[k],{output[k*4],-output[k*4+2],output[k*4+1],output[k*4+3]}});
+                    } else {
+                        track->scaleShear.interpolation=interpolation;
+                        track->scaleShear.keys.push_back({keyTimes[k],{output[k*3],0,0,0,output[k*3+2],0,0,0,output[k*3+1]}});
+                    }
+                }
                 animation.channels.push_back(std::move(metadata));
             }
             animation.trackGroupCount=static_cast<std::uint32_t>(animation.channels.size());
             model.animations.push_back(static_cast<std::uint32_t>(animations_.size()));
+            auto clip=std::make_shared<AR::RuntimeAnimationClip>();std::string error;
+            Require(clip->Initialize(animation.name,animation.duration,false,std::move(tracks),*skeleton_,error),"RuntimeAnimationClip: "+error);
+            clips_->push_back(std::move(clip));
             animations_.push_back(std::move(animation));
         }
     }
@@ -759,7 +841,10 @@ private:
         Require(positions->count*sizeof(Vertex)<=MaxAllocation-decoded,"Mesh vertex allocation limit exceeded");decoded+=positions->count*sizeof(Vertex);
         MeshData buffer;
         buffer.vertices.resize(positions->count);buffer.indices=Indices(primitive.indices,positions->count,decoded);
-        const auto transform=Multiply(world,Basis);
+        // Skinned mesh-node transforms cancel in glTF skinning. Joint model matrices
+        // already contain the scene/root transforms. Rigid nodes in a character are
+        // also evaluated by the shared skeleton, so neither path bakes them twice.
+        const auto transform=skeleton_?Basis:Multiply(world,Basis);
         const float determinant=Determinant(transform);
         Require(std::isfinite(determinant) && std::abs(determinant)>1e-20f, "Mesh transform is singular");
         if(determinant<0) for(std::size_t i=0;i<buffer.indices.size();i+=3) std::swap(buffer.indices[i+1],buffer.indices[i+2]);
@@ -853,18 +938,27 @@ private:
                     Require(j[v*4+k]>=0 && j[v*4+k]<node.skin->joints_count && w[v*4+k]>=0 && w[v*4+k]<=1, "Skin joint index or weight is invalid");
                     mesh.skin.jointIndices[v][k]=static_cast<std::uint32_t>(j[v*4+k]);sum+=w[v*4+k];
                 }
-                Require(std::isfinite(sum) && sum>1e-8f, "Skin weights have zero or invalid total");
+                Require(std::isfinite(sum) && std::abs(sum-1.f)<=.02f, "Skin weights must sum to one within 0.02; invalid sets are not repaired");
                 for(std::size_t k=0;k<4;++k) mesh.skin.jointWeights[v][k]=w[v*4+k]/sum;
             }
-            for(const auto& bone:model.skeleton->bones) { mesh.skin.boneNames.push_back(bone.name);mesh.skin.meshToSkeleton.push_back(bone.id); }
+            for(std::size_t i=0;i<node.skin->joints_count;++i) {
+                const auto& bone=model.skeleton->bones[i];mesh.skin.boneNames.push_back(bone.name);mesh.skin.meshToSkeleton.push_back(bone.id);
+                mesh.skin.boneBounds.push_back(mesh.bounds);
+            }
             mesh.skin.influencesPerVertex=4;mesh.skin.validRemap=true;mesh.deformation=Deformation::Skinned;
-            model.deformation=Deformation::Skinned;model.renderable=false;
+            mesh.vertexLayout=VertexLayout::WeightedPositionNormalUV;mesh.sourceVertexStride=40;
+            mesh.skin.weightOffset=12;mesh.skin.indexOffset=16;mesh.skin.normalizedByteWeights=true;mesh.skin.byteBoneIndices=true;
+            model.deformation=Deformation::Skinned;
         } else {
             Require(!joints && !weights, "Skin attributes require a node skin");
-            mesh.skin.boneNames={"root"};mesh.skin.meshToSkeleton={0};mesh.skin.boneBounds={mesh.bounds};mesh.skin.validRemap=true;
+            const BoneId bone=skeleton_?nodeToBone_[&node-data.nodes]:0;
+            mesh.skin.boneNames={model.skeleton->bones[bone].name};mesh.skin.meshToSkeleton={bone};mesh.skin.boneBounds={mesh.bounds};mesh.skin.validRemap=true;
         }
         model.meshes.push_back(std::move(mesh));meshes_.push_back(std::move(buffer));
     }
+    std::shared_ptr<const AR::RuntimeSkeleton> skeleton_;
+    std::shared_ptr<std::vector<std::shared_ptr<const AR::RuntimeAnimationClip>>> clips_=std::make_shared<std::vector<std::shared_ptr<const AR::RuntimeAnimationClip>>>();
+    std::vector<BoneId> nodeToBone_;
     std::vector<MeshData> meshes_;
     bool released_{};
 };

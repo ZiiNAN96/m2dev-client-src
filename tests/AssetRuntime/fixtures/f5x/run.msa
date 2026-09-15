@@ -1,0 +1,4 @@
+ScriptType MotionData
+MotionFileName "f5x/character.glb"
+MotionClipIndex 2
+MotionDuration 0.700000

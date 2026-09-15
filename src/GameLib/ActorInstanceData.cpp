@@ -111,7 +111,7 @@ bool CActorInstance::SetRace(DWORD eRace)
 				for (i = 0, it = c_rMotionVector.begin(); it != c_rMotionVector.end(); ++i, ++it)
 				{
 					DWORD dwMotionKey = MAKE_RANDOM_MOTION_KEY(wMotionMode, wMotionIndex, i);
-					CGraphicThingInstance::RegisterMotionThing(dwMotionKey, it->pMotion);
+					CGraphicThingInstance::RegisterMotionThing(dwMotionKey, it->pMotion, it->pMotionData ? it->pMotionData->GetMotionClipIndex() : 0);
 				}
 			}
 		}

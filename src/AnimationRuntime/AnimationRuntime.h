@@ -62,7 +62,9 @@ private:
     std::uint64_t bindingId_ = 0;
 };
 
-enum class Interpolation { Step, Linear };
+// Linear preserves the original normalized quaternion interpolation. SphericalLinear
+// provides constant angular speed for indexed interchange animation tracks.
+enum class Interpolation { Step, Linear, SphericalLinear };
 
 template <class Value> struct Keyframe
 {

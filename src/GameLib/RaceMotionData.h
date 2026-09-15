@@ -216,6 +216,7 @@ class CRaceMotionData
 		int				GetLoopCount() const;
 
 		const char *	GetMotionFileName() const;
+        int GetMotionClipIndex() const { return m_motionClipIndex; }
 		const char *	GetSoundScriptFileName() const;
 
 		void			SetMotionDuration(float fDur);
@@ -269,6 +270,7 @@ class CRaceMotionData
 		int								m_iLoopCount;
 
 		std::string						m_strMotionFileName;
+        int m_motionClipIndex=0;
 		std::string						m_strSoundScriptDataFileName;
 		float							m_fMotionDuration;
 

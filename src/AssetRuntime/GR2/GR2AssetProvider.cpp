@@ -1,5 +1,6 @@
 #include "GR2AssetProvider.h"
 #include "GR2Reader.h"
+#include "AssetRuntime/RuntimeAnimationInstance.h"
 #include "AssetRuntime/AnimationRuntimeMode.h"
 #include "AssetRuntime/AnimationStallAudit.h"
 #include <algorithm>
@@ -32,40 +33,12 @@ private:
     ModelHandle source_,destination_;
     std::vector<std::int32_t> indices_;
 };
-class Instance final : public AnimationInstance
+class Instance final : public RuntimeAnimationInstance
 {
 public:
     Instance(ModelHandle owner,std::shared_ptr<const AR::RuntimeSkeleton> skeleton)
-        : owner_(std::move(owner)),skeleton_(std::move(skeleton)) { PreparePose(); Evaluate({}); ++liveIndependentAnimationInstances; }
-    ~Instance() override { --liveIndependentAnimationInstances; }
-    bool PreparePose() override
-    {
-        if(!skeleton_) return false;
-        const auto count=skeleton_->Bones().size(); pose_.Prepare(count); scratch_.Prepare(count);
-        model_.resize(count); palette_.resize(count);
-        return true;
-    }
-    AssetError SetAnimation(const AnimationHandle& clip,float time) override
-    {
-        if(clip && clipOwner_.GetDocument()==clip.GetDocument() && clipOwner_.Index()==clip.Index() && clip_) { SetClock(time); return AssetError::None; }
-        const auto result=SetMotion(clip,0,0,0,1); SetClock(time); return result;
-    }
+        : RuntimeAnimationInstance(std::move(owner),std::move(skeleton)) {}
     AssetError SetMotion(const AnimationHandle&,float,float,int,float) override;
-    AssetError ChangeMotion(const AnimationHandle& clip,float time,int loops,float speed) override { return SetMotion(clip,time,0,loops,speed); }
-    AssetError CopyMotionFrom(AnimationInstance& source,float time,bool freeSource) override
-    {
-        auto* other=dynamic_cast<Instance*>(&source); if(!other) return AssetError::ProviderMismatch;
-        if(other==this || !other->IsPlaying()) return AssetError::InvalidInput;
-        auto result=SetMotion(other->clipOwner_,time,0,other->loops_,other->speed_);
-        if(result!=AssetError::None) return result;
-        start_=time-(other->clock_-other->start_);
-        if(freeSource) { other->clip_.reset(); other->clipOwner_={}; other->previous_.reset(); other->variants_={}; }
-        return result;
-    }
-    bool IsPlaying() const override { return clip_ && (!loops_ || (clock_-start_)*speed_<clip_->Duration()*loops_); }
-    void SetMotionAtEnd() override { if(clip_) { const auto duration=static_cast<float>(clip_->Duration()); if(SetMotion(clipOwner_,clock_,0,1,speed_)==AssetError::None) start_=clock_-duration/speed_; } }
-    void SetClock(float time) override { clock_=time; }
-    void FreeCompletedControls() override { if(clock_>=blendStart_+blendDuration_) previous_.reset(); }
     void UpdateTransform(float elapsed,std::span<float,16> matrix) const override
     {
         if(!clip_ || failed_ || !std::isfinite(elapsed)) return;
@@ -92,55 +65,13 @@ public:
         const auto updated=AR::Multiply(AR::LocalMatrix(delta),original);
         if(std::all_of(updated.begin(),updated.end(),[](float x){return std::isfinite(x);})) std::copy(updated.begin(),updated.end(),matrix.begin());
     }
-    std::span<const float> BoneWorldMatrix(BoneId bone) const override
-    {
-        return ready_ && bone>=0 && std::size_t(bone)<model_.size()?std::span<const float>(model_[bone]):std::span<const float>{};
-    }
-    PoseView CompositePose() const override { return ready_?PoseView{{palette_[0].data(),palette_.size()*16}}:PoseView{}; }
     std::unique_ptr<MeshBinding> CreateMeshBinding(const ModelHandle& source,std::size_t mesh) const override
     {
         if(!source || mesh>=source.Get()->meshes.size()) return {};
         try { return std::make_unique<Binding>(source,owner_,mesh); } catch(const GR2::Error&) { return {}; }
     }
-    PoseResult Evaluate(const PoseRequest& request) override
-    {
-        AnimationStallAudit::WorkScope audit(AnimationStallAudit::Work::Pose);
-        ready_=false;
-        if(!skeleton_ || failed_ || !std::isfinite(clock_) || (!request.attachmentMatrix.empty() && request.attachmentMatrix.size()!=16)) return {{},AssetError::EvaluationFailed};
-        if(clip_) {
-            const double time=(clock_-start_)*speed_;
-            if(loops_>1) {
-                const auto cycle=clip_->Duration()>0?std::floor(std::max(0.0,time)/clip_->Duration()):0;
-                const unsigned boundary=(cycle>0?1u:0u)|(cycle<loops_-1?2u:0u);
-                clip_=variants_[boundary];
-                if(!clip_) return {{},AssetError::EvaluationFailed};
-            }
-            const auto mode=loops_==1 || (loops_>0 && time>=clip_->Duration()*loops_)?AR::TimeMode::Clamp:AR::TimeMode::Loop;
-            if(!AR::Sample(*skeleton_,*clip_,loops_>1 && mode==AR::TimeMode::Clamp?clip_->Duration():time,mode,pose_)) return {{},AssetError::EvaluationFailed};
-            if(previous_ && blendDuration_>0 && clock_<blendStart_+blendDuration_) {
-                if(!AR::Sample(*skeleton_,*previous_,(clock_-previousStart_)*previousSpeed_,AR::TimeMode::Loop,scratch_) ||
-                    !AR::Blend(scratch_,pose_,BlendWeight(),pose_)) return {{},AssetError::EvaluationFailed};
-            }
-        } else for(std::size_t i=0;i<pose_.localTransforms.size();++i) pose_.localTransforms[i]=skeleton_->Bones()[i].localBind;
-        AR::Matrix parent;
-        if(!request.attachmentMatrix.empty()) std::copy(request.attachmentMatrix.begin(),request.attachmentMatrix.end(),parent.begin());
-        if(!AR::Evaluate(*skeleton_,pose_,model_,request.attachmentMatrix.empty()?nullptr:&parent)) return {{},AssetError::EvaluationFailed};
-        {
-            AnimationStallAudit::WorkScope paletteAudit(AnimationStallAudit::Work::Palette);
-            if(!AR::BuildPalette(*skeleton_,model_,palette_)) return {{},AssetError::EvaluationFailed};
-        }
-        ++independentPoseSamples; ready_=true; return {CompositePose(),AssetError::None};
-    }
 private:
-    float BlendWeight() const { if(!previous_ || blendDuration_<=0) return 1; const float x=std::clamp((clock_-blendStart_)/blendDuration_,0.0f,1.0f); return x*x*(3-2*x); }
-    ModelHandle owner_; AnimationHandle clipOwner_;
-    std::shared_ptr<const AR::RuntimeSkeleton> skeleton_;
-    std::shared_ptr<const AR::RuntimeAnimationClip> clip_,previous_;
-    std::array<std::shared_ptr<const AR::RuntimeAnimationClip>,4> variants_;
-    AR::AnimationPose pose_,scratch_; std::vector<AR::Matrix> model_,palette_;
-    float clock_{},start_{},speed_=1,blendStart_{},blendDuration_{},previousStart_{},previousSpeed_=1;
     GR2::RootMotion motion_,previousMotion_;
-    int loops_{}; bool ready_{},failed_{};
 };
 class Document final : public AssetDocument
 {

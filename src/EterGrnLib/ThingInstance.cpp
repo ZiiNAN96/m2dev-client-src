@@ -470,11 +470,11 @@ bool CGraphicThingInstance::SetMotion(DWORD dwMotionKey, float blendTime, int lo
 	if (!pMotionThing)
 		return false;
 
-	if (!pMotionThing->CheckMotionIndex(0))
+	if (!pMotionThing->CheckMotionIndex(GetMotionClipIndex(dwMotionKey)))
 		return false;
 
 	CGrannyLODController::FSetMotionPointer SetMotionPointer;
-	SetMotionPointer.m_pMotion = pMotionThing->GetMotionPointer(0);
+	SetMotionPointer.m_pMotion = pMotionThing->GetMotionPointer(GetMotionClipIndex(dwMotionKey));
 	SetMotionPointer.m_blendTime = blendTime;
 	SetMotionPointer.m_loopCount = loopCount;
 	SetMotionPointer.m_speedRatio = speedRatio;
@@ -495,11 +495,11 @@ bool CGraphicThingInstance::ChangeMotion(DWORD dwMotionKey, int loopCount, float
 	if (!pMotionThing)
 		return false;
 
-	if (!pMotionThing->CheckMotionIndex(0))
+	if (!pMotionThing->CheckMotionIndex(GetMotionClipIndex(dwMotionKey)))
 		return false;
 
 	CGrannyLODController::FChangeMotionPointer ChangeMotionPointer;
-	ChangeMotionPointer.m_pMotion = pMotionThing->GetMotionPointer(0);
+	ChangeMotionPointer.m_pMotion = pMotionThing->GetMotionPointer(GetMotionClipIndex(dwMotionKey));
 	ChangeMotionPointer.m_loopCount = loopCount;
 	ChangeMotionPointer.m_speedRatio = speedRatio;
 
@@ -534,8 +534,20 @@ void CGraphicThingInstance::RegisterLODThing(int iModelThing, CGraphicThing * pM
 	m_modelThingSetVector[iModelThing].m_pLODThingRefVector.push_back(pModelRef);
 }
 
-void CGraphicThingInstance::RegisterMotionThing(DWORD dwMotionKey, CGraphicThing* pMotionThing)
+int CGraphicThingInstance::GetMotionClipIndex(DWORD key) const
 {
+    const auto found=m_motionClipIndices.find(key);
+    return found==m_motionClipIndices.end()?0:found->second;
+}
+
+void CGraphicThingInstance::RegisterMotionThing(DWORD dwMotionKey, CGraphicThing* pMotionThing, int clipIndex)
+{
+    if(clipIndex<0 || !pMotionThing) return;
+    const auto previous=m_roMotionThingMap.find(dwMotionKey);
+    if(previous!=m_roMotionThingMap.end()) {
+        previous->second->SetPointer(pMotionThing);m_motionClipIndices[dwMotionKey]=clipIndex;return;
+    }
+    m_motionClipIndices[dwMotionKey]=clipIndex;
 	CGraphicThing::TRef * pMotionRef = new CGraphicThing::TRef;
 	pMotionRef->SetPointer(pMotionThing);
 	m_roMotionThingMap.insert(std::map<DWORD, CGraphicThing::TRef *>::value_type(dwMotionKey, pMotionRef));
@@ -941,6 +953,7 @@ void CGraphicThingInstance::OnClear()
 {
 	stl_wipe(m_LODControllerVector);
 	stl_wipe_second(m_roMotionThingMap);
+    m_motionClipIndices.clear();
 
 	for (DWORD d = 0; d < m_modelThingSetVector.size(); ++d)
 		m_modelThingSetVector[d].Clear();

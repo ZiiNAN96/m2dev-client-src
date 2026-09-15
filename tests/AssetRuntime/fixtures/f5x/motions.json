@@ -1,0 +1,32 @@
+{
+  "IDLE": {
+    "clip": 0,
+    "name": "Ruhe",
+    "loop": true
+  },
+  "WALK": {
+    "clip": 1,
+    "name": "Gehen",
+    "loop": true
+  },
+  "RUN": {
+    "clip": 2,
+    "name": "Laufen",
+    "loop": true
+  },
+  "ATTACK": {
+    "clip": 3,
+    "name": "Schlag",
+    "loop": false
+  },
+  "DAMAGE": {
+    "clip": 4,
+    "name": "Treffer",
+    "loop": false
+  },
+  "DEATH": {
+    "clip": 5,
+    "name": "Fallen",
+    "loop": false
+  }
+}

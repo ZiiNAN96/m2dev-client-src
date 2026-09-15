@@ -1,5 +1,6 @@
 #include "AssetRuntime/GlTF/GlTFAssetProvider.h"
 #include "GlTFFixtures.h"
+#include "GlTFCharacterFixtures.h"
 #include <cmath>
 #include <cstring>
 #include <fstream>
@@ -73,45 +74,25 @@ static void CheckTangentsAndNormals()
         std::abs(values[5]-2.f/std::sqrt(5.f))<1e-5f, "Nonuniform node scale uses inverse-transpose normals");
 }
 
-static GlTFFixtures::Builder SkinAnimationFixture()
-{
-    GlTFFixtures::Builder fixture;
-    fixture.nodes = R"({"mesh":0,"skin":0,"children":[1]},{"name":"root","children":[2]},{"name":"tip","translation":[0,1,0]})";
-    const auto jointsView = fixture.View(std::array<std::uint8_t,12>{0,1,0,0, 0,1,0,0, 0,1,0,0});
-    const auto joints = fixture.Accessor(jointsView,5121,3,"VEC4");
-    const auto weightsView = fixture.View(std::array<std::uint8_t,12>{128,127,0,0, 128,127,0,0, 128,127,0,0});
-    const auto weights = fixture.Accessor(weightsView,5121,3,"VEC4",0,true);
-    fixture.attributes += R"(,"JOINTS_0":)"+std::to_string(joints)+R"(,"WEIGHTS_0":)"+std::to_string(weights);
-    const std::array<float,32> inverse{1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1,
-        1,0,0,0,0,1,0,0,0,0,1,0,0,-1,0,1};
-    const auto inverseView = fixture.View(inverse);
-    const auto inverseAccessor = fixture.Accessor(inverseView,5126,2,"MAT4");
-    const auto timeView = fixture.View(std::array<float,2>{0,2});
-    const auto time = fixture.Accessor(timeView,5126,2,"SCALAR");
-    const auto outputView = fixture.View(std::array<float,6>{0,1,0, 0,2,0});
-    const auto output = fixture.Accessor(outputView,5126,2,"VEC3");
-    fixture.extra = R"(,"skins":[{"name":"two-joint","joints":[1,2],"skeleton":1,"inverseBindMatrices":)"+
-        std::to_string(inverseAccessor)+R"(}],"animations":[{"name":"move","samplers":[{"input":)"+std::to_string(time)+
-        R"(,"output":)"+std::to_string(output)+R"(,"interpolation":"STEP"}],"channels":[{"sampler":0,"target":{"node":2,"path":"translation"}}]}])";
-    return fixture;
-}
-
 static void CheckSkinAndAnimationMetadata()
 {
     auto fixture = SkinAnimationFixture();
     auto result = Load(fixture.Bytes()); Check(bool(result),result.diagnostic.c_str());
     const auto& model = *result.asset.Model(0).Get();
     const auto& bones = model.skeleton->bones;
-    Check(!model.renderable && bones.size()==2 && bones[1].name=="tip" && bones[1].parentIndex==0 &&
+    Check(model.renderable && bones.size()==3 && bones[1].name=="tip" && bones[1].parentIndex==0 &&
         bones[1].localBindMatrix[14]==100 && bones[1].inverseBind[14]==-100, "Imported skin hierarchy and inverse bind use centralized coordinate conversion");
     const auto& skin = model.meshes[0].skin;
     Check(skin.influencesPerVertex==4 && skin.jointIndices[0][1]==1 &&
         std::abs(skin.jointWeights[0][0]+skin.jointWeights[0][1]-1)<1e-6f, "Imported joints and normalized weights retained in metadata");
-    Check(!result.asset.Get()->CreateAnimationInstance(result.asset.Model(0)), "Skinned metadata cannot activate a fabricated animation engine");
+    auto instance=result.asset.Get()->CreateAnimationInstance(result.asset.Model(0));
+    Check(instance && instance->SetMotion(result.asset.Animation(0),0,0,1,1)==AssetError::None,"GLB enters the shared production playback");
+    instance->SetClock(2);
+    Check(instance->Evaluate({}).pose.Valid() && instance->BoneWorldMatrix(1)[14]==200,"STEP clip samples through AnimationRuntime");
     const auto* clip = result.asset.Animation(0).Get();
-    Check(clip && clip->metadataOnly && clip->name=="move" && clip->duration==2 && clip->channels.size()==1 &&
+    Check(clip && !clip->metadataOnly && clip->name=="move" && clip->duration==2 && clip->channels.size()==1 &&
         clip->channels[0].targetNode==2 && clip->channels[0].path==AnimationPath::Translation &&
-        clip->channels[0].interpolation==AnimationInterpolation::Step, "Animation duration, targets and interpolation retained without evaluator");
+        clip->channels[0].interpolation==AnimationInterpolation::Step, "Animation duration, targets and interpolation retained with shared runtime evaluator");
     fixture.binary[96] = std::byte{2};
     Reject(fixture.Bytes(),"Skin joint outside skeleton rejected");
     fixture = SkinAnimationFixture();

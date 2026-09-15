@@ -327,6 +327,18 @@ bool CRaceMotionData::LoadMotionData(const char * c_szFileName)
 	if (!rkTextFileLoader.GetTokenFloat("motionduration", &m_fMotionDuration))
 		return false;
 
+    m_motionClipIndex=0;
+    CTokenVector* clipTokens=nullptr;
+    if(rkTextFileLoader.GetTokenVector("motionclipindex", &clipTokens)) {
+        if(clipTokens->size()!=1 || clipTokens->front().empty()) return false;
+        unsigned value=0;
+        for(char c:clipTokens->front()) {
+            if(c<'0'||c>'9'||value>3276) return false;
+            value=value*10+unsigned(c-'0');
+        }
+        if(value>32767) return false;
+        m_motionClipIndex=static_cast<int>(value);
+    }
 	CTokenVector * pTokenVector;
 
 	if (rkTextFileLoader.GetTokenVector("accumulation", &pTokenVector))
@@ -496,6 +508,7 @@ const char * CRaceMotionData::GetSoundScriptFileName() const
 void CRaceMotionData::Initialize()
 {
 	m_iLoopCount = 0;
+    m_motionClipIndex=0;
 	m_fMotionDuration = 0.0f;
 	m_accumulationPosition.x = 0.0f;
 	m_accumulationPosition.y = 0.0f;

@@ -75,4 +75,8 @@ AttachmentBinding ResolveAttachment(const SkeletonAsset& skeleton, std::string_v
 {
     return {kind, skeleton.FindBone(bone)};
 }
+AttachmentBinding ResolveAttachment(const SkeletonAsset& skeleton, BoneId bone, AttachmentKind kind)
+{
+    return {kind, bone>=0 && std::size_t(bone)<skeleton.bones.size() ? bone : -1};
+}
 }

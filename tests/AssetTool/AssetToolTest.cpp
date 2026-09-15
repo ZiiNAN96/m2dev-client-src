@@ -151,7 +151,8 @@ static std::vector<std::byte> Bytes(const fs::path& path) {
     Check(bool(stream),"complete GLB read"); return bytes;
 }
 static AssetRuntime::LoadResult Roundtrip(const Scene& scene, const fs::path& path) {
-    Report report; Check(WriteGLB(scene,path,report),"Write failed: "+Errors(report));
+    Report report; const bool written=WriteGLB(scene,path,report);
+    Check(written,"Write failed for "+PathUTF8(path)+": "+Errors(report));
     auto result=AssetRuntime::GetGlTFAssetProvider().Load(PathUTF8(path),Bytes(path));
     Check(bool(result),"Real E1-X GlTFProvider failed: "+result.diagnostic);
     return result;
@@ -191,7 +192,9 @@ static void ImportTests(const fs::path& fixtures,const fs::path& output) {
     }
     auto hold=Animated(); hold.animations[0].duration=4; ProcessOK(hold);
     loaded=Roundtrip(hold,output/"animation_hold.glb");
-    Check(loaded.asset.AnimationCount()==1 && Near(loaded.asset.Animation(0).Get()->duration,4),"declared trailing hold survives writer/provider duration roundtrip"); loaded.asset.Reset();
+    Check(loaded.asset.AnimationCount()==1 && Near(loaded.asset.Animation(0).Get()->duration,4) &&
+        !loaded.asset.Animation(0).Get()->metadataOnly && loaded.asset.Model(0).GetDocument()->RuntimeClip(0),
+        "node-only animation and declared trailing hold survive as a real shared runtime clip"); loaded.asset.Reset();
     const auto alpha=Imported(fixtures/"alpha.obj");
     const auto& alphaMaterial=alpha.materials[alpha.meshes[0].material];
     Check(alphaMaterial.alpha==AlphaMode::Blend && Near(alphaMaterial.baseColor[3],.4),"OBJ source material opacity preserved");
@@ -203,7 +206,10 @@ static void ImportTests(const fs::path& fixtures,const fs::path& output) {
     const auto skin=Imported(fixtures/"skinned_animation.dae");
     Check(skin.skeleton.joints.size()==2 && !skin.animations.empty() && Near(skin.animations[0].duration,2),"source skin, joints and seconds animation imported");
     loaded=Roundtrip(skin,output/"skin.glb");
-    Check(!loaded.asset.Model(0).Get()->renderable && loaded.asset.Model(0).Get()->skeleton->bones.size()==2 && loaded.asset.AnimationCount()>0 && Near(loaded.asset.Animation(0).Get()->duration,2),"exported skin/animation retained as metadata only by E1-X provider"); loaded.asset.Reset();
+    Check(loaded.asset.Model(0).Get()->renderable && loaded.asset.Model(0).Get()->skeleton->bones.size()>=2 &&
+        loaded.asset.AnimationCount()>0 && Near(loaded.asset.Animation(0).Get()->duration,2) &&
+        !loaded.asset.Animation(0).Get()->metadataOnly && loaded.asset.Model(0).GetDocument()->RuntimeClip(0),
+        "exported skin and real runtime animation render through the F5-X provider"); loaded.asset.Reset();
     {
         const auto source=Bytes(fixtures/"skinned_animation.dae");
         std::string text(reinterpret_cast<const char*>(source.data()),source.size());
@@ -238,7 +244,7 @@ static void ImportTests(const fs::path& fixtures,const fs::path& output) {
     Options centimeters; centimeters.sourceMetersPerUnit=.01; const auto overridden=Imported(fixtures/"simple.obj",centimeters);
     Check(Near(overridden.bounds.max[0],.01),"explicit source unit override");
     Check(AssetRuntime::liveDocuments==0 && AssetRuntime::liveAnimationInstances==0 && AssetRuntime::liveMeshBindings==0,"roundtrip provider owners all released");
-    std::cout<<"PASS OBJ/DAE/FBX import, metadata unit/node normalization, GLB provider roundtrip, skin/animation metadata, image embedding, Unicode path, byte determinism\n";
+    std::cout<<"PASS OBJ/DAE/FBX import, metadata unit/node normalization, GLB provider roundtrip, real skin/node animation, image embedding, Unicode path, byte determinism\n";
     std::cout<<ToJSON(stall,Report{})<<'\n';
 }
 int main(int argc,char** argv) {

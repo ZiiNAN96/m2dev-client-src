@@ -573,7 +573,7 @@ float CActorInstance::GetMotionDuration(DWORD dwMotionKey)
 		return 0.0f;
 	}
 
-	if (0 == pMotion->GetMotionCount())
+	if (!pMotion->CheckMotionIndex(GetMotionClipIndex(dwMotionKey)))
 	{
 #ifdef _DEBUG
 		Tracenf("CActorInstance::GetMotionDuration - Invalid Motion Key : %d, %d, %d",
@@ -582,7 +582,7 @@ float CActorInstance::GetMotionDuration(DWORD dwMotionKey)
 		return 0.0f;
 	}
 
-	CGrannyMotion * pGrannyMotion = pMotion->GetMotionPointer(0);
+	CGrannyMotion * pGrannyMotion = pMotion->GetMotionPointer(GetMotionClipIndex(dwMotionKey));
 	return pGrannyMotion->GetDuration();
 }
 

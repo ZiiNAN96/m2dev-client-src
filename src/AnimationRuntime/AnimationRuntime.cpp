@@ -68,14 +68,31 @@ template <std::size_t N> std::array<float, N> SampleTrack(
     const auto& previous = *(next - 1);
     if (track.interpolation == Interpolation::Step) return previous.value;
     const float weight = static_cast<float>((time - previous.time) / (next->time - previous.time));
-    if constexpr (N == 4) return Nlerp(previous.value, next->value, weight);
+    if constexpr (N == 4) {
+        if(track.interpolation==Interpolation::SphericalLinear) {
+            double dot=0;
+            for(std::size_t i=0;i<4;++i) dot+=double(previous.value[i])*next->value[i];
+            auto adjusted=next->value;
+            if(dot<0) { dot=-dot; for(float& component:adjusted) component=-component; }
+            dot=std::clamp(dot,0.0,1.0);
+            if(dot>.9995) return Nlerp(previous.value,adjusted,weight);
+            const double angle=std::acos(dot), denominator=std::sin(angle);
+            Quaternion result;
+            for(std::size_t i=0;i<4;++i) result[i]=static_cast<float>(
+                (std::sin((1-weight)*angle)*previous.value[i]+std::sin(weight*angle)*adjusted[i])/denominator);
+            Normalize(result);
+            return result;
+        }
+        return Nlerp(previous.value, next->value, weight);
+    }
     else return Lerp(previous.value, next->value, weight);
 }
 
 template <std::size_t N> bool ValidateTrack(Track<std::array<float, N>>& track,
     double duration, std::string& error)
 {
-    if (track.interpolation != Interpolation::Linear && track.interpolation != Interpolation::Step)
+    if (track.interpolation != Interpolation::Linear && track.interpolation != Interpolation::Step &&
+        !(N==4 && track.interpolation==Interpolation::SphericalLinear))
     {
         error = "unsupported interpolation";
         return false;

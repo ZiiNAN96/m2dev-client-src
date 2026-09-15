@@ -4,7 +4,7 @@ target_compile_features(AssetRuntime PUBLIC cxx_std_20)
 target_link_libraries(AssetRuntime PRIVATE M2FirstPartyArchitectureChecks)
 
 add_library(AssetRuntimeGlTF STATIC GlTF/GlTFAssetProvider.cpp GlTF/CgltfImplementation.cpp)
-target_link_libraries(AssetRuntimeGlTF PUBLIC AssetRuntime PRIVATE M2FirstPartyArchitectureChecks)
+target_link_libraries(AssetRuntimeGlTF PUBLIC AssetRuntime AnimationRuntime PRIVATE M2FirstPartyArchitectureChecks)
 target_include_directories(AssetRuntimeGlTF SYSTEM PRIVATE "${CMAKE_SOURCE_DIR}/vendor/cgltf")
 
 add_library(AssetRuntimeGR2 STATIC GR2/GR2File.cpp GR2/GR2Compression.cpp GR2/GR2Types.cpp

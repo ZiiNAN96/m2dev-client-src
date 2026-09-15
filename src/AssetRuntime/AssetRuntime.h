@@ -12,6 +12,8 @@
 #include <utility>
 #include <vector>
 
+namespace AnimationRuntime { class RuntimeSkeleton; class RuntimeAnimationClip; }
+
 namespace AssetRuntime
 {
 // ZiiNAN: Asset Runtime boundary
@@ -284,6 +286,8 @@ public:
     virtual void ReleaseUploadData() = 0;
     virtual std::unique_ptr<PoseEvaluator> CreatePose(const ModelHandle&) const = 0;
     virtual std::unique_ptr<AnimationInstance> CreateAnimationInstance(const ModelHandle&) const { return {}; }
+    virtual const AnimationRuntime::RuntimeSkeleton* RuntimeSkeleton(std::size_t) const { return nullptr; }
+    virtual const AnimationRuntime::RuntimeAnimationClip* RuntimeClip(std::size_t) const { return nullptr; }
 protected:
     std::vector<ModelAsset> models_;
     std::vector<AnimationAsset> animations_;
@@ -313,5 +317,7 @@ struct AttachmentBinding
     explicit operator bool() const { return bone >= 0; }
 };
 AttachmentBinding ResolveAttachment(const SkeletonAsset& skeleton, std::string_view bone,
+    AttachmentKind kind = AttachmentKind::Other);
+AttachmentBinding ResolveAttachment(const SkeletonAsset& skeleton, BoneId bone,
     AttachmentKind kind = AttachmentKind::Other);
 }
