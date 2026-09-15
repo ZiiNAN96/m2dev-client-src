@@ -276,9 +276,6 @@ void CMapManager::BeginEnvironment()
 			DRAWSTATE.SetRenderState(Renderer::StateFogVertexMode, Renderer::FogExp);			// pixel fog
 			DRAWSTATE.SetRenderState(Renderer::StateFogDensity, *((DWORD *) &fDensity));	// vertex fog
 
-			float fApproxFogFar = 2.3f / fDensity;
-			CSpeedTreeForestRenderer& rkForest = CSpeedTreeForestRenderer::Instance();
-			rkForest.SetFog(0.0f, fApproxFogFar);
 		}
 		else
 		{
@@ -290,8 +287,6 @@ void CMapManager::BeginEnvironment()
 			fFogNear *= fFogScaleLevel[iFogLevel];
 			fFogFar  *= fFogScaleLevel[iFogLevel];
 
-			CSpeedTreeForestRenderer& rkForest=CSpeedTreeForestRenderer::Instance();
-			rkForest.SetFog(fFogNear, fFogFar);
 
 			DRAWSTATE.SetRenderState(Renderer::StateFogVertexMode, Renderer::FogLinear);		// vertex fox
 			DRAWSTATE.SetRenderState(Renderer::StateRangeFogEnable, TRUE);				// vertex fox

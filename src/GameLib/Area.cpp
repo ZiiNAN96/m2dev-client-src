@@ -3,7 +3,6 @@
 #include "EterLib/ResourceManager.h"
 #include "EterLib/DrawState.h"
 #include "EffectLib/EffectManager.h"
-#include "SpeedTreeLib/SpeedTreeForestRenderer.h"
 #include "EterBase/Timer.h"
 
 #include "Area.h"
@@ -551,7 +550,6 @@ void CArea::__SetObjectInstance_SetTree(TObjectInstance * pObjectInstance, const
 
 void CArea::TObjectInstance::SetTree(float x, float y, float z, DWORD dwTreeCRC, const char* c_szTreeName)
 {
-	CSpeedTreeForestRenderer& rkForest=CSpeedTreeForestRenderer::Instance();
 	pTree=CreateWorldTree(x, y, z, dwTreeCRC, c_szTreeName);
 	dwType = pTree ? prt::PROPERTY_TYPE_TREE : prt::PROPERTY_TYPE_NONE;
 }

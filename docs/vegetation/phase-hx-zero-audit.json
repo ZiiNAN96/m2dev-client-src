@@ -1,0 +1,2845 @@
+{
+  "productionFiles": 1480,
+  "productionHits": [],
+  "classification": {
+    "A": [],
+    "B": [
+      {
+        "file": "tools/Vegetation/CMakeLists.txt",
+        "line": 5,
+        "text": "foreach(file include/SpeedTreeRT.h lib/speedtree_static.lib lib/speedtree_staticd.lib)"
+      },
+      {
+        "file": "tools/Vegetation/CMakeLists.txt",
+        "line": 10,
+        "text": "add_library(LegacySPTSDK STATIC IMPORTED)"
+      },
+      {
+        "file": "tools/Vegetation/CMakeLists.txt",
+        "line": 11,
+        "text": "set_target_properties(LegacySPTSDK PROPERTIES"
+      },
+      {
+        "file": "tools/Vegetation/CMakeLists.txt",
+        "line": 13,
+        "text": "IMPORTED_LOCATION \"${ZIINAN_LEGACY_SPT_SDK_ROOT}/lib/speedtree_static.lib\""
+      },
+      {
+        "file": "tools/Vegetation/CMakeLists.txt",
+        "line": 14,
+        "text": "IMPORTED_LOCATION_DEBUG \"${ZIINAN_LEGACY_SPT_SDK_ROOT}/lib/speedtree_staticd.lib\")"
+      },
+      {
+        "file": "tools/Vegetation/CMakeLists.txt",
+        "line": 15,
+        "text": "add_executable(ZiiNANSPTProbe LegacySPTProbe.cpp)"
+      },
+      {
+        "file": "tools/Vegetation/CMakeLists.txt",
+        "line": 16,
+        "text": "target_link_libraries(ZiiNANSPTProbe PRIVATE LegacySPTSDK user32 M2FirstPartyArchitectureChecks)"
+      },
+      {
+        "file": "tools/Vegetation/CMakeLists.txt",
+        "line": 21,
+        "text": "add_library(LegacySPTExtraction STATIC LegacySPTExtractor.cpp)"
+      },
+      {
+        "file": "tools/Vegetation/CMakeLists.txt",
+        "line": 22,
+        "text": "target_include_directories(LegacySPTExtraction PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})"
+      },
+      {
+        "file": "tools/Vegetation/CMakeLists.txt",
+        "line": 23,
+        "text": "target_link_libraries(LegacySPTExtraction PRIVATE LegacySPTSDK user32 PUBLIC VegetationRuntime AssetToolCore)"
+      },
+      {
+        "file": "tools/Vegetation/CMakeLists.txt",
+        "line": 25,
+        "text": "target_link_libraries(ZiiNANVegetationTool PRIVATE LegacySPTExtraction M2FirstPartyArchitectureChecks)"
+      },
+      {
+        "file": "tools/Vegetation/LegacySPTExtractor.cpp",
+        "line": 3,
+        "text": "#include <SpeedTreeRT.h>"
+      },
+      {
+        "file": "tools/Vegetation/LegacySPTExtractor.cpp",
+        "line": 18,
+        "text": "void Setup(CSpeedTreeRT&tree,const std::filesystem::path&path,bool dynamic){"
+      },
+      {
+        "file": "tools/Vegetation/LegacySPTExtractor.cpp",
+        "line": 20,
+        "text": "auto lighting=dynamic?CSpeedTreeRT::LIGHT_DYNAMIC:CSpeedTreeRT::LIGHT_STATIC;"
+      },
+      {
+        "file": "tools/Vegetation/LegacySPTExtractor.cpp",
+        "line": 22,
+        "text": "tree.SetBranchWindMethod(CSpeedTreeRT::WIND_NONE);tree.SetFrondWindMethod(CSpeedTreeRT::WIND_NONE);tree.SetLeafWindMethod(CSpeedTreeRT::WIND_NONE);"
+      },
+      {
+        "file": "tools/Vegetation/LegacySPTExtractor.cpp",
+        "line": 25,
+        "text": "Mesh Indexed(const CSpeedTreeRT::SGeometry::SIndexed&g,unsigned material){"
+      },
+      {
+        "file": "tools/Vegetation/LegacySPTExtractor.cpp",
+        "line": 39,
+        "text": "CSpeedTreeRT::SetNumWindMatrices(4);CSpeedTreeRT::SetTextureFlip(true);CSpeedTreeRT::SetLightAttributes(0,light);CSpeedTreeRT::SetLightState(0,true);CSpeedTreeRT::SetDropToBillboard(true);CSpeedTreeRT::SetTime(0);"
+      },
+      {
+        "file": "tools/Vegetation/LegacySPTExtractor.cpp",
+        "line": 40,
+        "text": "const float eye[]={0,-2000,600},direction[]={0,1,0};CSpeedTreeRT::SetCamera(eye,direction);"
+      },
+      {
+        "file": "tools/Vegetation/LegacySPTExtractor.cpp",
+        "line": 41,
+        "text": "CSpeedTreeRT tree;Setup(tree,path,false);"
+      },
+      {
+        "file": "tools/Vegetation/LegacySPTExtractor.cpp",
+        "line": 48,
+        "text": "CSpeedTreeRT::STextures textures;tree.GetTextures(textures);"
+      },
+      {
+        "file": "tools/Vegetation/LegacySPTExtractor.cpp",
+        "line": 54,
+        "text": "CSpeedTreeRT::SGeometry g;std::map<std::pair<unsigned,unsigned>,int> lookup;"
+      },
+      {
+        "file": "tools/Vegetation/LegacySPTExtractor.cpp",
+        "line": 57,
+        "text": "for(unsigned kind=0;kind<2;++kind)for(unsigned lod=0;lod<source.lodCounts[kind];++lod){const auto mask=kind?SpeedTree_FrondGeometry:SpeedTree_BranchGeometry;tree.GetGeometry(g,mask,kind?-1:short(lod),kind?short(lod):-1);add(Indexed(kind?g.m"
+      },
+      {
+        "file": "tools/Vegetation/LegacySPTExtractor.cpp",
+        "line": 58,
+        "text": "CSpeedTreeRT::SetTime(0);tree.SetLodLevel(1);"
+      },
+      {
+        "file": "tools/Vegetation/LegacySPTExtractor.cpp",
+        "line": 60,
+        "text": "tree.GetGeometry(g,SpeedTree_LeafGeometry,-1,-1,short(lod));const auto&leaves=g.m_sLeaves0;"
+      },
+      {
+        "file": "tools/Vegetation/LegacySPTExtractor.cpp",
+        "line": 70,
+        "text": "for(unsigned sample=0;sample<2;++sample){const float angle=sample?.785398163f:-.785398163f;const float dir[]={0,std::cos(angle),-std::sin(angle)};CSpeedTreeRT::SetCamera(eye,dir);tree.GetGeometry(g);tree.GetGeometry(g,SpeedTree_LeafGeometry"
+      },
+      {
+        "file": "tools/Vegetation/LegacySPTExtractor.cpp",
+        "line": 77,
+        "text": "for(float angle:{-.9f,-.463647609f,.463647609f,.9f}){const float dir[]={0,std::cos(angle),-std::sin(angle)};CSpeedTreeRT::SetCamera(eye,dir);tree.GetGeometry(g);tree.GetGeometry(g,SpeedTree_LeafGeometry,-1,-1,short(part.lod));"
+      },
+      {
+        "file": "tools/Vegetation/LegacySPTExtractor.cpp",
+        "line": 82,
+        "text": "CSpeedTreeRT::SetCamera(eye,direction);"
+      },
+      {
+        "file": "tools/Vegetation/LegacySPTExtractor.cpp",
+        "line": 83,
+        "text": "tree.SetLodLevel(0);tree.GetGeometry(g,SpeedTree_BillboardGeometry);Require(g.m_sBillboard0.m_bIsActive&&g.m_sBillboard0.m_pCoords&&g.m_sBillboard0.m_pTexCoords,\"missing required far billboard\");"
+      },
+      {
+        "file": "tools/Vegetation/LegacySPTExtractor.cpp",
+        "line": 89,
+        "text": "for(unsigned angle=0;angle<16;++angle)for(float z:{-.5f,0.f,.5f}){const float a=angle*6.28318530718f/16;const float dir[]={std::sin(a),std::cos(a),z};CSpeedTreeRT::SetCamera(eye,dir);tree.GetGeometry(g,SpeedTree_BillboardGeometry);Require(!"
+      },
+      {
+        "file": "tools/Vegetation/LegacySPTExtractor.cpp",
+        "line": 90,
+        "text": "CSpeedTreeRT::SetCamera(eye,direction);"
+      },
+      {
+        "file": "tools/Vegetation/LegacySPTExtractor.cpp",
+        "line": 96,
+        "text": "for(unsigned i=0;i<tree.GetCollisionObjectCount();++i){Vegetation::Collision c;CSpeedTreeRT::ECollisionObjectType type;tree.GetCollisionObject(i,type,c.position.data(),c.dimensions.data());c.kind=unsigned(type);m.collisions.push_back(c);}"
+      },
+      {
+        "file": "tools/Vegetation/LegacySPTExtractor.cpp",
+        "line": 98,
+        "text": "CSpeedTreeRT normals;Setup(normals,path,true);CSpeedTreeRT::SGeometry n;"
+      },
+      {
+        "file": "tools/Vegetation/LegacySPTExtractor.cpp",
+        "line": 100,
+        "text": "if(part.kind==PartKind::Leaf){normals.GetGeometry(n,SpeedTree_LeafGeometry,-1,-1,short(part.lod));const auto&leaf=n.m_sLeaves0;Require(mesh.vertices.size()==std::size_t(leaf.m_usLeafCount)*4&&leaf.m_pNormals,\"leaf normal count mismatch\");fo"
+      },
+      {
+        "file": "tools/Vegetation/LegacySPTExtractor.cpp",
+        "line": 101,
+        "text": "else{const bool frond=part.kind==PartKind::Frond;normals.GetGeometry(n,frond?SpeedTree_FrondGeometry:SpeedTree_BranchGeometry,frond?-1:short(part.lod),frond?short(part.lod):-1);const auto&g=frond?n.m_sFronds:n.m_sBranches;Require(mesh.verti"
+      },
+      {
+        "file": "tools/Vegetation/LegacySPTProbe.cpp",
+        "line": 3,
+        "text": "#include <SpeedTreeRT.h>"
+      },
+      {
+        "file": "tools/Vegetation/LegacySPTProbe.cpp",
+        "line": 21,
+        "text": "void Indexed(Writer& w,const char* key,const CSpeedTreeRT::SGeometry::SIndexed& g) {"
+      },
+      {
+        "file": "tools/Vegetation/LegacySPTProbe.cpp",
+        "line": 39,
+        "text": "CSpeedTreeRT::SetNumWindMatrices(4);CSpeedTreeRT::SetTextureFlip(true);"
+      },
+      {
+        "file": "tools/Vegetation/LegacySPTProbe.cpp",
+        "line": 40,
+        "text": "CSpeedTreeRT::SetLightAttributes(0,light);CSpeedTreeRT::SetLightState(0,true);"
+      },
+      {
+        "file": "tools/Vegetation/LegacySPTProbe.cpp",
+        "line": 41,
+        "text": "CSpeedTreeRT::SetDropToBillboard(true);CSpeedTreeRT::SetTime(0);"
+      },
+      {
+        "file": "tools/Vegetation/LegacySPTProbe.cpp",
+        "line": 42,
+        "text": "const float eye[]={0,-2000,600},direction[]={0,1,0};CSpeedTreeRT::SetCamera(eye,direction);"
+      },
+      {
+        "file": "tools/Vegetation/LegacySPTProbe.cpp",
+        "line": 43,
+        "text": "CSpeedTreeRT tree;tree.SetWindStrength(1);tree.SetLocalMatrices(0,4);"
+      },
+      {
+        "file": "tools/Vegetation/LegacySPTProbe.cpp",
+        "line": 45,
+        "text": "tree.SetBranchLightingMethod(CSpeedTreeRT::LIGHT_STATIC);tree.SetFrondLightingMethod(CSpeedTreeRT::LIGHT_STATIC);tree.SetLeafLightingMethod(CSpeedTreeRT::LIGHT_STATIC);"
+      },
+      {
+        "file": "tools/Vegetation/LegacySPTProbe.cpp",
+        "line": 46,
+        "text": "tree.SetBranchWindMethod(CSpeedTreeRT::WIND_NONE);tree.SetFrondWindMethod(CSpeedTreeRT::WIND_NONE);tree.SetLeafWindMethod(CSpeedTreeRT::WIND_NONE);"
+      },
+      {
+        "file": "tools/Vegetation/LegacySPTProbe.cpp",
+        "line": 49,
+        "text": "CSpeedTreeRT::STextures textures;tree.GetTextures(textures);CSpeedTreeRT::SGeometry g;"
+      },
+      {
+        "file": "tools/Vegetation/LegacySPTProbe.cpp",
+        "line": 52,
+        "text": "w.Key(\"branchLODs\");w.StartArray();for(unsigned lod=0;lod<tree.GetNumBranchLodLevels();++lod){tree.GetGeometry(g,SpeedTree_BranchGeometry,short(lod));w.StartObject();Indexed(w,\"geometry\",g.m_sBranches);w.EndObject();}w.EndArray();"
+      },
+      {
+        "file": "tools/Vegetation/LegacySPTProbe.cpp",
+        "line": 53,
+        "text": "w.Key(\"frondLODs\");w.StartArray();for(unsigned lod=0;lod<tree.GetNumFrondLodLevels();++lod){tree.GetGeometry(g,SpeedTree_FrondGeometry,-1,short(lod));w.StartObject();Indexed(w,\"geometry\",g.m_sFronds);w.EndObject();}w.EndArray();"
+      },
+      {
+        "file": "tools/Vegetation/LegacySPTProbe.cpp",
+        "line": 55,
+        "text": "for(unsigned lod=0;lod<tree.GetNumLeafLodLevels();++lod){tree.GetGeometry(g,SpeedTree_LeafGeometry,-1,-1,short(lod));w.StartObject();w.Key(\"count\");w.Uint(g.m_sLeaves0.m_usLeafCount);w.Key(\"size\");w.Double(tree.GetLeafLodSizeAdjustments()[l"
+      },
+      {
+        "file": "tools/Vegetation/LegacySPTProbe.cpp",
+        "line": 66,
+        "text": "Array(w,\"leafTable\",table,count);CSpeedTreeRT::SetTime(1.25f);tree.GetGeometry(g);table=tree.GetLeafBillboardTable(count);Array(w,\"leafTableLater\",table,count);"
+      },
+      {
+        "file": "tools/Vegetation/LegacySPTProbe.cpp",
+        "line": 67,
+        "text": "CSpeedTreeRT::SetTime(0);w.Key(\"cameraLeafSamples\");w.StartArray();for(float angle:{-1.570796327f,-.785398163f,0.f,.463647609f,.785398163f,1.570796327f}){const float dir[]={0,std::cos(angle),-std::sin(angle)};CSpeedTreeRT::SetCamera(eye,dir"
+      }
+    ],
+    "C": [
+      {
+        "file": "android/README.md",
+        "line": 4,
+        "text": "assets, gameplay, audio, Python, Granny or SpeedTree dependency. The Android sources,"
+      },
+      {
+        "file": "buildtool/PlatformTargetAudit.cmake",
+        "line": 15,
+        "text": "foreach(forbidden UserInterface M2Platform M2PlatformWindowsFeatures WindowsInput WebView Granny SpeedTree Python"
+      },
+      {
+        "file": "tests/Platform/SourceBoundaryTest.cmake",
+        "line": 7,
+        "text": "if(source MATCHES \"#[ \\t]*include[ \\t]*[<\\\"][^>\\\"\\n]*(windows[.]h|winsock[2]?[.]h|dinput[.]h|shellapi[.]h|d3d11[.]h|WebView2[.]h|granny[.]h|Python[.]h|SpeedTree)\")"
+      },
+      {
+        "file": "tests/Renderer/AuditResources.ps1",
+        "line": 13,
+        "text": "@('UIRenderBridge|EffectRenderBridge|WorldRenderBridge|TreeRenderBridge', 'A', 'UI/Effect/World/TreeRenderBridge', 'image registration and state capture', 'image owns source; subsystem owns Diligent handles', 'texture identity and material "
+      },
+      {
+        "file": "tests/Renderer/AuditResources.ps1",
+        "line": 21,
+        "text": "@('SpeedTreeWrapper|SpeedTreeForestDirectX|VertexShaders', 'A', 'CSpeedTreeWrapper/CSpeedTreeForestDirectX', 'SetupBuffers/InitVertexShaders', 'base tree owns COM; instances borrow; forest owns shaders', 'tree LOD setup and draw; CPU SpeedT"
+      },
+      {
+        "file": "tests/Renderer/audit_d3d9.ps1",
+        "line": 26,
+        "text": "@('src/SpeedTreeLib/','MapOutdoor.RenderArea -> SpeedTreeForestDirectX -> SpeedTreeWrapper -> TreeRenderBridge','M6 original SDK geometry/materials'),"
+      },
+      {
+        "file": "tests/Renderer/audit_d3d9.ps1",
+        "line": 96,
+        "text": "if($function -eq 'CScreen::RenderBillboard') { $category='F'; $reachable='no callers'; $chain='CScreen definition only (not SpeedTree RenderBillboards)'; $alternative='n/a'; $action='No migration' }"
+      },
+      {
+        "file": "tests/Renderer/run_trees.ps1",
+        "line": 1,
+        "text": "# ZiiNAN: Diligent SpeedTree rendering; monitor only this newly started test process."
+      },
+      {
+        "file": "tests/Renderer/setup_trees.ps1",
+        "line": 1,
+        "text": "# ZiiNAN: Diligent SpeedTree rendering; private test folders, original asset packages unchanged."
+      },
+      {
+        "file": "tests/Renderer/trees_entry.py",
+        "line": 1,
+        "text": "# ZiiNAN: Diligent SpeedTree rendering"
+      },
+      {
+        "file": "tests/Renderer/trees_smoke.py",
+        "line": 1,
+        "text": "\"\"\"ZiiNAN: Diligent SpeedTree rendering integration; original maps, trees and actor lifecycle.\"\"\""
+      },
+      {
+        "file": "tests/Renderer/trees_smoke.py",
+        "line": 34,
+        "text": "app.Create(\"Metin2 SpeedTree milestone 6 test\", width, height, 1)"
+      },
+      {
+        "file": "tests/Renderer/verify_trees.ps1",
+        "line": 1,
+        "text": "# ZiiNAN: Diligent SpeedTree rendering integration; evidence checks, no application mutation."
+      },
+      {
+        "file": "tests/Vegetation/BoundaryTest.cmake",
+        "line": 4,
+        "text": "if(source MATCHES \"CSpeedTree|SpeedTreeRT[.]h|speedtree_static|LegacySPT|Assimp|assimp/\")"
+      },
+      {
+        "file": "tests/Vegetation/BoundaryTest.cmake",
+        "line": 12,
+        "text": "if(build MATCHES \"SpeedTree|LegacySPT|AssetTool|assimp|meshoptimizer\")"
+      },
+      {
+        "file": "tests/Vegetation/ConverterFailureTest.cmake",
+        "line": 2,
+        "text": "file(WRITE \"${OUTPUT}/corrupt.spt\" \"not a SpeedTree file\\n\")"
+      },
+      {
+        "file": "tests/Vegetation/NoLegacyDependency.cmake",
+        "line": 5,
+        "text": "if(source MATCHES \"[Ss][Pp][Ee][Ee][Dd][Tt][Rr][Ee][Ee]|LegacySPT|TreeRenderBridge|DiligentTreeRenderer|Vegetation::Mode|NativeEnabled\")"
+      },
+      {
+        "file": "tests/Vegetation/NoLegacyDependency.cmake",
+        "line": 9,
+        "text": "foreach(artifact extern/include/SpeedTreeRT.h extern/library/SpeedTree/speedtree_static.lib extern/library/SpeedTree/speedtree_staticd.lib src/SpeedTreeLib/SpeedTreeWrapper.cpp src/Renderer/DiligentTreeRenderer.cpp)"
+      },
+      {
+        "file": "tests/Vegetation/audit_removal.py",
+        "line": 10,
+        "text": "PATTERN = re.compile(r'speedtree|cspeedtree|legacySPT|DiligentTreeRenderer|TreeRenderBridge', re.I)"
+      },
+      {
+        "file": "tests/Vegetation/audit_removal.py",
+        "line": 11,
+        "text": "SDK_MARKERS = (b'CSpeedTree', b'SpeedTreeRT', b'speedtree_static', b'GrannyReadEntireFile', b'GrannyFreeFile', b'GrannySampleModelAnimations', b'granny2.dll')"
+      },
+      {
+        "file": "tests/Vegetation/audit_removal.py",
+        "line": 28,
+        "text": "for name in ('extern/include/SpeedTreeRT.h', 'extern/library/SpeedTree/speedtree_static.lib', 'extern/library/SpeedTree/speedtree_staticd.lib'):"
+      },
+      {
+        "file": "tests/Vegetation/audit_removal.py",
+        "line": 54,
+        "text": "forbidden = [x for x in dlls if re.search(r'speedtree|granny|^d3d[89]\\.dll$|^d3dx', x, re.I)]"
+      }
+    ],
+    "D": [
+      {
+        "file": "docs/assets/phase-d1x-granny-dependency-after.csv",
+        "line": 2,
+        "text": "\"android/README.md\",\"4\",\"file scope\",\"Granny\",\"Legacy model resource/instance API consumption or dependency declaration\",\"J\",\"D1-X state: private SDK adapter, explicit legacy reference entrypoint, compatibility wrapper or tooling; see main "
+      },
+      {
+        "file": "docs/assets/phase-d1x-granny-dependency-after.csv",
+        "line": 3,
+        "text": "\"buildtool/PlatformTargetAudit.cmake\",\"15\",\"file scope\",\"Granny\",\"Build linkage, source-target ownership or platform boundary configuration\",\"J\",\"D1-X state: private SDK adapter, explicit legacy reference entrypoint, compatibility wrapper o"
+      },
+      {
+        "file": "docs/assets/phase-d1x-granny-dependency-before.csv",
+        "line": 2,
+        "text": "\"android/README.md\",\"4\",\"file scope\",\"Granny\",\"Legacy model resource/instance API consumption or dependency declaration\",\"J\",\"Keep/update documented tooling or build boundary\",\"build/tool/documentation\",\"assets, gameplay, audio, Python, Gra"
+      },
+      {
+        "file": "docs/assets/phase-d1x-granny-dependency-before.csv",
+        "line": 3,
+        "text": "\"buildtool/PlatformTargetAudit.cmake\",\"15\",\"file scope\",\"Granny\",\"Build linkage, source-target ownership or platform boundary configuration\",\"J\",\"Keep/update documented tooling or build boundary\",\"build/tool/documentation\",\"foreach(forbidde"
+      },
+      {
+        "file": "docs/assets/phase-f34-production-granny-removal.md",
+        "line": 195,
+        "text": "**STOP nach F3/4-X.** Empfehlung: diesen Stand abnehmen; eine Folgephase erst nach einem neuen Auftrag. Kein F5-X, SpeedTree-Umbau, PBR/Visual Remaster, Android-Fortschritt oder FPS-Men\u00fc begonnen."
+      },
+      {
+        "file": "docs/platform/phase-c1x-64bit-x86-cleanup.md",
+        "line": 181,
+        "text": "| SpeedTree 1.6 | statisch, x64; getrennte Debug-/Release-Libs | ABI-sensitiv; im x64-Linkpfad verf\u00fcgbar |"
+      },
+      {
+        "file": "docs/platform/phase-c1x-64bit-x86-cleanup.md",
+        "line": 198,
+        "text": "F\u00fcr ein sp\u00e4teres ARM64-Ziel w\u00e4ren diese Stellen sowie die vorgebauten Granny-, Python-, SpeedTree-, WebView2- und DirectInput-Artefakte erneut zu l\u00f6sen. Das ist kein C1-X-Arbeitsauftrag und wurde nicht begonnen."
+      },
+      {
+        "file": "docs/platform/phase-c1x-64bit-x86-cleanup.md",
+        "line": 280,
+        "text": "- LNK4099: fehlende PDBs in vorgebauten Bibliotheken, unter anderem Python, zlib und SpeedTree."
+      },
+      {
+        "file": "docs/platform/phase-c1x-64bit-x86-cleanup.md",
+        "line": 317,
+        "text": "- Die gepr\u00fcften vorgebauten Linkbibliotheken f\u00fcr Granny, Python, SpeedTree, WebView2Loader, DirectInput und DXGUID sind x64."
+      },
+      {
+        "file": "docs/platform/phase-c2x-platform-abstraction.md",
+        "line": 248,
+        "text": "Nicht neutral sind weiterhin ausdr\u00fccklich IME/MMIO-/Bild-/Granny-/SpeedTree-Header mit Windows-Typen. Das ist bekannte verbleibende Kopplung, kein Versprechen eines heute bereits portablen Builds."
+      },
+      {
+        "file": "docs/platform/phase-c2x-platform-abstraction.md",
+        "line": 254,
+        "text": "Noch vorhandene direkte Headergrenzen umfassen unter anderem `EterImageLib`, `EterLib/IME.h`, `EterGrnLib/Material.h`, `EterLocale/StdAfx.h`, `SpeedTreeLib/StdAfx.h` und einzelne EterBase-Legacyheader. Diese sind entweder echte Windows-/SDK"
+      },
+      {
+        "file": "docs/platform/phase-c2x-platform-abstraction.md",
+        "line": 349,
+        "text": "6. Restkopplung an Windows besteht bewusst bzw. historisch in IME, MMIO/Image, Granny, SpeedTree, Video und Prozessdiagnostik sowie einzelnen Legacyheadern. C2-X schafft Grenzen, aber noch keinen Cross-Platform-Build."
+      },
+      {
+        "file": "docs/platform/phase-c3x-cross-platform-android-prep.md",
+        "line": 228,
+        "text": "Androidstatus, Schweregrad und sp\u00e4tere Arbeit. Importierte Granny-/SpeedTree-/"
+      },
+      {
+        "file": "docs/platform/phase-c3x-cross-platform-android-prep.md",
+        "line": 245,
+        "text": "## 20. SpeedTree"
+      },
+      {
+        "file": "docs/platform/phase-c3x-cross-platform-android-prep.md",
+        "line": 247,
+        "text": "SpeedTreeRT-Header bezeichnet Release 1.6.0; tats\u00e4chliche Binaryversion dar\u00fcber"
+      },
+      {
+        "file": "docs/platform/phase-c3x-cross-platform-android-prep.md",
+        "line": 248,
+        "text": "hinaus nicht unabh\u00e4ngig bestimmt. Windows-x64-`speedtree_static[d].lib`,"
+      },
+      {
+        "file": "docs/platform/phase-c3x-cross-platform-android-prep.md",
+        "line": 404,
+        "text": "| SpeedTree | produktive x64-Binary | keine ARM64-Runtime | hoch, B\u00e4ume | Runtimeverf\u00fcgbarkeit und sp\u00e4teren Ansatz kl\u00e4ren | sp\u00e4tere Runtime-Portierung |"
+      },
+      {
+        "file": "docs/platform/phase-c3x-cross-platform-android-prep.md",
+        "line": 453,
+        "text": "**STOP nach C3-X.** Keine Asset Runtime, Granny-/SpeedTree-Ersetzung, Python-"
+      },
+      {
+        "file": "docs/platform/phase-c3x-dependency-audit.md",
+        "line": 13,
+        "text": "| SpeedTreeRT header release 1.6.0 | `speedtree_static.lib` and `speedtree_staticd.lib` | Public API header and client wrappers; no proprietary runtime implementation | Existing binaries are x64 COFF. Header has historical static/dynamic an"
+      },
+      {
+        "file": "docs/platform/phase-c3x-dependency-audit.md",
+        "line": 32,
+        "text": "`dumpbin /headers` examined all five imported library files: Granny, SpeedTree"
+      },
+      {
+        "file": "docs/platform/phase-c3x-dependency-audit.md",
+        "line": 45,
+        "text": "- SpeedTree header release: `extern/include/SpeedTreeRT.h:21`; dynamic Windows"
+      },
+      {
+        "file": "docs/platform/phase-c3x-dependency-audit.md",
+        "line": 47,
+        "text": "Release/Debug binaries: `extern/library/SpeedTree/CMakeLists.txt:7-11`."
+      },
+      {
+        "file": "docs/platform/phase-c3x-dependency-audit.md",
+        "line": 66,
+        "text": "## Granny and SpeedTree scope"
+      },
+      {
+        "file": "docs/platform/phase-c3x-dependency-audit.md",
+        "line": 77,
+        "text": "SpeedTree client-side wrappers in `src/SpeedTreeLib` and the Diligent tree renderer"
+      },
+      {
+        "file": "docs/platform/phase-c3x-dependency-audit.md",
+        "line": 78,
+        "text": "are not the proprietary SpeedTree runtime source. They continue using the existing"
+      },
+      {
+        "file": "docs/platform/phase-c3x-dependency-audit.md",
+        "line": 151,
+        "text": "adding `vendor`, `src` gameplay modules or `extern`. No Granny, Python, SpeedTree,"
+      },
+      {
+        "file": "docs/platform/phase-c3x-portability-audit.md",
+        "line": 39,
+        "text": "| D | Dependency-/Architektur-Blocker | `EterGrnLib/Deform.cpp`: SSE-Code und Granny-Typen; `extern/include/SpeedTreeRT.h:26-34`: optionales Windows-DLL-Import/Export; `extern/include/radtypes.h` enth\u00e4lt Android/AArch64-Zweige, ein Headerzw"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 1741,
+        "text": "\"src/EterLib/GrpScreen.cpp\",\"447\",\"CScreen\",\"CScreen::RenderBillboard\",\"SetFVF\",\"F\",\"no callers\",\"n/a\",\"No migration\",\"CScreen definition only (not SpeedTree RenderBillboards)\""
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 1742,
+        "text": "\"src/EterLib/GrpScreen.cpp\",\"452\",\"CScreen\",\"CScreen::RenderBillboard\",\"DrawIndexedPrimitive\",\"F\",\"no callers\",\"n/a\",\"No migration\",\"CScreen definition only (not SpeedTree RenderBillboards)\""
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3507,
+        "text": "\"src/Renderer/DiligentTreeRenderer.cpp\",\"215\",\"DiligentTreeRenderer\",\"DiligentTreeRenderer::UploadTexture\",\"CreateTexture\",\"G\",\"renderer implementation or interface; same API name need not mean D3D9\",\"this IS the Diligent implementation\",\"D"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3515,
+        "text": "\"src/SpeedTreeLib/SpeedGrassWrapper.h\",\"56\",\"CSpeedGrassWrapper\",\"declaration/global\",\"LPDIRECT3DTEXTURE9\",\"F\",\"no active normal render caller\",\"not required\",\"Retain inactive library/helper; no feature invented\",\"library definitions only; "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3516,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForest.cpp\",\"295\",\"CSpeedTreeForest\",\"CSpeedTreeForest::SetLight\",\"SetLight\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CPU state an"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3517,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForest.h\",\"83\",\"CSpeedTreeForest\",\"declaration/global\",\"SetLight\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CPU state and Diligent "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3518,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"81\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::SetRenderingDevice\",\"LPDIRECT3DDEVICE9\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\""
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3519,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"115\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::UploadWindMatrix\",\"SetVertexShaderConstant\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materia"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3520,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"134\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::UpdateCompundMatrix\",\"SetVertexShaderConstant\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/mate"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3521,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"152\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::Render\",\"GetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3522,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"153\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::Render\",\"GetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3523,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"154\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::Render\",\"GetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3524,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"157\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::Render\",\"SetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3525,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"159\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::Render\",\"SetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3526,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"160\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::Render\",\"SetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3527,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"177\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::Render\",\"SetVertexShaderConstant\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3528,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"178\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::Render\",\"SetVertexShaderConstant\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3529,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"182\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::Render\",\"SetTextureStageState\",\"F\",\"comment or string literal only\",\"n/a\",\"Retain text; excluded from runtime API counts\",\"no API execut"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3530,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"183\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::Render\",\"SetTextureStageState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep par"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3531,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"184\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::Render\",\"SetTextureStageState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep par"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3532,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"185\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::Render\",\"SetTextureStageState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep par"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3533,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"189\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::Render\",\"SetTextureStageState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep par"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3534,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"190\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::Render\",\"SetTextureStageState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep par"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3535,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"191\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::Render\",\"SetTextureStageState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep par"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3536,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"192\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::Render\",\"SetTextureStageState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep par"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3537,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"193\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::Render\",\"SetTextureStageState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep par"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3538,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"194\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::Render\",\"SetTextureStageState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep par"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3539,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"195\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::Render\",\"SetSamplerState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3540,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"196\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::Render\",\"SetSamplerState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3541,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"197\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::Render\",\"SetSamplerState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3542,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"199\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::Render\",\"SetTextureStageState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep par"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3543,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"200\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::Render\",\"SetTextureStageState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep par"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3544,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"201\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::Render\",\"SetTextureStageState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep par"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3545,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"202\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::Render\",\"SetTextureStageState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep par"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3546,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"203\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::Render\",\"SetSamplerState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3547,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"204\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::Render\",\"SetSamplerState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3548,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"207\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::Render\",\"SaveRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3549,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"208\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::Render\",\"SaveRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3550,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"209\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::Render\",\"SaveRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3551,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"212\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::Render\",\"GetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3552,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"215\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::Render\",\"SetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3553,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"220\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::Render\",\"SetVertexDeclaration\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep par"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3554,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"241\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::Render\",\"SetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3555,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"266\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::Render\",\"SetVertexDeclaration\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep par"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3556,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"267\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::Render\",\"SaveVertexShader\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep paralle"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3557,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"269\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::Render\",\"GetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3558,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"272\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::Render\",\"SetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3559,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"278\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::Render\",\"SetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3560,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"279\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::Render\",\"SaveRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3561,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"303\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::Render\",\"SetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3562,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"304\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::Render\",\"RestoreRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep paral"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3563,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"306\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::Render\",\"RestoreVertexShader\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep para"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3564,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"313\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::Render\",\"SetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3565,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"314\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::Render\",\"SetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3566,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"334\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::Render\",\"SetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3567,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"335\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::Render\",\"SetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3568,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"336\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::Render\",\"SetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3569,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"342\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::Render\",\"SetTextureStageState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep par"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3570,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"343\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::Render\",\"SetTextureStageState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep par"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3571,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"346\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::Render\",\"RestoreRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep paral"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3572,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"347\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::Render\",\"RestoreRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep paral"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3573,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.cpp\",\"348\",\"CSpeedTreeForestDirectX\",\"CSpeedTreeForestDirectX::Render\",\"RestoreRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep paral"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3574,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.h\",\"54\",\"CSpeedTreeForestDirectX\",\"declaration/global\",\"LPDIRECT3DDEVICE9\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3575,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.h\",\"61\",\"CSpeedTreeForestDirectX\",\"declaration/global\",\"LPDIRECT3DDEVICE9\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3576,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.h\",\"63\",\"CSpeedTreeForestDirectX\",\"declaration/global\",\"LPDIRECT3DVERTEXDECLARATION9\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Le"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3577,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.h\",\"65\",\"CSpeedTreeForestDirectX\",\"declaration/global\",\"LPDIRECT3DVERTEXDECLARATION9\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Le"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3578,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.h\",\"66\",\"CSpeedTreeForestDirectX\",\"declaration/global\",\"LPDIRECT3DVERTEXSHADER9\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3579,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"56\",\"-\",\"declaration/global\",\"LPDIRECT3DVERTEXDECLARATION9\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CPU state and D"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3580,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"57\",\"-\",\"declaration/global\",\"LPDIRECT3DVERTEXDECLARATION9\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CPU state and D"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3581,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"58\",\"-\",\"declaration/global\",\"LPDIRECT3DVERTEXSHADER9\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CPU state and Dilige"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3582,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"86\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::SetVertexShaders\",\"LPDIRECT3DVERTEXDECLARATION9\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep para"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3583,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"86\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::SetVertexShaders\",\"LPDIRECT3DVERTEXDECLARATION9\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep para"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3584,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"86\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::SetVertexShaders\",\"LPDIRECT3DVERTEXSHADER9\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3585,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"102\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRenderPCBlocker\",\"SetVertexShader\",\"F\",\"comment or string literal only\",\"n/a\",\"Retain text; excluded from runtime API counts\",\"no API execution\""
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3586,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"112\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRenderPCBlocker\",\"SetTextureStageState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel L"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3587,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"113\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRenderPCBlocker\",\"SetTextureStageState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel L"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3588,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"114\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRenderPCBlocker\",\"SetTextureStageState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel L"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3589,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"115\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRenderPCBlocker\",\"SetTextureStageState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel L"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3590,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"116\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRenderPCBlocker\",\"SetTextureStageState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel L"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3591,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"117\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRenderPCBlocker\",\"SetTextureStageState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel L"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3592,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"119\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRenderPCBlocker\",\"SetTextureStageState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel L"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3593,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"120\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRenderPCBlocker\",\"SetTextureStageState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel L"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3594,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"121\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRenderPCBlocker\",\"SetTextureStageState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel L"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3595,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"123\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRenderPCBlocker\",\"GetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3596,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"124\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRenderPCBlocker\",\"GetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3597,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"125\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRenderPCBlocker\",\"GetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3598,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"126\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRenderPCBlocker\",\"SetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3599,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"127\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRenderPCBlocker\",\"SaveRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3600,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"128\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRenderPCBlocker\",\"SetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3601,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"129\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRenderPCBlocker\",\"SaveRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3602,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"130\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRenderPCBlocker\",\"SaveRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3603,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"131\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRenderPCBlocker\",\"SaveRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3604,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"132\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRenderPCBlocker\",\"SetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3605,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"135\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRenderPCBlocker\",\"SetVertexDeclaration\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel L"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3606,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"156\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRenderPCBlocker\",\"LPDIRECT3DTEXTURE9\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Leg"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3607,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"160\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRenderPCBlocker\",\"SetTexture\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3608,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"165\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRenderPCBlocker\",\"SetStreamSource\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3609,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"167\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRenderPCBlocker\",\"SetIndices\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3610,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"173\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRenderPCBlocker\",\"SetTexture\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3611,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"174\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRenderPCBlocker\",\"SetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3612,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"195\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRenderPCBlocker\",\"SetTexture\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3613,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"200\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRenderPCBlocker\",\"SetStreamSource\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3614,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"202\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRenderPCBlocker\",\"SetIndices\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3615,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"209\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRenderPCBlocker\",\"SetVertexDeclaration\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel L"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3616,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"210\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRenderPCBlocker\",\"SaveVertexShader\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legac"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3617,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"220\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRenderPCBlocker\",\"SetTexture\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3618,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"223\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRenderPCBlocker\",\"RestoreVertexShader\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Le"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3619,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"227\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRenderPCBlocker\",\"SetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3620,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"228\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRenderPCBlocker\",\"SetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3621,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"231\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRenderPCBlocker\",\"RestoreRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Leg"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3622,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"232\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRenderPCBlocker\",\"RestoreRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Leg"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3623,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"233\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRenderPCBlocker\",\"RestoreRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Leg"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3624,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"234\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRenderPCBlocker\",\"RestoreRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Leg"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3625,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"235\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRenderPCBlocker\",\"SetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3626,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"236\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRenderPCBlocker\",\"SetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3627,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"237\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRenderPCBlocker\",\"SetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3628,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"239\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRenderPCBlocker\",\"SetTextureStageState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel L"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3629,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"251\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRender\",\"SetVertexShader\",\"F\",\"comment or string literal only\",\"n/a\",\"Retain text; excluded from runtime API counts\",\"no API execution\""
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3630,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"262\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRender\",\"SetTextureStageState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy pat"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3631,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"263\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRender\",\"SetTextureStageState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy pat"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3632,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"264\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRender\",\"SetTextureStageState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy pat"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3633,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"265\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRender\",\"SetTextureStageState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy pat"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3634,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"266\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRender\",\"SetTextureStageState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy pat"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3635,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"267\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRender\",\"SetTextureStageState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy pat"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3636,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"269\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRender\",\"SetTextureStageState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy pat"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3637,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"270\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRender\",\"SetTextureStageState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy pat"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3638,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"271\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRender\",\"SetTextureStageState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy pat"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3639,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"272\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRender\",\"SetSamplerState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CP"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3640,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"273\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRender\",\"SetSamplerState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CP"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3641,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"275\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRender\",\"SaveRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CP"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3642,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"276\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRender\",\"SaveRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CP"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3643,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"277\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRender\",\"SaveRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CP"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3644,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"278\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRender\",\"SaveRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CP"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3645,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"279\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRender\",\"SaveRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CP"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3646,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"280\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRender\",\"SaveRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CP"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3647,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"283\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRender\",\"SetVertexDeclaration\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy pat"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3648,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"288\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRender\",\"SetTexture\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CPU sta"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3649,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"289\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRender\",\"SetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CPU"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3650,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"296\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRender\",\"SetVertexDeclaration\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy pat"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3651,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"297\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRender\",\"SaveVertexShader\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; C"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3652,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"301\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRender\",\"RestoreVertexShader\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3653,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"305\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRender\",\"SetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CPU"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3654,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"306\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRender\",\"SetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CPU"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3655,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"309\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRender\",\"RestoreRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path;"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3656,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"310\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRender\",\"RestoreRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path;"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3657,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"311\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRender\",\"RestoreRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path;"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3658,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"312\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRender\",\"RestoreRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path;"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3659,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"313\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRender\",\"RestoreRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path;"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3660,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"314\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::OnRender\",\"RestoreRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path;"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3661,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"518\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::SetupBranchBuffers\",\"CreateVertexBuffer\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Le"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3662,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"522\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::SetupBranchBuffers\",\"CreateVertexBuffer\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Le"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3663,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"598\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::SetupBranchBuffers\",\"CreateIndexBuffer\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Leg"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3664,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"631\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::SetupFrondBuffers\",\"CreateVertexBuffer\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Leg"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3665,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"635\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::SetupFrondBuffers\",\"CreateVertexBuffer\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Leg"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3666,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"709\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::SetupFrondBuffers\",\"CreateIndexBuffer\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Lega"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3667,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"740\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::SetupLeafBuffers\",\"LPDIRECT3DVERTEXBUFFER9\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3668,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"760\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::SetupLeafBuffers\",\"CreateVertexBuffer\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Lega"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3669,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"764\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::SetupLeafBuffers\",\"CreateVertexBuffer\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Lega"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3670,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"927\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::SetupBranchForTreeType\",\"SetMaterial\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legac"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3671,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"948\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::SetupBranchForTreeType\",\"LPDIRECT3DTEXTURE9\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep paralle"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3672,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"952\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::SetupBranchForTreeType\",\"SetTexture\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3673,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"957\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::SetupBranchForTreeType\",\"SetTexture\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3674,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"959\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::SetupBranchForTreeType\",\"SetTexture\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3675,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"965\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::SetupBranchForTreeType\",\"SetStreamSource\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel L"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3676,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"967\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::SetupBranchForTreeType\",\"SetIndices\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3677,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"988\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::RenderBranches\",\"SetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy pat"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3678,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"998\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::RenderBranches\",\"DrawIndexedPrimitive\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Lega"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3679,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"1013\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::SetupFrondForTreeType\",\"SetMaterial\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legac"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3680,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"1034\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::SetupFrondForTreeType\",\"SetTexture\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3681,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"1038\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::SetupFrondForTreeType\",\"LPDIRECT3DTEXTURE9\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep paralle"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3682,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"1041\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::SetupFrondForTreeType\",\"SetTexture\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3683,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"1047\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::SetupFrondForTreeType\",\"SetStreamSource\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel L"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3684,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"1049\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::SetupFrondForTreeType\",\"SetIndices\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3685,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"1070\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::RenderFronds\",\"SetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3686,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"1080\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::RenderFronds\",\"DrawIndexedPrimitive\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legac"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3687,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"1095\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::SetupLeafForTreeType\",\"SetMaterial\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3688,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"1105\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::SetupLeafForTreeType\",\"SetTexture\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3689,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"1109\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::SetupLeafForTreeType\",\"SetTexture\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3690,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"1125\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::UploadLeafTables\",\"SetVertexShaderConstant\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep paralle"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3691,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"1247\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::RenderLeaves\",\"SetStreamSource\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy pat"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3692,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"1248\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::RenderLeaves\",\"SetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3693,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"1251\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::RenderLeaves\",\"DrawPrimitive\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path;"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3694,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"1279\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::RenderBillboards\",\"SetTexture\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3695,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"1303\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::RenderBillboards\",\"SetFVF\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CP"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3696,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"1304\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::RenderBillboards\",\"SetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3697,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"1307\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::RenderBillboards\",\"DrawPrimitiveUP\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3698,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"1323\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::RenderBillboards\",\"SetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3699,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"1326\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::RenderBillboards\",\"DrawPrimitiveUP\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3700,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"1343\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::RenderBillboards\",\"SetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3701,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"1346\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::RenderBillboards\",\"DrawPrimitiveUP\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3702,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"1373\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::PositionTree\",\"SetTransform\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3703,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"1377\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::PositionTree\",\"SetVertexShaderConstant\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Le"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3704,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"1407\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::SetShaderConstants\",\"SetVertexShaderConstant\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep paral"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3705,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"1415\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::SetShaderConstants\",\"SetVertexShaderConstant\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep paral"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3706,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"1472\",\"CSpeedTreeWrapper\",\"CSpeedTreeWrapper::CalculateBBox\",\"GetTransform\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path;"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3707,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.h\",\"108\",\"CSpeedTreeWrapper\",\"declaration/global\",\"LPDIRECT3DVERTEXDECLARATION9\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3708,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.h\",\"108\",\"CSpeedTreeWrapper\",\"declaration/global\",\"LPDIRECT3DVERTEXDECLARATION9\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3709,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.h\",\"108\",\"CSpeedTreeWrapper\",\"declaration/global\",\"LPDIRECT3DVERTEXSHADER9\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CPU s"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3710,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.h\",\"150\",\"CSpeedTreeWrapper\",\"declaration/global\",\"LPDIRECT3DTEXTURE9\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CPU state "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3711,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.h\",\"177\",\"CSpeedTreeWrapper\",\"declaration/global\",\"LPDIRECT3DVERTEXBUFFER9\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CPU s"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3712,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.h\",\"179\",\"CSpeedTreeWrapper\",\"declaration/global\",\"LPDIRECT3DINDEXBUFFER9\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CPU st"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3713,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.h\",\"184\",\"CSpeedTreeWrapper\",\"declaration/global\",\"LPDIRECT3DVERTEXBUFFER9\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CPU s"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3714,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.h\",\"186\",\"CSpeedTreeWrapper\",\"declaration/global\",\"LPDIRECT3DINDEXBUFFER9\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CPU st"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3715,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.h\",\"192\",\"CSpeedTreeWrapper\",\"declaration/global\",\"LPDIRECT3DVERTEXBUFFER9\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CPU s"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3716,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.h\",\"209\",\"CSpeedTreeWrapper\",\"declaration/global\",\"LPDIRECT3DVERTEXDECLARATION9\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3717,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.h\",\"210\",\"CSpeedTreeWrapper\",\"declaration/global\",\"LPDIRECT3DVERTEXDECLARATION9\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3718,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.h\",\"211\",\"CSpeedTreeWrapper\",\"declaration/global\",\"LPDIRECT3DVERTEXSHADER9\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CPU s"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3719,
+        "text": "\"src/SpeedTreeLib/TreeRenderBridge.cpp\",\"25\",\"-\",\"Stage\",\"GetTextureStageState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CPU state and Diligent submission in"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3720,
+        "text": "\"src/SpeedTreeLib/TreeRenderBridge.cpp\",\"27\",\"-\",\"StateFloat\",\"GetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CPU state and Diligent submission in "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3721,
+        "text": "\"src/SpeedTreeLib/TreeRenderBridge.cpp\",\"31\",\"-\",\"Sampling\",\"GetSamplerState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CPU state and Diligent submission in s"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3722,
+        "text": "\"src/SpeedTreeLib/TreeRenderBridge.cpp\",\"47\",\"-\",\"CaptureState\",\"GetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CPU state and Diligent submission i"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3723,
+        "text": "\"src/SpeedTreeLib/TreeRenderBridge.cpp\",\"48\",\"-\",\"CaptureState\",\"GetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CPU state and Diligent submission i"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3724,
+        "text": "\"src/SpeedTreeLib/TreeRenderBridge.cpp\",\"49\",\"-\",\"CaptureState\",\"GetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CPU state and Diligent submission i"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3725,
+        "text": "\"src/SpeedTreeLib/TreeRenderBridge.cpp\",\"50\",\"-\",\"CaptureState\",\"GetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CPU state and Diligent submission i"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3726,
+        "text": "\"src/SpeedTreeLib/TreeRenderBridge.cpp\",\"51\",\"-\",\"CaptureState\",\"GetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CPU state and Diligent submission i"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3727,
+        "text": "\"src/SpeedTreeLib/TreeRenderBridge.cpp\",\"52\",\"-\",\"CaptureState\",\"GetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CPU state and Diligent submission i"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3728,
+        "text": "\"src/SpeedTreeLib/TreeRenderBridge.cpp\",\"53\",\"-\",\"CaptureState\",\"GetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CPU state and Diligent submission i"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3729,
+        "text": "\"src/SpeedTreeLib/TreeRenderBridge.cpp\",\"55\",\"-\",\"CaptureState\",\"GetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CPU state and Diligent submission i"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3730,
+        "text": "\"src/SpeedTreeLib/TreeRenderBridge.cpp\",\"56\",\"-\",\"CaptureState\",\"GetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CPU state and Diligent submission i"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3731,
+        "text": "\"src/SpeedTreeLib/TreeRenderBridge.cpp\",\"57\",\"-\",\"CaptureState\",\"GetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CPU state and Diligent submission i"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3732,
+        "text": "\"src/SpeedTreeLib/TreeRenderBridge.cpp\",\"58\",\"-\",\"CaptureState\",\"GetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CPU state and Diligent submission i"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3733,
+        "text": "\"src/SpeedTreeLib/TreeRenderBridge.cpp\",\"58\",\"-\",\"CaptureState\",\"GetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CPU state and Diligent submission i"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3734,
+        "text": "\"src/SpeedTreeLib/TreeRenderBridge.cpp\",\"59\",\"-\",\"CaptureState\",\"GetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CPU state and Diligent submission i"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3735,
+        "text": "\"src/SpeedTreeLib/TreeRenderBridge.cpp\",\"79\",\"-\",\"CaptureState\",\"GetTransform\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CPU state and Diligent submission in "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3736,
+        "text": "\"src/SpeedTreeLib/TreeRenderBridge.cpp\",\"81\",\"-\",\"CaptureState\",\"GetVertexShaderConstantF\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CPU state and Diligent su"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3737,
+        "text": "\"src/SpeedTreeLib/TreeRenderBridge.cpp\",\"82\",\"-\",\"CaptureState\",\"GetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CPU state and Diligent submission i"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3738,
+        "text": "\"src/SpeedTreeLib/TreeRenderBridge.cpp\",\"83\",\"-\",\"CaptureState\",\"GetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CPU state and Diligent submission i"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3739,
+        "text": "\"src/SpeedTreeLib/TreeRenderBridge.cpp\",\"84\",\"-\",\"CaptureState\",\"GetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CPU state and Diligent submission i"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3740,
+        "text": "\"src/SpeedTreeLib/TreeRenderBridge.cpp\",\"86\",\"-\",\"CaptureState\",\"GetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CPU state and Diligent submission i"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3741,
+        "text": "\"src/SpeedTreeLib/TreeRenderBridge.cpp\",\"89\",\"-\",\"CaptureState\",\"GetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CPU state and Diligent submission i"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3742,
+        "text": "\"src/SpeedTreeLib/TreeRenderBridge.cpp\",\"151\",\"TreeRenderBridge\",\"TreeRenderBridge::Draw\",\"LPDIRECT3DBASETEXTURE9\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; C"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3743,
+        "text": "\"src/SpeedTreeLib/TreeRenderBridge.cpp\",\"159\",\"TreeRenderBridge\",\"TreeRenderBridge::Draw\",\"GetTexture\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CPU state and"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3744,
+        "text": "\"src/SpeedTreeLib/TreeRenderBridge.cpp\",\"159\",\"TreeRenderBridge\",\"TreeRenderBridge::Draw\",\"GetTexture\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CPU state and"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3745,
+        "text": "\"src/SpeedTreeLib/TreeRenderBridge.cpp\",\"159\",\"TreeRenderBridge\",\"TreeRenderBridge::Draw\",\"LPDIRECT3DBASETEXTURE9\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; C"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3746,
+        "text": "\"src/SpeedTreeLib/TreeRenderBridge.cpp\",\"174\",\"TreeRenderBridge\",\"TreeRenderBridge::Draw\",\"GetRenderState\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CPU state"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3747,
+        "text": "\"src/SpeedTreeLib/VertexShaders.h\",\"130\",\"-\",\"LoadBranchShader\",\"LPDIRECT3DDEVICE9\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CPU state and Diligent submissio"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3748,
+        "text": "\"src/SpeedTreeLib/VertexShaders.h\",\"130\",\"-\",\"LoadBranchShader\",\"LPDIRECT3DVERTEXDECLARATION9\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CPU state and Diligen"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3749,
+        "text": "\"src/SpeedTreeLib/VertexShaders.h\",\"142\",\"-\",\"LoadBranchShader\",\"LPDIRECT3DVERTEXDECLARATION9\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CPU state and Diligen"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3750,
+        "text": "\"src/SpeedTreeLib/VertexShaders.h\",\"260\",\"-\",\"LoadLeafShader\",\"LPDIRECT3DDEVICE9\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CPU state and Diligent submission "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3751,
+        "text": "\"src/SpeedTreeLib/VertexShaders.h\",\"260\",\"-\",\"LoadLeafShader\",\"LPDIRECT3DVERTEXDECLARATION9\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CPU state and Diligent "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3752,
+        "text": "\"src/SpeedTreeLib/VertexShaders.h\",\"260\",\"-\",\"LoadLeafShader\",\"LPDIRECT3DVERTEXSHADER9\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CPU state and Diligent submi"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3753,
+        "text": "\"src/SpeedTreeLib/VertexShaders.h\",\"286\",\"-\",\"LoadLeafShader\",\"LPDIRECT3DVERTEXDECLARATION9\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CPU state and Diligent "
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3754,
+        "text": "\"src/SpeedTreeLib/VertexShaders.h\",\"287\",\"-\",\"LoadLeafShader\",\"LPDIRECT3DVERTEXSHADER9\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CPU state and Diligent submi"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3755,
+        "text": "\"src/SpeedTreeLib/VertexShaders.h\",\"289\",\"-\",\"LoadLeafShader\",\"D3DXAssembleShader\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CPU state and Diligent submission"
+      },
+      {
+        "file": "docs/renderer-milestone11-d3d9.csv",
+        "line": 3756,
+        "text": "\"src/SpeedTreeLib/VertexShaders.h\",\"292\",\"-\",\"LoadLeafShader\",\"CreateVertexShader\",\"G\",\"yes: shared runtime, wrapper or resource declaration\",\"M6 original SDK geometry/materials\",\"Keep parallel Legacy path; CPU state and Diligent submission"
+      },
+      {
+        "file": "docs/renderer-milestone11-validation.md",
+        "line": 130,
+        "text": "`CScreen::RenderBillboard` hat keine Aufrufer (nicht mit SpeedTree-Billboards verwechseln)."
+      },
+      {
+        "file": "docs/renderer-milestone2-analysis.md",
+        "line": 51,
+        "text": "- Erstes LOD0-Dreieck 0,17,1: mit +X/-Y-Gitter zeigt sein Kreuzprodukt nach +Z. Legacy-Grundzustand `EterLib/StateManager.cpp::SetDefaultState`: `D3DCULL_CW` (CW wird verworfen), ZENABLE=true, ZWRITE=true, ZFUNC=LESSEQUAL. Die Terrainmethod"
+      },
+      {
+        "file": "docs/renderer-milestone4a-analysis.md",
+        "line": 5,
+        "text": "Baseline: `d466965`. Scope: one path, opaque nonanimated rigid PNT map buildings/props; no animation, skinning, blend, specular, shadow, dungeon, SpeedTree or character migration."
+      },
+      {
+        "file": "docs/renderer-milestone4a-analysis.md",
+        "line": 12,
+        "text": "4. BUILDING can be static or animated Granny; `IsMotionThing` means a nonempty registered motion map. TREE is SpeedTree, EFFECT uses `CEffectInstance`, AMBIENCE is sound-only. Attribute/collision and height data belong to instances; there i"
+      },
+      {
+        "file": "docs/renderer-milestone4a-analysis.md",
+        "line": 46,
+        "text": "| SpeedTree | separate forest | wind/LOD | no | later |"
+      },
+      {
+        "file": "docs/renderer-milestone4a-ingame-regression.md",
+        "line": 40,
+        "text": "- Weiterhin Legacy, im Diligent-Weltbild nicht zusammengesetzt: Spieler, NPCs, Mobs, Mounts/Attachments, SpeedTree/B\u00e4ume, Effekte, UI/Text/Minimap; au\u00dferdem Wasser und nicht unterst\u00fctzte Objektvarianten. Die Start-/Login-UI ist vor Aktivier"
+      },
+      {
+        "file": "docs/renderer-milestone4a.md",
+        "line": 25,
+        "text": "Echtes Mapobjekt, ohne Animation, Skinning, Opacity-Map, Specular-Pass oder SpeedTree. Die Originaldaten sind w\u00e4hrend des bestehenden Modellladens zug\u00e4nglich. Die bereits vorhandene Granny-Library wurde zur Untersuchung verwendet; kein eige"
+      },
+      {
+        "file": "docs/renderer-milestone4a.md",
+        "line": 84,
+        "text": "Keine \u00c4nderung an `CStateManager`, Terrain-Geometrie/Splatting-Algorithmus, UI, SpeedTree, Actor-/Effect-Code oder Assets. Kein neuer Scenegraph, Materialmanager, Streaming- oder LOD-Entwurf."
+      },
+      {
+        "file": "docs/renderer-milestone4a.md",
+        "line": 194,
+        "text": "Abgrenzung: Keine erneute interaktive Vollspiel-Abnahme mit eingeloggtem Charakter, Kampf, NPCs/Mobs, Effekten und SpeedTree. Diese Produktionspfade sind im Diff unver\u00e4ndert; daraus folgt keine pauschale Behauptung, jede denkbare Legacy-Spi"
+      },
+      {
+        "file": "docs/renderer-milestone4a.md",
+        "line": 218,
+        "text": "- Der bestehende experimentelle Diligent-Child-Surface-Aufbau aus den vorigen Milestones ist keine fertige Legacy/Diligent-Komposition. Nicht migrierte Legacy-Draws laufen unver\u00e4ndert weiter, werden bei sichtbarer Diligent-Fl\u00e4che aber nicht"
+      },
+      {
+        "file": "docs/renderer-milestone4a.md",
+        "line": 225,
+        "text": "Animierte Geb\u00e4ude und nicht unterst\u00fctzte Material-/Vertexvarianten, Dungeon-Bl\u00f6cke, SpeedTree, Spieler/NPCs/Mobs, Mounts/Attachments, Effekte/Partikel/Flying Objects, Wasser, UI/Text/Minimap. Collision/Attribute/Sound bleiben bei ihrer best"
+      },
+      {
+        "file": "docs/renderer-milestone4b-analysis.md",
+        "line": 11,
+        "text": "| Map | Building-Eintr\u00e4ge | SpeedTree-Eintr\u00e4ge | Effect-Eintr\u00e4ge |"
+      },
+      {
+        "file": "docs/renderer-milestone4b-analysis.md",
+        "line": 34,
+        "text": "| SpeedTree | Nein | Eigene `PROPERTY_TYPE_TREE`-/Forest-Pipeline, ausdr\u00fccklich ausgeschlossen |"
+      },
+      {
+        "file": "docs/renderer-milestone4b-analysis.md",
+        "line": 87,
+        "text": "Granny, dessen Mesh-/Pose-/Skinning-Implementierung, Terrain-Draws, Charaktere/NPCs/Mobs, SpeedTree, Effekte und UI m\u00fcssen f\u00fcr den belegten Bestand nicht umgebaut werden. Falls Runtime andere ben\u00f6tigte Varianten zeigt: erst belegen, dann en"
+      },
+      {
+        "file": "docs/renderer-milestone4b-analysis.md",
+        "line": 93,
+        "text": "- Ein vorausgehender nativer SpeedTree-PCBlocker kann Stage-0-Alpha auf `MODULATE` belassen. Die statische Stage-1-Kameramaske ersetzt dieses Alpha anschlie\u00dfend vollst\u00e4ndig. Beide vorhandenen Stage-0-Varianten werden daher akzeptiert; der S"
+      },
+      {
+        "file": "docs/renderer-milestone4b.md",
+        "line": 7,
+        "text": "Legacy D3D9Ex bleibt der Standard. Diligent D3D11 bleibt ausschlie\u00dflich mit `--renderer=diligent-d3d11` aktiv. Keine Fortsetzung mit Charakteren, SpeedTree oder Animationen."
+      },
+      {
+        "file": "docs/renderer-milestone4b.md",
+        "line": 27,
+        "text": "SpeedTree, Charaktere/NPCs/Mobs, Effekte, Wasser, UI/Text/Minimap und Animationen sind ausdr\u00fccklich nicht Bestandteil von 4B. Ein unbekannter Zustand wird diagnostiziert und nicht als unterst\u00fctzter Pfad behauptet."
+      },
+      {
+        "file": "docs/renderer-milestone4b.md",
+        "line": 186,
+        "text": "| SpeedTree/B\u00e4ume | bestehend | nicht zusammengesetzt |"
+      },
+      {
+        "file": "docs/renderer-milestone4b.md",
+        "line": 197,
+        "text": "Zuerst die weiterhin offene Weltbild-Komposition und die Priorit\u00e4t **genau eines** n\u00e4chsten Systems abstimmen; nicht gleichzeitig SpeedTree, Charaktere, UI und Animationen migrieren. Falls Charaktere als n\u00e4chstes gew\u00fcnscht sind, zun\u00e4chst ih"
+      },
+      {
+        "file": "docs/renderer-milestone4b.md",
+        "line": 201,
+        "text": "Neun bestehende aufgabenbezogene Dateien: 356 zus\u00e4tzliche / 61 entfernte Zeilen. Dazu f\u00fcnf neue Dateien: zwei objektbezogene TextureLoader-Dateien, ein isolierter Real-Map-Test und Analyse/Abschlussbericht. Die \u00c4nderungsgruppen sind Map-\u00dcbe"
+      },
+      {
+        "file": "docs/renderer-milestone5a-analysis.md",
+        "line": 75,
+        "text": "Nach erfolgreicher Abnahme des ersten vollst\u00e4ndigen animierten Grundk\u00f6rperpfads: **STOP nach 5A**. Keine automatische Erweiterung auf Waffen, Hair-Attachments, Mounts/Pets, Skill-Effekte, SpeedTree oder UI."
+      },
+      {
+        "file": "docs/renderer-milestone5a.md",
+        "line": 83,
+        "text": "| SpeedTree / Effekte / Wasser / dynamische Schatten | weiterhin nativ | nicht migriert |"
+      },
+      {
+        "file": "docs/renderer-milestone5b-analysis.md",
+        "line": 94,
+        "text": "Nach erfolgreicher 5B-Abnahme STOP. Keine separate Waffen-/Haar-/Mount-/Pet-, UI-, Effekt-, SpeedTree- oder Schattenmigration."
+      },
+      {
+        "file": "docs/renderer-milestone5b-state-stabilization.md",
+        "line": 109,
+        "text": "Eine **uneingeschr\u00e4nkte 5B-Gesamtabnahme wird wegen der genannten Live-Testl\u00fccken nicht behauptet**. Die technische Materialstabilisierung ist innerhalb des getesteten 5B-Vertrags erfolgreich; die verbleibenden L\u00fccken werden nicht durch ein"
+      },
+      {
+        "file": "docs/renderer-milestone5b.md",
+        "line": 119,
+        "text": "| SpeedTree / Wasser / Partikel / Effekte / Schatten | weiterhin nativ | nicht migriert |"
+      },
+      {
+        "file": "docs/renderer-milestone5b.md",
+        "line": 190,
+        "text": "Vor einer uneingeschr\u00e4nkten Folgefreigabe zuerst die zwei offenen NPC-State-Randf\u00e4lle aus Punkt 28 gezielt reproduzieren. Danach nur nach gesondertem Auftrag einen klaren n\u00e4chsten Part-Vertrag ausw\u00e4hlen, beispielsweise separat angelegte Pla"
+      },
+      {
+        "file": "docs/renderer-milestone5c.md",
+        "line": 157,
+        "text": "- **Nicht migriert:** Mounts, Pets, sichtbare generische Accessory-OBJECT-Pfade (hier nicht implementiert), Effekte/Weapon Glow/Trails, Schatten, SpeedTree, Wasser, Ingame-UI/Nameplates/Damage Numbers. Native Logik kann weiterhin laufen; da"
+      },
+      {
+        "file": "docs/renderer-milestone5d.md",
+        "line": 152,
+        "text": "- Keine Migration von Pet-Systemen, Ice Smoke/Mount-Effekten, Horse Dust, Weapon Glow, Skills/Particles, Schatten, SpeedTree, Wasser oder Ingame-UI/Minimap/Nameplates/Damage Numbers. Native Hintergrundlogik kann weiterhin laufen, ohne im Di"
+      },
+      {
+        "file": "docs/renderer-milestone6-analysis.md",
+        "line": 5,
+        "text": "Baseline `288f4da` (5D), sauberer Source-Checkout. Ausschlie\u00dflich vorhandene SpeedTree-Objekte in der bestehenden Diligent-Weltfl\u00e4che. Legacy D3D9Ex bleibt Default. Keine Effekte, Wasser, UI, neue Vegetation, GPU-Optimierung oder Granny-/Sk"
+      },
+      {
+        "file": "docs/renderer-milestone6-analysis.md",
+        "line": 9,
+        "text": "1. Der tats\u00e4chlich eingebundene `extern/include/SpeedTreeRT.h` bezeichnet sich als **Release 1.6.0, 19.12.2003**. Statisch gelinkt werden `extern/library/SpeedTree/speedtree_static.lib` bzw. Debug `speedtree_staticd.lib` \u00fcber das importiert"
+      },
+      {
+        "file": "docs/renderer-milestone6-analysis.md",
+        "line": 10,
+        "text": "2. `src/UserInterface/CMakeLists.txt` linkt `SpeedTreeLib` (Clientwrapper) und `SpeedTree` (SDK). `src/SpeedTreeLib/CMakeLists.txt` sammelt die bestehenden Wrapper. D3D9/D3DX9-Abh\u00e4ngigkeiten liegen im Wrapper/Forest, nicht in der \u00f6ffentlich"
+      },
+      {
+        "file": "docs/renderer-milestone6-analysis.md",
+        "line": 11,
+        "text": "3. Klassen: `CSpeedTreeRT` als propriet\u00e4re Runtime; `CSpeedTreeWrapper : CGraphicObjectInstance` als Modell/Instanz; `CSpeedTreeForest` mit CRC\u2192MainTree-Map; `CSpeedTreeForestDirectX` f\u00fcr die vorhandene D3D9-Ausgabe; `CMapManager` besitzt d"
+      },
+      {
+        "file": "docs/renderer-milestone6-analysis.md",
+        "line": 12,
+        "text": "4. Laden: `CArea::__SetObjectInstance_SetTree` liest die Property `TreeFile` \u2192 `TObjectInstance::SetTree` \u2192 `CSpeedTreeForest::CreateInstance/GetMainTree` \u2192 `CPackManager::GetFile` \u2192 `CSpeedTreeWrapper::LoadTree` \u2192 `CSpeedTreeRT::LoadTree(b"
+      },
+      {
+        "file": "docs/renderer-milestone6-analysis.md",
+        "line": 20,
+        "text": "- Aktive Konfiguration in `SpeedTreeConfig.h`: `WRAPPER_USE_STATIC_LIGHTING`, `WRAPPER_USE_NO_WIND`, `WRAPPER_USE_GPU_LEAF_PLACEMENT`, `WRAPPER_FLIP_T_TEXCOORD`, Z-up, `WRAPPER_BILLBOARD_MODE`, `WRAPPER_RENDER_SELF_SHADOWS`, `WRAPPER_USE_FO"
+      },
+      {
+        "file": "docs/renderer-milestone6-analysis.md",
+        "line": 35,
+        "text": "`LoadTree` setzt LodLimits = Baumh\u00f6he \u00d7 2 / \u00d7 9 und DropToBillboard TRUE. Aber `CSpeedTreeWrapper::Advance` ruft **ComputeLodLevel(); SetLodLevel(1.0f);** auf. Auch OnRender/OnRenderPCBlocker setzen 1.0. Der aktuelle normale Client schaltet"
+      },
+      {
+        "file": "docs/renderer-milestone6-analysis.md",
+        "line": 37,
+        "text": "`LoadTree` setzt Branch/Leaf/Frond `WIND_NONE`, aber **LeafRockingState TRUE** und eine RockingGroup. `Forest.UpdateSystem` \u00fcbergibt Zeit an `CSpeedTreeRT::SetTime`; `GetLeafBillboardTable` liefert die aktuelle Kamera-/Rocking-Tabelle. Die "
+      },
+      {
+        "file": "docs/renderer-milestone6-analysis.md",
+        "line": 45,
+        "text": "`RenderTree` (PART_TREE sichtbar) \u2192 `CSpeedTreeForestDirectX::Render(Forest_RenderAll)` \u2192 `UpdateSystem` \u2192 `UpdateCompundMatrix` (SDK.SetCamera + c0) \u2192 alle Instanzen.Advance \u2192 native Komponenten-Setup/Draw \u2192 `RenderBranches/Fronds/Leaves/B"
+      },
+      {
+        "file": "docs/renderer-milestone6-analysis.md",
+        "line": 60,
+        "text": "1. Neue `Renderer/TreeRenderData.h`: kleine CPU-Vertex-/Strip-/Draw-Vertr\u00e4ge und abstrakte Tree-Handles. Kein Diligent/SpeedTree/D3D9 im Datenvertrag. Native Modelle besitzen die neuen Ressourcen, Instanzen teilen sie wie bisher."
+      },
+      {
+        "file": "docs/renderer-milestone6-analysis.md",
+        "line": 61,
+        "text": "2. Neuer `SpeedTreeLib/TreeRenderBridge.{h,cpp}`: SDK-/Wrapper-CPU-Daten und tats\u00e4chliche native Drawstates in diesen Vertrag \u00fcberf\u00fchren. DDS-/Packloader aus `EterLib/StaticObjectTextureLoader` wiederverwenden. Keine direkten Diligent-Aufru"
+      },
+      {
+        "file": "docs/renderer-milestone6-analysis.md",
+        "line": 62,
+        "text": "3. `SpeedTreeWrapper.{h,cpp}`: wenige Source-/Draw-Hooks an den bestehenden Setup-/Drawstellen. `SpeedTreeForestDirectX.cpp`: begrenzter Welt-Render-Scope, um Shadow/Minimap auszuschlie\u00dfen. Wenn f\u00fcr die vorhandene CameraBlocker-Maske n\u00f6tig,"
+      },
+      {
+        "file": "docs/renderer-milestone6-analysis.md",
+        "line": 63,
+        "text": "4. Neuer `Renderer/DiligentTreeRenderer.{h,cpp}`: gemeinsame vorhandene D3D11-Weltoberfl\u00e4che/Depth; explizite PSO/SRV/Sampler/Alpha/Depth/Cull/Fog-Bindings pro Draw, minimale \u00dcbersetzung des vorhandenen Leaf-Shaders. Keine Material-/Lightin"
+      },
+      {
+        "file": "docs/renderer-milestone6-analysis.md",
+        "line": 69,
+        "text": "`tests/Renderer/SpeedTreeAssetProbe.cpp`, gebaut gegen dieselbe vorhandene statische SDK-Library, Exit 0; vollst\u00e4ndige Ausgabe `build/milestone6/tree-assets.log`. Alle 15 A1/B1-SPTs besitzen **Branches, Fronds und Leaves**. Fronds sind dami"
+      },
+      {
+        "file": "docs/renderer-milestone6.md",
+        "line": 1,
+        "text": "# Milestone 6 \u2014 bestehendes SpeedTree in Diligent D3D11"
+      },
+      {
+        "file": "docs/renderer-milestone6.md",
+        "line": 5,
+        "text": "Stand: 12.09.2026. **M6 f\u00fcr den gepr\u00fcften normalen SpeedTree-Baumpfad abgeschlossen und freigegeben.** Release ON/OFF, vollst\u00e4ndige Suite, Renderer ON/OFF und beide Ingame-Pr\u00fcfungen bestanden. Abschlie\u00dfender ON-Build wiederhergestellt und e"
+      },
+      {
+        "file": "docs/renderer-milestone6.md",
+        "line": 12,
+        "text": "Originale Map/Area \u2192 Forest/MainTree/Instance \u2192 unver\u00e4nderte SpeedTreeRT"
+      },
+      {
+        "file": "docs/renderer-milestone6.md",
+        "line": 16,
+        "text": "\u2514\u2500 TreeRenderBridge \u2192 TreeRenderData \u2192 DiligentTreeRenderer"
+      },
+      {
+        "file": "docs/renderer-milestone6.md",
+        "line": 25,
+        "text": "- `src/SpeedTreeLib/TreeRenderBridge.{h,cpp}`: CPU-Aufnahme, Originaltextur-Aufl\u00f6sung, vollst\u00e4ndig gepr\u00fcfter Draw-Snapshot, begrenzte Diagnose."
+      },
+      {
+        "file": "docs/renderer-milestone6.md",
+        "line": 26,
+        "text": "- `src/Renderer/DiligentTreeRenderer.{h,cpp}`: Vertex-/Index-/Textur-Uploads, PSO/SRV/Sampler, Originalshader-Semantik, Lebensdauerz\u00e4hler."
+      },
+      {
+        "file": "docs/renderer-milestone6.md",
+        "line": 27,
+        "text": "- `SpeedTreeWrapper.{h,cpp}`: Capture nach Setup, vorhandene Modellteilung, wenige Hooks unmittelbar an nativen Draws."
+      },
+      {
+        "file": "docs/renderer-milestone6.md",
+        "line": 28,
+        "text": "- `SpeedTreeForestDirectX.cpp`: Welt-Scope; Shadow-/Minimap-P\u00e4sse ausgeschlossen."
+      },
+      {
+        "file": "docs/renderer-milestone6.md",
+        "line": 36,
+        "text": "| 1 | Runtime | Vorhandener Header `extern/include/SpeedTreeRT.h`: Release 1.6.0, 19.12.2003. Originale statische `speedtree_static.lib` / Debug-Variante. Keine zus\u00e4tzliche interne Bin\u00e4rversion behauptet; keine neue SDK-Bibliothek. |"
+      },
+      {
+        "file": "docs/renderer-milestone6.md",
+        "line": 37,
+        "text": "| 2 | Call-Chain | `CArea::__SetObjectInstance_SetTree \u2192 TObjectInstance::SetTree \u2192 Forest.CreateInstance/GetMainTree \u2192 Wrapper.LoadTree \u2192 SDK.LoadTree/Compute \u2192 SetupBuffers`; Render: `RenderGame \u2192 MapOutdoor.OnRender \u2192 RenderTree \u2192 Forest"
+      },
+      {
+        "file": "docs/renderer-milestone6.md",
+        "line": 38,
+        "text": "| 3 | Klassen | `CSpeedTreeRT`, `CSpeedTreeWrapper`, `CSpeedTreeForest`, `CSpeedTreeForestDirectX`, `CArea`, `CMapOutdoor`; neu ausschlie\u00dflich Bridge/Renderdaten/TreeRenderer. |"
+      },
+      {
+        "file": "docs/renderer-milestone6.md",
+        "line": 91,
+        "text": "- `tests/Renderer/SpeedTreeAssetProbe.cpp`: dieselbe native SDK-Bibliothek; reale SPT-Pfade als Argumente. Initiale 15-Asset-Ausgabe: `build/milestone6/tree-assets.log`."
+      },
+      {
+        "file": "docs/renderer-milestone8-analysis.md",
+        "line": 17,
+        "text": "| B\u00e4ume, SpeedTreeWrapper.cpp | ja | indexed, lists, fans | M6 | vorhanden; Shadow-Caster B |"
+      },
+      {
+        "file": "docs/renderer-milestone8-results.md",
+        "line": 49,
+        "text": "| Bereits gespiegelt | Terrain HTP/STP, normale StaticObjects/CameraBlocker, freigegebene Actors/Attachments/Mounts, SpeedTree, normale M7-Effekte/Trails/Snow; nun Water/Sky/Cloud und starre Ground-Items | Native Draws bleiben absichtlich e"
+      },
+      {
+        "file": "docs/renderer-milestone8-results.md",
+        "line": 51,
+        "text": "| B \u2013 Shadow/Postprocess | CharacterShadowTexture, Terrain-Shadowmultiplikation, DungeonBlockShadow, SpeedTree-Shadow-Caster, LensFlare Before/After/DrawFlare, ScreenFilter, Snow-Blur | Nicht Gegenstand von M8; keine neue Komposition erfund"
+      },
+      {
+        "file": "docs/renderer/README.md",
+        "line": 41,
+        "text": "Granny, SpeedTree, Python, audio and the other existing dependencies remain. The"
+      },
+      {
+        "file": "docs/renderer/milestone13a-audit.md",
+        "line": 39,
+        "text": "buffers. TreeRenderBridge already captures original SpeedTree data. Snow uses CPU"
+      },
+      {
+        "file": "docs/renderer/milestone13a-report.md",
+        "line": 65,
+        "text": "SpeedTree beh\u00e4lt originale Geometrie/LOD/Strip-Daten, erzeugt aber keine nativen VBs."
+      },
+      {
+        "file": "docs/renderer/milestone13a-report.md",
+        "line": 104,
+        "text": "| Tree | SpeedTree-Originaldaten/TreeRenderData | Tree-Renderer/Renderdaten | Tree-Basis; Instanzen leihen |"
+      },
+      {
+        "file": "docs/renderer/milestone13a-report.md",
+        "line": 328,
+        "text": "Zwei bereits gemischt codierte SpeedTree-Kommentarzeilen wurden f\u00fcr die Bearbeitung nach UTF-8"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-after.csv",
+        "line": 291,
+        "text": "\"src/SpeedTreeLib/SpeedGrassWrapper.cpp\",\"197\",\"CSpeedGrassWrapper\",\"m_lpD3DTexure8 = m_GrassImageInstance.GetTexturePointer()->GetD3DTexture();\",\"wrapper/native creation or getter (see statement)\",\"USE_SPEEDGRASS conditional code\",\"borrowe"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-after.csv",
+        "line": 292,
+        "text": "\"src/SpeedTreeLib/SpeedGrassWrapper.h\",\"56\",\"CSpeedGrassWrapper\",\"LPDIRECT3DTEXTURE9\t\t\t\tm_lpD3DTexure8;\",\"LPDIRECT3DTEXTURE9\",\"USE_SPEEDGRASS conditional code\",\"borrowed image texture\",\"not enabled in supported builds\",\"False\",\"False\",\"Fals"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-after.csv",
+        "line": 293,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.h\",\"63\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"LPDIRECT3DVERTEXDECLARATION9 m_dwBranchVertexShader;\t\t\t// branch/frond vertex shaders\",\"LPDIRECT3DVERTEXDECLARATION9\",\"SetupBuffers/InitVertexShad"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-after.csv",
+        "line": 294,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.h\",\"65\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"LPDIRECT3DVERTEXDECLARATION9\tm_pLeafVertexShaderDecl;\t\t\t// leaf vertex shader declaration\",\"LPDIRECT3DVERTEXDECLARATION9\",\"SetupBuffers/InitVertex"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-after.csv",
+        "line": 295,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.h\",\"66\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"LPDIRECT3DVERTEXSHADER9\t\t\tm_pLeafVertexShader;\t\t\t\t// leaf vertex shader\",\"LPDIRECT3DVERTEXSHADER9\",\"SetupBuffers/InitVertexShaders\",\"base tree own"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-after.csv",
+        "line": 296,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"57\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"LPDIRECT3DVERTEXDECLARATION9 CSpeedTreeWrapper::ms_dwBranchVertexShader = nullptr;\",\"LPDIRECT3DVERTEXDECLARATION9\",\"SetupBuffers/InitVertexShaders\",\"b"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-after.csv",
+        "line": 297,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"58\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"LPDIRECT3DVERTEXDECLARATION9 CSpeedTreeWrapper::ms_pLeafVertexShaderDecl = nullptr;\",\"LPDIRECT3DVERTEXDECLARATION9\",\"SetupBuffers/InitVertexShaders\",\""
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-after.csv",
+        "line": 298,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"59\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"LPDIRECT3DVERTEXSHADER9 CSpeedTreeWrapper::ms_pLeafVertexShader = nullptr;\",\"LPDIRECT3DVERTEXSHADER9\",\"SetupBuffers/InitVertexShaders\",\"base tree owns"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-after.csv",
+        "line": 299,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"87\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"void CSpeedTreeWrapper::SetVertexShaders(LPDIRECT3DVERTEXDECLARATION9 pBranchVertexShader, LPDIRECT3DVERTEXDECLARATION9 pLeafVertexShader, LPDIRECT3DV"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-after.csv",
+        "line": 300,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"520\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"M2_NATIVE_RESOURCE(VertexBuffer, ms_lpd3dDevice->CreateVertexBuffer(m_unBranchVertexCount * sizeof(SFVFBranchVertex), D3DUSAGE_WRITEONLY, D3DFVF_SPEE"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-after.csv",
+        "line": 301,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"524\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"M2_NATIVE_RESOURCE(VertexBuffer, ms_lpd3dDevice->CreateVertexBuffer(m_unBranchVertexCount * sizeof(SFVFBranchVertex), D3DUSAGE_DYNAMIC, D3DFVF_SPEEDT"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-after.csv",
+        "line": 302,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"601\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"M2_NATIVE_RESOURCE(IndexBuffer, ms_lpd3dDevice->CreateIndexBuffer(totalIndexCount * sizeof(uint16_t), D3DUSAGE_WRITEONLY, D3DFMT_INDEX16, D3DPOOL_DEF"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-after.csv",
+        "line": 303,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"635\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"M2_NATIVE_RESOURCE(VertexBuffer, ms_lpd3dDevice->CreateVertexBuffer(m_unFrondVertexCount * sizeof(SFVFBranchVertex), D3DUSAGE_WRITEONLY, D3DFVF_SPEED"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-after.csv",
+        "line": 304,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"639\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"M2_NATIVE_RESOURCE(VertexBuffer, ms_lpd3dDevice->CreateVertexBuffer(m_unFrondVertexCount * sizeof(SFVFBranchVertex), D3DUSAGE_DYNAMIC, D3DFVF_SPEEDTR"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-after.csv",
+        "line": 305,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"714\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"M2_NATIVE_RESOURCE(IndexBuffer, ms_lpd3dDevice->CreateIndexBuffer(totalIndexCount * sizeof(uint16_t), D3DUSAGE_WRITEONLY, D3DFMT_INDEX16, D3DPOOL_DEF"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-after.csv",
+        "line": 306,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"747\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"m_pLeafVertexBuffer = new LPDIRECT3DVERTEXBUFFER9[m_usNumLeafLods];\",\"LPDIRECT3DVERTEXBUFFER9\",\"SetupBuffers/InitVertexShaders\",\"base tree owns COM; "
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-after.csv",
+        "line": 307,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"767\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"M2_NATIVE_RESOURCE(VertexBuffer, ms_lpd3dDevice->CreateVertexBuffer(usLeafCount * 6 * sizeof(SFVFLeafVertex), D3DUSAGE_WRITEONLY, D3DFVF_SPEEDTREE_LE"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-after.csv",
+        "line": 308,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"771\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"M2_NATIVE_RESOURCE(VertexBuffer, ms_lpd3dDevice->CreateVertexBuffer(usLeafCount * 6 * sizeof(SFVFLeafVertex), D3DUSAGE_DYNAMIC, D3DFVF_SPEEDTREE_LEAF"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-after.csv",
+        "line": 309,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.h\",\"108\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"static void\t\t\t\t\tSetVertexShaders(LPDIRECT3DVERTEXDECLARATION9 pBranchVertexShader, LPDIRECT3DVERTEXDECLARATION9 pLeafVertexShader, LPDIRECT3DVERTEXSHAD"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-after.csv",
+        "line": 310,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.h\",\"150\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"LPDIRECT3DTEXTURE9\t\t\tGetBranchTexture(void) const;\",\"LPDIRECT3DTEXTURE9\",\"SetupBuffers/InitVertexShaders\",\"base tree owns COM; instances borrow; forest"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-after.csv",
+        "line": 311,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.h\",\"177\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"LPDIRECT3DVERTEXBUFFER9\t\t\tm_pBranchVertexBuffer;\t\t\t// branch vertex buffer\",\"LPDIRECT3DVERTEXBUFFER9\",\"SetupBuffers/InitVertexShaders\",\"base tree owns "
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-after.csv",
+        "line": 312,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.h\",\"179\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"LPDIRECT3DINDEXBUFFER9\t\t\tm_pBranchIndexBuffer;\t\t\t// branch index buffer\",\"LPDIRECT3DINDEXBUFFER9\",\"SetupBuffers/InitVertexShaders\",\"base tree owns COM;"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-after.csv",
+        "line": 313,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.h\",\"184\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"LPDIRECT3DVERTEXBUFFER9\t\t\tm_pFrondVertexBuffer;\t\t\t// frond vertex buffer\",\"LPDIRECT3DVERTEXBUFFER9\",\"SetupBuffers/InitVertexShaders\",\"base tree owns CO"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-after.csv",
+        "line": 314,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.h\",\"186\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"LPDIRECT3DINDEXBUFFER9\t\t\tm_pFrondIndexBuffer;\t\t\t// frond index buffer\",\"LPDIRECT3DINDEXBUFFER9\",\"SetupBuffers/InitVertexShaders\",\"base tree owns COM; i"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-after.csv",
+        "line": 315,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.h\",\"192\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"LPDIRECT3DVERTEXBUFFER9*\t\tm_pLeafVertexBuffer;\t\t\t// leaf vertex buffer\",\"LPDIRECT3DVERTEXBUFFER9\",\"SetupBuffers/InitVertexShaders\",\"base tree owns COM;"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-after.csv",
+        "line": 316,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.h\",\"209\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"static LPDIRECT3DVERTEXDECLARATION9 ms_dwBranchVertexShader;\",\"LPDIRECT3DVERTEXDECLARATION9\",\"SetupBuffers/InitVertexShaders\",\"base tree owns COM; inst"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-after.csv",
+        "line": 317,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.h\",\"210\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"static LPDIRECT3DVERTEXDECLARATION9 ms_pLeafVertexShaderDecl;\",\"LPDIRECT3DVERTEXDECLARATION9\",\"SetupBuffers/InitVertexShaders\",\"base tree owns COM; ins"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-after.csv",
+        "line": 318,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.h\",\"211\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"static LPDIRECT3DVERTEXSHADER9 ms_pLeafVertexShader;\",\"LPDIRECT3DVERTEXSHADER9\",\"SetupBuffers/InitVertexShaders\",\"base tree owns COM; instances borrow;"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-after.csv",
+        "line": 319,
+        "text": "\"src/SpeedTreeLib/VertexShaders.h\",\"131\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"static LPDIRECT3DVERTEXDECLARATION9 LoadBranchShader(LPDIRECT3DDEVICE9 pDx)\",\"LPDIRECT3DVERTEXDECLARATION9\",\"SetupBuffers/InitVertexShaders\",\"base tree ow"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-after.csv",
+        "line": 320,
+        "text": "\"src/SpeedTreeLib/VertexShaders.h\",\"143\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"LPDIRECT3DVERTEXDECLARATION9 dwShader = NULL;\",\"LPDIRECT3DVERTEXDECLARATION9\",\"SetupBuffers/InitVertexShaders\",\"base tree owns COM; instances borrow; fore"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-after.csv",
+        "line": 321,
+        "text": "\"src/SpeedTreeLib/VertexShaders.h\",\"145\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"if (M2_NATIVE_RESOURCE(Declaration, pDx->CreateVertexDeclaration(pBranchShaderDecl, &dwShader)) != D3D_OK)\",\"wrapper/native creation or getter (see statem"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-after.csv",
+        "line": 322,
+        "text": "\"src/SpeedTreeLib/VertexShaders.h\",\"261\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"static void LoadLeafShader(LPDIRECT3DDEVICE9 pDx, LPDIRECT3DVERTEXDECLARATION9& pVertexDecl, LPDIRECT3DVERTEXSHADER9& pVertexShader)\",\"LPDIRECT3DVERTEXDEC"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-after.csv",
+        "line": 323,
+        "text": "\"src/SpeedTreeLib/VertexShaders.h\",\"287\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"LPDIRECT3DVERTEXDECLARATION9 pNewVertexDecl = nullptr;\",\"LPDIRECT3DVERTEXDECLARATION9\",\"SetupBuffers/InitVertexShaders\",\"base tree owns COM; instances bor"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-after.csv",
+        "line": 324,
+        "text": "\"src/SpeedTreeLib/VertexShaders.h\",\"288\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"LPDIRECT3DVERTEXSHADER9 pNewVertexShader = nullptr;\",\"LPDIRECT3DVERTEXSHADER9\",\"SetupBuffers/InitVertexShaders\",\"base tree owns COM; instances borrow; for"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-after.csv",
+        "line": 325,
+        "text": "\"src/SpeedTreeLib/VertexShaders.h\",\"293\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"const HRESULT hrCreateShader = M2_NATIVE_RESOURCE(VertexShader, pDx->CreateVertexShader((DWORD*)pCode->GetBufferPointer(), &pNewVertexShader));\",\"wrapper/"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-after.csv",
+        "line": 326,
+        "text": "\"src/SpeedTreeLib/VertexShaders.h\",\"302\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"const HRESULT hrCreateDecl = M2_NATIVE_RESOURCE(Declaration, pDx->CreateVertexDeclaration(leafVertexDecl, &pNewVertexDecl));\",\"wrapper/native creation or "
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 3,
+        "text": "\"src/EffectLib/EffectRenderBridge.cpp\",\"61\",\"UI/Effect/World/TreeRenderBridge\",\"if(auto* texture=image->GetTexturePointer()->GetD3DTexture()) textureNames[texture]=image->GetFileName();\",\"wrapper/native creation or getter (see statement)\",\""
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 4,
+        "text": "\"src/EffectLib/EffectRenderBridge.cpp\",\"79\",\"UI/Effect/World/TreeRenderBridge\",\"IDirect3DBaseTexture9* bound=nullptr; NativeStateView().GetTexture(0,&bound);\",\"IDirect3DBaseTexture9\",\"image registration and state capture\",\"image owns source"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 259,
+        "text": "\"src/EterLib/UIRenderBridge.cpp\",\"42\",\"UI/Effect/World/TreeRenderBridge\",\"IDirect3DBaseTexture9* bound=nullptr;\",\"IDirect3DBaseTexture9\",\"image registration and state capture\",\"image owns source; subsystem owns Diligent handles\",\"texture id"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 260,
+        "text": "\"src/EterLib/UIRenderBridge.cpp\",\"44\",\"UI/Effect/World/TreeRenderBridge\",\"const bool matches=!image || bound==image->GetTexturePointer()->GetD3DTexture();\",\"wrapper/native creation or getter (see statement)\",\"image registration and state ca"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 261,
+        "text": "\"src/EterLib/WorldRenderBridge.cpp\",\"39\",\"UI/Effect/World/TreeRenderBridge\",\"if(Active() && image) textureNames[image->GetTexturePointer()->GetD3DTexture()]=image->GetFileName();\",\"wrapper/native creation or getter (see statement)\",\"image r"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 262,
+        "text": "\"src/EterLib/WorldRenderBridge.cpp\",\"60\",\"UI/Effect/World/TreeRenderBridge\",\"IDirect3DBaseTexture9* bound=nullptr;\",\"IDirect3DBaseTexture9\",\"image registration and state capture\",\"image owns source; subsystem owns Diligent handles\",\"texture"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 328,
+        "text": "\"src/SpeedTreeLib/SpeedGrassWrapper.cpp\",\"197\",\"Image/effect/world draw callers\",\"m_lpD3DTexure8 = m_GrassImageInstance.GetTexturePointer()->GetD3DTexture();\",\"wrapper/native creation or getter (see statement)\",\"image or mesh wrappers\",\"bor"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 329,
+        "text": "\"src/SpeedTreeLib/SpeedGrassWrapper.h\",\"56\",\"CSpeedGrassWrapper\",\"LPDIRECT3DTEXTURE9\t\t\t\tm_lpD3DTexure8;\",\"LPDIRECT3DTEXTURE9\",\"USE_SPEEDGRASS conditional code\",\"borrowed image texture\",\"not enabled in supported builds\",\"False\",\"False\",\"Fals"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 330,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.h\",\"63\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"LPDIRECT3DVERTEXDECLARATION9 m_dwBranchVertexShader;\t\t\t// branch/frond vertex shaders\",\"LPDIRECT3DVERTEXDECLARATION9\",\"SetupBuffers/InitVertexShad"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 331,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.h\",\"65\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"LPDIRECT3DVERTEXDECLARATION9\tm_pLeafVertexShaderDecl;\t\t\t// leaf vertex shader declaration\",\"LPDIRECT3DVERTEXDECLARATION9\",\"SetupBuffers/InitVertex"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 332,
+        "text": "\"src/SpeedTreeLib/SpeedTreeForestDirectX.h\",\"66\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"LPDIRECT3DVERTEXSHADER9\t\t\tm_pLeafVertexShader;\t\t\t\t// leaf vertex shader\",\"LPDIRECT3DVERTEXSHADER9\",\"SetupBuffers/InitVertexShaders\",\"base tree own"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 333,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"56\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"LPDIRECT3DVERTEXDECLARATION9 CSpeedTreeWrapper::ms_dwBranchVertexShader = nullptr;\",\"LPDIRECT3DVERTEXDECLARATION9\",\"SetupBuffers/InitVertexShaders\",\"b"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 334,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"57\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"LPDIRECT3DVERTEXDECLARATION9 CSpeedTreeWrapper::ms_pLeafVertexShaderDecl = nullptr;\",\"LPDIRECT3DVERTEXDECLARATION9\",\"SetupBuffers/InitVertexShaders\",\""
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 335,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"58\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"LPDIRECT3DVERTEXSHADER9 CSpeedTreeWrapper::ms_pLeafVertexShader = nullptr;\",\"LPDIRECT3DVERTEXSHADER9\",\"SetupBuffers/InitVertexShaders\",\"base tree owns"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 336,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"86\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"void CSpeedTreeWrapper::SetVertexShaders(LPDIRECT3DVERTEXDECLARATION9 pBranchVertexShader, LPDIRECT3DVERTEXDECLARATION9 pLeafVertexShader, LPDIRECT3DV"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 337,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"156\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"LPDIRECT3DTEXTURE9 lpd3dTexture;\",\"LPDIRECT3DTEXTURE9\",\"SetupBuffers/InitVertexShaders\",\"base tree owns COM; instances borrow; forest owns shaders\",\""
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 338,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"159\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"if ((lpd3dTexture = m_BranchImageInstance.GetTextureReference().GetD3DTexture()))\",\"wrapper/native creation or getter (see statement)\",\"SetupBuffers/"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 339,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"173\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"STATEMANAGER.SetTexture(0, m_CompositeImageInstance.GetTextureReference().GetD3DTexture());\",\"wrapper/native creation or getter (see statement)\",\"Set"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 340,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"195\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"STATEMANAGER.SetTexture(0, m_CompositeImageInstance.GetTextureReference().GetD3DTexture());\",\"wrapper/native creation or getter (see statement)\",\"Set"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 341,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"220\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"STATEMANAGER.SetTexture(0, m_CompositeImageInstance.GetTextureReference().GetD3DTexture());\",\"wrapper/native creation or getter (see statement)\",\"Set"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 342,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"288\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"STATEMANAGER.SetTexture(0, m_CompositeImageInstance.GetTextureReference().GetD3DTexture());\",\"wrapper/native creation or getter (see statement)\",\"Set"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 343,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"518\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"ms_lpd3dDevice->CreateVertexBuffer(m_unBranchVertexCount * sizeof(SFVFBranchVertex), D3DUSAGE_WRITEONLY, D3DFVF_SPEEDTREE_BRANCH_VERTEX, D3DPOOL_DEFA"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 344,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"522\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"ms_lpd3dDevice->CreateVertexBuffer(m_unBranchVertexCount * sizeof(SFVFBranchVertex), D3DUSAGE_DYNAMIC, D3DFVF_SPEEDTREE_BRANCH_VERTEX, D3DPOOL_DEFAUL"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 345,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"598\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"ms_lpd3dDevice->CreateIndexBuffer(totalIndexCount * sizeof(uint16_t), D3DUSAGE_WRITEONLY, D3DFMT_INDEX16, D3DPOOL_DEFAULT, &m_pBranchIndexBuffer, NUL"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 346,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"631\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"ms_lpd3dDevice->CreateVertexBuffer(m_unFrondVertexCount * sizeof(SFVFBranchVertex), D3DUSAGE_WRITEONLY, D3DFVF_SPEEDTREE_BRANCH_VERTEX, D3DPOOL_DEFAU"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 347,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"635\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"ms_lpd3dDevice->CreateVertexBuffer(m_unFrondVertexCount * sizeof(SFVFBranchVertex), D3DUSAGE_DYNAMIC, D3DFVF_SPEEDTREE_BRANCH_VERTEX, D3DPOOL_DEFAULT"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 348,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"709\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"ms_lpd3dDevice->CreateIndexBuffer(totalIndexCount * sizeof(uint16_t), D3DUSAGE_WRITEONLY, D3DFMT_INDEX16, D3DPOOL_DEFAULT, &m_pFrondIndexBuffer, NULL"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 349,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"740\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"m_pLeafVertexBuffer = new LPDIRECT3DVERTEXBUFFER9[m_usNumLeafLods];\",\"LPDIRECT3DVERTEXBUFFER9\",\"SetupBuffers/InitVertexShaders\",\"base tree owns COM; "
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 350,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"760\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"ms_lpd3dDevice->CreateVertexBuffer(usLeafCount * 6 * sizeof(SFVFLeafVertex), D3DUSAGE_WRITEONLY, D3DFVF_SPEEDTREE_LEAF_VERTEX, D3DPOOL_DEFAULT, &m_pL"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 351,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"764\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"ms_lpd3dDevice->CreateVertexBuffer(usLeafCount * 6 * sizeof(SFVFLeafVertex), D3DUSAGE_DYNAMIC, D3DFVF_SPEEDTREE_LEAF_VERTEX, D3DPOOL_DEFAULT, &m_pLea"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 352,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"948\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"LPDIRECT3DTEXTURE9 lpd3dTexture;\",\"LPDIRECT3DTEXTURE9\",\"SetupBuffers/InitVertexShaders\",\"base tree owns COM; instances borrow; forest owns shaders\",\""
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 353,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"951\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"if ((lpd3dTexture = m_BranchImageInstance.GetTextureReference().GetD3DTexture()))\",\"wrapper/native creation or getter (see statement)\",\"SetupBuffers/"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 354,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"956\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"if (ms_bSelfShadowOn && (lpd3dTexture = m_ShadowImageInstance.GetTextureReference().GetD3DTexture()))\",\"wrapper/native creation or getter (see statem"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 355,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"1034\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"STATEMANAGER.SetTexture(0, m_CompositeImageInstance.GetTextureReference().GetD3DTexture());\",\"wrapper/native creation or getter (see statement)\",\"Se"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 356,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"1038\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"LPDIRECT3DTEXTURE9 lpd3dTexture;\",\"LPDIRECT3DTEXTURE9\",\"SetupBuffers/InitVertexShaders\",\"base tree owns COM; instances borrow; forest owns shaders\","
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 357,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"1040\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"if ((lpd3dTexture = m_ShadowImageInstance.GetTextureReference().GetD3DTexture()))\",\"wrapper/native creation or getter (see statement)\",\"SetupBuffers"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 358,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"1105\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"STATEMANAGER.SetTexture(0, m_CompositeImageInstance.GetTextureReference().GetD3DTexture());\",\"wrapper/native creation or getter (see statement)\",\"Se"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 359,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.cpp\",\"1279\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"STATEMANAGER.SetTexture(0, m_CompositeImageInstance.GetTextureReference().GetD3DTexture());\",\"wrapper/native creation or getter (see statement)\",\"Se"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 360,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.h\",\"108\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"static void\t\t\t\t\tSetVertexShaders(LPDIRECT3DVERTEXDECLARATION9 pBranchVertexShader, LPDIRECT3DVERTEXDECLARATION9 pLeafVertexShader, LPDIRECT3DVERTEXSHAD"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 361,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.h\",\"150\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"LPDIRECT3DTEXTURE9\t\t\tGetBranchTexture(void) const;\",\"LPDIRECT3DTEXTURE9\",\"SetupBuffers/InitVertexShaders\",\"base tree owns COM; instances borrow; forest"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 362,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.h\",\"177\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"LPDIRECT3DVERTEXBUFFER9\t\t\tm_pBranchVertexBuffer;\t\t\t// branch vertex buffer\",\"LPDIRECT3DVERTEXBUFFER9\",\"SetupBuffers/InitVertexShaders\",\"base tree owns "
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 363,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.h\",\"179\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"LPDIRECT3DINDEXBUFFER9\t\t\tm_pBranchIndexBuffer;\t\t\t// branch index buffer\",\"LPDIRECT3DINDEXBUFFER9\",\"SetupBuffers/InitVertexShaders\",\"base tree owns COM;"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 364,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.h\",\"184\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"LPDIRECT3DVERTEXBUFFER9\t\t\tm_pFrondVertexBuffer;\t\t\t// frond vertex buffer\",\"LPDIRECT3DVERTEXBUFFER9\",\"SetupBuffers/InitVertexShaders\",\"base tree owns CO"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 365,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.h\",\"186\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"LPDIRECT3DINDEXBUFFER9\t\t\tm_pFrondIndexBuffer;\t\t\t// frond index buffer\",\"LPDIRECT3DINDEXBUFFER9\",\"SetupBuffers/InitVertexShaders\",\"base tree owns COM; i"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 366,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.h\",\"192\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"LPDIRECT3DVERTEXBUFFER9*\t\tm_pLeafVertexBuffer;\t\t\t// leaf vertex buffer\",\"LPDIRECT3DVERTEXBUFFER9\",\"SetupBuffers/InitVertexShaders\",\"base tree owns COM;"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 367,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.h\",\"209\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"static LPDIRECT3DVERTEXDECLARATION9 ms_dwBranchVertexShader;\",\"LPDIRECT3DVERTEXDECLARATION9\",\"SetupBuffers/InitVertexShaders\",\"base tree owns COM; inst"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 368,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.h\",\"210\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"static LPDIRECT3DVERTEXDECLARATION9 ms_pLeafVertexShaderDecl;\",\"LPDIRECT3DVERTEXDECLARATION9\",\"SetupBuffers/InitVertexShaders\",\"base tree owns COM; ins"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 369,
+        "text": "\"src/SpeedTreeLib/SpeedTreeWrapper.h\",\"211\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"static LPDIRECT3DVERTEXSHADER9 ms_pLeafVertexShader;\",\"LPDIRECT3DVERTEXSHADER9\",\"SetupBuffers/InitVertexShaders\",\"base tree owns COM; instances borrow;"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 370,
+        "text": "\"src/SpeedTreeLib/TreeRenderBridge.cpp\",\"151\",\"UI/Effect/World/TreeRenderBridge\",\"const auto resolve=[&](LPDIRECT3DBASETEXTURE9 bound) -> CGraphicImage* {\",\"LPDIRECT3DBASETEXTURE9\",\"image registration and state capture\",\"image owns source; "
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 371,
+        "text": "\"src/SpeedTreeLib/TreeRenderBridge.cpp\",\"154\",\"UI/Effect/World/TreeRenderBridge\",\"if(!candidate->IsEmpty() && candidate->GetTextureReference().GetD3DTexture()==bound)\",\"wrapper/native creation or getter (see statement)\",\"image registration "
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 372,
+        "text": "\"src/SpeedTreeLib/TreeRenderBridge.cpp\",\"156\",\"UI/Effect/World/TreeRenderBridge\",\"if(cameraMask && cameraMask->GetTexturePointer()->GetD3DTexture()==bound) return cameraMask;\",\"wrapper/native creation or getter (see statement)\",\"image regis"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 373,
+        "text": "\"src/SpeedTreeLib/TreeRenderBridge.cpp\",\"159\",\"UI/Effect/World/TreeRenderBridge\",\"LPDIRECT3DBASETEXTURE9 bound[2]{}; STATEMANAGER.GetTexture(0,&bound[0]); STATEMANAGER.GetTexture(1,&bound[1]);\",\"LPDIRECT3DBASETEXTURE9\",\"image registration a"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 374,
+        "text": "\"src/SpeedTreeLib/VertexShaders.h\",\"130\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"static LPDIRECT3DVERTEXDECLARATION9 LoadBranchShader(LPDIRECT3DDEVICE9 pDx)\",\"LPDIRECT3DVERTEXDECLARATION9\",\"SetupBuffers/InitVertexShaders\",\"base tree ow"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 375,
+        "text": "\"src/SpeedTreeLib/VertexShaders.h\",\"142\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"LPDIRECT3DVERTEXDECLARATION9 dwShader = NULL;\",\"LPDIRECT3DVERTEXDECLARATION9\",\"SetupBuffers/InitVertexShaders\",\"base tree owns COM; instances borrow; fore"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 376,
+        "text": "\"src/SpeedTreeLib/VertexShaders.h\",\"144\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"if (pDx->CreateVertexDeclaration(pBranchShaderDecl, &dwShader) != D3D_OK)\",\"wrapper/native creation or getter (see statement)\",\"SetupBuffers/InitVertexSha"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 377,
+        "text": "\"src/SpeedTreeLib/VertexShaders.h\",\"260\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"static void LoadLeafShader(LPDIRECT3DDEVICE9 pDx, LPDIRECT3DVERTEXDECLARATION9& pVertexDecl, LPDIRECT3DVERTEXSHADER9& pVertexShader)\",\"LPDIRECT3DVERTEXDEC"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 378,
+        "text": "\"src/SpeedTreeLib/VertexShaders.h\",\"286\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"LPDIRECT3DVERTEXDECLARATION9 pNewVertexDecl = nullptr;\",\"LPDIRECT3DVERTEXDECLARATION9\",\"SetupBuffers/InitVertexShaders\",\"base tree owns COM; instances bor"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 379,
+        "text": "\"src/SpeedTreeLib/VertexShaders.h\",\"287\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"LPDIRECT3DVERTEXSHADER9 pNewVertexShader = nullptr;\",\"LPDIRECT3DVERTEXSHADER9\",\"SetupBuffers/InitVertexShaders\",\"base tree owns COM; instances borrow; for"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 380,
+        "text": "\"src/SpeedTreeLib/VertexShaders.h\",\"292\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"const HRESULT hrCreateShader = pDx->CreateVertexShader((DWORD*)pCode->GetBufferPointer(), &pNewVertexShader);\",\"wrapper/native creation or getter (see sta"
+      },
+      {
+        "file": "docs/renderer/milestone13a-resources-before.csv",
+        "line": 381,
+        "text": "\"src/SpeedTreeLib/VertexShaders.h\",\"301\",\"CSpeedTreeWrapper/CSpeedTreeForestDirectX\",\"const HRESULT hrCreateDecl = pDx->CreateVertexDeclaration(leafVertexDecl, &pNewVertexDecl);\",\"wrapper/native creation or getter (see statement)\",\"SetupBuf"
+      },
+      {
+        "file": "docs/renderer/milestone13b-audit.md",
+        "line": 41,
+        "text": "GameLib (Terrain/statische Objekte/Actors/Wasser), SpeedTreeLib, EffectLib,"
+      },
+      {
+        "file": "docs/renderer/milestone13b-report.md",
+        "line": 53,
+        "text": "| 11 | Shader-Pfade | Keine nativen Shader gebunden oder erzeugt. Native Shader-Setter akzeptieren nur null; n\u00f6tige SpeedTree-Konstanten bleiben CPU-Werte. Diligent-Shader unver\u00e4ndert. |"
+      },
+      {
+        "file": "docs/renderer/milestone13c-audit.md",
+        "line": 10,
+        "text": "| B/D | EterLib/StdAfx.h, SphereLib/StdAfx.h, SpeedTreeLib/SpeedTreeWrapper.h, SpeedTreeMaterial.h, SpeedTreeForestDirectX.cpp | Projekt-Mathe und CPU-Renderdaten statt d3d9/d3dx9/d3d9types. SpeedTree-SDK unver\u00e4ndert. |"
+      },
+      {
+        "file": "docs/renderer/milestone13c-audit.md",
+        "line": 14,
+        "text": "| A/D | EterLib/StateManager.h, NativeStateView.h, NativeResourceAudit.h; SpeedTreeLib/VertexShaders.h | CPU-State weiterverwenden, irref\u00fchrende Namen/Signaturen entfernen; alte Shader-/Declarationpfade entfernen. |"
+      },
+      {
+        "file": "docs/renderer/milestone13c-report.md",
+        "line": 37,
+        "text": "NativeMaterialSnapshot \u2192 MaterialStateSnapshot, SpeedTreeForestDirectX \u2192"
+      },
+      {
+        "file": "docs/renderer/milestone13c-report.md",
+        "line": 38,
+        "text": "SpeedTreeForestRenderer, VertexShaders \u2192 TreeVertexData."
+      },
+      {
+        "file": "docs/renderer/milestone13c-report.md",
+        "line": 44,
+        "text": "Granny-Posen/CPU-Vertices und SpeedTree-Geometrie werden unver\u00e4ndert berechnet."
+      },
+      {
+        "file": "docs/renderer/milestone13c-source-audit.csv",
+        "line": 79,
+        "text": "\"docs\\renderer-milestone6-analysis.md\",\"5\",\"Documentation: history or current removal/dependency explanation\",\"Baseline `288f4da` (5D), sauberer Source-Checkout. Ausschlie\u00dflich vorhandene SpeedTree-Objekte in der bestehenden Diligent-Weltfl"
+      },
+      {
+        "file": "docs/renderer/milestone13c-source-audit.csv",
+        "line": 80,
+        "text": "\"docs\\renderer-milestone6-analysis.md\",\"10\",\"Documentation: history or current removal/dependency explanation\",\"2. `src/UserInterface/CMakeLists.txt` linkt `SpeedTreeLib` (Clientwrapper) und `SpeedTree` (SDK). `src/SpeedTreeLib/CMakeLists.t"
+      },
+      {
+        "file": "docs/renderer/milestone13c-source-audit.csv",
+        "line": 81,
+        "text": "\"docs\\renderer-milestone6-analysis.md\",\"11\",\"Documentation: history or current removal/dependency explanation\",\"3. Klassen: `CSpeedTreeRT` als propriet\u00e4re Runtime; `CSpeedTreeWrapper : CGraphicObjectInstance` als Modell/Instanz; `CSpeedTree"
+      },
+      {
+        "file": "docs/renderer/milestone13c-source-audit.csv",
+        "line": 84,
+        "text": "\"docs\\renderer-milestone6-analysis.md\",\"60\",\"Documentation: history or current removal/dependency explanation\",\"1. Neue `Renderer/TreeRenderData.h`: kleine CPU-Vertex-/Strip-/Draw-Vertr\u00e4ge und abstrakte Tree-Handles. Kein Diligent/SpeedTree"
+      },
+      {
+        "file": "docs/renderer/milestone13c-source-audit.csv",
+        "line": 114,
+        "text": "\"docs\\renderer-milestone4b.md\",\"7\",\"Documentation: history or current removal/dependency explanation\",\"Legacy D3D9Ex bleibt der Standard. Diligent D3D11 bleibt ausschlie\u00dflich mit `--renderer=diligent-d3d11` aktiv. Keine Fortsetzung mit Char"
+      },
+      {
+        "file": "docs/renderer/milestone13c-source-audit.csv",
+        "line": 1689,
+        "text": "\"docs\\renderer-milestone11-d3d9.csv\",\"3507\",\"Documentation: history or current removal/dependency explanation\",\"\"\"src/Renderer/DiligentTreeRenderer.cpp\"\",\"\"215\"\",\"\"DiligentTreeRenderer\"\",\"\"DiligentTreeRenderer::UploadTexture\"\",\"\"CreateTextu"
+      },
+      {
+        "file": "docs/renderer/milestone13c-source-audit.csv",
+        "line": 1690,
+        "text": "\"docs\\renderer-milestone11-d3d9.csv\",\"3755\",\"Documentation: history or current removal/dependency explanation\",\"\"\"src/SpeedTreeLib/VertexShaders.h\"\",\"\"289\"\",\"\"-\"\",\"\"LoadLeafShader\"\",\"\"D3DXAssembleShader\"\",\"\"G\"\",\"\"yes: shared runtime, wrappe"
+      },
+      {
+        "file": "docs/renderer/milestone13c-source-audit.csv",
+        "line": 1735,
+        "text": "\"docs\\renderer\\milestone13c-audit.md\",\"10\",\"Documentation: history or current removal/dependency explanation\",\"| B/D | EterLib/StdAfx.h, SphereLib/StdAfx.h, SpeedTreeLib/SpeedTreeWrapper.h, SpeedTreeMaterial.h, SpeedTreeForestDirectX.cpp | "
+      },
+      {
+        "file": "docs/renderer/milestone13c-source-audit.csv",
+        "line": 1764,
+        "text": "\"docs\\renderer\\milestone13a-resources-before.csv\",\"4\",\"Documentation: history or current removal/dependency explanation\",\"\"\"src/EffectLib/EffectRenderBridge.cpp\"\",\"\"79\"\",\"\"UI/Effect/World/TreeRenderBridge\"\",\"\"IDirect3DBaseTexture9* bound=nu"
+      },
+      {
+        "file": "docs/renderer/milestone13c-source-audit.csv",
+        "line": 1818,
+        "text": "\"docs\\renderer\\milestone13a-resources-before.csv\",\"259\",\"Documentation: history or current removal/dependency explanation\",\"\"\"src/EterLib/UIRenderBridge.cpp\"\",\"\"42\"\",\"\"UI/Effect/World/TreeRenderBridge\"\",\"\"IDirect3DBaseTexture9* bound=nullpt"
+      },
+      {
+        "file": "docs/renderer/milestone13c-source-audit.csv",
+        "line": 1819,
+        "text": "\"docs\\renderer\\milestone13a-resources-before.csv\",\"262\",\"Documentation: history or current removal/dependency explanation\",\"\"\"src/EterLib/WorldRenderBridge.cpp\"\",\"\"60\"\",\"\"UI/Effect/World/TreeRenderBridge\"\",\"\"IDirect3DBaseTexture9* bound=nul"
+      },
+      {
+        "file": "docs/renderer/milestone13c-source-audit.csv",
+        "line": 6796,
+        "text": "\"src\\SpeedTreeLib\\TreeVertexData.h\",\"35\",\"Documentation-only code comment / requested ZiiNAN marker\",\"// ZiiNAN: Removed final D3D9 compile-time dependency. Packed CPU vertex layouts.\""
+      },
+      {
+        "file": "docs/renderer/milestone13c-source-audit.csv",
+        "line": 6797,
+        "text": "\"src\\SpeedTreeLib\\SpeedTreeWrapper.cpp\",\"396\",\"Documentation-only code comment / requested ZiiNAN marker\",\"// ZiiNAN: Keep CPU upload data with the native model; no D3D9 buffer readback.\""
+      },
+      {
+        "file": "docs/renderer/phase-b1-gpu-skinning-analysis.md",
+        "line": 464,
+        "text": "- B\u00e4ume verwenden SpeedTree, nicht Granny-Skinning;"
+      },
+      {
+        "file": "docs/renderer/phase-b3-gpu-skinning-prototype.md",
+        "line": 207,
+        "text": "Buildmeldungen bleiben die bestehenden Hinweise: fehlende Vendor-PDBs (SpeedTree/Python/zlib-ng), LTCG/INCREMENTAL-/CRT-Verkn\u00fcpfung sowie bestehende C4311/C4834-Stellen au\u00dferhalb B3. Keine neuen B3-Compilerwarnungen. Diese Bestandsmeldungen"
+      },
+      {
+        "file": "docs/vegetation/phase-hx-a2-visual-parity-fix.md",
+        "line": 9,
+        "text": "Der gemeldete Fehler wurde an den Originalb\u00e4umen bei den A1-Br\u00fccken reproduziert: Beim Kameraschwenk wurden die Bl\u00e4tter einfarbig hell, w\u00e4hrend Stamm, Fronds und die ausgeschnittene Alpha-Silhouette erhalten blieben. Dieselben Kameras blieb"
+      },
+      {
+        "file": "docs/vegetation/phase-hx-a2-visual-parity-fix.md",
+        "line": 11,
+        "text": "`CMapManager::BeginEnvironment` behandelt Dichtenebel unterschiedlich: Branch/Frond/Billboard verwenden exponentielle D\u00e4mpfung; die urspr\u00fcnglichen SpeedTree-Bl\u00e4tter erhalten dagegen \u00fcber `CSpeedTreeForest::SetFog` eine lineare Shader-Nebels"
+      },
+      {
+        "file": "docs/vegetation/phase-hx-a2-visual-parity-fix.md",
+        "line": 13,
+        "text": "Die einzige produktive A2-Korrektur liegt in `src/Vegetation/VegetationRenderer.cpp`: F\u00fcr Leaves bei `TerrainFog::Exp` wird dieselbe Blatt-Nebelspanne wie bei SpeedTree gesetzt. Bei Dichte 0 bleibt die D\u00e4mpfung aus. Kein anderer Renderer, S"
+      },
+      {
+        "file": "docs/vegetation/phase-hx-a2-visual-parity-fix.md",
+        "line": 17,
+        "text": "Referenz: `SpeedTreeWrapper`, `SpeedTreeForestRenderer`, `TreeRenderBridge`, `DiligentTreeRenderer`. ZiiNAN: `WorldTree`, `VegetationRenderer`, vorhandener Mesh-Renderer. Der neue Bildtest l\u00e4dt ZiiNAN-Texturen \u00fcber `CResourceManager` / `CGr"
+      },
+      {
+        "file": "docs/vegetation/phase-hx-a2-visual-parity-fix.md",
+        "line": 19,
+        "text": "| Nr. | Zustand | SpeedTree Reference | ZiiNAN / Ergebnis |"
+      },
+      {
+        "file": "docs/vegetation/phase-hx-speedtree-replacement-removal.md",
+        "line": 1,
+        "text": "# H-X Gate B \u2013 Production Switch und vollst\u00e4ndige SpeedTree-Entfernung"
+      },
+      {
+        "file": "docs/vegetation/phase-hx-speedtree-replacement-removal.md",
+        "line": 51,
+        "text": "`src/SpeedTreeLib` samt Wrapper, Forest, Material-/Wind-/LOD-Verwaltung, alter Grass-Integration und Bridge entfernt. `DiligentTreeRenderer` sowie `TreeRenderData` entfernt. Keine alte Render-Submission, kein SDK-Billboard- oder Windzustand"
+      },
+      {
+        "file": "docs/vegetation/phase-hx-speedtree-replacement-removal.md",
+        "line": 55,
+        "text": "SDK-Includes aus World, Actor, Area, Map und Client-PCH entfernt. `extern/include/SpeedTreeRT.h` ist nicht mehr im Quellprojekt. Die \u00fcbrigen gemeinsamen Header in `extern/include` bleiben f\u00fcr unabh\u00e4ngige Bibliotheken verf\u00fcgbar."
+      },
+      {
+        "file": "docs/vegetation/phase-hx-speedtree-replacement-removal.md",
+        "line": 59,
+        "text": "Produktive `CSpeedTree*`-/SDK-Typen: **0**. World verwendet den neutralen `CWorldTreeInstance`-Vertrag; AssetRuntime und Vegetation enthalten ausschlie\u00dflich eigene Strukturen. Das gemeinsame Frame-Flag hei\u00dft `vegetationWorldFrame` und ben\u00f6t"
+      },
+      {
+        "file": "docs/vegetation/phase-hx-speedtree-replacement-removal.md",
+        "line": 67,
+        "text": "`SpeedTreeLib`, `SpeedTree`, `speedtree_static.lib` und `speedtree_staticd.lib` sind aus dem Client-Linkpfad entfernt. Der transitive Projekt-Audit pr\u00fcft auch Includes, Defines, Linkoptionen und zus\u00e4tzliche Abh\u00e4ngigkeiten in den generierten"
+      },
+      {
+        "file": "docs/vegetation/phase-hx-speedtree-replacement-removal.md",
+        "line": 75,
+        "text": "`LegacySPTSDK` ist nur im optionalen Tool-Verzeichnis definiert. Der Entwickler muss `ZIINAN_LEGACY_SPT_SDK_ROOT` ausdr\u00fccklich auf ein externes SDK setzen. Die drei fr\u00fcher produktiv erreichbaren Header-/Library-Dateien wurden mit Hashkontro"
+      },
+      {
+        "file": "docs/vegetation/phase-hx-speedtree-replacement-removal.md",
+        "line": 99,
+        "text": "Release-/Debug-Client und die beiden frisch gebauten Diligent-D3D11-DLLs: **AMD64**, keine SpeedTree-/Granny-SDK-Marker oder -Imports, keine D3D8/D3D9/D3DX-Imports. Static-Link-Freiheit wird gemeinsam durch Source-Audit, entfernte SDK-Artef"
+      },
+      {
+        "file": "docs/vegetation/phase-hx-speedtree-replacement-removal.md",
+        "line": 195,
+        "text": "Produktive SpeedTree Includes/Typen/Aufrufe/SDK-Artefakte/CMake-Link-Anbindungen: jeweils **0**. `Vegetation.NoLegacyDependency` in Release, Debug und GCC bestanden. `AssetRuntime.NoGrannyDependency` ebenfalls gr\u00fcn. Historische neutrale `CG"
+      },
+      {
+        "file": "docs/vegetation/phase-hx-speedtree-replacement-removal.md",
+        "line": 211,
+        "text": "Empfehlung **A: optionales Developer-/Migration-Tool behalten**. Kein Standard-Clienttarget ben\u00f6tigt es. Reproduktion: Converter ON, `M2_BUILD_ASSET_TOOL=ON`, expliziter externer SDK-Root mit `include/SpeedTreeRT.h` sowie Release-/Debug-Lib"
+      },
+      {
+        "file": "docs/vegetation/phase-hx-speedtree-replacement-removal.md",
+        "line": 236,
+        "text": "Produktiver Client: Granny SDK = 0, SpeedTree SDK = 0"
+      }
+    ],
+    "E": []
+  },
+  "sdkArtifacts": [],
+  "productionProjects": [
+    "src/UserInterface/UserInterface.vcxproj",
+    "vendor/libsodium/sodium.vcxproj",
+    "vendor/lzo-2.10/lzo2.vcxproj",
+    "vendor/zstd/lib/libzstd_static.vcxproj",
+    "vendor/freetype-2.13.3/freetype.vcxproj",
+    "src/Vegetation/VegetationRuntime.vcxproj",
+    "src/AssetRuntime/AssetRuntimeGlTF.vcxproj",
+    "src/AssetRuntime/AssetRuntime.vcxproj",
+    "src/SphereLib/SphereLib.vcxproj",
+    "src/ScriptLib/ScriptLib.vcxproj",
+    "src/PythonModules/PythonModules.vcxproj",
+    "src/PackLib/PackLib.vcxproj",
+    "src/PRTerrainLib/PRTerrainLib.vcxproj",
+    "src/Renderer/M2RendererDiligent.vcxproj",
+    "_deps/diligentcore-build/Platforms/Win32/Diligent-Win32Platform.vcxproj",
+    "_deps/diligentcore-build/Primitives/Diligent-Primitives.vcxproj",
+    "_deps/diligentcore-build/Platforms/Basic/Diligent-BasicPlatform.vcxproj",
+    "_deps/diligentcore-build/Graphics/ShaderTools/Diligent-ShaderTools.vcxproj",
+    "_deps/diligentcore-build/Graphics/GraphicsAccessories/Diligent-GraphicsAccessories.vcxproj",
+    "_deps/diligentcore-build/Common/Diligent-Common.vcxproj",
+    "_deps/diligentcore-build/Graphics/GraphicsEngineD3DBase/Diligent-GraphicsEngineD3DBase.vcxproj",
+    "_deps/diligentcore-build/Graphics/GraphicsEngine/Diligent-GraphicsEngine.vcxproj",
+    "_deps/diligentcore-build/Graphics/GraphicsEngineD3D11/Diligent-GraphicsEngineD3D11-static.vcxproj",
+    "src/Renderer/M2RendererBootstrap.vcxproj",
+    "src/Platform/M2Platform.vcxproj",
+    "src/Platform/M2PlatformWindowsFeatures.vcxproj",
+    "src/GameLib/GameLib.vcxproj",
+    "src/EterPythonLib/EterPythonLib.vcxproj",
+    "src/EterLocale/EterLocale.vcxproj",
+    "src/EterLib/EterLib.vcxproj",
+    "src/EterImageLib/EterImageLib.vcxproj",
+    "src/EterGrnLib/EterGrnLib.vcxproj",
+    "src/AssetRuntime/AssetRuntimeProviders.vcxproj",
+    "src/AssetRuntime/AssetRuntimeGR2.vcxproj",
+    "src/AnimationRuntime/AnimationRuntime.vcxproj",
+    "src/EterBase/EterBase.vcxproj",
+    "src/EffectLib/EffectLib.vcxproj",
+    "src/Discord/Discord.vcxproj",
+    "src/AudioLib/AudioLib.vcxproj"
+  ],
+  "buildUtilityProjects": [
+    "ZERO_CHECK.vcxproj"
+  ],
+  "linkHits": [],
+  "binaries": [
+    {
+      "path": "bin/Release/Metin2_Release.exe",
+      "sha256": "942058d512ddf1db3f3d0643a7e67f57c50e8d70ef294b8335fa41c4a5c0a307",
+      "amd64": true,
+      "imports": [
+        "ADVAPI32.dll",
+        "api-ms-win-core-path-l1-1-0.dll",
+        "bcrypt.dll",
+        "COMDLG32.dll",
+        "d3d11.dll",
+        "D3DCOMPILER_47.dll",
+        "dbghelp.dll",
+        "DDRAW.dll",
+        "DINPUT8.dll",
+        "dxgi.dll",
+        "GDI32.dll",
+        "IMM32.dll",
+        "KERNEL32.dll",
+        "ole32.dll",
+        "OLEAUT32.dll",
+        "SHELL32.dll",
+        "SHLWAPI.dll",
+        "USER32.dll",
+        "VERSION.dll",
+        "WINMM.dll",
+        "WS2_32.dll"
+      ],
+      "forbiddenImports": [],
+      "sdkMarkers": []
+    },
+    {
+      "path": "_deps/diligentcore-build/Graphics/GraphicsEngineD3D11/Release/GraphicsEngineD3D11_64r.dll",
+      "sha256": "875ae6df6b7d275504bcf59c3c81de88c4baa7fa3b62a232da9b57217670aa78",
+      "amd64": true,
+      "imports": [
+        "d3d11.dll",
+        "D3DCOMPILER_47.dll",
+        "dxgi.dll",
+        "KERNEL32.dll",
+        "SHLWAPI.dll",
+        "USER32.dll"
+      ],
+      "forbiddenImports": [],
+      "sdkMarkers": []
+    },
+    {
+      "path": "bin/Debug/Metin2_Debug.exe",
+      "sha256": "c9f3064fce37ecca8e1242fd04be14d10dc77c482eed8d25082d89968f8149b3",
+      "amd64": true,
+      "imports": [
+        "ADVAPI32.dll",
+        "api-ms-win-core-path-l1-1-0.dll",
+        "bcrypt.dll",
+        "COMDLG32.dll",
+        "d3d11.dll",
+        "D3DCOMPILER_47.dll",
+        "DDRAW.dll",
+        "DINPUT8.dll",
+        "dxgi.dll",
+        "GDI32.dll",
+        "IMM32.dll",
+        "KERNEL32.dll",
+        "ole32.dll",
+        "OLEAUT32.dll",
+        "SHELL32.dll",
+        "SHLWAPI.dll",
+        "USER32.dll",
+        "VERSION.dll",
+        "WINMM.dll",
+        "WS2_32.dll"
+      ],
+      "forbiddenImports": [],
+      "sdkMarkers": []
+    },
+    {
+      "path": "_deps/diligentcore-build/Graphics/GraphicsEngineD3D11/Debug/GraphicsEngineD3D11_64d.dll",
+      "sha256": "7fc651ec0cad74aeed4f45fdff8a843dcb9f87d945307ef8537ff787b126b645",
+      "amd64": true,
+      "imports": [
+        "COMDLG32.dll",
+        "d3d11.dll",
+        "D3DCOMPILER_47.dll",
+        "dxgi.dll",
+        "KERNEL32.dll",
+        "ole32.dll",
+        "SHELL32.dll",
+        "SHLWAPI.dll",
+        "USER32.dll"
+      ],
+      "forbiddenImports": [],
+      "sdkMarkers": []
+    }
+  ],
+  "pass": true
+}

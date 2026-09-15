@@ -11,7 +11,6 @@
 #include "Renderer/DiligentD3D11BackendInternal.h"
 #include "Renderer/DiligentTerrainRenderer.h"
 #include "Renderer/DiligentStaticObjectRenderer.h"
-#include "Renderer/DiligentTreeRenderer.h"
 #include "Renderer/DiligentWorldRenderer.h"
 #include "Renderer/DiligentUIRenderer.h"
 #include "Renderer/DiligentTextRenderer.h"
@@ -256,7 +255,7 @@ int main()
             Check(firstFailure!=std::string::npos && failureLog.find("legacy terrain state mismatch")!=std::string::npos &&
                 failureLog.find("ERROR",firstFailure+1)==std::string::npos,"renderer logs first failure reason once");
             const auto presentationLog=readLog("terrain-renderer.log");
-            Check(presentationLog.find("failed_terrain=1 failed_objects=0 failed_actors=0 failed_trees=0 failed_effects=0 failed_world=0 failed_ui=0 failed_text=0")!=std::string::npos,
+            Check(presentationLog.find("failed_terrain=1 failed_objects=0 failed_actors=0 failed_effects=0 failed_world=0 failed_ui=0 failed_text=0")!=std::string::npos,
                 "failed present logs exact subsystem flags before periodic snapshot");
             vb.reset(); ib.reset(); // Map handles must die before the device owner.
             presentation.reset();
@@ -266,7 +265,7 @@ int main()
             std::cout << "Textured presentation resize / suspend / resume / shutdown: PASS\n";
             std::cout << "Renderer first failure reason / subsystem diagnostic: PASS\n";
         }
-        Check(!activePresentation && !terrainRenderer && !actorRenderer && !treeRenderer &&
+        Check(!activePresentation && !terrainRenderer && !actorRenderer &&
               !worldRenderer && !effectRenderer && !uiRenderer && !textRenderer,"all production owners released");
         graphics.Destroy();
         Check(liveSourceTextures==0 && liveSourceBuffers==0,"CPU owners released");

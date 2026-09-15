@@ -3,11 +3,11 @@
 int main()
 {
     using namespace Renderer;
-    if(StartupOptions{}.vegetation!=Vegetation::Mode::Reference||StartupOptions{}.vegetationSelected)return 36;
+    if(StartupOptions{}.vegetationSelected)return 36;
     StartupOptions vegetation;vegetation.ParseArgument(L"--vegetation=ziinan");vegetation.ParseArgument(L"--vegetation=ziinan");
-    if(!vegetation.valid||!vegetation.vegetationSelected||vegetation.vegetation!=Vegetation::Mode::ZiiNAN)return 37;
+    if(!vegetation.valid||!vegetation.vegetationSelected)return 37;
     vegetation.ParseArgument(L"--vegetation=reference");if(vegetation.valid)return 38;
-    for(auto value:{L"--vegetation=",L"--vegetation=auto",L"--vegetation=ZiiNAN"}){StartupOptions bad;bad.ParseArgument(value);if(bad.valid)return 39;}
+    for(auto value:{L"--vegetation=reference",L"--vegetation=",L"--vegetation=auto",L"--vegetation=ZiiNAN"}){StartupOptions bad;bad.ParseArgument(value);if(bad.valid)return 39;}
     for(auto value:{L"--gr2-reader=granny",L"--animation-runtime=granny"}) {
         StartupOptions removed; removed.ParseArgument(value); if(removed.valid) return 35;
     }

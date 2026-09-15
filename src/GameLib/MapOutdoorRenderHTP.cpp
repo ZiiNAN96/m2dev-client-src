@@ -51,7 +51,6 @@ void CMapOutdoor::__RenderTerrain_RenderHardwareTransformPatch()
 	DRAWSTATE.SetSamplerState(1, Renderer::SamplerAddressU, Renderer::AddressClamp);
 	DRAWSTATE.SetSamplerState(1, Renderer::SamplerAddressV, Renderer::AddressClamp);
 
-	CSpeedTreeWrapper::ms_bSelfShadowOn = true;
 	DRAWSTATE.SetBestFiltering(0);
 	DRAWSTATE.SetBestFiltering(1);
 

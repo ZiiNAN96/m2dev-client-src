@@ -36,7 +36,6 @@ target_link_libraries(UserInterface
 	PRTerrainLib
 	PythonModules
 	ScriptLib
-	SpeedTreeLib
 	SphereLib
 	PackLib
 
@@ -46,7 +45,6 @@ target_link_libraries(UserInterface
 	
 	M2Platform
 	M2PlatformWindowsFeatures
-	SpeedTree
 	Python
 	
 	ws2_32 

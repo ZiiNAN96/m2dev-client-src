@@ -26,7 +26,6 @@ bool Draw(Instance&instance,const RenderAsset&asset,::Renderer::IStaticObjectRen
     if(instance.asset!=asset.asset)return false;
     const auto previous=instance.lod.meshes;
     if(!instance.Update(context.camera)){++statistics.culled;return false;}
-    if(context.referenceLod)instance.lod=instance.asset->metadata.lods.back();
     if(previous!=instance.lod.meshes)++statistics.lodChanges;
     const auto model=instance.asset->geometry.Model(0);
     for(unsigned slot=0;slot<5;++slot){const int index=instance.lod.meshes[slot];if(index<0)continue;
@@ -37,9 +36,9 @@ bool Draw(Instance&instance,const RenderAsset&asset,::Renderer::IStaticObjectRen
         draw.vertexCount=mesh.vertexCount;draw.indexCount=mesh.indexCount;draw.firstIndex=draw.baseVertex=0;
         draw.cardMode=part.kind==PartKind::Leaf?1:(part.kind==PartKind::Billboard?2:0);
         draw.cardFog=part.kind==PartKind::Leaf&&draw.fog!=::Renderer::TerrainFog::None;
-        // SpeedTree leaves use the forest's linear shader fog even when the world
-        // uses density fog. MapManager::BeginEnvironment supplies 0 .. 2.3/density
-        // to that leaf table; the ordinary FogStart/FogEnd states are stale then.
+        // Legacy leaf cards use linear shader fog even when the world uses density
+        // fog. Preserve the accepted 0 .. 2.3/density range independently of
+        // the ordinary FogStart/FogEnd states, which are stale in density mode.
         if(draw.cardFog&&draw.fog==::Renderer::TerrainFog::Exp){
             const float density=draw.fogParameters[2];
             if(density>0){draw.fogParameters[0]=0;draw.fogParameters[1]=2.3f/density;}

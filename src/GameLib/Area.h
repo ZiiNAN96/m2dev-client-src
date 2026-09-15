@@ -1,11 +1,9 @@
 #include "WorldTree.h"
 #pragma once
 
-#include "SpeedTreeLib/SpeedTreeWrapper.h"
 #include "EterGrnLib/ThingInstance.h"
 #include "MapType.h"
 #include "DungeonBlock.h"
-#include "SpeedTreeLib/SpeedTreeForest.h"
 
 class CMapOutdoor;
 class CEffectInstance;

@@ -8,7 +8,6 @@
 #include "PRTerrainLib/TerrainType.h"
 #include "PRTerrainLib/TextureSet.h"
 
-#include "SpeedTreeLib/SpeedTreeForestRenderer.h"
 
 #include "MapBase.h"
 #include "Area.h"

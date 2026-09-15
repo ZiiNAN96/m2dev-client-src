@@ -1,336 +1,243 @@
-# H-X – Vegetation Runtime / Gate A1
+# H-X Gate B – Production Switch und vollständige SpeedTree-Entfernung
 
-Autonomer Lauf vom 14. September 2026. Kein Commit, kein Push, keine manuelle Bestätigung erfunden.
+Stand: **15.09.2026 · Gate B: GO · danach STOP**. Gate A1/A2 sind manuell freigegeben; auch die finale Gate-B-Sichtprüfung wurde bestätigt. Kein Commit, kein Push, keine nächste Phase.
 
-**H-X Gate A1: GO**  
-**H-X Gate A2: GO – erneute Sichtprüfung am 15.09.2026 mit „passt“ bestätigt**  
-**Gate B: NOT STARTED**
+Basis: `04cb378651418439b15fd21a19765ef46608f6b4`. Release und Debug wurden im neuen `build-hx-clean` erstellt. ZiiNAN ist der einzige Vegetationspfad. Die vollständigen lokalen Messergebnisse stehen in `build-hx-clean/hx-evidence/result.json`; der reproduzierbare [Zero-Audit](phase-hx-zero-audit.json) enthält Source-Kategorien, Link-Projekte und Binär-Hashes.
 
-Der normale Clientstart bleibt auf SpeedTree Reference. Die neue Vegetation wird ausschließlich mit --vegetation=ziinan ausgewählt. Kein automatischer Rückfall auf SpeedTree.
+## 1. Gate A Ausgangslage
 
-Nachtrag 15.09.2026: Die manuelle A2-Prüfung meldete massive Blattartefakte. Ursache und begrenzte Korrektur, neue Vorher-/Referenz-/Nachherbilder sowie aktuelle Nachweise stehen in [H-X A2 Visual parity fix](phase-hx-a2-visual-parity-fix.md). Die erneute Sichtprüfung wurde anschließend vom Benutzer mit „passt“ bestätigt: A2 GO. Die folgenden A1-Ergebnisse bleiben als historische Nachweise erhalten. Gate B ist weiterhin nicht gestartet.
+Gate A hat Registry, ZVEG, GLB, neutrale Runtime und die Anbindung an den vorhandenen Diligent-Meshrenderer bereitgestellt. Der alte SDK-Pfad war bis zur manuellen Freigabe noch vorhanden. Die ursprüngliche A1-Berichtsfassung bleibt in der genannten Git-Basis nachvollziehbar.
 
-## 1. Ausgangslage
+## 2. Gate A1 Ergebnis
 
-Basis ist der aktuelle Granny-freie F34-Stand: nativer GR2-Reader, eigene AnimationRuntime, produktives GPU-Skinning und Diligent D3D11. Source/CMake liegen in m2dev-client-src, Originaldaten in ../m2dev-client/assets und ../m2dev-client/pack. Der Source-Checkout war zu Beginn sauber. SDK und Referenzpfad bleiben bis zur manuellen Freigabe vorhanden.
+118/118 Quellen konvertiert; alle 85 produktiv erreichbaren Typen unterstützt. A1 bestand mit Release 43/43, Debug 43/43 und GCC/LP64 21/21 sowie World-/Multi-Map-Smokes. Das sind historische A1-Ergebnisse, keine neu ausgeführten Gate-B-Tests.
 
-## 2. SPT Corpus
+## 3. Gate A2 Ergebnis
 
-**118 rohe und 118 effektiv gepackte SPTs**, alle SDK-lesbar. Alle enthalten die Kennung __IdvSpt_02_; daraus wird keine unbelegte SDK-Produktversion abgeleitet. Pfade, Dateigrößen, SHA256 und Features stehen in [phase-hx-feature-matrix.csv](phase-hx-feature-matrix.csv). Vollständige lokale Referenzdaten: build/hx/audit/corpus.json.
+A2 wurde nach dem [Visual-Parity-Fix](phase-hx-a2-visual-parity-fix.md) mit „passt“ bestätigt. Ursache der weißen Blätter war die Übertragung des Blattnebels bei Dichtenebel: veraltete allgemeine FogStart/FogEnd-Werte statt der separaten linearen Blattspanne. Kein Verlust des Textur-Alpha-Kanals. Gate B bewahrt die Korrektur `0 .. 2.3 / density` unverändert in der ausführbaren Logik.
 
-## 3. Production References
+## 4. Production Default Switch
 
-**82 durch Map-/Property-/Actor-Konfigurationen verwendete Typen, 12.819 Platzierungen in 60 Map-Verzeichnissen.** Dazu kommen drei hardcodierte Weihnachtsbaumvarianten in PythonBackground.cpp: **85 produktiv erreichbare Typen insgesamt**. 85 Tree-Properties wurden gelesen; Eventbäume besitzen keine festen Mapplatzierungen.
+Normaler Start ohne Argumente: `Vegetation=ziinan`, `VegetationSelection=default`. Es gibt keine Runtime-Modusvariable und keinen Reference-Zweig mehr. `--vegetation=ziinan` bleibt ein optionaler Kompatibilitätsalias; `--vegetation=reference` und andere Werte sind ungültig.
 
-Die effektive Packreihenfolge entspricht dem Client: zuletzt registrierter Pfad gewinnt. Alle 118 SPTs stimmen bytegenau zwischen ausgewähltem Pack und Quelle überein. Zwei koreanisch benannte AreaData-Sicherungskopien sind über den schmalen Audit-Dateipfad nicht identisch zuordenbar. Sie heißen nicht areadata.txt und gehören nicht zu den geladenen Mapdaten; sie werden nicht als Platzierungen gezählt.
+Produktiver Aufrufweg: alte Map-/Actor-/Eventreferenz → `CreateWorldTree` → Registry → ZVEG/GLB → Vegetation Runtime → vorhandener Diligent-Meshrenderer.
 
-## 4. SpeedTree API Baseline
+## 5. No-Fallback Policy
 
-CArea/Actor/Event → CSpeedTreeForest::CreateInstance → CSpeedTreeWrapper::LoadTree/MakeInstance → GetGeometry/GetLeafBillboardTable → TreeRenderBridge → DiligentTreeRenderer. Genutzt werden Bounds, Collision-Daten, Texturbezüge, statische Farben, dynamische Normalen, diskrete LODs, Kameratabellen und Blattbewegung.
+Fehlende Registry-Zuordnung, fehlendes ZVEG/GLB oder beschädigte Daten liefern einen klaren Fehler. Der World-Adapter protokolliert ihn und der Client beendet sich bei Vegetationsfehlern mit Code 6. Es existiert kein SDK-Loader als Ersatz. Fehlgeschlagene Asset-Ladevorgänge werden gecacht; pro Frame entstehen keine erneuten Leseversuche. Die Tests prüfen fehlende Zuordnungen, Dateien und ungültige Metadaten ausdrücklich.
 
-**Der bisherige Wrapper berechnet LOD, erzwingt danach aber SetLodLevel(1.0f).** Der normale Reference-Client bleibt deshalb auf Nah-LOD. H-X aktiviert ausschließlich im expliziten neuen Testpfad die tatsächlich vorhandenen SDK-LODs und Fernbillboards.
+## 6. Golden Vegetation References
 
-## 5. Feature Matrix
+Vor dem Entfernen der Runtime wurden [production-goldens.json](../../tests/Vegetation/fixtures/production-goldens.json) und [render-goldens.json](../../tests/Vegetation/fixtures/render-goldens.json) gesichert: zusammen **332.826 Bytes**, ohne vollständige Mesh- oder Texturkopien.
 
-| Feature | Bestand |
-|---|---:|
-| Branch-Geometrie | 118 Typen |
-| Frond-Geometrie | 94 Typen |
-| Leaf-Geometrie | 92 Typen |
-| ein Fernbillboard | 118 Typen |
-| Branch-LOD-Anzahlen | 115 × 6; 3 × 2 |
-| Frond-LOD-Anzahlen | 102 × 4; 16 × 6 |
-| Leaf-LOD-Anzahlen | 108 × 4; 7 × 3; 3 × 2 |
-| SDK-Collision-Objekte | 242 |
-| fehlende benötigte Texturen | 0 |
+Neun Typen: Baobab, Beech, Monterey Cypress, Pagoda, Sassafras, B3 Beech RT3, B3 Pagoda Winter, Cinnamon Fern und Coconut Palm. Enthalten sind unabhängige SDK-Zählwerte, ausgewählte Positionen/UV/Farben, Bounds, Material-/Texturbezüge, reale Maptransforms und SDK-Windstichproben. Zusätzlich sind akzeptierte neutrale Metadaten samt LOD-/Alpha-Stichproben gesichert. Ihre Herkunft ist im Fixture ausdrücklich getrennt. 54 Referenzbilder aus A2 werden als kleine 16×16-RGB-Kachelsignaturen und Originalbild-Hashes bewahrt.
 
-Leere Geometrie in einer vorhandenen SDK-LOD bleibt als nicht zeichnender Zustand erhalten. Deklarierte LOD-Anzahl und vorhandene Dreiecke werden getrennt erfasst.
+## 7. Final Dependency Audit
 
-## 6. Converter Architecture
+[Auditwerkzeug](../../tests/Vegetation/audit_removal.py): **1.480 vorhandene produktive Textdateien**, **39 transitive produktive Build-/Link-Projekte**, vier Binärdateien. Produktionsfunde: **0**. CMake-Regenerierungsaufgaben werden separat als Build-Utilities aufgeführt, weil sie keine Bibliotheken in den Client linken.
 
-Optionales Flag ZIINAN_BUILD_LEGACY_SPT_CONVERTER=ON, standardmäßig OFF. Das Windows-Tool benötigt M2_BUILD_ASSET_TOOL=ON und verwendet die vorhandene AssetToolCore-Scene und deren GLB-Writer. Kein neuer allgemeiner Importer, Mesh-Writer, Texturdecoder oder Renderer.
-
-Targets: ZiiNANSPTProbe, LegacySPTExtraction, ZiiNANVegetationTool, VegetationPackAudit und der ausschließlich diagnostische VegetationRenderParity. Keines davon wird vom VegetationRuntime-Target gelinkt.
-
-## 7. Neutral Vegetation Source
-
-VegetationSource besitzt AssetTool::Scene, neutrale Metadaten, Legacy-Key und Diagnosezähler. Der öffentliche Header enthält keine SDK-Typen. SDK-Zeiger werden innerhalb des Offline-Extractors gelesen und sofort in eigene Daten kopiert.
-
-## 8. Geometry Extraction
-
-Branch-/Frond-Strips werden mit wechselnder Winding-Reihenfolge in Dreiecke umgesetzt. Wiederholte Indizes eines degenerierten Strip-Dreiecks erzeugen kein Dreieck. Leaves erhalten vier Vertices/sechs Indizes je Karte; jede wirkliche LOD wird getrennt extrahiert.
-
-Die SDK-LeafMap-Koordinaten enthalten ihre LOD-Größe bereits. Eine zunächst doppelte Skalierung wurde behoben und durch unabhängige Positions-/Bildprüfungen abgesichert. Statische Farben müssen vollständig kopiert werden, bevor eine zweite SDK-Abfrage dynamische Normalen anfordert: das geschlossene SDK teilt intern Beleuchtungszustand und Speicher.
-
-## 9. GLB Geometry
-
-Gewöhnliche Meshes/Materials über den vorhandenen GlTFProvider. Export: Z-up/Zentimeter → Y-up/Meter mit (x,z,-y) × 0,01. Der vorhandene Provider wandelt einmalig zurück mit (x,-z,y) × 100. Ausgewählte Positionen werden gegen Originalwerte geprüft.
-
-Optionale gemeinsame Vertexkanäle: COLOR_0, TEXCOORD_1, _ZIINAN_PIVOT, _ZIINAN_FLEXIBILITY, _ZIINAN_CARD_PITCH_COS und _ZIINAN_CARD_PITCH_SIN. Die letzten beiden beschreiben die Kameraantwort im kanonischen Blattkoordinatensystem; keine SDK-Speicherabbilder.
-
-## 10. ZVEG Metadata
-
-Versioniertes JSON: GLB-Pfad, Shadow-Textur, Referenz-/Renderbounds, LOD-Distanzen, Parts, Alpha-Zustände, Windprofil und Collision-Daten. Grenzen: 2 MiB, 16 Verschachtelungsebenen, 256 Parts, 2–2049 LOD-Samples, 256 Collision-Objekte und endliche begrenzte Zahlen. Ungültige Pfade, doppelte Schlüssel, falsche Slot-Typen, inkonsistente Meshindices und Bounds werden abgewiesen. Parsing veröffentlicht erst ein vollständig gültiges Ergebnis.
-
-## 11. Registry Generation
-
-vegetation/registry.json enthält 118 normalisierte Legacy-Keys und ZVEG-Ziele. Die ursprüngliche Verzeichnisstruktur unter vegetation/ymir work/... verhindert Kollisionen gleicher Basenames. Fehlerhafte Batches liefern Exitcode 1 und veröffentlichen keine neue Registry.
-
-Ausgaben erst nach erfolgreichem Batch und Strukturprüfung übernehmen. Der Converter ist kein Hot-Reload-/Transaktionssystem: ein erneuter fehlgeschlagener Batch kann vorhandene Ausgabedateien bereits teilweise ersetzt haben. Deshalb während einer Konvertierung keine laufende Deploymentkopie als Ausgabe verwenden. Die hier bereitgestellte Testkopie entstand erst nach vollständig erfolgreichem Batch und wurde per Hash geprüft.
-
-## 12. Resolver
-
-Alte .spt-Referenz → Registry → ZVEG → GLB → vorhandener GlTFProvider. Der neue Runtime-Pfad öffnet/parst keine SPT-Datei. Slashes und Groß-/Kleinschreibung werden normalisiert. Kompilierte Pfade sind auf vegetation/ begrenzt. Erfolge und Ladefehler werden gecacht; unbekannte Keys lösen keine Datei-I/O aus.
-
-## 13. VegetationAsset
-
-Ein immutable Asset hält Metadaten und AssetRuntime::AssetHandle. Der Renderadapter hält gemeinsame Geometrie-/Texturhandles. Der Loader verlangt ein starres renderbares Modell, korrekte Parts und alle Zusatzkanäle; Renderbounds müssen die tatsächliche GLB-Geometrie umfassen.
-
-## 14. Vegetation Runtime
-
-src/Vegetation enthält Registry, Parser, Assetcache, Instance, LOD-/Bounds-/Windlogik und Adapter zum vorhandenen IStaticObjectRenderer. Öffentliche Header enthalten keine SDK-, Windows-, D3D11-, Loader- oder Assimp-Typen. WorldTree verbindet diese Schicht mit bestehenden Fabriken. Vegetation.Boundary und GCC prüfen die Trennung.
-
-## 15. Asset Sharing
-
-Instanz: Transform, LOD-Zustand, deterministische Phase und geteiltes Assethandle. Geometrie wird pro Asset/LOD hochgeladen. CResourceManager/CGraphicImage und dessen Uploadcache liefern die Texturen.
-
-Der neutrale Test erstellt 1.000 Instanzen mit genau einem Meshupload, einem Texturlookup und zwei initialen Datei-Reads. Zeichnen verursacht keine weiteren Reads. Keine Mesh- oder GPU-Texturkopie pro Baum.
-
-## 16. GPU Instancing Decision
-
-Gemeinsame immutable Geometrie und kleine Instanzzustände sind vorhanden; gebündelte Instancing-Draws noch nicht. Parität von Strips, Karten, Alpha, Verdeckung und LOD hatte Vorrang vor einem zusätzlichen Batching-Umbau. Die Asset-/Instanzgrenze erlaubt späteres Batching. Maximal fünf aktive Parts je Instanz.
-
-## 17. Frustum Culling
-
-CWorldTreeInstance registriert konservative Bounding Spheres im bestehenden World-Culling. Nur isShow()-Instanzen werden eingereicht. Der portable Kern hat zusätzlich einen getesteten AABB-/Plane-Test. Konservative Bounds können zusätzliche Offscreen-Submissions zulassen, sollen sichtbare Karten aber nicht vorzeitig abschneiden.
-
-## 18. Distance Culling
-
-Die bisherigen höhenbezogenen Faktoren 2 und 9 bilden Near/Far. ZVEG enthält eine explizite Culldistanz, standardmäßig das Doppelte von Far. Diese Grenze lässt sich pro kompiliertem Asset anpassen; keine einheitliche globale Abschneidedistanz für alle Baumgrößen. Eine neue Benutzeroberfläche für Qualitätsparameter wurde nicht eingeführt.
-
-## 19. LOD
-
-257 offline erfasste Zustände über SDK-Level 0–1 enthalten Branch, Frond, bis zu zwei Leaf-LODs und Billboard mit eigenen Alpha-Grenzen. Jede Instanz wählt ihren Zustand aus der Kameradistanz. Kein gemeinsamer globaler Asset-LOD-Zustand.
-
-## 20. LOD Transitions
-
-SDK-Zustände, Leaf-Überlappungen und Alpha-Grenzen bleiben erhalten. Interpolation nur zwischen Samples derselben Meshkombination. Diskrete Schwellen haben 1/256-Auflösung des LOD-Bereichs. Kein neuer Dither-/Remaster-Crossfade. Sichtbare Pops sind Bestandteil von A2.
-
-## 21. Branches
-
-Originalgeometrie, Strip-Winding, UV0/UV1, Farben, Normalen, Alpha-Test und Clockwise-Culling. Gebackene Vertexfarben und vorhandene Self-Shadow-Textur werden im normalen Meshrenderer verwendet. Branch-Windamplitude bleibt gemäß tatsächlicher No-Wind-Baseline null.
-
-## 22. Fronds
-
-Composite-Atlas, Alpha-Test, beidseitige Darstellung und vorhandene Self-Shadow-UV1. Keine Behandlung als opake Branches. Farn und Kokospalme erweitern den Bildvergleich um ausgeprägte Frondformen.
-
-## 23. Leaves
-
-Pivot, Kartenform, UV, Farbe und echte LOD-Größe bleiben erhalten. Die SDK-Kameraantwort variiert je Blattgruppe: zwei kleine immutable Vektoren pro Vertex beschreiben ihre Cosinus-/Sinus-Reaktion. Alle Leaf-LODs werden bei vier zusätzlichen positiven/negativen Kameraneigungen überprüft.
-
-Vor erzwungenen LOD-Abfragen muss die SDK-Kameratabelle regulär aktualisiert werden; andernfalls liefert sie bei höheren LODs veraltete Werte. Dieser während der Umsetzung gefundene Fehler wurde korrigiert.
-
-## 24. Billboard
-
-Alle 118 Typen verwenden ein Fernbillboard. Der Extractor prüft 16 Azimutrichtungen und drei Elevationen auf zweite/horizontale Billboards und wechselnde Atlas-UVs. Nicht erfasste Varianten würden ausdrücklich abgewiesen. Das exportierte Billboard bleibt aufrecht und folgt dem Kameraazimut. Kein neues Impostor-System.
-
-## 25. Textures
-
-**Fehlende benötigte Texturen: 0.** DDS-Bezüge entsprechen der bisherigen Kombination von SPT-Verzeichnis und SDK-Dateiname. GLB erlaubt kontrollierte d:/ymir work/...dds-Packpfade; der Provider führt selbst keine externe Datei-I/O aus. Keine Original-SPTs oder DDS-Dumps in Testfixtures kopiert.
-
-## 26. Materials
-
-Branch/Frond/Leaf/Billboard mit Alpha-Mask und bisherigen Cull-Unterschieden; wechselnde Alpha-Schwellen stammen aus ZVEG. Kameraverdeckung multipliziert bestehende Texturalpha mit Maskenalpha. Leaves behalten die konstante zweite UV und den alten Clip-Z-basierten Nebel; übrige Parts nutzen regulären World-Nebel. GPU-Vergleiche decken diese Varianten ab.
-
-## 27. Wind Audit
-
-WRAPPER_USE_NO_WIND ist aktiv: Branch-/Frond-CPU-/GPU-Winddeformation ist aus. Leaf-Rocking bleibt aktiviert; alle 118 SDK-Tabellen ändern sich zwischen t=0 und t=1,25. EnvironmentData::fWindStrength wird weitergereicht. Die bisherige Integration liefert keine eigene deterministische platzierungsabhängige Instanzphase.
-
-## 28. Wind Profile
-
-Neutraler Typ mit Richtung, Stärke, Branch-/Frond-/Leaf-Amplitude und Frequenz. Konvertierte Baseline: Branch/Frond=0, Leaf=0,018 rad, Frequenz=1,3. Die neue kleine Bewegung ist eine eigene deterministische Grundfunktion. Eine exakte zeitliche Reproduktion der geschlossenen SDK-Windfunktion wird nicht behauptet. Die Bildparität verwendet abgeschaltete eigene Bewegung.
-
-## 29. Instance Wind
-
-FNV-basierte Phase aus Position und optionaler stabiler ID, keine Zufallswerte pro Frame. Zeit und Umgebungsstärke steuern die Blattbewegung. Tests prüfen verschiedene Phasen, geänderte GPU-Pixel bei t=1,25 und identische Pixel bei wiederholtem t=0. Keine Windvolumes oder Wettersimulation.
-
-## 30. Bounds
-
-Original-SDK-Bounds bleiben als Vergleichsdaten erhalten. Separate Renderbounds umfassen alle LOD-Geometrien, Kameradrehung, Blatt-Pitch-Reaktion und kleinen Windspielraum. Instanzbounds transformieren alle acht Ecken.
-
-Sechs SPTs liefern je 72 ungültige Zusatznormalen über LOD-Kopien: b2_japanesemaple_rt_fall, b2_japanesemaple_rt_fall2, n1_tulip_rt_winter_01 und zone/b/tree/c/riverbirch_rt_01/02/03. Die allgemeine Reparatur nutzt inzidente Flächennormalen. Hier existiert keine nichtdegenerierte inzidente Fläche oberhalb der numerischen Toleranz; diese Vertices erhalten endliche kanonische Normalen. Sichtbare Geometrie/Farben bleiben erhalten; keine Asset-Sonderfälle.
-
-## 31. Map Transform
-
-Position einschließlich HeightBias bleibt unverändert. Der echte bisherige Tree-Zweig reicht keine Map-Rotation/Scale weiter, sondern setzt nur x/y/z. H-X bewahrt dieses Verhalten und aktiviert keine bislang ignorierten Mapwinkel. Die neutrale Instanzmatrix und Bounds unterstützen Rotation/Skalierung und sind separat getestet. Unbearbeitete ausgewählte Mapzeilen stehen in den Goldens.
-
-## 32. Reference Trees
-
-Buche, Pagode, Monterey-Zypresse, Baobab, Sassafras, Zimtfarn und Kokospalme. Damit sind geforderte Typen, häufige produktive Vegetation, Fronds und Leaf-/Billboarddarstellung abgedeckt. Die drei Weihnachtsbaumvarianten sind vollständig konvertiert und strukturell geprüft.
-
-## 33. Structural Parity
-
-**118/118 PASS.** Unabhängiger SDK-Probeprozess und separater Python-GLB-Leser vergleichen Mesh-/Vertex-/Indexzahlen, Strip-Dreiecke, alle LODs, Bounds, Textur-/Materialbezüge, ausgewählte Positionen/UVs/Farben, Leaf-Größen und Billboardaktivierung. Der Prüfer nutzt weder SDK noch Runtime-Provider.
-
-Lokale Ergebnisse: build/hx/structural-parity.json und .csv. [phase-hx-reference-goldens.json](phase-hx-reference-goldens.json) enthält kleine Stichproben für sieben Typen, Mapzeilen und deterministische Winddaten; keine vollständigen Meshes oder Texturen.
-
-## 34. Automated Visual Parity
-
-105 Paarvergleiche: sieben Typen × drei Ansichten × nah/mittel/fern/mittel/nah im selben versteckten D3D11-Framebuffer. Zusätzlich Nebel, Kamera-Alpha, Wind, Resize und Nullgrößen-Restore. Vorab festgelegte Grenzen: IoU >0,90; mittlerer RGB-Fehler <8/255; deutlich veränderte Pixel <10 %. Keine nachträgliche Lockerung.
-
-Release: **Minimum-IoU 0,999933; maximaler mittlerer RGB-Fehler 0,006590/255; maximal veränderte Pixel 0,025771 %.** Debug liefert dieselben 105 Messwerte innerhalb der angegebenen Grenzen. TSV und 20 bewusst behaltene 384×384-Nah-/Fern-Referenzbilder der fünf geforderten Baumtypen: build/hx/visual-Release. Redundante Debug- und Zwischenstands-Bilder wurden entfernt; die Debug-TSV bleibt erhalten. Automatische Vorbereitung, keine manuelle Ingame-Abnahme.
-
-## 35. Corpus Conversion
-
-**total=118; converted=118; failed=0.** Ausgabe build/hx/compiled/vegetation: 118 GLBs + 118 ZVEGs + Registry, rund 66,3 MiB. Jeder Export wurde zusätzlich durch den echten Runtime-Loader validiert. Originalquellen/Packs unverändert.
-
-## 36. Production Coverage
-
-**production referenced=85; production referenced unsupported=0.** 82 feste Map-/Property-/Actor-Typen plus drei Event-Typen. Alle 12.819 Platzierungen lösen auf unterstützte Quellen auf. Die zunächst genannten 82 Typen waren der Kartenbestand; der finale Wert schließt hardcodierte Eventreferenzen ein.
-
-## 37. Failure Tests
-
-| Fehlerfall | Nachweis |
+| Kategorie | Einordnung |
 |---|---|
-| fehlende/beschädigte SPT | Offline-Exit 1, kein Prozessabsturz, keine neue Registry |
-| unbekannter Legacy-Key | Fehler ohne Datei-I/O |
-| fehlende ZVEG/GLB | klarer gecachter Ladefehler |
-| beschädigte GLB/ungültige ZVEG | abgewiesen |
-| fehlende Textur | Prepare-Fehler und vollständige Geometriefreigabe |
-| falsche LOD-/Part-/Billboard-Zuordnung | abgewiesen |
-| falsche Bounds/Traversal/doppelte Schlüssel | abgewiesen |
-| unbekannte Billboard-/Kameravarianten | ausdrücklicher Extractorfehler |
+| A – Production | 0 Includes, Typen, Aufrufe, SDK-Artefakte und Link-Anbindungen |
+| B – Offline Converter | Nur ausdrücklich aktivierte `tools/Vegetation`-Targets mit externem SDK |
+| C – Tests/Reference | Negative Audits und historische M6-/A2-Testbeschreibungen |
+| D – Docs/Comments | Historische Berichte und Dokumentation der Entfernung |
+| E – Dead Code | Alter Runtime-Code entfernt; keine produktive zweite Baumruntime |
 
-Kein neuer Runtime-Fehler ruft SpeedTree auf. Closed-SDK-Ausnahmen enden ausschließlich im separaten Offline-Prozess mit Fehlerexit. Keine Fuzzkampagne.
+Alle verbleibenden Texttreffer stehen mit Datei und Zeile im JSON-Audit. Historische Test-/Dokumentationsnamen sind keine Produktionsabhängigkeiten.
 
-## 38. Release Build
+## 8. Old Runtime Removal
 
-**Vollständiger Release-Build und Abschlussbuild PASS. 43/43 Fast-Gate-Tests PASS, 58,99 s.** Bisheriger 39er-Gate plus vier H-X-Tests. VS2022/x64, CMake build-f34-clean, vorhandene Abhängigkeitsquellen wiederverwendet. Logs: build/hx/release-build.log, release-finalize.log, release-tests.log. Bestehende PDB-/Vendor-Linkwarnungen bleiben; nicht warnungsfrei.
+`src/SpeedTreeLib` samt Wrapper, Forest, Material-/Wind-/LOD-Verwaltung, alter Grass-Integration und Bridge entfernt. `DiligentTreeRenderer` sowie `TreeRenderData` entfernt. Keine alte Render-Submission, kein SDK-Billboard- oder Windzustand bleibt im Client.
 
-## 39. Debug Build
+## 9. Include Removal
 
-**Vollständiger Debug-Build PASS. 43/43 Fast-Gate-Tests PASS, 109,93 s.** Logs: build/hx/debug-build.log und debug-tests.log. Beide Client-EXEs sind AMD64 (0x8664). Debug-SHA256: f1de81a7c952be4a7f195ead47a16d6944a567bc8f995b58cff3f6948706d45a.
+SDK-Includes aus World, Actor, Area, Map und Client-PCH entfernt. `extern/include/SpeedTreeRT.h` ist nicht mehr im Quellprojekt. Die übrigen gemeinsamen Header in `extern/include` bleiben für unabhängige Bibliotheken verfügbar.
 
-## 40. GCC/LP64
+## 10. Type Removal
 
-**21/21 PASS, 25,57 s** im bestehenden Cygwin/GCC-Common-Pfad, einschließlich Vegetation.Contracts/Boundary. SDK-Converter Windows-only. Kein Android-/Vulkan-Gerätenachweis. Logs: build/hx/gcc-build.log und gcc-tests.log.
+Produktive `CSpeedTree*`-/SDK-Typen: **0**. World verwendet den neutralen `CWorldTreeInstance`-Vertrag; AssetRuntime und Vegetation enthalten ausschließlich eigene Strukturen. Das gemeinsame Frame-Flag heißt `vegetationWorldFrame` und benötigt keinen alten Tree-Renderer-Vertrag.
 
-## 41. Unit Tests
+## 11. Runtime Call Removal
 
-Registry, atomarer Parser, Bounds, Transformationen, Plane-Culling, LOD/Alpha, Phasen, 1.000 geteilte Instanzen, fehlende Dateien/Texturen, beschädigte Daten, Cached-Failure-Semantik und Freigabe. StartupOptions prüft Reference-Standard, explizites ZiiNAN, Konflikte und ungültige Werte.
+Alte LoadTree-, Compute-, GetGeometry-, SDK-LOD-, Wind-, Licht- und Fog-Aufrufe sowie Singleton-Zugriffe entfernt. Der automatisierte `Vegetation.NoLegacyDependency`-Test kontrolliert den produktiven Source- und CMake-Baum.
 
-## 42. GR2 Regression
+## 12. Linker Cleanup
 
-Native statische/Animations-Goldens, Reader-Safety/Compatibility/Warmup, Produktions-Consumer, GR2Render, AnimationRuntime und HairLodQuick sind im begrenzten Gate. NoGrannyDependency besteht. GPU-Skinning bleibt Standard; World-Smoke weist CPU-Deformation=0 und GPUFallbacks=0 nach.
+`SpeedTreeLib`, `SpeedTree`, `speedtree_static.lib` und `speedtree_staticd.lib` sind aus dem Client-Linkpfad entfernt. Der transitive Projekt-Audit prüft auch Includes, Defines, Linkoptionen und zusätzliche Abhängigkeiten in den generierten Projekten. Keine alten Build-Artefaktpfade oder Offline-Importer im Client-Linkpfad.
 
-## 43. GLB Regression
+## 13. CMake Cleanup
 
-GlTFProvider, eingebettete Materialien, Blend-/Static-Render, breite Indizes und bestehende FBX/OBJ/DAE-Offline-Roundtrips im Gate. Normale Assets ohne Zusatzkanäle behalten ihren Renderpfad. AssetTool.RuntimeIsolation prüft die Trennung der Offline-Abhängigkeiten.
+Produktive `add_subdirectory`- und Renderer-Source-Einträge entfernt. `ZIINAN_BUILD_LEGACY_SPT_CONVERTER` bleibt standardmäßig **OFF**. Der Client kann ohne SDK konfigurieren und bauen. Golden-, Registry- und GPU-Tests hängen nicht mehr vom Converter ab; der Pack-Audit ist ebenfalls SDK-frei.
 
-## 44. World Smoke
+## 14. Legacy Converter Separation
 
-**Endgültiger Lauf PASS: A1 → B1 → Trent → A1, 83 s, Exitcode 0.** 706 erzeugte Vegetationsinstanzen, 192 LOD-Zustandswechsel, 171.037 Part-Draws: Branch 43.007, Frond 38.705, Leaf 64.845, Billboard 24.480.
+`LegacySPTSDK` ist nur im optionalen Tool-Verzeichnis definiert. Der Entwickler muss `ZIINAN_LEGACY_SPT_SDK_ROOT` ausdrücklich auf ein externes SDK setzen. Die drei früher produktiv erreichbaren Header-/Library-Dateien wurden mit Hashkontrolle außerhalb des Checkouts gesichert; kein lokaler SDK-Pfad wird in Source-Dateien festgeschrieben.
 
-Original-Pack-Harness prüft zusätzlich Gebäude, Props, Camera Blocker, Player/NPC/Mobs/Boss/Mount und GPU-Animation. Belege: build/f2x/runtime/hx-native-final und build/hx/world-native-final.log. Separater Standard-Reference-Kontrolllauf A1 → B1 → A1: **PASS, 63 s, Exitcode 0**, unveränderte Standardauswahl, saubere Ressourcen und 11.431 erfasste Referenzeinstiege. Beleg: build/hx/world-reference-final.log. Die syserr-Dateien beider finalen Läufe sind leer; Renderer-Failure-Logs enthalten keine Fehler.
+Separater Nachweis in `build-hx-converter`: Windows, `M2_BUILD_WINDOWS_CLIENT=OFF`, `M2_BUILD_RENDERER_TESTS=OFF`, `M2_BUILD_ASSET_TOOL=ON`, Converter ON. Keine Client-/Diligent-Abhängigkeit nötig. Beide Tool-Targets erfolgreich gebaut; ein Baobab erzeugt byteidentische GLB-/ZVEG-Dateien. Fehlende/beschädigte Eingaben werden sauber mit Code 1 verworfen.
 
-## 45. Multi-Map Automation
+## 15. Clean Configure
 
-Isolierte eigene Test-Root-Pack, unveränderte Originalpacks per Hardlink, separate kompilierte Vegetationsdaten. Karten laden/entladen und A1-Rückkehr bestanden. Auf A1 zusätzlich ausgeführte Event-Grade-Aufrufe werden korrekt durch die bestehende Snow-Map-Bedingung verworfen; sie sind ausdrücklich **kein** Nachweis gerenderter Weihnachtsbäume. Diese drei Typen sind über Corpus-/Strukturprüfung abgedeckt.
+`build-hx-clean` existierte vor diesem Lauf nicht. Visual Studio 2022, x64, Windows D3D11, Converter OFF. SDK-Header und -Libraries wurden vor Configure aus den produktiven Suchpfaden entfernt. Kein alter Cache, OBJ oder Build-LIB übernommen. Bereits vorhandene, gepinnte Quellarchive von Diligent/Assimp/meshoptimizer wurden wiederverwendet; ihre Buildprodukte wurden neu erstellt. Unabhängige bereits mitgelieferte Fremdbibliotheken bleiben Teil des bestehenden Client-Builds.
 
-## 46. LOD Distance Automation
+## 16. Clean Release
 
-Je Karte fünf tatsächliche Kamerastufen: 1000 → 3500 → 6500 → 3500 → 1000. Zusätzlich 105 gezielte SDK-/ZVEG-LOD-Paare. Reference im normalen Client behält den Near-Override; Fernparität wird deshalb im Offline-Referenzharness nachgewiesen.
+Frischer vollständiger Release-Build: **Exitcode 0**. EXE: `build-hx-clean/bin/Release/Metin2_Release.exe`.
 
-## 47. Performance Sanity
+SHA256: `942058d512ddf1db3f3d0643a7e67f57c50e8d70ef294b8335fa41c4a5c0a307`.
 
-Keine Mesh-/Texturkopie je Instanz und kein Parsing/Dateizugriff pro Frame. Im kontrollierten Vergleich **1–3 neue Draws** gegenüber bis zu **45 Referenz-Draws**. Jede Probe verlangt neue Drawzahl ≤ Referenzzahl. Kein FPS-/GPU-Zeit-Benchmark; Release-Gate und Debug-Build liefen teilweise gleichzeitig.
+## 17. Clean Debug
 
-## 48. Resource Lifetime
+Frischer vollständiger Debug-Build: **Exitcode 0**. EXE: `build-hx-clean/bin/Debug/Metin2_Debug.exe`.
 
-Endgültiger World-Exit 0: VegetationAssets/Instances/RenderAssets/Geometry=0; InstanceBuffers=0; SourceTextures/SourceBuffers=0; AssetDocuments/AnimationInstances/MeshBindings=0; CollisionResources=0; GR2ReaderResources=0; RuntimeSkeletons/AnimationClips=0. VegetationFailures=0, registrierte Reference-Einstiege=0, CPU-Deformation=0, GPUFallbacks=0. GPU-Referenztest prüft zusätzlich die Geometrie-/Texturzähler beider Renderer auf null.
+SHA256: `c9f3064fce37ecca8e1242fd04be14d10dc77c482eed8d25082d89968f8149b3`.
 
-InstanceBuffers=0 bezeichnet hier ausdrücklich das Fehlen eines separaten Instancing-Buffers, nicht einen bereits implementierten Instancing-Pfad.
+Keine Warnungsfreiheit behauptet: vorhandene C4005/C4313/C4477/C4834/D9025 sowie LNK4099; Debug zusätzlich LNK4075/LNK4098. Details stehen in den beiden Buildlogs. Keine neuen Vegetations-Compile-/Linkfehler.
 
-## 49. Gate A1 Decision
+## 18. Binary Audit
 
-**GO.** Corpus-/Produktionsabdeckung, Offline-Konvertierung, portable Runtime, Struktur- und GPU-Parität, Wind, Fehlersemantik, vollständige Release-/Debug-Builds, beide 43er-Gates, GCC/LP64, finaler World-Smoke und Ressourcenfreigabe sind bestanden. Die isolierte Testkopie ist fertig und mit dem finalen Release-Build identisch. Manuelle Ingame-Sichtprüfung bleibt ausschließlich Gate A2; Gate B bleibt unangetastet.
+Release-/Debug-Client und die beiden frisch gebauten Diligent-D3D11-DLLs: **AMD64**, keine SpeedTree-/Granny-SDK-Marker oder -Imports, keine D3D8/D3D9/D3DX-Imports. Static-Link-Freiheit wird gemeinsam durch Source-Audit, entfernte SDK-Artefakte und transitive Link-Projekte belegt; eine PE-Importliste allein würde dazu nicht genügen. Bestehende DirectDraw-/Input-/Video-Abhängigkeiten wurden nicht verändert.
 
-## 50. Gate A2 Status
+## 19. Header Leak Test
 
-**GO.** Nach dem dokumentierten Blatt-Nebel-Fix bestätigt der Benutzer die erneute Sichtprüfung am 15.09.2026 mit „passt“. Die Abnahme bezieht sich auf den A2-Visual-Parity-Fix; nicht einzeln gemeldete Bedienungsprüfungen werden nicht nachträglich als separat bestanden ausgegeben. Gate B bleibt NOT STARTED.
+Vegetation Boundary, AssetRuntime PublicHeaders und Platform PortableHeaders sind in Release, Debug und GCC grün. Zusätzlich erfasst der vollständige Source-Audit alle produktiven Header, auch Renderer/Core. Keine SDK-Typen oder Includes; die gemeinsame Runtime bleibt ohne Windows-SDK-Glue baubar.
 
-## 51. Historische A1-Testkopie und vorbereitete Prüfliste
+## 20. Golden Tests
 
-Fertige Kopie: build/hx/test-client. **start-ziinan.cmd** wählt den neuen Pfad ausdrücklich; **start-reference.cmd** die Referenz. Kein Build nötig. LIESMICH.txt liegt daneben.
+SDK-freie CPU-Goldens für neun Typen bestanden in allen drei Builds. Geprüft: Branch-/Frond-/Leaf-Zählwerte, LODs, ausgewählte Positionen/UV/Farben, Bounds, Texturen/Materialzustände, Metadaten, reale Platzierungen, Wind, Asset-Sharing und vollständige Freigabe.
 
-1. Login → Character Select → Ingame.
-2. A1/B1/Wald: Bäume vorhanden; Position, Größe, Ausrichtung; Branches/Fronds/Leaves; Texturen/Blattalpha; keine schwarzen/weißen Quads.
-3. Kamera nah → mittel → fern → mittel → nah: LOD, Billboard, Wind, Pops, fehlende Typen, Nebel und Kameraverdeckung.
-4. Resize → Minimize/Restore → X.
+GPU-Goldens pro Windows-Konfiguration: **225 Frames**, **81 Vergleiche gegen 54 unabhängige Bildsignaturen**, fünf Kamera-/Umgebungsfälle und near → mid → far → mid → near. Maximaler mittlerer RGB-Kachelfehler **0,0103892/255**, maximale einzelne Kachel-/Kanalabweichung **0,996522/255**. Grenzwerte: Mittel <0,25 und Maximum <3. Release und Debug liefern dieselben Vergleichswerte. Das ist eine kompakte Regression der gespeicherten Referenzansichten; es ersetzt keinen neuen SDK-Livevergleich.
 
-Zum damaligen A1-Abschluss war A2 offen. Die inzwischen bestätigte korrigierte Testkopie liegt unter build/hx/a2-test-client; siehe A2-Fixbericht. Historischer A1-Release-SHA256: e864f95c77c89992ede03d282e69c2105fff24f5bd27fbeb12579d977bbfb1c6. Testkopie und finales Binary stimmen überein; alle 237 kopierten Vegetationsdateien wurden gegen die Ausgabe gehasht. Originalpacks sind Hardlinks, die Konfiguration ist eine eigene Kopie. Die Starter wurden vorbereitet, der interaktive Loginclient wurde heute nicht gestartet.
+## 21. Registry/Resolver
 
-## 52. Gate B Dependency Removal Plan
+Valid Mapping, fehlender Key, normalisierte Groß-/Kleinschreibung und Slashes, doppelte Keys, Pfad-Traversal, malformed ZVEG, fehlendes/defektes GLB, atomare Registry-Fehler und gecachte Ladefehler geprüft. Der Golden-Reader akzeptiert ausschließlich `.zveg` und `.glb`; ein SPT-Leseversuch würde den Test abbrechen. Die instrumentierten echten Maps verwenden den normalen Pack-/Loose-File-Resolver und Original-Texturpakete.
 
-Erst nach positivem A2, separat:
+## 22. Map Transform
 
-- Standard auf native Vegetation umstellen; Reference-Auswahl entfernen.
-- CSpeedTreeForest/ForestRenderer/Wrapper, TreeRenderBridge, TreeVertexData und nicht mehr benötigte SDK-Sample-Hilfen aus src/SpeedTreeLib entfernen.
-- Referenzzweige, Forest-Member und Includes in WorldTree, Area, Actor, MapOutdoor, MapManager, MapOutdoorLoad/Update/RenderHTP und UserInterface-StdAfx bereinigen.
-- ITreeRenderer/DiligentTreeRenderer und Backend-/Bootstrap-Anbindung nach vollständigem Callsite-Audit entfernen; neutrales WorldTree-Interface erhalten.
-- src/SpeedTreeLib/CMakeLists.txt, src/CMakeLists.txt, src/UserInterface/CMakeLists.txt, extern/CMakeLists.txt und extern/library/SpeedTree/CMakeLists.txt trennen.
-- Produktionslinks auf speedtree_static.lib/speedtree_staticd.lib, SDK-Header und spezifische Wrapper-Defines entfernen.
-- Bestehenden SpeedTreeAssetProbe und H-X-Referenzrenderer ausschließlich optional offline behalten oder nach Sicherung der Goldens aus der normalen Testmenge nehmen.
-- USE_LOD nicht pauschal löschen: es betrifft weitere bestehende Pfade.
+Reale gespeicherte Platzierungen werden gegen die neutralen Bounds und Instanztransforms geprüft. Bestehende Tree-Semantik bleibt Translation einschließlich HeightBias; separate Euler-Angaben aus AreaData wurden schon vom alten Tree-Erzeugungspfad nicht angewendet. Größe bleibt im konvertierten Asset, Instanzscale ist unverändert 1. Allgemeine Rotation-/Scale-Bounds sind zusätzlich im Runtime-Vertrag getestet. Es wurde keine neue Interpretation alter Mapwinkel eingeführt. Manuelle Position-/Größen-/Ausrichtungsprüfung: bestätigt.
 
-**Keine endgültige Removal-Aktion wurde heute ausgeführt.**
+## 23. LOD
 
-## 53. Clean Build Plan
+Near → medium → far → medium → near besteht in CPU- und GPU-Tests. Die zurückkehrenden Bilder sind deterministisch identisch; alle Zustände besitzen gültige Geometrie. ZVEG liefert diskrete Meshzuordnung und Alpha-Werte. World-Smoke: **192 beobachtete LOD-Wechsel**. Der bereits in Gate A akzeptierte native LOD-Pfad bleibt aktiv.
 
-Nach Gate B frisches build-hx-clean konfigurieren, ohne erreichbare Produktions-SDK-Header/-Bibliotheken, Converter OFF. Release/Debug neu bauen, begrenzten Gate und World-Smoke wiederholen. Source, öffentliche Header, Targetgraph, erzeugte Linkprojekte und Binärimporte auditieren: Production SpeedTree Includes/Types/Calls/Links/SPT-Parsing jeweils null. Kein alter Cache als Ersatznachweis.
+## 24. Branch/Frond/Leaf
 
-## 54. Converter Retention Plan
+Im World-Smoke: **42.326 Branch-, 38.086 Frond-, 63.735 Leaf- und 24.414 Billboard-Draws**. Materialien, Texturreferenzen, Culling und Sichtbarkeit sind durch Golden-Tests und die finale Sichtprüfung abgedeckt. Höchstens fünf Teil-Draws pro getesteter Instanz; kein neuer Batch-/Meshkopierpfad.
 
-SPT bleibt Quellformat. Optionaler Windows-Converter mit separat verfügbar gemachtem SDK. Dessen Pfad wird in Gate B ausschließlich an das Offline-Target gebunden. Produktion muss auch ohne erreichbares SDK konfigurieren/bauen. Neutrale Goldens, Registry-/ZVEG-/Runtime-Tests bleiben dauerhaft nutzbar.
+## 25. Alpha
 
-## 55. Known Limitations
+A2-Logik erhalten. GLB-Materiale sind MASK, Basis-Cutoff 84/255; konkrete Draw-Cutoffs kommen aus den gespeicherten LOD-Werten. Alpha-Test `Greater`, DepthWrite an, normale Vegetation ohne Blend; Zweige cullen wie zuvor, Fronds/Blätter/Billboards doppelseitig. Kamera-Verdeckung verwendet weiterhin den vorhandenen Alpha-Masken-/Blendpfad. Produktionscache und direkter Texturdecoder stimmen in den GPU-Tests in Format, Maßen und sämtlichen Mip-Bytes überein. Keine weißen/schwarzen Quads in der bestätigten finalen Sichtprüfung.
 
-Kein Instancing-Batching, PBR, neue Assets, Gras oder Android/Vulkan. Kleine eigene Windfunktion statt exakter zeitlicher SDK-Reproduktion. LOD-Schwellen mit 1/256-Auflösung; der optionale neue Pfad aktiviert LOD/Billboard gegenüber dem bisherigen Near-Override. Mehrfach-/Horizontalbillboards und unrepräsentierbare Kamerareaktionen werden abgewiesen, kommen aber im Corpus nicht vor.
+## 26. Billboard
 
-**SDK bleibt im Gate-A-Clientbinary gelinkt**, damit Reference verfügbar bleibt. Die neue Runtime verwendet es nicht. Der Zähler erfasst geprüfte Integrations-Einstiege und ist zusammen mit Source-/Targetaudit zu lesen; er ist kein systemweiter Profiler geschlossener Bibliotheksinitialisierungen. Bestehende LNK4099/LNK4098, DumpProto-Formatwarnungen, MarkManager-nodiscard-Warnungen und Vendor-Makrowarnungen bleiben erhalten. Diese Dateien wurden durch H-X nicht geändert; ein warnungsfreier Build wird nicht behauptet.
+Gesicherte vier Vertices/sechs Indices, Textur-/Alpha-/Cull-Vertrag und Fernaktivierung geprüft. Far-Bildsignaturen, Wiedereintritt in mittlere/nahe LODs und manuelle Prüfung bestanden. Keine neue Impostor-Technik oder zusätzliche SDK-Abhängigkeit.
 
-## 56. Git Diff
+## 27. Wind
 
-Neue Runtime, WorldTree-Adapter, optionaler Converter, unabhängige Corpus-/Bild-/Fehlertests und Bericht. Vorhandene AssetRuntime-/GLB-/Meshrenderer-Strukturen erhielten optionale gemeinsame Vertexkanäle. Kein Ersatz/Zurücksetzen von GR2, Animation oder GPU-Skinning. Keine Originalassets geändert. 24 bestehende Dateien geändert, 26 neue Source-/Test-/Berichtsdateien. Git diff --check bestanden; Index leer. Kein Commit/Push; nichts gestaged. GLB/ZVEG, Logs, PDB, Captures und Testclient liegen in ignorierten Build-Verzeichnissen.
+Deterministische Instanzphase, neutrale Profilwerte und übergebene Amplituden/Frequenz geprüft. GPU: t=0 → t=1,25 → t=0 verändert das Blattbild und kehrt exakt zurück. Im akzeptierten Profil sind Branch-/Frond-Amplituden 0; dafür wird unveränderte Nullantwort geprüft. Blattbewegung bleibt aktiv. Keine nachträglich hinzugefügte Branch-/Frond-Windphysik.
 
-## 57. GO/NO-GO Status
+## 28. Asset Sharing
 
-H-X Gate A1: GO  
-H-X Gate A2: GO – Benutzerbestätigung „passt“ vom 15.09.2026  
-Gate B: NOT STARTED  
-Test client: READY
+Eine gecachte Asset-/RenderAsset-Struktur wird von vielen Instanzen genutzt. Der Vertragstest erzeugt 1.000 Instanzen mit einem Geometrieupload und einem Texturzugriff; nach dem Laden entstehen keine weiteren Dateizugriffe. Der World-Adapter teilt vorbereitete Ressourcen und Bildreferenzen. Shutdown-Prüfungen bestehen.
 
-## 58. Nächster Schritt
+## 29. GPU Instancing Status
 
-A2 ist bestätigt. Gate B bleibt ein separater, noch nicht gestarteter Arbeitsschritt und benötigt einen eigenen Auftrag. Referenzpfad und Captures bleiben verfügbar; kein automatischer Produktionswechsel.
+Kein GPU-Instancing aktiviert. Vorhandene Mesh-/Texturressourcen werden geteilt, die Draws bleiben pro Instanz. `VegetationInstanceBuffers=0` beschreibt das Fehlen solcher Buffer; es ist kein Nachweis für neu implementiertes Instancing. Keine Erweiterung in Gate B.
 
-### Reproduzierbare lokale Befehle
+## 30. Performance Sanity
 
-Aus m2dev-client-src; den vorhandenen Python-Interpreter der lokalen Umgebung verwenden.
+Keine Registry-/ZVEG-/GLB-Parser oder Dateileser im Framepfad. Instanzen aktualisieren Distanz-LOD und liefern Drawzustände; Mesh-/Texturvorbereitung findet beim Laden statt. 4.656 World-Frames in 83,2 Sekunden; 168.561 Teil-Draws über den gesamten Kartenlauf. Die Messung ist ein kurzer Funktions-/Ressourcencheck, kein FPS-Benchmark. Kein Fuzzer, keine Stresssuite, kein Test über zehn Minuten.
 
-~~~powershell
-cmake -S . -B build-f34-clean -DZIINAN_BUILD_LEGACY_SPT_CONVERTER=ON -DM2_BUILD_ASSET_TOOL=ON
-cmake --build build-f34-clean --config Release --parallel 6
-cmake --build build-f34-clean --config Debug --parallel 6
-build-f34-clean/tools/Vegetation/Release/ZiiNANVegetationTool.exe batch ../m2dev-client/assets build/hx/compiled
-python3 tools/Vegetation/audit_corpus.py --client ../m2dev-client --source . --probe build-f34-clean/tools/Vegetation/Release/ZiiNANSPTProbe.exe --output build/hx/audit --pack-audit build/hx/audit/packed.json
-python3 tools/Vegetation/verify_corpus.py --audit build/hx/audit/corpus.json --compiled build/hx/compiled --output build/hx/structural-parity.json
-ctest --test-dir build-f34-clean -C Release -R '^(Platform\.|AssetRuntime\.|AnimationRuntime\.|AssetTool\.|Vegetation\.|Renderer\.(StartupOptions|DiligentD3D11|HairLodQuick)$)' --output-on-failure
-ctest --test-dir build-f34-clean -C Debug -R '^(Platform\.|AssetRuntime\.|AnimationRuntime\.|AssetTool\.|Vegetation\.|Renderer\.(StartupOptions|DiligentD3D11|HairLodQuick)$)' --output-on-failure
-cmake --build build-c3x/cygwin-common --parallel 6
-ctest --test-dir build-c3x/cygwin-common --output-on-failure
-tests/AssetRuntime/run_gr2_smoke.ps1 -Name hx-native-repeat -BuildDirectory build-f34-clean -ProductionDefault -MultiMap -Vegetation ziinan -VegetationAssets build/hx/compiled -VegetationForest
-tools/Vegetation/prepare_test_client.ps1 -OutputDirectory build/hx/test-client-repeat
-~~~
+## 31. GR2 Regression
 
-Frischen Packaudit zuerst mit audit_corpus.py ohne --pack-audit vorbereiten, dann VegetationPackAudit.exe mit Clientverzeichnis, pack-order.txt und Ziel packed.json ausführen; danach Referenz-/Strukturprüfung. Der gesamte Gate enthält keinen Vendor-Fuzzer, keinen Stresslauf und keine vollständige Renderer-Gesamtsuite.
+Nativer GR2-Reader und ZiiNAN-Animation bleiben Default, GPU-Skinning bleibt Default. Golden-/Safety-/Compatibility-/Warmup-/Render- und HairLOD-Prüfungen bestanden. Player, Mob, NPC, Hair, Weapon und Mount im kurzen World-Smoke; **CPU-Deformation 0, GPU-Fallback 0, GrannyFileReads 0**. Bekannte frühere Raw-Corpus-Grenzen werden durch Gate B nicht als behoben behauptet.
+
+## 32. GLB Regression
+
+E1-X Provider-, Material-, statische/animierte Diligent-Render- und WideIndex-Tests grün. Vegetation nutzt denselben bestehenden GLB-Provider; dessen normalen Pfad hat Gate B nicht geändert.
+
+## 33. Offline Tool Regression
+
+E2-X AssetTool Unit, ImportRoundtrip, CLI, RuntimeIsolation, ConvertRenderFixture und DiligentRoundtrip in Release/Debug bestanden. Vorhandene FBX/OBJ/DAE-Konvertierungsfälle bleiben grün. Assimp/meshoptimizer sind weiterhin ausschließlich im Offline-Tool, nicht im Client-Linkpfad.
+
+## 34. Release Tests
+
+**46/46 PASS**: Haupt-Fast-Gate 44/44 in **47,61 s**, anschließend zwei gezielte Renderer-Removal-Prüfungen 2/2 in **10,58 s**. Logs: `build-hx-clean/tests-Release.log` und `tests-Release-renderer.log`. Keine Wiederholung langer Suiten.
+
+## 35. Debug Tests
+
+**46/46 PASS**, **108,40 s**. Gleicher Umfang einschließlich Renderer.ProductionGpu und Renderer.NoLegacyArchitecture. Log: `build-hx-clean/tests-Debug.log`. Der längste einzelne Test ist GR2Render mit 80,28 s.
+
+## 36. GCC/LP64
+
+Neuer `build-hx-common`, GCC 12/Cygwin x86_64, LP64, Windows-Client/Renderer und Converter OFF: Build erfolgreich; **23/23 PASS in 16,32 s**. Runtime, Registry, Goldens, Header-/Source-Grenzen sowie GR2/GLB/Animation abgedeckt. Ein vorhandener GCC-Optimiererhinweis im GLB-Code bleibt dokumentiert; keine Vegetationsfehler.
+
+## 37. Final Runtime Smoke
+
+`build/hx/final-test-client` enthält die fertige Release-EXE und **237 hashgeprüfte compiled-Dateien**. Der normale Starter verwendet **keine Argumente**. Login → Charakterauswahl → Ingame, A1 nach der Brücke, Blätter/Wedel/Alpha/Wind und nah → fern → nah wurden vom Benutzer bestätigt: **„Ja, alles passt; mit X geschlossen“**. Kein zweiter Client-Build oder Reference-Schalter für diese Abnahme.
+
+## 38. Multi-Map
+
+Gleiche Release-EXE: **A1 → B1 → Trent/Wald → A1**, 4.656 Frames, 706 erzeugte Vegetationsinstanzen, Originalmaps und Actor-Animationen. Nah-/Fern-Screenshots je Phase vorhanden. `build/f2x/runtime/hx-b-default-multimap`: **Exitcode 0**, **83,2 s**. Argument war nur `--renderer-diagnostics`; alle produktiven Reader-/Vegetationsmodi kamen aus dem Default.
+
+## 39. Resize/Minimize
+
+Einmal Größe ändern und minimieren/wiederherstellen im finalen sichtbaren Client vom Benutzer bestätigt. Zusätzlich bestehen die D3D11-Backend- und Vegetations-GPU-Tests mit 0×0-Suspend, Restore und Resize. Keine neue Fenster-/Rendererarchitektur.
+
+## 40. Shutdown
+
+Manueller X-Shutdown: **Exitcode 0 nach 52,6 s**, `VegetationAssets=0`, `VegetationInstances=0`, Geometrie=0 im normalen Vegetationslog; 65.690 vorherige Vegetations-Draws. Ohne Diagnoseargument wird das umfangreiche `source-resource-audit.log` absichtlich nicht erstellt.
+
+Vollständiger Ressourcenbeleg stammt deshalb aus dem instrumentierten Kartenlauf **derselben unveränderten EXE**: Assets/Instanzen/RenderAssets/Geometrie/InstanceBuffers=0; SourceTextures/SourceBuffers=0; MeshBindings/AssetDocuments/Animation-/GR2-/Collision-Ressourcen=0; VegetationFailures=0. Das wird getrennt von der manuellen Sichtbestätigung ausgewiesen.
+
+## 41. Source Zero Audit
+
+Produktive SpeedTree Includes/Typen/Aufrufe/SDK-Artefakte/CMake-Link-Anbindungen: jeweils **0**. `Vegetation.NoLegacyDependency` in Release, Debug und GCC bestanden. `AssetRuntime.NoGrannyDependency` ebenfalls grün. Historische neutrale `CGranny*`-Consumerbezeichnungen bleiben gemäß F34 erlaubt und sind keine Granny-SDK-Typen.
+
+## 42. Runtime Zero Audit
+
+Der Client enthält weder SDK-Loader noch SDK-Linkinput oder SDK-DLL-Import. `Runtime::Load` löst Legacy-Keys ausschließlich über validierte compiled-Pfade auf. Golden-I/O-Verträge verbieten SPT-Lesen, echte Maps laufen mit Default-ZiiNAN. Keine OS-Modulliste als Beleg behauptet: die Nachweise sind Source, Linkgraph, Binärprüfung und tatsächlich ausgeführte Pfade; der entfernte Reference-Zähler wurde nicht als künstliche konstante Null weitergeführt.
+
+## 43. Legacy Map Compatibility
+
+Alte `.spt`-Strings bleiben unveränderte Registry-Keys. Map-/Property-/Actor-/Eventdateien benötigen keine Massenmigration. Für den neuen Client müssen Registry und compiled ZVEG/GLB mitgeliefert werden; die fertig vorbereitete Test-/Releasekopie enthält sie bereits. Fehlende Deployment-Dateien führen zu den dokumentierten Fehlern, nicht zur alten Runtime.
+
+## 44. Production Coverage
+
+Erneut SDK-frei gegen gesicherte unabhängige Referenzdaten geprüft: **118/118**, Registryeinträge **118**, produktiv erreichbare Typen **85**, **production referenced unsupported = 0**. 12.819 Mapplatzierungen; 82 datenreferenzierte Typen plus drei Event-/Weihnachtsbaumtypen. Quelle: `build-hx-clean/hx-evidence/coverage.json` und bestehende Feature-Matrix. Die 118 compiled-Dateipaare wurden nicht neu verändert.
+
+## 45. Converter Retention
+
+Empfehlung **A: optionales Developer-/Migration-Tool behalten**. Kein Standard-Clienttarget benötigt es. Reproduktion: Converter ON, `M2_BUILD_ASSET_TOOL=ON`, expliziter externer SDK-Root mit `include/SpeedTreeRT.h` sowie Release-/Debug-Libraries unter `lib/`. Für den unabhängigen Tool-Build kann der Windows-Client OFF bleiben. Release-Toolbuild, Fehlerfälle und eine identische Konvertierung sind lokal belegt; kein neuer vollständiger 118er-Export erforderlich.
+
+## 46. Remaining Limitations
+
+Keine neue Vegetationsdarstellung, kein GPU-Instancing, kein PBR/Remaster/erweiterter Wind. Windows D3D11 ist validiert; Vulkan-/Android-Ausführung wurde in diesem Gate nicht erweitert oder als getestet ausgegeben. Die kleinen Bildsignaturen prüfen ausgewählte Referenzen, keine pixelgenaue Voll-Corpus-Abnahme. Bekannte Link-/Compilerwarnungen sowie `MarkManager invalid idx 0` und bestehende Damage-Diagnosen im normalen Spiel-Log bleiben; kein Vegetationsfehler. Vollständige Resource-Counter sind beim normalen Start weiterhin diagnosegesteuert.
+
+## 47. Git Diff
+
+Änderungen: alter SDK-/Runtime-/Renderer-Code und produktive Build-Anbindungen entfernt; Default-/World-Anbindung bereinigt; SDK-freie Goldens, Audits und Tests hinzugefügt; Converter isoliert; Start-/Smokehelfer und Bericht aktualisiert. Rund 5.300 alte Codezeilen und etwa 15,7 MB SDK-Libraries entfernt. Die drei SDK-Dateien sind außerhalb des Checkouts für das optionale Tool gesichert.
+
+Kein Stage, Commit oder Push. Buildordner, EXEs/PDBs, Logs, extrahierte Daten, lokale SDK-Pfade und neu erzeugte Converterausgaben bleiben ungestaged bzw. außerhalb der versionierten Änderungen. Nur kleine Referenzfixtures und der Auditbericht sind als neue Quelldateien vorgesehen. Der Startcheckout war sauber.
+
+## 48. GO/NO-GO
+
+**H-X Gate B: GO.** Einziger produktiver Pfad ZiiNAN, kein SDK-Fallback, frische Release-/Debug-Builds ohne SDK, Source/Link/Binary-Zero-Audits, 46/46 + 46/46 + 23/23 Tests, 118/118 Coverage und 0 unsupported. Alpha-/Fog-/LOD-/Wind-/GR2-/GLB-Regressionsprüfungen sowie manuelle finale Abnahme bestanden; Shutdown 0, instrumentierte Ressourcen 0.
+
+## 49. Architecture After H-X
+
+```text
+GR2 -> ZiiNAN GR2 Reader ----\
+GLB -------------------------> ZiiNAN AssetRuntime -> Diligent -> D3D11
+Legacy .spt key -> Registry --/          ^
+                         ZVEG + GLB -> ZiiNAN Vegetation Runtime
+
+Optionaler Offline-Converter + externes SDK -> GLB / ZVEG / Registry
+Produktiver Client: Granny SDK = 0, SpeedTree SDK = 0
+```
+
+Der bestehende Vulkan-Architekturpfad bleibt außerhalb dieser Windows-Abnahme; kein Android-/Vulkan-Fortschritt wird daraus abgeleitet.
+
+## 50. Recommendation Next Phase
+
+**Nach Gate B STOP.** Erst einen neuen ausdrücklich freigegebenen Auftrag abwarten. Vegetation 2.0, F5-X, Visual Remaster/PBR, Android und 60/120-FPS-Menü wurden nicht begonnen.

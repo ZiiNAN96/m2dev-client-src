@@ -1,7 +1,7 @@
 param(
     [Parameter(Mandatory=$true)][ValidatePattern('^[a-zA-Z0-9_-]+$')][string]$Name,
-    [ValidateSet('reference','ziinan')][string]$Vegetation='ziinan',
-    [string]$BuildDirectory='build-f34-clean'
+    [ValidateSet('ziinan')][string]$Vegetation='ziinan',
+    [string]$BuildDirectory='build-hx-clean'
 )
 $ErrorActionPreference='Stop'
 $source=(Resolve-Path -LiteralPath "$PSScriptRoot/../..").Path
@@ -22,7 +22,7 @@ foreach ($file in Get-ChildItem -LiteralPath "$original/pack" -File) {
 if ($LASTEXITCODE -ne 0) {throw 'Fixture pack failed.'}
 $hash=(Get-FileHash -LiteralPath "$target/Metin2_Release.exe" -Algorithm SHA256).Hash
 "SHA256=$hash`nVegetation=$Vegetation`nFixtureSHA256=$((Get-FileHash -LiteralPath "$PSScriptRoot/a2_bridge_entry.py" -Algorithm SHA256).Hash)" | Set-Content -LiteralPath "$target/artifact.txt"
-$process=Start-Process -FilePath "$target/Metin2_Release.exe" -WorkingDirectory $target -WindowStyle Hidden -ArgumentList "--vegetation=$Vegetation",'--renderer-diagnostics' -PassThru
+$process=Start-Process -FilePath "$target/Metin2_Release.exe" -WorkingDirectory $target -WindowStyle Hidden -ArgumentList '--renderer-diagnostics' -PassThru
 Write-Output "A2 bridge parity PID=$($process.Id) Runtime=$target"
 $watch=[Diagnostics.Stopwatch]::StartNew()
 while (-not $process.WaitForExit(1000)) {
@@ -44,7 +44,7 @@ if ($Vegetation -eq 'ziinan') {
     foreach ($field in @('VegetationBranches','VegetationFronds','VegetationLeaves','VegetationBillboards','VegetationLODChanges')) {
         if ($audit -notmatch "\b$field=[1-9][0-9]*\b") {throw "Missing coverage: $field"}
     }
-    if ($audit -notmatch '\bVegetationReferenceEntries=0\b') {throw 'Unexpected reference entry.'}
+    if ((Get-Content -LiteralPath "$target/renderer-startup.log" -Raw) -notmatch 'VegetationSelection=default') {throw 'Production default missing.'}
 }
 if (Test-Path -LiteralPath "$target/log/syserr.txt") {
     if ((Get-Item -LiteralPath "$target/log/syserr.txt").Length -ne 0) {throw 'Runtime error log is not empty.'}

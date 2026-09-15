@@ -210,7 +210,6 @@ bool CMapOutdoor::Destroy()
 
 	m_rkList_kGuildArea.clear();
 	m_kPool_kMonsterAreaInfo.Destroy();
-	CSpeedTreeForestRenderer::Instance().Clear();
 	ClearNativeVegetation();
 
 	return true;
@@ -241,15 +240,7 @@ void CMapOutdoor::OnBeginEnvironment()
 	if (!mc_pEnvironmentData)
 		return;
 
-	CSpeedTreeForestRenderer& rkForest=CSpeedTreeForestRenderer::Instance();
 
-	const Renderer::LightValues& c_rkLight = mc_pEnvironmentData->DirLights[ENV_DIRLIGHT_CHARACTER];
-	rkForest.SetLight(
-		(const float *)&c_rkLight.Direction,
-		(const float *)&c_rkLight.Ambient, 
-		(const float *)&c_rkLight.Diffuse);
-	
-	rkForest.SetWindStrength(mc_pEnvironmentData->fWindStrength);
 	SetNativeVegetationWind(mc_pEnvironmentData->fWindStrength);
 }
 
@@ -1256,7 +1247,6 @@ void CMapOutdoor::XMasTree_Destroy()
 {
 	if (m_kXMas.m_pkTree)
 	{
-		CSpeedTreeForestRenderer& rkForest=CSpeedTreeForestRenderer::Instance();
 		m_kXMas.m_pkTree->Clear();
 		DeleteWorldTree(m_kXMas.m_pkTree);
 		m_kXMas.m_pkTree=NULL;
@@ -1274,7 +1264,6 @@ void CMapOutdoor::__XMasTree_Create(float x, float y, float z, const char* c_szT
 	assert(NULL==m_kXMas.m_pkTree);
 	assert(-1==m_kXMas.m_iEffectID);
 
-	CSpeedTreeForestRenderer& rkForest=CSpeedTreeForestRenderer::Instance();
 	DWORD dwCRC32 = GetCaseCRC32(c_szTreeName, strlen(c_szTreeName));
 	m_kXMas.m_pkTree=CreateWorldTree(x, y, z, dwCRC32, c_szTreeName);
 

@@ -16,7 +16,6 @@
 #include "AudioLib/StdAfx.h"
 #include "EffectLib/StdAfx.h"
 #include "PRTerrainLib/StdAfx.h"
-#include "SpeedTreeLib/StdAfx.h"
 
 #ifndef __D3DRM_H__
 #define __D3DRM_H__

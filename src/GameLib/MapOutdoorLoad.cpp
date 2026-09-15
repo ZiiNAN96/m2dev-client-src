@@ -34,7 +34,6 @@ bool CMapOutdoor::Load(float x, float y, float z)
 	m_lOldReadX = -1;
 
 	// TODO: SetRenderingDevice에서 Environment로 부터 라이트 속성을 넘겨줘야 스태틱 라이트가 제대로 작동한다.
-	CSpeedTreeForestRenderer::Instance().InitializeLighting();
 
 	Update(x, y, z);
 

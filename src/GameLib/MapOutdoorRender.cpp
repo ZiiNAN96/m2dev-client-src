@@ -1,5 +1,4 @@
 #include "StdAfx.h"
-#include "SpeedTreeLib/TreeRenderBridge.h" // ZiiNAN: Existing tree camera-blocker texture.
 #include "Platform/PlatformTime.h"
 #include "StaticObjectBridge.h"
 #include "MapOutdoor.h"
@@ -266,8 +265,7 @@ void CMapOutdoor::RenderCloud()
 void CMapOutdoor::RenderTree()
 {
 	if (IsVisiblePart(PART_TREE)) {
-        if(Vegetation::NativeEnabled())RenderNativeVegetation();
-        else CSpeedTreeForestRenderer::Instance().Render();
+        RenderNativeVegetation();
     }
 }
 
@@ -354,7 +352,6 @@ struct FRenderPCBlocker
 	CGraphicImage* cameraAlpha;
 	void operator () (CGraphicObjectInstance * pInstance)
 	{
-        TreeCameraMaskScope treeMask(cameraAlpha);
         VegetationCameraMaskScope vegetationMask(cameraAlpha);
 		pInstance->Show();
 		CGraphicThingInstance* pThingInstance = dynamic_cast <CGraphicThingInstance*> (pInstance);

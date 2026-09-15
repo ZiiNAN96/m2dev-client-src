@@ -11,9 +11,6 @@ using Matrix=AssetRuntime::Matrix4;
 using Bounds=AssetRuntime::Bounds;
 inline constexpr Matrix Identity{1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1};
 inline std::atomic_size_t liveAssets{},liveInstances{};
-enum class Mode { Reference, ZiiNAN };
-inline Mode mode=Mode::Reference; // Gate A only. Gate B requires separate manual acceptance.
-inline bool NativeEnabled(){return mode==Mode::ZiiNAN;}
 enum class PartKind : std::uint32_t { Branch, Frond, Leaf, Billboard };
 struct Part { PartKind kind{};std::uint32_t lod{},mesh{}; };
 struct WindProfile {

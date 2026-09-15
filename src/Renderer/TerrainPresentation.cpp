@@ -2,7 +2,6 @@
 #include "DiligentTerrainRenderer.h"
 #include "DiligentStaticObjectRenderer.h"
 #include "DiligentActorRenderer.h" // ZiiNAN: Same world surface and depth target.
-#include "DiligentTreeRenderer.h" // ZiiNAN: Diligent SpeedTree rendering integration
 #include "DiligentEffectRenderer.h" // ZiiNAN: Diligent effect rendering integration
 #include "DiligentWorldRenderer.h" // ZiiNAN: Diligent water and special world rendering.
 #include "DiligentUIRenderer.h" // ZiiNAN: UI shares the existing world surface, never a new widget system.
@@ -24,7 +23,6 @@ class TerrainPresentation final : public ITerrainPresentation
     std::unique_ptr<DiligentTerrainRenderer> m_terrain;
     std::unique_ptr<DiligentStaticObjectRenderer> m_objects;
     std::unique_ptr<DiligentActorRenderer> m_actors; // ZiiNAN: Separate actor resource counters.
-    std::unique_ptr<DiligentTreeRenderer> m_trees;
     std::unique_ptr<DiligentEffectRenderer> m_effects;
     std::unique_ptr<DiligentWorldRenderer> m_world;
     std::unique_ptr<DiligentUIRenderer> m_ui;
@@ -57,8 +55,6 @@ public:
         // ZiiNAN: No additional backend, window or animation runtime.
         m_actors=std::make_unique<DiligentActorRenderer>(m_backend);
         if(!m_actors->Initialize()) return false;
-        m_trees=std::make_unique<DiligentTreeRenderer>(m_backend);
-        if(!m_trees->Initialize()) return false;
         m_effects=std::make_unique<DiligentEffectRenderer>(m_backend);
         if(!m_effects->Initialize()) return false;
         m_world=std::make_unique<DiligentWorldRenderer>(m_backend);
@@ -71,7 +67,6 @@ public:
         terrainRenderer = m_terrain.get();
         staticObjectRenderer = m_objects.get();
         actorRenderer=m_actors.get(); // ZiiNAN: Available before original character assets load.
-        treeRenderer=m_trees.get();
         effectRenderer=m_effects.get();
         worldRenderer=m_world.get();
         uiRenderer=m_ui.get();
@@ -119,12 +114,7 @@ public:
         }
         m_effects.reset();
         // ZiiNAN: Native map/instance owners must release their tree resources first.
-        treeWorldFrame=false;
-        if(m_diagnostics && m_trees)
-            m_diagnostics << "shutdown tree_geometry=" << m_trees->LiveGeometryCount()
-                          << " tree_textures=" << m_trees->LiveTextureCount() << std::endl;
-        if(treeRenderer==m_trees.get()) treeRenderer=nullptr;
-        m_trees.reset();
+        vegetationWorldFrame=false;
         // ZiiNAN: Actors must already be destroyed by the existing application teardown.
         if(m_diagnostics && m_actors)
         {
@@ -157,7 +147,7 @@ public:
         m_objects->ResetFrame();
         // ZiiNAN: Reject stale world snapshots; selection enters its own explicit actor scope.
         m_actors->ResetFrame(); ++actorFrameSerial; actorWorldFrame=false;
-        m_trees->ResetFrame(); treeWorldFrame=false;
+        vegetationWorldFrame=false;
         m_effects->ResetFrame(); effectWorldFrame=false; ++effectFrameSerial; effectVisibleParticles=0;
         m_world->ResetFrame(); worldSurfaceFrame=false; ++worldSurfaceSerial;
         m_ui->ResetFrame(); uiFrame=uiMode=false;
@@ -165,7 +155,7 @@ public:
         if (!m_backend.BeginFrame()) return false;
         uiFrame=true;
         actorWorldFrame=worldWasVisible;
-        treeWorldFrame=worldWasVisible;
+        vegetationWorldFrame=worldWasVisible;
         effectWorldFrame=worldWasVisible;
         worldSurfaceFrame=worldWasVisible;
         m_inFrame = true;
@@ -193,17 +183,17 @@ public:
         m_backend.EndFrame();
         uiFrame=uiMode=false;
         actorWorldFrame=false; // ZiiNAN: No actor submissions outside the completed frame.
-        treeWorldFrame=false;
+        vegetationWorldFrame=false;
         m_inFrame = false;
         effectWorldFrame=false;
         worldSurfaceFrame=false;
-        if (m_terrain->Failed() || m_objects->Failed() || m_actors->Failed() || m_trees->Failed() || m_effects->Failed() || m_world->Failed() || m_ui->Failed() || m_text->Failed()) {
+        if (m_terrain->Failed() || m_objects->Failed() || m_actors->Failed() || m_effects->Failed() || m_world->Failed() || m_ui->Failed() || m_text->Failed()) {
             // The failure frame precedes the periodic snapshot below. Preserve
             // the subsystem identity instead of reporting every failure as terrain.
             try {
                 if (m_diagnostics) m_diagnostics << "ERROR Present frame=" << m_frame+1
                     << " failed_terrain=" << m_terrain->Failed() << " failed_objects=" << m_objects->Failed()
-                    << " failed_actors=" << m_actors->Failed() << " failed_trees=" << m_trees->Failed()
+                    << " failed_actors=" << m_actors->Failed()
                     << " failed_effects=" << m_effects->Failed() << " failed_world=" << m_world->Failed()
                     << " failed_ui=" << m_ui->Failed() << " failed_text=" << m_text->Failed()
                     << " actors_visible=" << m_actors->VisibleActors() << " actor_draws=" << m_actors->DrawCount()
@@ -262,14 +252,6 @@ public:
                           << " mount_geometry=" << m_actors->MountGeometryCount()
                           << " mount_textures=" << m_actors->MountTextureCount() << std::endl;
             // ZiiNAN: Tree draw counts are observations, not a batching/LOD change.
-            m_diagnostics << "trees_visible=" << m_trees->VisibleInstances()
-                          << " branch_draws=" << m_trees->DrawCount(TreePart::Branch)
-                          << " frond_draws=" << m_trees->DrawCount(TreePart::Frond)
-                          << " leaf_draws=" << m_trees->DrawCount(TreePart::Leaf)
-                          << " billboard_draws=" << m_trees->DrawCount(TreePart::Billboard)
-                          << " tree_vertices=" << m_trees->Vertices() << " tree_indices=" << m_trees->Indices()
-                          << " tree_geometry=" << m_trees->LiveGeometryCount()
-                          << " tree_textures=" << m_trees->LiveTextureCount() << std::endl;
             m_diagnostics << "effect_instances=" << effectRuntime.instances << " particle_systems=" << effectRuntime.systems
                           << " particles_alive=" << effectRuntime.particles << " particles_visible=" << effectVisibleParticles
                           << " particle_draws=" << m_effects->DrawCount(EffectPart::Particle)

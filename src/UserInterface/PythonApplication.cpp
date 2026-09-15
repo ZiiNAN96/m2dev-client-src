@@ -11,7 +11,7 @@
 #include "Renderer/ActorRenderData.h"
 #include "Renderer/SkinningBenchmark.h"
 #include "Renderer/AnimationStallFrame.h"
-#include "Renderer/TreeRenderData.h"
+#include "Renderer/StaticObjectRenderData.h"
 #include "Renderer/WorldRenderData.h"
 #include "Renderer/UIRenderData.h"
 #include "Platform/PlatformTime.h"
@@ -181,7 +181,7 @@ void CPythonApplication::RenderGame()
     const auto benchmarkStart=Renderer::skinningBenchmarkEnabled ? Renderer::PrototypeClock::now() : Renderer::PrototypeClock::time_point{};
     // ZiiNAN: Indoor worlds do not require a terrain submission in the previous frame.
     if(Renderer::uiFrame && Renderer::worldRenderer) {
-        Renderer::actorWorldFrame=Renderer::treeWorldFrame=true;
+        Renderer::actorWorldFrame=Renderer::vegetationWorldFrame=true;
         Renderer::effectWorldFrame=Renderer::worldSurfaceFrame=true;
     }
 	float fAspect = m_kWndMgr.GetAspect();
@@ -1108,7 +1108,6 @@ void CPythonApplication::Destroy()
 	m_terrainPresentation.reset();
     m_grpDevice.Destroy();
 
-	//CSpeedTreeForestRenderer::Instance().Clear();
 
 	CAttributeInstance::DestroySystem();
 	CTextFileLoader::DestroySystem();

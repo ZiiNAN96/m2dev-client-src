@@ -3,8 +3,6 @@
 #include "ActorRenderBridge.h" // ZiiNAN: Same bounded category selection for deformation and draws.
 #include "AreaTerrain.h"
 #include "RaceData.h"
-#include "SpeedTreeLib/SpeedTreeForestRenderer.h"
-#include "SpeedTreeLib/SpeedTreeWrapper.h"
 #include "AssetRuntime/GR2/GR2AssetProvider.h"
 
 enum
@@ -881,7 +879,6 @@ void CActorInstance::__CreateTree(const char * c_szFileName)
 {
 	__DestroyTree();
 
-	CSpeedTreeForestRenderer& rkForest=CSpeedTreeForestRenderer::Instance();
 	m_pkTree=CreateWorldTree(m_x, m_y, m_z, GetCaseCRC32(c_szFileName, strlen(c_szFileName)), c_szFileName);
 	if (!m_pkTree) return;
 	m_pkTree->SetPosition(m_x, m_y, m_z);

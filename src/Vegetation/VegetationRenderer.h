@@ -4,7 +4,7 @@
 
 namespace Vegetation {
 inline std::atomic_size_t liveRenderAssets{},liveGeometry{};
-struct Statistics {std::uint64_t loaded{},created{},submitted{},culled{},uploads{},failures{},referenceEntries{},lodChanges{};std::array<std::uint64_t,4> parts{};};
+struct Statistics {std::uint64_t loaded{},created{},submitted{},culled{},uploads{},failures{},lodChanges{};std::array<std::uint64_t,4> parts{};};
 inline Statistics statistics;
 struct RenderAsset {
     AssetPtr asset;
@@ -18,7 +18,7 @@ using TextureResolver=std::function<::Renderer::TerrainTexturePtr(std::string_vi
 std::shared_ptr<const RenderAsset> Prepare(AssetPtr,::Renderer::IStaticObjectRenderer&,const TextureResolver&,std::string&error);
 struct RenderContext {
     Matrix view{Identity},projection{Identity};Vec3 camera{};
-    float time{},windStrength{1};bool referenceLod{};
+    float time{},windStrength{1};;
     ::Renderer::StaticObjectDraw state;
 };
 bool Draw(Instance&,const RenderAsset&,::Renderer::IStaticObjectRenderer&,const RenderContext&);

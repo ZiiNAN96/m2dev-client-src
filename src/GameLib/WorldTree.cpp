@@ -1,6 +1,5 @@
 #include "StdAfx.h"
 #include "WorldTree.h"
-#include "SpeedTreeLib/SpeedTreeForestRenderer.h"
 #include "EterLib/Camera.h"
 #include "EterLib/DrawState.h"
 #include "EterLib/GrpImage.h"
@@ -8,7 +7,7 @@
 #include "EterBase/Timer.h"
 #include "PackLib/PackManager.h"
 #include "Renderer/Diagnostics.h"
-#include "Renderer/TreeRenderData.h"
+#include "Renderer/StaticObjectRenderData.h"
 #include <fstream>
 #include <algorithm>
 #include <cmath>
@@ -65,8 +64,8 @@ public:
         for(unsigned k=0;k<3;++k){center[k]=(b.min[k]+b.max[k])*.5f;const float d=b.max[k]-b.min[k];squared+=d*d;}radius=std::sqrt(squared)*.5f;return true;
     }
     void RenderTree(const Vegetation::RenderContext&c){if(isShow()&&resources_&&Renderer::staticObjectRenderer)Vegetation::Draw(instance_,*resources_->render,*Renderer::staticObjectRenderer,c);else ++Vegetation::statistics.culled;}
-    void OnRender()override{if(Renderer::treeWorldFrame)RenderTree(Context(false));}
-    void OnRenderPCBlocker()override{if(Renderer::treeWorldFrame)RenderTree(Context(true));}
+    void OnRender()override{if(Renderer::vegetationWorldFrame)RenderTree(Context(false));}
+    void OnRenderPCBlocker()override{if(Renderer::vegetationWorldFrame)RenderTree(Context(true));}
     void OnBlendRender()override{}void OnRenderToShadowMap()override{}void OnRenderShadow()override{}
 protected:
     void OnUpdateCollisionData(const CStaticCollisionDataVector*)override{
@@ -77,8 +76,7 @@ protected:
 private:Vegetation::Instance instance_;std::shared_ptr<NativeResources>resources_;
 };
 }
-WorldTreePtr CreateWorldTree(float x,float y,float z,std::uint32_t crc,const char*key){
-    if(!Vegetation::NativeEnabled())return CSpeedTreeForestRenderer::Instance().CreateInstance(x,y,z,crc,key);
+WorldTreePtr CreateWorldTree(float x,float y,float z,std::uint32_t,const char*key){
     auto&s=World();if(!s.registryAttempted){s.registryAttempted=true;std::vector<std::byte>bytes;if(!Read("vegetation/registry.json",bytes)){Failure("compiled registry missing");return {};}
         const auto r=s.runtime.registry.Parse({reinterpret_cast<const char*>(bytes.data()),bytes.size()});if(!r){Failure(r.error);return {};}Log("registry entries="+std::to_string(s.runtime.registry.Size()));}
     const auto loaded=s.runtime.Load(key,Read);if(!loaded){Failure(loaded.error);return {};}
@@ -88,9 +86,9 @@ WorldTreePtr CreateWorldTree(float x,float y,float z,std::uint32_t crc,const cha
     if(Renderer::verboseDiagnostics)Log("instance key="+std::string(key)+" position="+std::to_string(x)+","+std::to_string(y)+","+std::to_string(z));
     return instance;
 }
-void DeleteWorldTree(WorldTreePtr&tree){if(!tree)return;if(auto legacy=std::dynamic_pointer_cast<CSpeedTreeWrapper>(tree))CSpeedTreeForestRenderer::Instance().DeleteInstance(legacy);tree.reset();}
+void DeleteWorldTree(WorldTreePtr&tree){tree.reset();}
 void RenderNativeVegetation(){
-    if(!Vegetation::NativeEnabled()||!Renderer::treeWorldFrame)return;auto&s=World();const auto c=Context(false);
+    if(!Renderer::vegetationWorldFrame)return;auto&s=World();const auto c=Context(false);
     std::erase_if(s.instances,[](const auto&w){return w.expired();});for(const auto&w:s.instances)if(auto tree=w.lock())tree->RenderTree(c);
 }
 void ClearNativeVegetation(){

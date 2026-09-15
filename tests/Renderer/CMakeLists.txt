@@ -12,10 +12,6 @@ add_executable(RendererActorPolicyTest ActorPolicyTest.cpp)
 target_link_libraries(RendererActorPolicyTest PRIVATE M2RendererInterface)
 add_test(NAME Renderer.ActorPolicy COMMAND RendererActorPolicyTest)
 
-# ZiiNAN: Tree integration boundaries remain testable without Diligent.
-add_executable(RendererTreePolicyTest TreePolicyTest.cpp)
-target_link_libraries(RendererTreePolicyTest PRIVATE M2RendererInterface)
-add_test(NAME Renderer.TreePolicy COMMAND RendererTreePolicyTest)
 
 # CPU effect contracts and lifetime remain independent of GPU execution.
 add_executable(RendererEffectPolicyTest EffectPolicyTest.cpp)
@@ -36,9 +32,6 @@ add_executable(RendererTextPolicyTest TextPolicyTest.cpp)
 target_link_libraries(RendererTextPolicyTest PRIVATE M2RendererInterface)
 add_test(NAME Renderer.TextPolicy COMMAND RendererTextPolicyTest)
 
-# ZiiNAN: Read-only original SpeedTree SDK probe; real asset paths are explicit arguments.
-add_executable(SpeedTreeAssetProbe SpeedTreeAssetProbe.cpp)
-target_link_libraries(SpeedTreeAssetProbe PRIVATE SpeedTree user32)
 
 add_executable(RendererSmokeTest RendererSmokeTest.cpp)
 get_target_property(client_libraries UserInterface LINK_LIBRARIES)

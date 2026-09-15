@@ -4,8 +4,8 @@ param(
     [ValidateSet('ziinan')][string]$AnimationRuntime = 'ziinan', [ValidateSet('ziinan')][string]$GR2Reader = 'ziinan', [switch]$Visible,
     [switch]$ProductionDefault,
     [switch]$MultiMap,
-    [ValidateSet('reference','ziinan')][string]$Vegetation = 'reference',
-    [string]$VegetationAssets = '',
+    [ValidateSet('ziinan')][string]$Vegetation = 'ziinan',
+    [string]$VegetationAssets = 'build/hx/compiled',
     [switch]$VegetationForest
 )
 $ErrorActionPreference = 'Stop'
@@ -67,7 +67,7 @@ if ((Get-FileHash -LiteralPath "$target/Metin2_Release.exe" -Algorithm SHA256).H
 }
 $clientArguments = @('--renderer-diagnostics', "--animation-runtime=$AnimationRuntime", "--gr2-reader=$GR2Reader")
 if ($ProductionDefault) { $clientArguments = @('--renderer-diagnostics') }
-if ($Vegetation -eq 'ziinan') { $clientArguments += '--vegetation=ziinan' }
+
 "SourceBinary=$binary`nSHA256=$hash`nArguments=$($clientArguments -join ' ')`nAutomated fixture; login/window visuals are separate" |
     Set-Content -LiteralPath "$target/artifact.txt"
 $style = if ($Visible) { 'Normal' } else { 'Hidden' }
@@ -127,8 +127,8 @@ if (-not $startup.Contains('Skinning=gpu') -or -not $startup.Contains('SkinningS
 if (-not $startup.Contains("AnimationRuntime=$AnimationRuntime")) { throw 'Requested animation runtime was not used.' }
 $audit = Get-Content -LiteralPath "$target/source-resource-audit.log" -Raw
 if ($Vegetation -eq 'ziinan') {
-    if (-not $startup.Contains('Vegetation=ziinan') -or -not $startup.Contains('VegetationSelection=explicit')) { throw 'Explicit native vegetation selection missing.' }
-    foreach ($field in @('VegetationAssets','VegetationInstances','VegetationRenderAssets','VegetationGeometry','VegetationInstanceBuffers','VegetationFailures','VegetationReferenceEntries')) {
+    if (-not $startup.Contains('Vegetation=ziinan') -or -not $startup.Contains('VegetationSelection=default')) { throw 'Production default vegetation selection missing.' }
+    foreach ($field in @('VegetationAssets','VegetationInstances','VegetationRenderAssets','VegetationGeometry','VegetationInstanceBuffers','VegetationFailures')) {
         if ($audit -notmatch "\b$field=0\b" -or $audit -match "\b$field=[1-9]") { throw "Native vegetation failure or resource leak: $field" }
     }
     foreach ($field in @('VegetationCreated','VegetationDraws','VegetationLODChanges','VegetationBranches','VegetationFronds','VegetationLeaves','VegetationBillboards')) {

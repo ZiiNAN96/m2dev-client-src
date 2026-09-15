@@ -3,6 +3,7 @@
 
 namespace Renderer
 {
+inline bool vegetationWorldFrame=false;
 // Exactly the existing TPNT layout, not a new scene/mesh representation.
 using StaticObjectVertex = std::array<float, 8>;
 struct StaticObjectVertexExtras {

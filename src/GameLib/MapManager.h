@@ -107,7 +107,6 @@ class CMapManager : public CScreen, public IPhysicsWorld
 		// Map
 		//////////////////////////////////////////////////////////////////////////
 		CMapOutdoor *				m_pkMap;
-		CSpeedTreeForestRenderer	m_Forest;
 
 	public:
 		// 2004.10.14.myevan.TEMP_CAreaLoaderThread

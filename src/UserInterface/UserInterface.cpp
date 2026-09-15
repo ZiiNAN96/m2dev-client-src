@@ -326,8 +326,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     Renderer::startupSkinningMode=rendererOptions.skinning;
     AssetRuntime::startupAnimationRuntime=rendererOptions.animationRuntime;
     AssetRuntime::startupGR2Reader=rendererOptions.gr2Reader;
-    Vegetation::mode=rendererOptions.vegetation;
-    rendererLog << "Vegetation=" << (Vegetation::NativeEnabled()?"ziinan":"reference") << '\n';
+    rendererLog << "Vegetation=" << "ziinan" << '\n';
     rendererLog << "VegetationSelection=" << (rendererOptions.vegetationSelected?"explicit":"default") << '\n';
     AssetRuntime::nativeGR2Prewarm=rendererOptions.gr2Prewarm;
     rendererLog << "GR2Reader=" << "ziinan" << std::endl;
@@ -363,7 +362,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     // ZiiNAN: Backend-neutral graphics resource ownership
     const int mainResult = Main(hInstance, lpCmdLine, rendererOptions.backend);
     ClearNativeVegetation();
-    const int result = mainResult ? mainResult : (Vegetation::NativeEnabled()&&Vegetation::statistics.failures?6:0);
+    const int result = mainResult ? mainResult : (Vegetation::statistics.failures?6:0);
     AssetRuntime::AnimationStallAudit::Write();
     AssetRuntime::ClearAnimationRuntimeCaches();
     std::ofstream resourceLog;
@@ -373,7 +372,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     resourceLog << "VegetationAssets=" << Vegetation::liveAssets << " VegetationInstances=" << Vegetation::liveInstances
         << " VegetationRenderAssets=" << Vegetation::liveRenderAssets << " VegetationGeometry=" << Vegetation::liveGeometry
         << " VegetationInstanceBuffers=0 VegetationFailures=" << Vegetation::statistics.failures
-        << " VegetationReferenceEntries=" << Vegetation::statistics.referenceEntries
         << " VegetationCreated=" << Vegetation::statistics.created << " VegetationDraws=" << Vegetation::statistics.submitted
         << " VegetationLODChanges=" << Vegetation::statistics.lodChanges << '\n';
     resourceLog << "VegetationBranches=" << Vegetation::statistics.parts[0] << " VegetationFronds=" << Vegetation::statistics.parts[1]

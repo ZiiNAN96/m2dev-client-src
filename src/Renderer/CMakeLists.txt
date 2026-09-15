@@ -12,8 +12,6 @@ if(M2_BUILD_WINDOWS_CLIENT)
     add_library(M2RendererDiligent STATIC DiligentD3D11Backend.cpp DiligentTerrainRenderer.cpp DiligentStaticObjectRenderer.cpp)
     # ZiiNAN: CPU-skinned actor submission reuses the existing D3D11 world renderer.
     target_sources(M2RendererDiligent PRIVATE DiligentActorRenderer.cpp)
-    # ZiiNAN: Existing SpeedTree geometry/materials, no new vegetation runtime.
-    target_sources(M2RendererDiligent PRIVATE DiligentTreeRenderer.cpp)
     # ZiiNAN: Existing CPU effects, no simulation or other backend changes.
     target_sources(M2RendererDiligent PRIVATE DiligentEffectRenderer.cpp)
     target_include_directories(M2RendererDiligent PRIVATE "${diligentcore_SOURCE_DIR}")
