@@ -599,9 +599,9 @@ private:
         for(std::size_t i=0;i<data.materials_count;++i) {
             const auto& source=data.materials[i];
             MaterialAsset material;
-            material.model=MaterialModel::PBRMetallicRoughness;
-            // glTF defaults also apply when pbrMetallicRoughness is absent.
-            material.metallic=material.roughness=1.f;
+            // Only an authored PBR block opts into the modern BRDF. A GLB
+            // container or a missing material does not invent metallic data.
+            if(source.has_pbr_metallic_roughness)material.model=MaterialModel::PBRMetallicRoughness;
             material.name=Name(source.name,"material-"+std::to_string(i));
             material.explicitRenderState=true;
             material.culling=source.double_sided ? Culling::None : Culling::Clockwise;
@@ -660,8 +660,7 @@ private:
         }
         MaterialAsset fallback;
         fallback.name="default";fallback.explicitRenderState=true;fallback.alphaTest=false;
-        fallback.model=MaterialModel::PBRMetallicRoughness;
-        fallback.metallic=fallback.roughness=1.f;fallback.alphaMode=AlphaMode::Opaque;
+        fallback.alphaMode=AlphaMode::Opaque;
         model.materials.push_back(std::move(fallback));
     }
     void ImportSkeleton(const cgltf_data& data,const NodeGraph& graph,ModelAsset& model,std::size_t& decoded)

@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "MapOutdoor.h"
+#include "Renderer/GraphicsConfig.h"
 
 #include "EterLib/DrawState.h"
 
@@ -78,6 +79,10 @@ void CMapOutdoor::__RenderTerrain_RenderHardwareTransformPatch()
 
 	std::vector<std::pair<float ,long> >::iterator far_it = std::upper_bound(m_PatchVector.begin(),m_PatchVector.end(),fog_far);
 	std::vector<std::pair<float ,long> >::iterator near_it = std::upper_bound(m_PatchVector.begin(),m_PatchVector.end(),fog_near);
+    // Keep all visible Modern terrain textured. Classic retains its authored
+    // distance fog and the old solid-colour far patch optimization.
+    if(Renderer::GetGraphicsRuntimeConfig().style==Graphics::GraphicsStyle::Modern)
+        near_it=far_it=m_PatchVector.end();
 
 	// NOTE: Word Editor 툴에서는 fog far보다 멀리있는 물체를 텍스쳐 없이 그리는 작업을 하지 않음
 	WORD wPrimitiveCount;

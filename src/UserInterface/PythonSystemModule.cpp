@@ -9,11 +9,11 @@
 PyObject* systemGetGraphicsSettings(PyObject*, PyObject*)
 {
     const auto& s = CPythonSystem::Instance().GetGraphicsSettings();
-    return Py_BuildValue("{s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:f,s:i}",
+    return Py_BuildValue("{s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:f,s:i}",
         "preset", int(s.preset), "style", int(s.style), "shadows", int(s.shadows),
         "ambientOcclusion", int(s.ambientOcclusion), "water", int(s.water), "vegetation", int(s.vegetation),
         "textures", int(s.textures), "hdr", int(s.hdr), "bloom", int(s.bloom), "modernSky", int(s.modernSky),
-        "highQualityFog", int(s.highQualityFog), "viewDistance", s.viewDistance, "fogLevel", s.fogLevel);
+        "viewDistance", s.viewDistance, "fogLevel", s.fogLevel);
 }
 
 PyObject* systemApplyGraphicsSettings(PyObject*, PyObject* args)
@@ -45,12 +45,11 @@ PyObject* systemApplyGraphicsSettings(PyObject*, PyObject* args)
         else if (!strcmp(name, "vegetation")) s.vegetation = static_cast<Graphics::VegetationQuality>(number);
         else if (!strcmp(name, "textures")) s.textures = static_cast<Graphics::TextureQuality>(number);
         else if (!strcmp(name, "fogLevel")) s.fogLevel = int(number);
-        else if ((!strcmp(name, "hdr") || !strcmp(name, "bloom") || !strcmp(name, "modernSky") || !strcmp(name, "highQualityFog")) && number <= 1)
+        else if ((!strcmp(name, "hdr") || !strcmp(name, "bloom") || !strcmp(name, "modernSky")) && number <= 1)
         {
             if (!strcmp(name, "hdr")) s.hdr = number != 0;
             if (!strcmp(name, "bloom")) s.bloom = number != 0;
             if (!strcmp(name, "modernSky")) s.modernSky = number != 0;
-            if (!strcmp(name, "highQualityFog")) s.highQualityFog = number != 0;
         }
         else { PyErr_SetString(PyExc_ValueError, "Unknown graphics option; use ApplyGraphicsPreset for presets"); return nullptr; }
     }

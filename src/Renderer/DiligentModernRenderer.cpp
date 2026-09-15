@@ -45,6 +45,7 @@ struct ObjectConstants
     float4x4 cameraMaskMatrix;
     float4 legacyAlpha;
     float4 legacyTint;
+    float4x4 legacyView;
 };
 struct LightConstants {float4 direction,color,ambient,camera,environment;};
 struct TerrainConstants {
@@ -53,7 +54,7 @@ struct TerrainConstants {
     std::array<float,4> factor,fogColor,fogParameters;
     uint4 modes;
 };
-struct CompositeConstants {CameraAttribs camera;ShadowMapAttribs shadows;float4 options,fogColor,fogParameters,sunDirection,sunRadiance;};
+struct CompositeConstants {CameraAttribs camera;ShadowMapAttribs shadows;float4 options,horizonColor,sunDirection,sunRadiance;};
 struct ToneConstants {float4 exposure;};
 float4 Vector(const std::array<float,4>& a) {return {a[0],a[1],a[2],a[3]};}
 constexpr char compositeShader[]=R"(
@@ -63,7 +64,7 @@ constexpr char compositeShader[]=R"(
 #define PCF_FILTER_SIZE 3
 #define FILTER_ACROSS_CASCADES 1
 #include "Shadows.fxh"
-cbuffer Composite {CameraAttribs Camera;ShadowMapAttribs Shadows;float4 Options;float4 FogColor;float4 FogParameters;float4 SunDirection;float4 SunRadiance;};
+cbuffer Composite {CameraAttribs Camera;ShadowMapAttribs Shadows;float4 Options;float4 HorizonColor;float4 SunDirection;float4 SunRadiance;};
 Texture2D Direct;Texture2D Indirect;Texture2D Emission;Texture2D Depth;Texture2D AO;Texture2D Background;
 Texture2D Sky;SamplerState SkySampler;
 Texture2DArray<float> ShadowMap;SamplerComparisonState ShadowSampler;
@@ -78,9 +79,8 @@ float4 CompositePS(float4 pixel:SV_POSITION):SV_TARGET {
  float3 ray=normalize(world.xyz-Camera.f4Position.xyz);
  float2 skyUV=float2(atan2(ray.y,ray.x)/(2*3.14159265359)+.5,1-saturate(ray.z));
  float3 sky=Sky.SampleLevel(SkySampler,skyUV,0).rgb;
- // Retain the map's authored horizon tint. Both sky and distance fog sample
- // this identical horizon, avoiding a separate flat fog colour boundary.
- sky=lerp(sky,FogColor.rgb,.12*pow(1-saturate(ray.z),4));
+ // Map tint belongs to the sky horizon only. Never mix it into world pixels.
+ sky=lerp(sky,HorizonColor.rgb,.12*pow(1-saturate(ray.z),4));
  if(depth>=1) {
   if(Options.z==0)return float4(FastSRGBToLinear(Background.Load(int3(coord,0)).rgb),1);
   // A 32 arc-minute disk in sky space; the direction is opposite the rays.
@@ -99,13 +99,6 @@ float4 CompositePS(float4 pixel:SV_POSITION):SV_TARGET {
  float ao=Options.y!=0?AO.Load(int3(coord,0)).r:1;
  float3 linearColor=Direct.Load(int3(coord,0)).rgb*shadow+Indirect.Load(int3(coord,0)).rgb*ao+Emission.Load(int3(coord,0)).rgb;
  float3 color=max(linearColor,0);
- if(FogParameters.w!=0) {
-  float distance=length(world.xyz-Camera.f4Position.xyz);
-  float progress=max(0,(distance-FogParameters.x)/max(1,FogParameters.y-FogParameters.x));
-  float amount=FogParameters.w==2?exp(-distance*FogParameters.z):exp(-3*progress*progress);
-  if(Options.w==0)amount=saturate(1-progress);
-  color=lerp(sky,color,saturate(amount));
- }
  return float4(color,1);
 }
 )";
@@ -295,16 +288,22 @@ struct DiligentModernRenderer::Impl
         const MaterialRuntimeData defaults;const auto& material=item.draw.material?*item.draw.material:defaults;
         ObjectConstants constants{};constants.world=Matrix(item.draw.matrices.world);constants.viewProjection=vp;
         constants.baseColor=Vector(material.baseColor);constants.surface={material.roughness,material.metallic,material.normalScale,material.occlusionStrength};
-        constants.emissive={material.emissive[0],material.emissive[1],material.emissive[2],0};
+        constants.emissive={material.emissive[0],material.emissive[1],material.emissive[2],
+            material.model==AssetRuntime::MaterialModel::PBRMetallicRoughness?1.f:0.f};
         unsigned mask=0;for(unsigned i=1;i<item.textures.size();++i)if(item.textures[i])mask|=1u<<i;
         constants.maps={mask,material.roughnessChannel,material.metallicChannel,material.occlusionChannel};
         constants.alpha={float(item.draw.alphaReference),float(item.draw.alphaTest),item.draw.cull==StaticObjectCull::None?1.f:0.f,1};
         constants.cardRight=Vector(item.draw.cardRight);constants.cardForward=Vector(item.draw.cardForward);constants.cardUp=Vector(item.draw.cardUp);
         constants.wind=Vector(item.draw.wind);constants.cardPitch=Vector(item.draw.cardPitch);constants.card={item.draw.cardMode,0,0,0};
-        constants.cameraMaskMatrix=Matrix(item.draw.matrices.view)*Matrix(item.draw.cameraAlphaTransform);
+        constants.legacyView=Matrix(item.draw.matrices.view);
+        constants.cameraMaskMatrix=item.sphereMap?Matrix(item.draw.cameraAlphaTransform):
+            constants.legacyView*Matrix(item.draw.cameraAlphaTransform);
         constants.legacyAlpha={float(item.draw.factorAlphaOnly?4:item.draw.factorAlpha?3:item.draw.diffuseAlphaOnly?2:item.draw.textureAlpha?1:0),
             item.draw.ambient[3],item.draw.textureFactor[3],item.cameraAlpha?(item.draw.modulateCameraAlpha?2.f:1.f):0.f};
-        constants.legacyTint={item.draw.textureFactor[0],item.draw.textureFactor[1],item.draw.textureFactor[2],float(item.draw.actorStage)};
+        // Apply authored linear baseColor once. The Classic bridge mirrors it
+        // into its texture stage; that copy is not an additional game tint.
+        constants.legacyTint={item.draw.textureFactor[0],item.draw.textureFactor[1],item.draw.textureFactor[2],
+            item.draw.materialBaseColorInFactor?0.f:float(item.draw.actorStage)};
         {MapHelper<ObjectConstants> mapped(state.context,objectCB,MAP_WRITE,MAP_FLAG_DISCARD);Require(bool(mapped),"G-DX object map");*mapped=constants;}
         for(auto stage:{SHADER_TYPE_VERTEX,SHADER_TYPE_PIXEL})Set(pipeline.srb,stage,"ModernObject",objectCB);
         Set(pipeline.srb,SHADER_TYPE_PIXEL,"ModernLighting",lightCB);
@@ -314,7 +313,6 @@ struct DiligentModernRenderer::Impl
         Set(pipeline.srb,SHADER_TYPE_PIXEL,"SkyEnvironment",atmosphere->PrefilteredEnvironment());
         Set(pipeline.srb,SHADER_TYPE_PIXEL,"IBLSampler",iblSampler);
         if(forwardPass) {
-            Set(pipeline.srb,SHADER_TYPE_PIXEL,"Sky",atmosphere->Sky());Set(pipeline.srb,SHADER_TYPE_PIXEL,"SkySampler",atmosphere->Sampler());
             Set(pipeline.srb,SHADER_TYPE_PIXEL,"Composite",compositeCB);
             Set(pipeline.srb,SHADER_TYPE_PIXEL,"ShadowMap",shadow->GetSRV());Set(pipeline.srb,SHADER_TYPE_PIXEL,"ShadowSampler",shadowSampler);
             auto* aoTexture=config.ambientOcclusion!=Graphics::AmbientOcclusionQuality::Off&&ao?ao->GetAmbientOcclusionSRV():white->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE);
@@ -324,7 +322,8 @@ struct DiligentModernRenderer::Impl
         const char* names[]{"BaseMap","NormalMap","RoughnessMap","MetallicMap","AOMap","EmissiveMap"};
         for(unsigned i=0;i<6;++i)Set(pipeline.srb,SHADER_TYPE_PIXEL,names[i],item.textures[i]?item.textures[i].RawPtr():item.textures[0].RawPtr());
         Set(pipeline.srb,SHADER_TYPE_PIXEL,"MaterialSampler",MaterialSampler(item.draw.sampling,item.draw.anisotropic,item.draw.maxAnisotropy));
-        Set(pipeline.srb,SHADER_TYPE_PIXEL,"CameraAlphaTexture",item.cameraAlpha?item.cameraAlpha.RawPtr():item.textures[0].RawPtr());
+        Set(pipeline.srb,SHADER_TYPE_PIXEL,"CameraAlphaTexture",item.sphereMap?item.sphereMap.RawPtr():
+            item.cameraAlpha?item.cameraAlpha.RawPtr():item.textures[0].RawPtr());
         Set(pipeline.srb,SHADER_TYPE_PIXEL,"CameraAlphaSampler",MaterialSampler(item.draw.cameraAlphaSampling,item.draw.cameraAlphaAnisotropic,item.draw.cameraAlphaMaxAnisotropy));
         state.context->SetPipelineState(pipeline.pso);
         IBuffer* buffers[]{item.vertices,item.extras,item.tangents};Uint64 offsets[]{0,0,item.tangentOffset};
@@ -333,7 +332,12 @@ struct DiligentModernRenderer::Impl
         state.context->CommitShaderResources(pipeline.srb,RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
         DrawIndexedAttribs args{item.draw.indexCount,item.indexType,DRAW_FLAG_VERIFY_ALL};args.FirstIndexLocation=item.draw.firstIndex;args.BaseVertex=item.baseVertex;
         state.context->DrawIndexed(args);
-        if(shadowPass)++stats.shadowDraws;else ++stats.meshDraws;
+        if(shadowPass)++stats.shadowDraws;else {
+            ++stats.meshDraws;
+            if(material.model==AssetRuntime::MaterialModel::PBRMetallicRoughness)++stats.pbrMaterialDraws;
+            else ++stats.legacyMaterialDraws;
+            if(item.sphereMap&&item.draw.actorStage==ActorMaterialStage::Specular)++stats.authoredShimmerDraws;
+        }
     }
     void Camera(const TerrainMatrices& matrices);
     void TerrainShaders(unsigned variant) {
@@ -401,6 +405,8 @@ DiligentModernRenderer::~DiligentModernRenderer() {
            <<" atmosphereCpuSubmitMs="<<stats.atmosphereSubmitMilliseconds<<" bloomCpuSubmitMs="<<stats.bloomSubmitMilliseconds
            <<" toneMapCpuSubmitMs="<<stats.toneMapSubmitMilliseconds<<" compositeCpuSubmitMs="<<stats.compositeSubmitMilliseconds
            <<" toneMappedFrames="<<stats.toneMappedFrames
+           <<" legacyMaterialDraws="<<stats.legacyMaterialDraws<<" pbrMaterialDraws="<<stats.pbrMaterialDraws
+           <<" authoredShimmerDraws="<<stats.authoredShimmerDraws
            <<" ModernRenderers="<<liveModernRenderers<<'\n';
     }catch(...){}
 }
@@ -619,11 +625,10 @@ void DiligentModernRenderer::End() {
     Require(bool(s.composite.srb),"G-DX composition binding");
     s.Buffer(s.compositeCB,sizeof(CompositeConstants),"G-DX composition constants");
     {MapHelper<CompositeConstants> data(state.context,s.compositeCB,MAP_WRITE,MAP_FLAG_DISCARD);Require(bool(data),"G-DX composition map");
-        data->camera=s.camera;data->shadows=s.shadowAttribs;data->options={useShadows?1.f:0.f,useAO?1.f:0.f,s.hasCamera?1.f:0.f,s.config.highQualityFog?1.f:0.f};
-        data->fogColor={std::pow(s.lighting.fogColor[0],2.2f),std::pow(s.lighting.fogColor[1],2.2f),std::pow(s.lighting.fogColor[2],2.2f),1};
+        data->camera=s.camera;data->shadows=s.shadowAttribs;data->options={useShadows?1.f:0.f,useAO?1.f:0.f,s.hasCamera?1.f:0.f,0};
+        data->horizonColor={std::pow(s.lighting.fogColor[0],2.2f),std::pow(s.lighting.fogColor[1],2.2f),std::pow(s.lighting.fogColor[2],2.2f),1};
         data->sunDirection={s.lighting.sunDirection[0],s.lighting.sunDirection[1],s.lighting.sunDirection[2],0};
-        data->sunRadiance={s.lighting.sunColor[0]*s.lighting.sunIntensity,s.lighting.sunColor[1]*s.lighting.sunIntensity,s.lighting.sunColor[2]*s.lighting.sunIntensity,0};
-        data->fogParameters={s.lighting.fogNear,s.lighting.fogFar,s.lighting.fogDensity,s.lighting.fogEnabled?(s.lighting.densityFog?2.f:1.f):0.f};}
+        data->sunRadiance={s.lighting.sunColor[0]*s.lighting.sunIntensity,s.lighting.sunColor[1]*s.lighting.sunIntensity,s.lighting.sunColor[2]*s.lighting.sunIntensity,0};}
     Impl::Set(s.composite.srb,SHADER_TYPE_PIXEL,"Composite",s.compositeCB);
     const char* names[]{"Direct","Indirect","Emission"};
     for(unsigned i=0;i<3;++i)Impl::Set(s.composite.srb,SHADER_TYPE_PIXEL,names[i],s.surfaces[i]->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE));

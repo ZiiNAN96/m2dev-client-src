@@ -52,6 +52,7 @@ struct StaticObjectDraw
     ActorMaterialStage actorStage = ActorMaterialStage::None;
     std::array<float,4> textureFactor{1,1,1,1};
     bool factorAlpha = false, factorAlphaOnly = false;
+    bool materialBaseColorInFactor = false; // Classic stage copy; Modern already uses MaterialRuntimeData.
     TerrainTexturePtr sphereMap; // Uses the mutually exclusive native stage-1 matrix/sampling above.
     // Existing point light 1 left by character selection, needed by PCBlocker MODULATE.
     std::array<float,4> pointPositionRange{}, pointAttenuation{}, pointAmbient{}, pointDiffuse{};

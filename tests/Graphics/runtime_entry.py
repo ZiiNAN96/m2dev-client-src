@@ -66,6 +66,8 @@ class World(ui.Window):
                 self.options.OpenGraphics()
                 self.options.graphicsDialog.SetPosition(355, 90)
             dialog = self.options.graphicsDialog
+            assert not hasattr(dialog, "fogQuality")
+            assert "highQualityFog" not in systemSetting.GetGraphicsSettings()
             if not expected_restart:
                 if 1 <= step <= 4:
                     dialog.preset.SelectItem(step - 1)
@@ -84,7 +86,7 @@ class World(ui.Window):
                 elif step == 8:
                     # G56 enables the existing Modern HDR/atmosphere controls.
                     systemSetting.ApplyGraphicsSettings({"style": 1, "ambientOcclusion": 2, "hdr": 1,
-                        "bloom": 1, "modernSky": 1, "highQualityFog": 1, "shadows": 2, "water": 0, "textures": 2})
+                        "bloom": 1, "modernSky": 1, "shadows": 2, "water": 0, "textures": 2})
                     assert systemSetting.SaveGraphicsSettings()
                     self.expected = systemSetting.GetGraphicsSettings()
                     systemSetting.ApplyGraphicsPreset(0)
@@ -104,10 +106,10 @@ class World(ui.Window):
                     log.write("window=%s\n" % json.dumps(window_result, sort_keys=True))
                 elif step == 10:
                     dialog.preset.CloseListBox()
-                    systemSetting.ApplyGraphicsSettings({"bloom": 0, "modernSky": 0, "highQualityFog": 0})
+                    systemSetting.ApplyGraphicsSettings({"bloom": 0, "modernSky": 0})
                     dialog.Refresh()
                 elif step == 11:
-                    systemSetting.ApplyGraphicsSettings({"bloom": 1, "modernSky": 1, "highQualityFog": 1})
+                    systemSetting.ApplyGraphicsSettings({"bloom": 1, "modernSky": 1})
                     dialog.Refresh()
                 elif step == 12:
                     background.Destroy()
@@ -130,6 +132,11 @@ class World(ui.Window):
             expected_ao = current["ambientOcclusion"] if current["style"] == 1 else 0
             assert runtime["shadows"] == expected_shadows and runtime["ambientOcclusion"] == expected_ao
             modern = current["style"] == 1
+            dialog = self.options.graphicsDialog
+            assert bool(dialog.fog.IsShow()) == (not modern)
+            assert bool(dialog.fog.label.IsShow()) == (not modern)
+            for control in self.options.fogModeButtonList + [self.options.fogLabel]:
+                assert bool(control.IsShow()) == (not modern)
             assert runtime["hdr"] == int(modern)
             assert runtime["bloom"] == (current["bloom"] if modern else 0)
             assert runtime["modernSky"] == (current["modernSky"] if modern else 0)

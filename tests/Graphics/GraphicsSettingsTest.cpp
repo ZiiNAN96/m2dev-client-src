@@ -23,7 +23,7 @@ void Presets()
         Check(s.viewDistance == distance[i] && int(s.vegetation) == i, "preset view/vegetation");
         Check(s.water == (i == 0 ? WaterQuality::Low : i == 1 ? WaterQuality::Medium : WaterQuality::High), "preset water");
         Check(s.textures == (i == 0 ? TextureQuality::Medium : i == 3 ? TextureQuality::Ultra : TextureQuality::High), "preset texture");
-        Check(s.hdr == (i >= 2) && s.bloom == (i >= 2) && s.modernSky == (i >= 2) && s.highQualityFog == (i >= 2), "preset reserved flags");
+        Check(s.hdr == (i >= 2) && s.bloom == (i >= 2) && s.modernSky == (i >= 2), "preset HDR/bloom/sky flags");
         Check(s.style == GraphicsStyle::Classic && s.fogLevel == 0, "presets retain classic by default");
         for (auto style : {GraphicsStyle::Classic, GraphicsStyle::Modern})
         {
@@ -87,6 +87,9 @@ void Invalid()
     }
     Check(!LoadGraphicsSettings(std::string(65537, 'x')).writable, "bounded config parser");
     Check(LoadGraphicsSettings("# comment\nUNKNOWN 9\nSHADOWS 4\n", legacy).settings.shadows == ShadowQuality::High, "v0 migration/unknown values");
+    const auto retired=LoadGraphicsSettings("VERSION 1\nHIGH_QUALITY_FOG 1\n", legacy);
+    Check(retired.settings==legacy && retired.invalidValues==0,"retired fog quality loads without changing settings");
+    Check(SaveGraphicsSettings(legacy,"VERSION 1\nHIGH_QUALITY_FOG 1\n").find("HIGH_QUALITY_FOG")==std::string::npos,"retired fog quality is removed on save");
     const auto output = SaveGraphicsSettings(legacy, "VERSION 1\n# keep me\nFUTURE_VALUE custom text\nSHADOWS 5\n");
     Check(output.find("# keep me") != output.npos && output.find("FUTURE_VALUE custom text") != output.npos &&
         LoadGraphicsSettings(output).settings == legacy, "unknown fields preserved and known fields canonicalized");

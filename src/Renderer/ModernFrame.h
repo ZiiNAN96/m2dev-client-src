@@ -14,6 +14,7 @@ struct ModernFrameStats
     double shadowSubmitMilliseconds{},aoSubmitMilliseconds{};
     double atmosphereSubmitMilliseconds{},bloomSubmitMilliseconds{},toneMapSubmitMilliseconds{},compositeSubmitMilliseconds{};
     std::uint64_t hdrTargetBytes{},atmosphereTargetBytes{},toneMappedFrames{};
+    std::uint64_t legacyMaterialDraws{},pbrMaterialDraws{},authoredShimmerDraws{};
     unsigned meshShaderVariants{},terrainShaderVariants{};
 };
 class IModernFrame

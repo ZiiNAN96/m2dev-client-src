@@ -1,6 +1,10 @@
 # G5/6-X — HDR & Atmosphere
 
-**G5/6-X = GO.** Release/Debug 64/64, GCC/LP64 34/34, Classic jeweils 12/12 bytegleich. Manuelle Login-/Relog-/UI-Abnahme erfolgreich bestätigt. Kein Commit, kein Push; STOP nach G5/6.
+**Designänderung im laufenden G5/6-X:** Classic-Farbcharakter + Modern-Lichttiefe.
+Legacy ohne Override bleibt diffus; echtes PBR benötigt Materialdaten/Override.
+Atmosphäre bleibt Sky/Horizon/Sonne, die Modern-Welt bleibt ohne Nebelschleier.
+Nebelqualität entfernt. **G5/6-X = GO. Der Benutzer meldete zuvor fehlenden
+Rüstungs-/Waffenschimmer und anschließend eine zu schwache blaue Rüstungs-Aura in Modern. Beide Korrekturen sind technisch geprüft; der Benutzer hat auch die vollständige Schlussabnahme einschließlich Relog und Beenden bestätigt.** Kein Neustart.
 
 ## 1. Start State
 
@@ -15,6 +19,14 @@ Die eingecheckten Berichte bestätigen **G-DX-C = GO** und **C-LIB-X = GO**.
 sind Ausgangsevidenz, noch keine erneuten G56-Ergebnisse. Der bisherige
 Release-Client wurde vor dem ersten Build nach `build/g56x/baseline/` kopiert.
 Kein Commit, Push, Staging, Reset oder History-Rewrite.
+
+Fortsetzung mit verbindlicher Designänderung am 15.09.2026: Der vorhandene
+G56-Stand war inzwischen als `ec3d41c` eingecheckt; Source-Arbeitsbaum sauber.
+Die Änderung setzt auf diesem Stand im selben Source-Branch auf. Assets wurden
+vom sauberen `72d92593` auf Arbeitsbranch `codex/g56-hdr-colors` gewechselt, um
+die angeforderte Menübereinigung ohne Änderung an main vorzunehmen.
+Diese Fortsetzung erzeugt keinen Commit/Push und startet keinen neuen Meilenstein.
+
 
 ## 2. Diligent/DiligentFX Reuse
 
@@ -54,9 +66,12 @@ Der Sonnenkreis benutzt dieselbe Strahlrichtung wie Lighting/Shadows und eine
 Winkelgröße von 32 Bogenminuten. Der upstream Sun-Shader liefert nur einen
 weißen normierten Bildschirm-Quad ohne unsere HDR-Radiance-/World-Depth-Grenze.
 Der ZiiNAN-Adapter setzt daher den winkelbasierten Kreis bei Sky-Depth ein.
-Fog ist eine kleine exponentielle Distance-Policy; der Atmosphärenhorizont wird
-als Zielfarbe wiederverwendet. FX besitzt keinen passenden isolierten
-Map-Distance-Fog-Pass. Keine neue Schatten-, AO- oder PBR-Architektur.
+Die angeforderte originalnahe Legacy-Diffuse-Beleuchtung ist Materialpolitik:
+Texturfarbe × diffuse Sonnenbeleuchtung plus vorhandenes Map-Ambient. Der
+pi-Faktor hebt nur die bestehende Umrechnung von Map-Licht zu Irradiance auf.
+Kein erfundener BRDF, Metallic, BRDF-Specular oder Sky-IBL für Legacy. Diligent-GGX,
+Normal Mapping und IBL bleiben der expliziten PBR-Route vorbehalten.
+Der Modern-Distance-Fog wurde gemäß Designänderung vollständig entfernt.
 
 ## 3. Render Boundary Audit
 
@@ -128,16 +143,26 @@ Bloom-Off/On und die unveränderten Ausgabebilder liegen in der Galerie.
 
 ## 12. Black Crush Prevention
 
-Kalibrierung über korrektes HDR, feste Exposure und Tone Mapping. Der nahe
-B1-A/B/C-Vergleich zeigt hellere Haut/Rüstungsdetails und einen lesbaren Wolf;
-Tor- und Körperschatten bleiben klar. Kein Ambient-Multiplikator und keine
-Aufhebung von Shadow oder SSAO.
+HDR, konstante Exposure und der luminanzbasierte Tone Mapper bleiben erhalten.
+Die neue diffuse Legacy-Route erhält dunkle Texturdetails ohne grauen Specular-
+oder Fog-Zuschlag. Kein Ambient-Multiplikator; Shadow und SSAO bleiben aktiv.
+Der erweiterte GPU-Test verlangt lesbare Grün-/Braun-/Rüstungs-Mitteltöne.
+Die finale subjektive Farb-/Lesbarkeitsabnahme wurde vom Benutzer bestätigt (§52).
 
 ## 13. Color Preservation
 
-Keine Grading-, Entsättigungs-, Vignette- oder Filmstufe. Die Vergleichsbilder
-behalten grüne Vegetation, braune Erde, gelbe Kleidung und rote Rüstungsteile.
-Reinhard erhält die linearen Farbverhältnisse vor der SDR-Konvertierung.
+Verbindliches Ziel: **Classic-Farbcharakter + Modern-Lichttiefe**.
+Legacy-Diffuse wird linearisiert, mit diffusem Sonnenlicht und vorhandenem
+Map-Ambient multipliziert, dann über Diligent Reinhard-Luminanz/sRGB ausgegeben.
+Keine erfundene weiße BRDF-Specular-Schicht, automatische Metallic-Schätzung,
+Sky-Reflexion, globale Fog-Mischung oder Entsättigung für Legacy.
+
+Der GPU-Test prüft Grün, Braun und Blau einer Rüstung: Abweichung der normierten
+linearen RGB-Anteile jeweils <0.02 trotz Licht/Tone Mapping. Extreme ungewollte
+Metallic-/Roughness-/Environment-Werte bleiben für Legacy bytewirkungslos.
+GLB-BaseColor wird im Modern-Pfad genau einmal angewandt; die Classic-Kopie
+im TextureFactor wird dort nicht nochmals als zusätzlicher Spiel-Tint benutzt.
+Echte Hit-/Selection-Tints bleiben erhalten. Keine Retusche von Vergleichsbildern.
 
 ## 14. Bloom
 
@@ -188,35 +213,69 @@ nicht zusätzlich über den neuen Himmel gelegt.
 
 ## 21. Existing Map Environment Integration
 
-Vorhandene Directional-Light-, Material-Diffuse-/Ambient-/Emissive-Fill- und
-Fog-Daten werden in ZiiNAN auf SceneLighting abgebildet. Fehlende Werte haben
-validierte Defaults. Der kleine atmosphärische IBL-Anteil beträgt 0.15 und
-ist separat begrenzt; bestehendes Map-Ambient bleibt erhalten.
+Vorhandene Directional-Light-, Material-Diffuse-/Ambient-/Emissive-Fill-Daten
+werden weiter in SceneLighting abgebildet. Map-Fog-Farbe ist ausschließlich
+ein Input für den Sky-Horizont; Fog-Dichte/Near/Far werden der Modern-Welt nicht
+zugeführt. Alte Map-Dateien funktionieren ohne Migration.
+Sky-IBL-Stärke 0.15 gilt ausschließlich für explizite PBR-Materialien.
 
 ## 22. Horizon
 
-Die Sky-LUT liefert die richtungsabhängige Horizontfarbe. Der bestehende
-Map-Fog-Farbton fließt mit maximal 12 Prozent am Horizont ein. Es gibt keine
-unabhängige zweite Horizontfarbe im opaken Composite.
+Die unveränderte Diligent-Scattering-LUT liefert die Sky-Farbe. Die vorhandene
+Map-Fog-Farbe darf nur am Sky-Horizont bis zu 12 Prozent beitragen.
+Pixel mit World-Depth erhalten keine Atmosphären-Farbmischung.
 
 ## 23. Fog
 
-Low verwendet Distance-Linear-Fog, High eine exponentielle Distanzkurve;
-vorhandene Density-Maps behalten ihre Dichte-Semantik. Near/Far/Qualität kommen
-von der Map und GraphicsRuntimeConfig. Ungültige Intervalle werden deaktiviert.
+**Modern: kein sichtbarer allgemeiner Weltnebel.** Entfernt sind die
+Distance-/Density-Fog-Mischungen aus opakem Composite und transparentem Mesh-
+Pass. HDR-World-Effekte ignorieren alte Fog-Zustände. MapManager aktiviert
+Environment-Fog nur noch in Classic.
+
+Auch die alten HTP-/STP-Terrainwege behalten in Modern Texturen bis zur
+vorhandenen Sicht-/Splatgrenze: kein Austausch gegen einfarbige Fog-Patches,
+keine STP-DiffuseAlpha-Nebelüberblendung. Bestehende LOD-/Sichtweitenregeln
+bleiben. Kein neues Far-Fading zum Kaschieren der Sichtweite.
+Classic behält seinen bisherigen Fog und dessen Einstellung.
 
 ## 24. Sky/Fog Integration
 
-Opake Welt und moderner transparenter Mesh-Pass mischen zur gleichen
-richtungsabhängigen Sky-/Horizontfarbe. Ferne Kontraste und Schatten werden
-mit der Welt abgeschwächt. Legacy-Particle-Combiner behalten ihre vorhandene
-Fog-/Alpha-Semantik und werden anschließend in lineares HDR überführt.
+Atmosphäre → Sky/Horizon/Sonne. Welt → Materialfarbe, Directional Lighting,
+Shadows, SSAO, HDR/Tone Mapping. Der GPU-Test erzwingt extremen aktiven
+Environment-Fog und prüft bytegleiche World-Ausgabe für opake, transparente
+und Partikel-Pässe. Alte Alpha-/Blend-Regeln bleiben erhalten.
 
 ## 25. PBR under HDR
 
-Diligent-PBR-Materialtests und GLB-Renderfälle prüfen Roughness, Metallic,
-Normal Maps, Emissive und IBL. Materialparameter und BRDF bleiben erhalten;
-HDR vergrößert den darstellbaren Lichtbereich. Keine neue PBR-Implementierung.
+Die vorhandene neutrale `MaterialModel`-Kennung steuert den Shader:
+
+| Material | Modern-Darstellung |
+|---|---|
+| Legacy/GR2 ohne Override | Original-Diffuse, diffuse Sonne und Map-Ambient; kein GGX/Metallic/Sky-IBL; originaler Item-Schimmer bleibt erhalten |
+| GLB ohne authored `pbrMetallicRoughness` | Diffuse-Route; Containerformat allein erzeugt kein Metallic |
+| GLB mit PBR-Block | Voller Diligent-PBR-Pfad mit den authored/default Werten dieses Blocks |
+| Expliziter Legacy-/GR2-MaterialOverride | Voller Diligent-PBR-Pfad |
+
+Der Override-Vertrag bleibt atomar und an die exakte Asset-/Materialidentität
+gebunden. Normal-/Roughness-/Metallic-/AO-Materialkarten werden nur in PBR
+ausgewertet; echtes Emissive bleibt authored. GPU-Tests bestätigen unterschiedliche
+Metall-/Dielektrikum-Ausgabe sowie die einmalige BaseColor-Anwendung über den
+echten Material-Bridge-Helfer. Laufzeit-Zähler erfassen beide Materialrouten.
+
+
+**Nachbesserung aus der Benutzerabnahme: originaler Item-Schimmer.** Der zuvor
+fehlende `ActorMaterialStage::Specular` übernimmt jetzt die vorhandene Sphere-
+Map aus der Actor-/Static-Bridge. Kamerabezogene Reflexionskoordinaten entstehen
+wie im Classic-Pfad an den Vertices; die bestehende bewegte Texturmatrix,
+Sampler, Textur-Alpha und Item-Stärke bleiben erhalten. Der Beitrag wird
+linear vor Tone Mapping addiert, unabhängig vom Materialmodell. Keine
+PBR-Aktivierung, Metallic-Schätzung oder zusätzliche Reflexion für normale
+Legacy-Materialien. Keine neuen Targets oder per Frame erzeugten Ressourcen.
+
+**Warum nicht Diligent-GGX?** Dieser Schimmer ist eine vorhandene, ausdrücklich
+von Item-Daten aktivierte Spielgrafik. Diligent-GGX würde weder die originale
+Sphere-Map noch ihre animierte Farbwirkung ersetzen. Der kleine Adapter erhält
+die Spielsemantik auf der vorhandenen Diligent-Shader-/Resource-Infrastruktur.
 
 ## 26. IBL
 
@@ -232,6 +291,8 @@ Filteralgorithmus stammen aus dem gepinnten PBR-Renderer. Keine Reflection
 Probes oder neue Cubemap-Engine. Der GPU-Test weist den zusätzlichen
 richtungsabhängigen indirekten PBR-Beitrag nach.
 
+Diese Faltungen beeinflussen ausschließlich PBR. Legacy-Materialien erhalten kein zusätzliches reflektiertes Sky-Licht.
+
 ## 27. Shadow Regression
 
 Unveränderter Diligent ShadowMapManager/PCF-Pfad. G-DX-Tests einschließlich
@@ -246,50 +307,78 @@ Nach Exposure/Tone Mapping war keine zusätzliche Stärkeänderung erforderlich.
 
 ## 29. Legacy GR2 Proof
 
-Originale lokale GR2-Geometrie und Diffuse-Assets laufen über den nativen
-Reader, neutrale Animation und GPU-Skinning in Diligent PBR/HDR.
-Der A1→B1→A1-Lauf und die manuelle Spielsitzung verwenden diese Production-Route.
-Kein Granny-Import oder Runtime-Fallback.
+Originale lokale GR2-Geometrie/Diffuse laufen über nativen Reader,
+neutrale Animation und GPU-Skinning. Ohne PBR-Override bleibt das Material diffus,
+mit modernem Licht/Shadow/SSAO/HDR. Der originale, durch Item-Daten aktivierte
+Rüstungs-/Waffenschimmer ist ausdrücklich erhalten und kein erfundenes PBR.
+
+Neuer identischer nativer Vergleich: Classic / Modern vor Korrektur / Modern
+nach Korrektur, originale Rüstung **11299** und Schwert **19**, Kamera 850/18/0
+an B1 64000/55300. Originale Item-Stärken und normaler Armour-Specular-Startschalter.
+Actor-Log bestätigt **stage=3 auf GPU-skinned part=0 und rigid part=1**;
+**2720 tatsächliche Schimmer-Draws**, Materialmodell weiterhin Legacy,
+CPU-Deformation/Fallbacks=0, Exit 0, Diligent/Shutdown=0.
+
+GPU-Regression: sichtbar, proportional zur Item-Stärke, mit originaler Matrix
+beweglich; ohne aktivierten Effekt bleibt normale Legacy-Ausgabe bytegleich.
+15/16 bestehende GPU-Rohbilder sind ebenfalls bytegleich; beim PBR-Materialbild
+weichen 3274 von 1950000 Farbkanälen um höchstens einen 8-bit-Schritt ab.
+PBR-Material-/Normal-/Roughness-/Metallic-Gates sind grün.
 
 ## 30. Player Proof
 
-Galerie: B1-Nahaufnahme, identischer Standort und Kamera in Classic, altem G-DX
-und G5/6. G5/6 verbessert Haut-/Rüstungsdetails; die Körper- und Torschatten
-bleiben. Echte Idle-Animationen laufen weiter, deshalb kein Pixelvergleich
-unterschiedlicher Animationszeitpunkte.
+Neuer Classic/Modern-Vergleich mit demselben finalen Client und fester
+B1-Kamera 1800/22/0 an 64000/55300. Die unveränderten Aufnahmen zeigen erhaltene
+Haut-/Rüstungsfarben und erkennbare Schattenseiten. G-DX bleibt als B-Referenz.
+Idle-Zeitpunkte können abweichen; identische Kamera bedeutet keine identische
+Animationsphase. Die endgültige subjektive Abnahme wurde vom Benutzer bestätigt (§52).
 
 ## 31. Mob Proof
 
-Derselbe Wolf steht in allen drei Nahaufnahmen neben Player/NPC/Boss auf
-trockenem B1-Boden. Gesicht, Rücken und Beine bleiben sichtbar. Die vorherigen
-Fluss-/Unterwasser-Testkameras sind nicht als Mob-Abnahme verwendet.
+Derselbe dunkle Wolf neben dem Legacy-Player im B1-Nahvergleich.
+Gesicht, Rücken und Beine bleiben in der neuen Aufnahme unterscheidbar;
+der diffuse Materialpfad erhält die Texturfarben ohne graue Reflexionsschicht.
+Keine Fluss-/Unterwasserkamera als Ersatz. Finales Benutzerurteil siehe §52.
 
 ## 32. Building Proof
 
-Großes vorhandenes B1-Steintor, ermittelt aus den lokalen Map-/Property-Daten.
-A/B/C zeigt Reliefs, Seitenflächen, Boden und Schatten bei gleicher Kamera.
-Zusätzlich dokumentiert die entfernte B1-Ansicht Gebäude/Vegetation/Fog.
+Großes bestehendes B1-Steintor, Kamera 4000/18/0 an 64000/55300.
+Neue A/C-Aufnahmen zeigen Materialfarbe, Relief, Vorder-/Seitenflächen sowie
+Boden-/Torschatten ohne allgemeinen Weltnebel. Der Schattenkontrast bleibt
+deutlich räumlich. Die vorhandene G-DX-Aufnahme ist die B-Referenz.
 
 ## 33. Terrain Proof
 
-A1 und B1 mit Grass/Dirt/Path, gleicher Szene und Kamera. Farbzeichnung bleibt
-sichtbar, Schatten sind erhalten. Die Performance-Serie enthält zusätzlich
-identische A1→B1→A1-Nah-/Fernkameras.
+Trockene B1-Gras-/Erde-/Wegfläche an 68900/53200, Kamera 5000/55/40.
+Alle drei Versionen wurden an dieser Kamera aufgenommen, G-DX mit dem erhaltenen
+Referenzbinary. Grün und Braun bleiben in Modern erkennbar; rechts liegt
+bestehendes Wasser. Die hohe Kamera zeigt zugleich die volle Baumkrone.
+Die zuerst erzeugte A1-Flussansicht wird nicht als Terrain-Farbproof verwendet.
+Terrain bleibt diffus; der farblose Fog-Patch-Ersatz entfällt nur in Modern.
 
 ## 34. Vegetation Proof
 
-Vorhandener ZiiNAN-Pagoda-Baum auf B1, aus dem Property-/Mapbestand ausgewählt.
-A/B/C zeigt Stamm, Äste, Blätter und Bodenschatten. Der H-X-GPU-Gate prüft
-zusätzlich die bestehenden Typen, Alpha, Fog, Wind, LOD und Ressourcen.
-Keine Leaf Transmission, neuen Bäume, Grass- oder Wind-Systeme.
+Bestehende ZiiNAN-Vegetation auf B1 an 68900/53200; Kamera 3500/20/0,
+Zielhöhe +500. Gleiches Motiv für Stamm, Äste und Bodenschatten. Bei dieser
+niedrigen Kamera blendet der bestehende Modern-Pfad die Baumkrone stark aus;
+das ist bereits in der G-DX-/bisherigen G56-Referenz sichtbar und wird nicht
+als vollständige Kronenparität ausgegeben. Die zusätzliche hohe Terrain-Kamera
+in §33 zeigt die volle Krone und ihre grünen Blattfarben in allen drei Ständen.
+Keine neuen Bäume, Transmission, Grass oder Wind. Classic-Goldens bleiben grün.
 
 ## 35. Animated GLB Proof
 
-Native F5-Charaktersequenz: **20 Actors, Idle/Walk/Attack**, Material-/Attachment-
-und Neustufenfälle, PBR/HDR, Shadows/SSAO, Bloom und Atmosphäre.
-GPUFrames=17640, CPU-Deformation=0, GPUFallbacks=0, Diligent ERROR/FATAL=0;
-alle erfassten Skeleton-/Clip-/GPU-Owners am Shutdown 0.
-Galerie enthält native Aufnahmen und die kontrollierten 20-Actor-A/B/C-Bilder.
+[Nativer F5-Lauf](../../build/f5x/runtime/g56-colors-animated-01/f5x-character-smoke.log):
+**9 Zustände, 9 Captures, 883 Frames, Exit 0**; Idle, Walk, Run, Attack,
+Damage, Death und MultiInstance mit 20 Actors. Authored PBR, Attachments,
+HDR, Shadows/SSAO, Bloom und Sky bleiben aktiv. Die Galerie zeigt tatsächlich
+Idle (0), Walk (1) und Attack (4). Dieser native Lauf stammt aus der Farb-/Fog-
+Revision; die abschließenden Release-/Debug-GLB-GPU-Gates sind erneut grün.
+
+**17660 GPUFrames**, CPU-Deformation/Fallbacks=0. Tatsächlich gerendert:
+**12664 PBR-Draws** und **45597 Legacy-Draws** der Umgebung. Alle Owner und
+Diligent ERROR/FATAL am Shutdown=0. Der GPU-Materialtest ergänzt Normal-/AO-/
+Metallic-/Roughness- und Override-Nachweise.
 
 ## 36. Emissive/Bloom Proof
 
@@ -299,47 +388,78 @@ Die PNG-Dateien sind ausschließlich verlustfreie Konvertierungen der GPU-Rohbil
 
 ## 37. Effects
 
-Audit: Water, Fire, Skills, Particles, Weapon Trails, World Snow sowie Items/
-Flying/PCBlocker liegen vor `FinishWorld()`. Traces behalten ihre bisherige
-Kamera-Sortierung. Damage/Miss-Effekte werden beim Erzeugen als Screen markiert.
+Water, Fire, Skills, Particles, Weapon Trails, World Snow, Items/Flying und
+PCBlocker liegen vor Tone Mapping; Damage/Miss danach. Alpha-/Blend-Semantik
+bleibt erhalten, HDR-Welteffekte erhalten keinen Environment-Fog.
 
-Zusätzlicher begrenzter nativer 20-Sekunden-Lauf: Feuer, Nahkampf, Flächeneffekt,
-Snow, Drain; fünf Captures, kein Stress-/Dense-Test. Exitcode 0, kein Game-/Python-
-Fehler, Diligent ERROR/FATAL=0, CPU-Verformung/Fallback=0. Skills/Schadenszahlen
-wurden außerdem in der manuellen Sitzung ohne Auffälligkeiten bestätigt.
+**Zweite Nachbesserung: blaue Aura um die Rüstung.** Die Originaleffekte
+`armor-4-2-1.mse` und `armor-4-2-2.mse` wurden bereits korrekt eingereicht.
+Die sRGB-Dekodierung ihrer additiven Leuchtstärke schwächte besonders die
+weichen Farbverläufe so weit ab, dass die Aura gegenüber Classic verschwand.
+Additive World-Effekte (Blend ADD, Ziel ONE) behandeln die authored Combiner-
+Werte jetzt als Emissionsintensität. Quellfaktor und Alpha-Fade bleiben erhalten;
+normale Alpha-Flächen werden weiterhin von sRGB nach linear gewandelt.
+Der Effekt bleibt in HDR vor Bloom/Tone Mapping, mit normalem Depth-Test.
+Keine pauschale Helligkeitsverstärkung, PBR-Änderung oder Nebelwirkung.
+
+**Warum ein Adapter?** Die authored Legacy-Blendsemantik gehört zum Spiel.
+Der kleine Zweig im vorhandenen Diligent-Effektshader benötigt weder neue
+Targets noch zusätzliche Shader-Varianten oder per Frame erzeugte Ressourcen.
+
+GPU-Regression vergleicht blaue additive Partikel mit derselben HDR-Emission:
+Alpha 0/128/255 sowie SRC_ALPHA und SRC_COLOR; maximal 2/255 Abweichung.
+Der native A/B/C-Vergleich mit Originalrüstung **12019**, Schwert 19 und Kamera
+850/18/0 zeigt Classic, Modern vorher und korrigiertes Modern. Die Fixture
+aktualisiert nun auch die Partikelsimulation, die im regulären Client bereits
+von UpdateGame läuft. **346 Frames, 2768 Sphere-Map-Draws, Exit 0, Diligent und
+Shutdown=0**. Originale Aura-, Rüstungs- und Waffenpartikel im Effektlog belegt.
+Benutzerbestätigung: **"Aura und Schimmer sind wieder sichtbar"**.
+
+Der vorherige [native Effektlauf](../../build/g56x/colors/effects-run.log)
+(Fire, Melee, AoE, Snow, Drain; 5 Phasen/5 Captures, 23.72 s, Exit 0) bleibt
+als frühere Evidenz markiert. Die finalen GPU-Gates prüfen Blend-Parität,
+Fog-Unabhängigkeit, UI-Grenze und Bloom erneut.
 
 ## 38. UI
 
-HUD, Chat, Nameplates, Damage/Miss-Zahlen, Inventory, Settings, Minimap und Cursor
-folgen dem SDR-Weltabschluss. Der GPU-Test erhält den UI-Pixel **RGB 208/96/32**
-exakt trotz unterschiedlicher Exposure/Bloom-Einstellung. Derselbe Farbwert
-als Welteffekt reagiert auf Exposure. Benutzerabnahme: keine Auffälligkeiten.
+UI folgt dem SDR-Weltabschluss. GPU-Pixel RGB 208/96/32 bleibt unabhängig
+von Exposure/Bloom exakt gleich. Der finale native Menütest besteht mit
+16 Captures einschließlich Neustart. Nebelqualität ist entfernt; die echte
+Classic-Nebelwahl ist in Modern sowohl im Grafik- als auch im alten Systemdialog
+einschließlich Beschriftung ausgeblendet. Aktualisierung erfolgt bei Menüaktionen,
+ohne Produktions-Polling. HUD/Schadenszahlen/Skills wurden zusätzlich in der manuellen Schlussabnahme vom Benutzer bestätigt (§52).
 
 ## 39. GraphicsSettings
 
-Bestehende Felder Bloom, Himmelqualität und Nebelqualität aktiviert; kein
-UI-Redesign und keine Asset-Repository-Änderung. Modern erzwingt internes HDR,
-Classic löst HDR/Bloom/Sky/Fog-Features auf inaktiv auf.
+Nebelqualität wurde aus Menü, öffentlicher Settings-API und Runtime-Config
+entfernt. Alte `HIGH_QUALITY_FOG`-Dateiwerte werden validiert, kompatibel
+eingelesen und beim Speichern entfernt; sie verändern keine Einstellung.
+Keine Fake-Option. `fogLevel` bleibt eine echte Classic-Option und wird in
+Modern in beiden Dialogen samt Beschriftung ausgeblendet. Bloom und Himmelqualität
+bleiben. Die kleine Menübereinigung liegt im Assets-Arbeitsbranch; keine
+sonstige UI-Neugestaltung.
 
 ## 40. Presets
 
-| Preset | HDR/Tone Map | Bloom | Sky | Fog |
+| Preset | HDR/Tone Map | Bloom | Sky | Modern-Weltnebel |
 |---|---|---|---|---|
-| Modern Low | an | aus | Low | Low |
-| Modern Medium | an | aus | High | High |
-| Modern High | an | an | High | High |
-| Modern Ultra | an | an | High | High |
+| Modern Low | an | aus | Low | keiner |
+| Modern Medium | an | aus | High | keiner |
+| Modern High | an | an | High | keiner |
+| Modern Ultra | an | an | High | keiner |
 
-Keine zusätzlichen künstlichen Atmosphärenstufen. Andere bestehende Preset-
-Qualitäten behalten ihre reale G-DX-Bedeutung.
+Classic behält seine eigene bisherige Nebeldarstellung. Keine zusätzlichen
+Atmosphärenstufen oder unbeschrifteten Wirkungslos-Schalter.
 
 ## 41. Live Apply
 
-Nativer Settings-Lauf mit 14 Schritten plus zwei Neustartschritten, insgesamt
-**16 Captures**, erfolgreich. Bloom Off/On, Sky/Fog Low/High, Classic/Modern,
-UI, Persistenz, Map-Wechsel und Fensterübergänge sind abgedeckt.
-Der erste Versuch scheiterte an einer Testabfrage eines nicht exportierten
-Diagnosefeldes, wurde korrigiert und vollständig neu in einem frischen Root ausgeführt.
+[Finaler nativer Settings-Test](../../build/g56x/colors/settings-run-final.log):
+**14 Schritte + 2 Neustartschritte PASS**, 16 Captures, 30.17 + 6.11 s, beide
+Exitcodes 0. Nebelqualität fehlt in Dialog/API; beide Classic-Nebelwahlen
+und ihre Beschriftungen sind ausschließlich in Classic sichtbar.
+Bloom/Sky, Speichern/Laden, Classic↔Modern, Map-Wechsel, Dropdown-Schließen,
+gedrückter Sichtweiten-Slider, Resize und Minimize/Restore sind enthalten.
+Alle Ressourcen=0; finales Menü aus dem Assets-Branch im isolierten Root-Pack.
 
 ## 42. Morning Test
 
@@ -365,119 +485,129 @@ SSR/TAA bleiben inaktiv; keine G7-/G8-/H2-Erweiterung.
 
 ## 46. Performance
 
-[Messdaten und Methodik](../../build/g56x/performance.md),
-[CSV-Auswertung mit p95](../../build/g56x/performance.json).
-Gleiche A1→B1→A1-Szene, neun Map-/Kameraabschnitte, 1024×768, VSync,
-identische Schatten-/AO-Stufe. Erste 60 Frames je Abschnitt verworfen.
-Während dieser zwei Läufe keine parallelen Builds oder anderen Testclients.
+[Finale Performance-Sanity](../../build/g56x/colors/performance.md) und
+[Rohzusammenfassung](../../build/g56x/colors/performance.json). Gleiche A1→B1→A1-
+Sequenz, neun Kamerasegmente, 1024×768/VSync, erste 60 Frames je Segment
+ausgeschlossen. Alle vier Läufe isoliert; finale Schimmer-Version erst nach
+Abschluss der Builds/Gates und nach Beenden des vorherigen manuellen Clients.
 
-| Größe | G-DX | G5/6 |
-|---|---:|---:|
-| CPU-Mediane über die neun Abschnitte | 0.886–1.088 ms | 0.872–1.048 ms |
-| GPU-Frame-Mediane | 0.290–0.332 ms | 0.357–0.393 ms |
-| Max. privater Prozessspeicher | 621.2 MB | 652.2 MB |
-| Gezählt: eigene Scene/Shadow/BRDF/Atmo-Targets | 54,525,952 B | 79,572,976 B |
+| Messbereich über neun Kameras | G-DX | G56 bisher | Farb-/Fog-Revision | inklusive Item-Schimmer |
+|---|---:|---:|---:|---:|
+| CPU-Frame-Median ohne Present/Limiter, ms | 0.886–1.088 | 0.872–1.048 | 0.871–1.039 | 0.874–1.069 |
+| GPU-Frame-Median, ms | 0.290–0.332 | 0.357–0.393 | 0.353–0.396 | 0.361–0.393 |
+| Prozess Private Bytes Maximum, MiB | 621.2 | 652.2 | 662.5 | 666.6 |
+| Frames | 3501 | 3490 | 3484 | 3480 |
 
-GPU-Zuwachs paarweise etwa **0.06–0.08 ms**; keine allgemeine FPS-Garantie.
-HDR-Scene allein 6,291,456 B (6 MiB); Atmosphäre + beide Sky-Stufen + IBL
-9,318,384 B. Zusätzlich upstream Bloom: **5,242,872 B**, aus konkreten
-Target-Abmessungen berechnet. Internes PostFX/AO und Treiber-Overhead sind
-nicht vollständig in `ownedTargetBytes` enthalten.
-
-CPU-Einreichung im G56-Lauf, Summe / 3490 Frames: Atmosphere 111.371 ms
-(einschließlich Initialisierung/Änderungen), Bloom 59.1805 ms, Tone Mapping
-9.1091 ms, Composite 59.9376 ms. Das sind **keine GPU-Effektzeiten**.
-Fog liegt im Composite/Forward-Pass und hat keine isolierte Messung.
-Keine Performance-Finish-Phase, kein Stresslauf.
+Kurze Sanity, keine allgemeine FPS-Garantie oder Performance-Finish-Phase.
+Unverändert: HDR-Scene **6291456 B**, Atmosphäre/Sky/IBL **9318384 B**, eigene
+Targets **79572976 B**, upstream Bloom zusätzlich **5242872 B**. Keine neuen
+Targets für Schimmer; er nutzt die bestehende Sphere-Map und Materialbindung.
+Über 3480 Frames: CPU-Einreichung Atmosphäre 116.00 ms,
+Bloom 58.55 ms, ToneMap 9.21 ms,
+Composite 57.41 ms. Keine isolierten GPU-Passzeiten;
+Prozess Private Bytes ist keine vollständige GPU-Heap-Messung. World-Fog-Pass=0. Diese Messreihe liegt vor der anschließenden Aura-Korrektur; dafür wird keine neue Performance-Messung behauptet. Der kleine Shaderzweig fügt keine Targets, Varianten oder Draws hinzu.
 
 ## 47. First Use
 
-Die bestehenden Loading-Prewarm-Aufrufe bereiten HDR, Atmosphären-LUTs/IBL,
-Bloom und Tone Mapping vor dem ersten World Present vor. Manuelle Sitzung:
-Prewarm 5440.99 / 1513.86 ms; erste sichtbare World-CPU-Abgabe 8.9842 / 3.0222 ms.
-Diese Werte entstanden während weiterer Abnahmearbeiten, nicht als isolierter
-Vergleichsbenchmark.
-
-Ein bewusster Classic→Modern-Wechsel erstellt den freigegebenen Modern-Owner
-neu. Dafür gibt es Shaderaufbau im Umschaltframe; bestehende G-DX-Material-
-Varianten können danach bei ihrem ersten Auftreten entstehen. Das wird nicht
-als "0 Shader-Kompilierungen nach Start" ausgegeben. Initiales Gameplay und
-Relog verwenden den Loading-Prewarm. Runtime-PSO-Maximum der Sitzung 0.4543 ms.
+Loading-Prewarm für HDR/Atmosphäre/IBL/Bloom/Tone Mapping bleibt erhalten.
+Initiales Ingame und Relog verwenden ihn. Bei bewusstem Classic→Modern-Wechsel
+wird der freigegebene Owner mit Shadern neu aufgebaut; spätere Varianten
+können beim ersten Auftreten entstehen. Keine Behauptung "0 Shader-Compiles
+nach Startup". Alte manuelle Prewarm-Zahlen sind historische Evidenz.
 
 ## 48. Resource Lifetime
 
-HDR/Lighting/Depth, Bloom, ToneMap, Atmosphäre/Sky/IBL und PostFX sind persistente
-Owner-Ressourcen. Sun/Fog verwenden gemeinsame Konstanten und haben keinen
-eigenen zusätzlichen Frame-Target. Sky/IBL werden nur bei Sun-/Qualitätsänderung
-neu gefüllt. Alle Cube-RTVs werden einmal angelegt.
+Persistente HDR/Lighting/Depth-, Bloom-, ToneMap-, Atmosphären-/Sky-/IBL-
+und PostFX-Owner. Schimmer verwendet die existierende Textur-/Samplerbindung;
+kein neuer RenderTarget oder per Frame erzeugter Owner. Die Mesh-Submission
+hält ihre Sphere-Map bis zum Ende der jeweiligen Draw-/Shadow-Liste.
 
-Native Map-, Settings-, GLB-, Effects- und echte Login/Relog-Läufe enden mit
-ModernRenderers=0 und freigegebenen Source-, Asset-, Animation-, GR2-, GLB- und
-Vegetation-Owners. [Manuelle Auditdaten](../../build/g56x/manual-final.json)
-prüfen die benannten Zero-Felder. Das ist Owner-/Referenz-Evidenz, keine
-Behauptung einer vollständigen Treiber-Heap-Messung.
+[Runtime-Audit](../../build/g56x/colors/runtime-audit.json): **27 abgeschlossene
+Runtime-Verzeichnisse** einschließlich der ersten manuellen Sitzung, der
+Schimmer-Vergleiche und des finalen Maplaufs. Alle 31 Nullfelder und acht
+Renderer-Shutdownzeilen=0, ModernRenderers=0, Exit 0. Der aktuelle manuelle Abnahmelauf ist mit denselben Nullzählern geprüft. Die Aura-Vergleiche -01 liefen nach einem Fehler beim Erzeugen der Python-Fixture mit dem allgemeinen Testaufbau; sie gelten nicht als Aura-Nachweis. Die -02-Vergleiche verwenden die korrigierte Fixture.
 
 ## 49. Resize
 
 Window-Targets und größenabhängige PostFX/Bloom-Ressourcen werden freigegeben
 und passend neu angelegt; zugehörige SRBs werden zurückgesetzt.
-GPU-Test 512×384→320×240 sowie nativer Fenster-Test erfolgreich.
+Finaler GPU-Test **512×384→320×240 PASS** und nativer Fenster-Test **PASS**.
 Größenunabhängige Atmosphäre/IBL bleibt bestehen.
 
 ## 50. Minimize/Restore
 
-GPU-Test suspendiert bei 0×0, rendert dort keinen Frame und stellt korrekt
-wieder her. Nativer Window-Test bestätigt Minimize/Restore/Resize/OriginalSize.
-Kein Black Screen, Crash oder zurückbehaltener Owner in der Abnahme.
+Finaler GPU-Test suspendiert bei 0×0 ohne Frame und stellt korrekt wieder her.
+Finaler nativer Window-Test bestätigt **Minimize/Restore/Resize/OriginalSize**.
+Die automatischen Captures und Nullzähler zeigen keinen verbleibenden Black
+Screen oder Owner; beide Settings-Prozesse beenden sich mit Exit 0.
 
 ## 51. Map Change
 
-A1→B1→A1 im finalen HDR-Client: **3490 Frames**, Settings auf Bloom/Sky/Fog High,
-Exitcode 0. SceneLighting/Fog werden pro Map gelesen; Sun-/Sky-/IBL-Cache prüft
-aktuelle Werte. Kein stale Environment oder PostFX-Binding beobachtet.
+Finale isolierte **A1→B1→A1-Serie inklusive Item-Schimmer PASS**,
+3480 Frames, Exit 0. 218997 Legacy-Mesh-Draws,
+185026 Terrain-Draws, 1215051 Shadow-Draws und
+6960 originale Item-Schimmer-Draws.
+CPU-Deformation/Fallbacks=0, Diligent ERROR/FATAL=0, alle Shutdown-Owner=0.
+[Lauf](../../build/g56x/colors/shimmer-performance-run.log).
 
 ## 52. Login/Character Select
 
-Echte Sitzung: Start→Login→Select→Loading→Game, Relog, erneut Select/Loading/
-Game, ShutdownClean. Zwei World-Presents und zwei GameWindow-Open/Close-Paare.
-Benutzer bestätigt: **"Abnahme erfolgreich, keine Auffälligkeiten"**.
-Exitcode 0 und alle geprüften Zero-Felder erfüllt.
+Die erste Benutzerfreigabe lag vor der verbindlichen Designänderung.
+Danach meldete der Benutzer zuerst fehlenden Rüstungs-/Waffenschimmer und nach
+dessen Korrektur zusätzlich die zu schwache blaue Aura um die Rüstung.
+Beide Fehler wurden im laufenden Meilenstein nachgebessert (§25 und §37).
+Die vorherige manuelle Sitzung `g56-colors-manual-02` ist mit Exit 0 beendet.
 
-Die Sitzung verwendete den vollständigen Production-Pfad. Der danach ergänzte
-CMake-Compile-Schalter betrifft ausschließlich die Entwicklungssonnenprobe;
-bei −1 bleibt die normale Map-Beleuchtung gleich. Finaler Client und Probe
-wurden anschließend separat gebaut und in den nativen Sonnenansichten geprüft.
+Der aktuelle isolierte Client `build/g0x/runtime/g56-colors-manual-03` enthält
+die Aura-Korrektur und beide bereinigten Menüdateien. Release-Binary-SHA256:
+`bb3cfb6d5a9619df2f93aae51f2ed8474377b831e0fa3d5576357b1c2d535434`.
+Login/Select/Loading/Ingame, Relog, erneut Ingame und ShutdownClean sind im
+[Lifecycle-Protokoll](../../build/g0x/runtime/g56-colors-manual-03/gdxc-lifecycle.log)
+belegt. Beide Ingame-Einstiege erreichen WorldPresented. Exitcode 0,
+68437 GPUFrames, CPU-Deformation/Fallbacks=0, Diligent ERROR/FATAL=0,
+alle Ressourcen- und acht Renderer-Shutdownzeilen=0.
+
+Der Benutzer bestätigt ausdrücklich **"Aura und Schimmer sind wieder sichtbar"**
+und anschließend die vollständige Schlussfrage zu Farben, Nebelfreiheit,
+Player/Mob/Gebäude/Terrain/Vegetation, HUD/Schadenszahlen/Skills sowie
+Relog→Ingame→Beenden: **"Alles unauffällig, Relog und Beenden erfolgreich"**.
+Damit ist die erweiterte manuelle Abnahme für diesen aktuellen Stand **PASS**.
 
 ## 53. Release
 
-Vollständiger Release-Build **PASS**. Begrenztes Gate **64/64**: bisherige 62 plus
-`Graphics.HDRAtmosphereConfig` und `Graphics.HDRAtmosphereGpu`.
-[Finales Testlog](../../build/g56x/release-tests-final.log).
-Keine Vendor-Fuzzer/Benchmarks. Bekannte LNK4099-PDB-/LTCG-Hinweise bleiben;
-der Build wird nicht als warnungsfrei bezeichnet.
+Finaler vollständiger Release-Build mit Sphere-Map- und Aura-Korrektur **PASS**.
+Begrenzter Gate **64/64 PASS, 54.82 s**, Classic **12/12 bytegleich**.
+[Build](../../build/g56x/colors/aura-release-build-final.log) ·
+[Tests](../../build/g56x/colors/aura-release-tests-final.log).
+Frühere Farb-/Fog-/Schimmer-Gates bleiben separat erhalten. Bekannte Linker-
+und LTCG-Hinweise bleiben dokumentiert; keine Warnungsfreiheitsbehauptung.
 
 ## 54. Debug
 
-Vollständiger Debug-Build **PASS**, dasselbe begrenzte Gate **64/64**.
-[Finales Testlog](../../build/g56x/debug-tests-final.log).
-Diligent-Development-Validierung aktiv; der neue GPU-Test zählt ERROR/FATAL
-explizit. Bekannte LNK4098-/LNK4099-Linkerwarnungen sind nicht verschwiegen.
+Finaler vollständiger Debug-Build mit Sphere-Map- und Aura-Korrektur **PASS**.
+Begrenzter Gate **64/64 PASS, 186.23 s**, Classic **12/12 bytegleich**.
+[Build](../../build/g56x/colors/aura-debug-build-final.log) ·
+[Tests](../../build/g56x/colors/aura-debug-tests-final.log).
+Frühere Farb-/Fog-/Schimmer-Gates bleiben separat erhalten. Bekannte Linker-
+und LTCG-Hinweise bleiben dokumentiert; keine Warnungsfreiheitsbehauptung.
 
 ## 55. GCC/LP64
 
-Portabler Cygwin-GCC-Build und **34/34** Tests PASS: bisherige 33 plus die neue
-Exposure-/Sun-/Fog-/IBL-Validierung. Kein Diligent-GPU-Code im rendererlosen
-Harness. [Testlog](../../build/g56x/gcc-tests.log).
-Der erste eingeschränkte Build konnte vorhandene Cygwin-Objektdateien nicht
-schreiben; mit normalem Zugriff wurde er erfolgreich abgeschlossen.
+Finaler portabler GCC/LP64-Build **PASS**, **34/34 PASS, 5.78 s**,
+einschließlich expliziter PBR-Zuordnung, Legacy-Diffuse-Default und kompatibler
+Entfernung des Fog-Keys.
+[Build](../../build/g56x/colors/gcc-build-final.log) ·
+[Tests](../../build/g56x/colors/gcc-tests-final.log).
+Keine GPU-Abnahme im rendererlosen Harness.
 
 ## 56. Diligent Diagnostics
 
-Neuer GPU-Test und alle finalen nativen G56-Läufe: **0 ERROR, 0 FATAL**.
-Der native Client protokolliert die Diligent-Factory-Severities und beendet bei
-ERROR/FATAL mit Fehlercode. Keine schweigende Fehlerunterdrückung.
-Der bekannte einmalige Game-Log-Eintrag `invalid idx 0` in der echten Sitzung
-ist kein Diligent-Bindungsfehler und wird im Audit separat erhalten.
+Finale Release-/Debug-GPU-Gates und alle abgeschlossenen nativen Läufe:
+**Diligent ERROR=0, FATAL=0**. Neue Materialbindung im nativen Sphere-Map-
+Vergleich geprüft. Der bekannte Game-Log-Eintrag `invalid idx 0` bleibt
+separat; die Game-Log-Größen stehen im Runtime-Audit. Die erste manuelle
+Sitzung beendete sich ebenfalls mit Exit 0 und Nullzählern, trotz gemeldetem
+visuellem Schimmerfehler. Technische Nullzähler ersetzen keine visuelle Abnahme.
 
 ## 57. GR2 Regression
 
@@ -499,55 +629,75 @@ Keine SpeedTree-Runtime oder automatische Legacy-Route.
 
 ## 60. Classic Goldens
 
-**12/12 bytegleich in Release und Debug**, SHA256 gegen die erhaltene G-DX-
-Classic-Referenz. [Release](../../build/g56x/classic-Release.json),
-[Debug](../../build/g56x/classic-Debug.json). Classic benutzt keinen neuen
-HDR-/ToneMap-/Bloom-/Atmosphäre-Renderpfad.
+Finale SHA256-Vergleiche nach der Aura-Korrektur gegen die erhaltene
+G-DX-Referenz: **Release 12/12 und Debug 12/12 bytegleich**.
+[Release](../../build/g56x/colors/aura-classic-Release.json) ·
+[Debug](../../build/g56x/colors/aura-classic-Debug.json).
+Rohbilder beider finalen Konfigurationen getrennt gesichert. Classic weiterhin
+ohne HDR-/ToneMap-/Bloom-/Atmosphärenänderungen.
 
 ## 61. Visual Gallery
 
-[Interaktive A/B/C-Galerie](../../build/g56x/visual-proof.html),
-[Manifest mit Pfaden und SHA256](../../build/g56x/visual-manifest.json).
-Player/Wolf, großes Tor, Terrain, Vegetation, animated GLB, drei Sonnenstände,
-Emissive Off/On, PBR, UI und native Feuer-/Skill-/Snow-Aufnahmen.
-
-A/B/C-Weltbilder wurden mit erhaltenem Baseline-Client bzw. G56 und denselben
-Map-/Kameraangaben aufgenommen. Das kontrollierte GLB-B-Bild stammt aus der
-vorhandenen G-DX-Galerie; es ist ausdrücklich als erhaltene Referenz markiert.
-Kein Screenshot-Retouching. Rohbilder und Testlogs bleiben erhalten.
+[A/B/C-Galerie](../../build/g56x/colors/visual-proof.html),
+[44 Originalreferenzen mit SHA256](../../build/g56x/colors/visual-manifest.json).
+Feste Kameras für Player/Wolf, Tor, Terrain und Vegetation dokumentieren die
+Farb-/Fog-Revision. Zusätzlicher identischer Vergleich zeigt den anschließend
+gemeldeten Rüstungs-/Waffenschimmerfehler vor und nach der Korrektur sowie Classic.
+Alle GPU-Proofs stammen aus dem abschließenden Release-Gate: Legacy-Farben,
+PBR-Materialreihe, GLB, Bloom, UI-Bypass und drei Schimmer-Kontrollen. Zusätzlich zeigt der native Aura-Vergleich (§37) die zweite Nachbesserung. Der neue additive GPU-Proof liegt separat als `aura-release-gpu-proof/g56-authored-aura.ppm` vor.
+Weitere native Aufnahmen: drei Sonnenstände, GLB-Idle/Walk/Attack, Menü, Effekte.
+Originale native JPEGs unverändert; GPU-PPM/BMP nur verlustfrei nach PNG.
+Kronenausblendung bei niedriger Modern-Kamera offen benannt (§34).
 
 ## 62. Zero Legacy Audit
 
-**D3D9=0, Granny=0, SpeedTree=0** im Source-/Link-Gate und in Release-/Debug-
-DLL-Imports. Native Route: ZiiNAN GR2, AnimationRuntime, Vegetation und GPU-
-Skinning. [Importaudit](../../build/g56x/zero-legacy.json).
-Vorhandenes DDRAW für historische Plattformfunktionen wird nicht als D3D9
-umgedeutet. Keine Behauptung einer durchgeführten OS-Modulenumeration.
+Release und Debug: **0 direkte D3D9-/Granny-/SpeedTree-DLL-Imports**.
+[Importlisten und Binary-SHA256](../../build/g56x/colors/zero-legacy.json).
+Bestehende Source-/Link-/Unabhängigkeitsgates sind erneut grün. Native Runtimes:
+GrannyFileReads=0, CPU-Deformation=0, GPUFallbacks=0. Production bleibt ZiiNAN
+GR2, neutrale Animation und Vegetation. Vorhandenes DDRAW ist kein D3D9;
+keine OS-Modulenumeration behauptet.
 
 ## 63. Git Diff
 
-Source-Branch `codex/g56-hdr-atmosphere`; ursprünglicher HEAD unverändert.
-[Review-Patch einschließlich neuer Dateien](../../build/g56x/g56-review.patch),
-[Abschlussstatus](../../build/g56x/git-final.txt).
-Assets-Repository/main bleibt sauber. Kein Stage, Commit, Push oder Rewrite.
-Builds, Logs, Binaries und Bilder liegen in ignorierten Build-Verzeichnissen.
+Source: `codex/g56-hdr-atmosphere`, Designrevision auf vorhandenem `ec3d41c`.
+Assets: `codex/g56-hdr-colors`, HEAD `72d92593`; zwei Menüdateien geändert.
+Die neue, ungestagte Datei `tests/Graphics/prepare_g56_shimmer.py` ist in beiden
+Source-Patches enthalten; sie reproduziert den nativen Rüstungs-/Waffenvergleich.
+Main-Referenzen unverändert. Kein Staging, Commit, Push oder Rewrite durch
+diese Fortsetzung. Builds, Logs, Binaries und Bilder bleiben ignoriert.
+
+- [Source-Designrevision ab ec3d41c](../../build/g56x/colors/source-revision.patch)
+- [Gesamtes G56 ab 77645d2](../../build/g56x/colors/source-g56-full.patch)
+- [Assets-Menüänderung](../../build/g56x/colors/assets-menu.patch)
+- [Status, Patch-/Whitespace-Prüfung und Hashes](../../build/g56x/colors/git-audit.json)
+
+Beide Arbeitsbäume mit explizitem Repo-Pfad geprüft; Index leer. Die Patches
+enthalten keine Build-/Log-/Binary-/Screenshot-Dateien.
 
 ## 64. Known Limitations
 
-- SDR-Ausgabe; Windows D3D11-GPU-Abnahme, portable Config unter GCC/LP64.
-- Single Scattering, keine Mehrfachstreuung, volumetrischen Medien oder Wetter.
-- Legacy-Particle-Fog-/Blend-Semantik bleibt erhalten; keine generelle Neugestaltung alter Effekte.
-- Map-Bias ist als SceneLighting-Eingang vorbereitet, ohne neues Map-Dateiformat.
-- Expliziter Classic→Modern-Wechsel baut freigegebene Ressourcen neu auf.
-- Keine isolierten GPU-Passzeiten und keine vollständige Treiber-Speicherbilanz.
-- Bekannte Linkerwarnungen und der getrennt dokumentierte Game-Log-Baseline-Eintrag bleiben.
+- SDR-Ausgabe; D3D11-GPU-Abnahme unter Windows, portable Verträge unter GCC/LP64.
+- Atmosphäre nur Sky/Horizon/Sonne; Single Scattering, keine Wetter-/Volumetric-Engine.
+- Bestehende starke Kronenausblendung bei niedriger Modern-Kamera (§34); voller Blattfarbproof zusätzlich aus hoher Kamera.
+- Vorhandene View-/LOD-/Splatgrenzen bleiben sichtbar möglich; kein Nebel kaschiert sie.
+- Legacy-Diffuse ist originalnah, nicht Classic-pixelgleich: modernes Licht/Shadow/SSAO/Tone Mapping bleiben.
+- GLB ohne authored PBR-Block verwendet gemäß neuer Materialpolitik Diffuse statt automatisch erfundenem Metallic.
+- Expliziter Classic→Modern-Wechsel erstellt Ressourcen und Shader neu.
+- Keine isolierten GPU-Passzeiten oder vollständige Treiber-Speicherbilanz.
+- Bekannte Linkerwarnungen und getrennte Game-Log-Baseline bleiben dokumentiert.
 
 ## 65. GO/NO-GO
 
-**G5/6-X = GO.** Alle angeforderten Kernfunktionen, finalen Gates,
-A/B/C-Nachweise, native Lifecycle-/Effekt-/GLB-Prüfungen und Benutzerabnahme
-sind erfüllt. Finaler Release-Gate 64/64 in 58.45 s, Debug 64/64 in 137.00 s;
-Classic jeweils 12/12 bytegleich. Die Grenzen in Abschnitt 64 bleiben ausdrücklich bestehen.
+**G5/6-X = GO. Technische Gates und vollständige manuelle Abnahme PASS.**
+Legacy-Farben ohne künstliches PBR, explizite PBR-Route, Sky/Horizon ohne
+Weltnebel und bereinigtes Menü sind implementiert. Originaler Item-Schimmer
+und additive blaue Aura sind wieder sichtbar und gezielt getestet.
+Release 64/64, Debug 64/64, unveränderte portable Verträge GCC/LP64 34/34,
+Classic je 12/12 bytegleich, Runtime-/Importaudits grün. Benutzer bestätigt
+die vollständige aktuelle Schlussabnahme; Login→Select→Ingame→Relog→Ingame→
+ShutdownClean mit Exit 0 und Nullzählern protokolliert (§52).
+Kein Neustart des Milestones, kein Commit/Push. Nach G5/6 STOP.
 
 ## 66. Recommendation G7-X
 

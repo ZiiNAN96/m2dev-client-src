@@ -53,7 +53,7 @@ int main()
             for(unsigned i=0;i<12;++i) {
                 draw.matrices.world=identity;draw.matrices.world[0]=draw.matrices.world[5]=draw.matrices.world[10]=.72f;
                 draw.matrices.world[12]=(float(i%4)-1.5f)*2.6f;draw.matrices.world[13]=(1-float(i/4))*2.4f;
-                auto material=std::make_shared<MaterialRuntimeData>();material->baseColor={.55f,.19f,.07f,1};
+                auto material=std::make_shared<MaterialRuntimeData>();material->model=AssetRuntime::MaterialModel::PBRMetallicRoughness;material->baseColor={.55f,.19f,.07f,1};
                 material->roughness=i==1||i==3?.08f:.85f;material->metallic=i==2||i==3?1.f:0.f;
                 if(i==4||i==11){material->textures[1]=normal;material->normalScale=i==11?0.f:1.f;}
                 if(i==5)material->textures[4]=occlusion;

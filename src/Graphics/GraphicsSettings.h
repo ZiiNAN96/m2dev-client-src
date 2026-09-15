@@ -32,9 +32,9 @@ struct GraphicsSettings
     WaterQuality water{WaterQuality::High};
     VegetationQuality vegetation{VegetationQuality::High};
     TextureQuality textures{TextureQuality::High};
-    bool hdr{}, bloom{}, modernSky{}, highQualityFog{};
+    bool hdr{}, bloom{}, modernSky{};
     float viewDistance{DefaultViewDistance};
-    int fogLevel{}; // Existing dense / middle / light choice, distinct from future fog quality.
+    int fogLevel{}; // Classic-only dense / middle / light choice.
     bool operator==(const GraphicsSettings&) const = default;
 };
 
@@ -48,7 +48,7 @@ struct GraphicsRuntimeConfig
     WaterQuality water{WaterQuality::High};
     VegetationQuality vegetation{VegetationQuality::High};
     TextureQuality textures{TextureQuality::High};
-    bool hdr{}, bloom{}, modernSky{}, highQualityFog{};
+    bool hdr{}, bloom{}, modernSky{};
     float viewDistance{DefaultViewDistance};
     float vegetationDistanceScale{1.f};
     float fogDistanceScale{.75f}, fogDensity{.000006f};

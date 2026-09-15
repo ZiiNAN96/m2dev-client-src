@@ -29,7 +29,7 @@ if($Modern) { "VERSION 1`nPRESET 4`nSTYLE 1`nSHADOWS $Shadows`nAO $AO" | Set-Con
 elseif($Benchmark) { "VERSION 1`nPRESET 4`nSTYLE 0`nSHADOWS $Shadows`nAO $AO" | Set-Content -LiteralPath "$target/config/graphics.cfg" }
 if($HDRAtmosphere) {
     if(-not $Modern){throw 'HDRAtmosphere requires Modern.'}
-    "BLOOM 1`nMODERN_SKY 1`nHIGH_QUALITY_FOG 1" | Add-Content -LiteralPath "$target/config/graphics.cfg"
+    "BLOOM 1`nMODERN_SKY 1" | Add-Content -LiteralPath "$target/config/graphics.cfg"
 }
 Copy-Item -LiteralPath $rootTemplate -Destination "$target/test-root/root" -Recurse
 $fixture = Get-Content -LiteralPath "$PSScriptRoot/../AnimationRuntime/runtime_entry.py" -Raw

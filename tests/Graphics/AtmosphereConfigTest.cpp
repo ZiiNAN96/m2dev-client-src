@@ -15,7 +15,7 @@ int main() {
             Check(config.bloom==(preset==GraphicsPreset::High||preset==GraphicsPreset::Ultra),"highlight-only bloom default");
             Check(atmosphere.skyWidth==(preset==GraphicsPreset::Low?128u:256u),"two real sky resolutions");
             settings.style=GraphicsStyle::Classic;config=Resolve(settings);
-            Check(!config.hdr&&!config.bloom&&!GraphicsFeatures{config}.UseModernSky()&&!config.highQualityFog,"Classic bypasses all new effects");
+            Check(!config.hdr&&!config.bloom&&!GraphicsFeatures{config}.UseModernSky(),"Classic bypasses all new effects");
         }
         GraphicsRuntimeConfig config;SceneLighting light;
         light.exposureBias=1;Check(ResolveAtmosphere(light,config).exposure==4,"one stop doubles exposure");

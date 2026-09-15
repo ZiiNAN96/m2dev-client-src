@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "EterLib/SourceResourceAudit.h"
 #include "MapOutdoor.h"
+#include "Renderer/GraphicsConfig.h"
 #include "TerrainPatch.h"
 #include "TerrainQuadtree.h"
 
@@ -36,6 +37,10 @@ void CMapOutdoor::__RenderTerrain_RenderSoftwareTransformPatch()
 
 	std::vector<std::pair<float ,long> >::iterator far_it = std::upper_bound(m_PatchVector.begin(),m_PatchVector.end(),fog_far);
 	std::vector<std::pair<float ,long> >::iterator near_it = std::upper_bound(m_PatchVector.begin(),m_PatchVector.end(),fog_near);
+    // Keep all visible Modern terrain textured. Classic retains its authored
+    // distance fog and the old solid-colour far patch optimization.
+    if(Renderer::GetGraphicsRuntimeConfig().style==Graphics::GraphicsStyle::Modern)
+        near_it=far_it=m_PatchVector.end();
 
 	WORD wPrimitiveCount;
 	Renderer::PrimitiveTopology ePrimitiveType;

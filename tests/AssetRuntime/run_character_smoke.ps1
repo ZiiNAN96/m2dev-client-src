@@ -18,7 +18,7 @@ Copy-Item -LiteralPath "$original/config" -Destination "$target/config" -Recurse
 if($Modern) { "VERSION 1`nPRESET 4`nSTYLE 1`nSHADOWS 4`nAO 2" | Set-Content -LiteralPath "$target/config/graphics.cfg" }
 if($HDRAtmosphere) {
     if(-not $Modern){throw 'HDRAtmosphere requires Modern.'}
-    "BLOOM 1`nMODERN_SKY 1`nHIGH_QUALITY_FOG 1" | Add-Content -LiteralPath "$target/config/graphics.cfg"
+    "BLOOM 1`nMODERN_SKY 1" | Add-Content -LiteralPath "$target/config/graphics.cfg"
 }
 Copy-Item -LiteralPath "$original/assets/root" -Destination "$target/test-root/root" -Recurse
 Copy-Item -LiteralPath "$PSScriptRoot/character_runtime_entry.py" -Destination "$target/test-root/root/prototype.py"

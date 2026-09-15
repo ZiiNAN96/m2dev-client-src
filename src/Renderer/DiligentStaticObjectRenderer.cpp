@@ -538,6 +538,7 @@ void DiligentStaticObjectRenderer::Draw(const StaticObjectGeometryPtr& geometry,
             submission.draw=draw;submission.baseVertex=draw.baseVertex-(rigid?mesh->skin->deformCount:0);
             submission.textures[0]=image->texture->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE);
             if(draw.cameraAlpha)submission.cameraAlpha=cameraImage->texture->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE);
+            if(draw.sphereMap)submission.sphereMap=cameraImage->texture->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE);
             if(draw.material)for(unsigned i=1;i<submission.textures.size();++i)
                 if(auto map=std::dynamic_pointer_cast<Texture>(draw.material->textures[i]))
                     submission.textures[i]=map->texture->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE);

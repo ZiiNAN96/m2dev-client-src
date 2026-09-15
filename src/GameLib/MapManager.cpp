@@ -234,7 +234,8 @@ void CMapManager::BeginEnvironment()
 	DRAWSTATE.SaveRenderState(Renderer::StateLighting, TRUE);
 
 	// Fog
-	DRAWSTATE.SaveRenderState(Renderer::StateFogEnable, mc_pcurEnvironmentData->bFogEnable);
+	DRAWSTATE.SaveRenderState(Renderer::StateFogEnable,
+        Renderer::GetGraphicsRuntimeConfig().style==Graphics::GraphicsStyle::Classic && mc_pcurEnvironmentData->bFogEnable);
 
 	// Material
 	DRAWSTATE.SetMaterial(&mc_pcurEnvironmentData->Material);

@@ -16,9 +16,9 @@ source = source.replace('chrmgr.LoadLocalRaceData("msm/warrior_m.msm")', '')
 source = source.replace('playersettingmodule.__LoadGameWarriorEx(0, "d:/ymir work/pc/warrior/")',
     'for phase in ("INIT", "WARRIOR", "ASSASSIN", "SURA", "SHAMAN"): playersettingmodule.LoadGameData(phase)')
 source = source.replace('SCENES = (("a1", 44000, 27200, 0),)', '''SCENES = (("b1", 64000, 55300, 0), ("b1", 64000, 55300, 0),
-          ("a1", 44000, 27200, 0), ("b1", 68900, 53200, 0),
+          ("b1", 68900, 53200, 0), ("b1", 68900, 53200, 0),
           ("a1", 44000, 27200, 0), ("a1", 44000, 27200, 0), ("a1", 44000, 27200, 0))
-VIEWS = ((1800, 22, 0), (4000, 18, 0), (6500, 35, 0), (3500, 20, 0),
+VIEWS = ((1800, 22, 0), (4000, 18, 0), (5000, 55, 40), (3500, 20, 0),
          (4000, -15, 97), (4000, -75, 129), (4000, -15, -97))
 NAMES = ("player-wolf", "building", "terrain", "vegetation", "morning", "noon", "evening")''')
 source = source.replace('int(elapsed / 60)', 'int(elapsed / 8)').replace('elapsed - phase * 60', 'elapsed - phase * 8')

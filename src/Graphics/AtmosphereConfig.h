@@ -10,7 +10,6 @@ struct AtmosphereConfig
     float exposure{2.f};
     float bloomThreshold{2.f},bloomIntensity{.06f},bloomRadius{.65f};
     unsigned skyWidth{128},skyHeight{64};
-    bool highQualityFog{};
 };
 inline AtmosphereConfig ResolveAtmosphere(const SceneLighting& input,const GraphicsRuntimeConfig& settings)
 {
@@ -18,7 +17,6 @@ inline AtmosphereConfig ResolveAtmosphere(const SceneLighting& input,const Graph
     AtmosphereConfig result;
     result.exposure*=std::exp2(light.exposureBias);
     if(settings.modernSky){result.skyWidth=256;result.skyHeight=128;}
-    result.highQualityFog=settings.highQualityFog;
     return result;
 }
 // Development-only fixed states. All consumers still receive the same validated

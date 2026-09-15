@@ -261,7 +261,6 @@ void CPythonApplication::RenderGame()
         m_pyBackground.GetCurrentEnvironmentData(&environment);
         if(environment) {
             const auto& sun=environment->DirLights[ENV_DIRLIGHT_BACKGROUND];
-            const auto& config=Renderer::GetGraphicsRuntimeConfig();
             Graphics::LegacyEnvironmentLight source;
             source.direction={sun.Direction.x,sun.Direction.y,sun.Direction.z};
             source.diffuse={sun.Diffuse.r,sun.Diffuse.g,sun.Diffuse.b};
@@ -273,11 +272,7 @@ void CPythonApplication::RenderGame()
             source.enabled=environment->bDirLightsEnable[ENV_DIRLIGHT_BACKGROUND]!=FALSE;
             light=Graphics::ResolveLegacyEnvironmentLight(source);
             light.fogColor={environment->FogColor.r,environment->FogColor.g,environment->FogColor.b};
-            light.fogEnabled=environment->bFogEnable!=FALSE;
-            light.densityFog=environment->bDensityFog&&environment->bFogLevel!=0;
-            light.fogDensity=environment->bFogLevel*config.fogDensity;
-            light.fogNear=environment->GetFogNearDistance()*config.fogDistanceScale;
-            light.fogFar=environment->GetFogFarDistance()*config.fogDistanceScale;
+            // Authored fog colour is a sky-horizon input only in Modern.
         }
 #ifdef M2_RENDERER_DIAGNOSTICS
         if(Graphics::developmentSunState>=0)light=Graphics::WithDevelopmentSun(light,unsigned(Graphics::developmentSunState));

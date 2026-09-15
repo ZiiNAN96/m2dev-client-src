@@ -26,7 +26,7 @@ struct ModernMeshSubmission
 {
     Diligent::RefCntAutoPtr<Diligent::IBuffer> vertices,indices,extras,palette,tangents;
     std::array<Diligent::RefCntAutoPtr<Diligent::ITextureView>,AssetRuntime::MaterialTextureCount> textures;
-    Diligent::RefCntAutoPtr<Diligent::ITextureView> cameraAlpha;
+    Diligent::RefCntAutoPtr<Diligent::ITextureView> cameraAlpha,sphereMap;
     StaticObjectDraw draw;
     Diligent::VALUE_TYPE indexType{Diligent::VT_UINT16};
     unsigned baseVertex{};

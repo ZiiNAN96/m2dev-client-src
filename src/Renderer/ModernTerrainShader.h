@@ -1,9 +1,9 @@
 #pragma once
 namespace Renderer
 {
-// Existing terrain texture/alpha coordinate semantics, with the shared FX BRDF.
+// Authored terrain diffuse and splat coverage, lit without invented PBR data.
 inline constexpr char modernTerrainShader[]=R"(
-#include "PBR_Shading.fxh"
+#include "SRGBUtilities.fxh"
 cbuffer ModernTerrain {
  row_major float4x4 World;row_major float4x4 View;row_major float4x4 Projection;
  row_major float4x4 ColorTransform;row_major float4x4 AlphaTransform;
@@ -41,11 +41,11 @@ TerrainTargets TerrainPS(TerrainOutput i) {
  float3 color=FastSRGBToLinear(sampled.rgb);
  // STP diffuse RGB already contains CPU sunlight. Modern evaluates sunlight
  // once on the GPU; diffuse alpha still selects the existing splat layers.
- if((Modes.x&7)==2)color=lerp(FastSRGBToLinear(TextureFactor.rgb),color,i.diffuse.a);
- float3 N=normalize(i.normal);float3 V=normalize(CameraPosition.xyz-i.world);
- SurfaceReflectanceInfo material=GetSurfaceReflectanceMR(color,0,.9);
- TerrainTargets o;o.direct=float4(ApplyDirectionalLightGGX(SunDirection.xyz,SunColor.rgb,material,N,V),alpha);
- o.indirect=float4(AmbientColor.rgb*material.DiffuseColor,alpha);
+ // BlendDiffuseAlpha in STP was the legacy fog blend, not a material layer.
+ // Modern keeps the original texture; texture masks still select the splats.
+ float3 N=normalize(i.normal);
+ TerrainTargets o;o.direct=float4(color*SunColor.rgb*(saturate(dot(N,-SunDirection.xyz))/3.14159265359),alpha);
+ o.indirect=float4(AmbientColor.rgb*color,alpha);
  o.emission=float4(0,0,0,alpha);o.normal=float4(N,alpha);
 #if GDX_SOLID
  // Existing far-terrain solid fog fill is already an environment color.

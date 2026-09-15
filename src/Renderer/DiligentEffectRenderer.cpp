@@ -110,10 +110,14 @@ float4 PS(Output i):SV_TARGET {
  }
 #endif
  if(Modes.w!=0 && !Compare(Alpha.w,floor(saturate(c.a)*255+0.5),float(Color.w))) discard;
- c.rgb=lerp(FogColor.rgb,c.rgb,i.fog);
 #if EFFECT_HDR
- // Keep authored alpha/combiner rules, then enter the linear HDR world.
- c.rgb=FastSRGBToLinear(c.rgb);
+ // Additive legacy effects author emission strength, including faint coloured
+ // aura tails. Decoding that strength as surface albedo crushes their glow.
+ // Keep it in the HDR emission domain; retain the authored blend and alpha.
+ // Ordinary alpha surfaces still use the sRGB colour conversion. No world fog.
+ if(SecondaryAlpha.w==0) c.rgb=FastSRGBToLinear(c.rgb);
+#else
+ c.rgb=lerp(FogColor.rgb,c.rgb,i.fog);
 #endif
  return c;
 }
@@ -344,7 +348,8 @@ void DiligentEffectRenderer::Draw(const EffectVertex* vertices,uint32_t count,co
             mapped->coordinates={d.textureCoordinates,d.textureTransformFlags,d.secondaryCoordinates,d.secondaryTransformFlags};
             mapped->secondaryTransform=d.secondaryTransform;
             mapped->secondaryColor={d.secondaryColorOp,d.secondaryColorArg1,d.secondaryColorArg2,uint32_t(bool(secondary))};
-            mapped->secondaryAlpha={d.secondaryAlphaOp,d.secondaryAlphaArg1,d.secondaryAlphaArg2,0};
+            mapped->secondaryAlpha={d.secondaryAlphaOp,d.secondaryAlphaArg1,d.secondaryAlphaArg2,
+                uint32_t(hdr&&d.blend&&dst==2&&d.blendOp==1)};
         }
         if(d.textured) {
             p.bindings->GetVariableByName(SHADER_TYPE_PIXEL,"EffectTexture")->Set(texture->image->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE));
