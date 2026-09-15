@@ -93,4 +93,11 @@ if(M2_BUILD_WINDOWS_CLIENT)
     target_link_libraries(WideIndexRenderTest PRIVATE M2RendererDiligent M2FirstPartyArchitectureChecks)
     add_test(NAME AssetRuntime.WideIndices COMMAND WideIndexRenderTest)
     set_tests_properties(AssetRuntime.WideIndices PROPERTIES LABELS "assets;gpu;fast;e1x" TIMEOUT 30 RUN_SERIAL TRUE)
+    set_tests_properties(AssetRuntime.GlTFRender AssetRuntime.GlTFCharacterRender
+        PROPERTIES FIXTURES_SETUP ClassicCaptures)
+    add_test(NAME Renderer.ClassicGoldens COMMAND ${CMAKE_COMMAND}
+        "-DCAPTURE_DIRECTORY=${CMAKE_CURRENT_BINARY_DIR}"
+        -P "${CMAKE_SOURCE_DIR}/tests/goldens/classic/Verify.cmake")
+    set_tests_properties(Renderer.ClassicGoldens PROPERTIES
+        LABELS "renderer;golden;fast" TIMEOUT 15 FIXTURES_REQUIRED ClassicCaptures)
 endif()

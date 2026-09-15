@@ -37,7 +37,7 @@ $backends=@('default','diligent')
 foreach($backend in $backends) {
     New-Item -ItemType Directory -Path "$target/$backend-bin","$target/$backend-runtime" | Out-Null
     $configBackend=if($backend -eq 'default') { 'diligent' } else { $backend }
-    Copy-Item -LiteralPath "$source/build/milestone5a/normal-gate/$configBackend-runtime/config" -Destination "$target/$backend-runtime/config" -Recurse
+    Copy-Item -LiteralPath "$source/test-data/legacy-renderer/$configBackend-config" -Destination "$target/$backend-runtime/config" -Recurse
     if($Milestone -in @('milestone11','milestone12','milestone13a','milestone13b','milestone13c')) { New-Item -ItemType File -Path "$target/$backend-runtime/config/renderer-audit.enabled" | Out-Null }
     if($StartupFailure) { Copy-Item -LiteralPath "$PSScriptRoot/startup_failure.cfg" -Destination "$target/$backend-runtime/config/metin2.cfg" }
     if($UiConfiguration) {

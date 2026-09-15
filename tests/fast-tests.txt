@@ -64,3 +64,4 @@ AssetTool.ConvertRenderFixture
 AssetTool.DiligentRoundtrip
 Graphics.WaterConfig
 Graphics.ModernWaterGpu
+Renderer.ClassicGoldens

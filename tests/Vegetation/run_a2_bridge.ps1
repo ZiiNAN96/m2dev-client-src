@@ -1,7 +1,7 @@
 param(
     [Parameter(Mandatory=$true)][ValidatePattern('^[a-zA-Z0-9_-]+$')][string]$Name,
     [ValidateSet('ziinan')][string]$Vegetation='ziinan',
-    [string]$BuildDirectory='build-hx-clean'
+    [string]$BuildDirectory='build'
 )
 $ErrorActionPreference='Stop'
 $source=(Resolve-Path -LiteralPath "$PSScriptRoot/../..").Path
@@ -14,7 +14,7 @@ Copy-Item -LiteralPath "$build/bin/Release/Metin2_Release.exe" -Destination "$ta
 Copy-Item -LiteralPath "$original/config" -Destination "$target/config" -Recurse
 Copy-Item -LiteralPath "$original/assets/root" -Destination "$target/test-root/root" -Recurse
 Copy-Item -LiteralPath "$PSScriptRoot/a2_bridge_entry.py" -Destination "$target/test-root/root/prototype.py"
-if ($Vegetation -eq 'ziinan') {Copy-Item -LiteralPath "$source/build/hx/compiled/vegetation" -Destination "$target/vegetation" -Recurse}
+if ($Vegetation -eq 'ziinan') {Copy-Item -LiteralPath "$source/test-data/vegetation/vegetation" -Destination "$target/vegetation" -Recurse}
 foreach ($file in Get-ChildItem -LiteralPath "$original/pack" -File) {
     if ($file.Name -ne 'root.pck') {New-Item -ItemType HardLink -Path "$target/pack/$($file.Name)" -Target $file.FullName | Out-Null}
 }

@@ -5,7 +5,7 @@ param(
     [switch]$ProductionDefault,
     [switch]$MultiMap,
     [ValidateSet('ziinan')][string]$Vegetation = 'ziinan',
-    [string]$VegetationAssets = 'build/hx/compiled',
+    [string]$VegetationAssets = 'test-data/vegetation',
     [switch]$VegetationForest,
     [switch]$Modern,
     [switch]$HDRAtmosphere,
