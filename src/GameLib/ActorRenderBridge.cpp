@@ -7,6 +7,7 @@
 #include "EterLib/DrawState.h"
 #include "Renderer/Diagnostics.h"
 #include "Renderer/AssetMaterialRenderData.h"
+#include "Renderer/GraphicsConfig.h"
 #include <fstream>
 
 // ZiiNAN: Diligent mount actor rendering
@@ -120,6 +121,7 @@ void Submit(void* context, const void* nativeInstance, ActorPart part, const Act
     auto& material=palette.GetMaterialRef(native.material);
     const auto& materialAsset=material.GetAsset();
     ApplyAssetMaterial(materialAsset,draw);
+    if(GetGraphicsRuntimeConfig().style==Graphics::GraphicsStyle::Modern)draw.material=material.GetModernMaterial(*actorRenderer);
     // OneTexture's opacity pass uses the same native stage-0 image, not a synthetic second mask.
     auto load=[&](const std::string& name) -> TerrainTexturePtr {
         return LoadActorTexture(data,name,part,category);

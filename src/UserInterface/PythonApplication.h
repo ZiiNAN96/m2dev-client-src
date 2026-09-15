@@ -175,6 +175,7 @@ class CPythonApplication : public CMSApplication, public CInputKeyboard, public 
 
 		void UpdateGame();
 		void RenderGame();
+        bool PrewarmModernWorld();
 
 		bool Process();
 

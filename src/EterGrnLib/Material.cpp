@@ -57,6 +57,9 @@ void CGrannyMaterial::Copy(CGrannyMaterial& rkMtrl)
 	m_roImage[1] =  rkMtrl.m_roImage[1];
     m_eType = rkMtrl.m_eType;
     m_asset = rkMtrl.m_asset;
+    m_modernMaterial = rkMtrl.m_modernMaterial;
+    m_modernUploader = rkMtrl.m_modernUploader;
+    m_modernImages = rkMtrl.m_modernImages;
     if (m_asset.explicitRenderState) {
         m_bTwoSideRender = rkMtrl.m_bTwoSideRender;
         SetSpecularInfo(rkMtrl.m_bSpecularEnable, rkMtrl.m_fSpecularPower, rkMtrl.m_bSphereMapIndex);
@@ -217,6 +220,8 @@ CGraphicImage* CGrannyMaterial::__GetImagePointer(const char* fileName)
 
 bool CGrannyMaterial::CreateFromAsset(const AssetRuntime::MaterialAsset& material)
 {
+    m_modernMaterial.reset();m_modernUploader.reset();
+    for(auto& image:m_modernImages) image=nullptr;
     if (material.explicitRenderState) {
         if (!std::isfinite(material.alphaCutoff) || material.alphaCutoff < 0.0f) return false;
         for (const auto factor : material.baseColorFactor)
@@ -269,12 +274,43 @@ bool CGrannyMaterial::CreateFromAsset(const AssetRuntime::MaterialAsset& materia
 
 void CGrannyMaterial::Initialize()
 {
+    m_modernMaterial.reset();m_modernUploader.reset();
+    for(auto& image:m_modernImages) image=nullptr;
 	m_sourceAsset = nullptr;
 	m_eType = TYPE_DIFFUSE_PNT;
 	m_roImage[0] = NULL;
 	m_roImage[1] = NULL;
 
 	SetSpecularInfo(FALSE, 0.0f, 0);
+}
+
+std::shared_ptr<const Renderer::MaterialRuntimeData> CGrannyMaterial::GetModernMaterial(Renderer::ITextureUploader& uploader) const
+{
+    if(m_modernMaterial && m_modernUploader.lock()==uploader.TextureCacheLifetime().lock()) return m_modernMaterial;
+    auto result=std::make_shared<Renderer::MaterialRuntimeData>();
+    result->baseColor=m_asset.baseColorFactor;result->emissive=m_asset.emissiveColor;
+    result->roughness=m_asset.roughness;result->metallic=m_asset.metallic;
+    result->normalScale=m_asset.normalScale;result->occlusionStrength=m_asset.occlusionStrength;
+    result->model=m_asset.model;
+    result->roughnessChannel=m_asset.materialTextures[2].channel;
+    result->metallicChannel=m_asset.materialTextures[3].channel;
+    result->occlusionChannel=m_asset.materialTextures[4].channel;
+    for(std::size_t i=1;i<AssetRuntime::MaterialTextureCount;++i) {
+        const auto& source=m_asset.materialTextures[i];
+        CGraphicImage* image=nullptr;
+        if(source.image) image=CResourceManager::Instance().GetEncodedImagePointer(source.image);
+        else if(!source.id.empty()) {
+            auto* resource=CResourceManager::Instance().GetResourcePointer(source.id.c_str());
+            if(resource&&resource->IsType(CGraphicImage::Type()))image=static_cast<CGraphicImage*>(resource);
+        }
+        if(image && !image->IsEmpty()) {
+            m_modernImages[i]=image;result->textures[i]=image->GetAssetTexture(uploader);
+        }
+        if(!source.id.empty() && !result->textures[i])
+            TraceError("G-DX: invalid optional material map uses neutral fallback: %s",source.id.c_str());
+    }
+    m_modernUploader=uploader.TextureCacheLifetime();m_modernMaterial=std::move(result);
+    return m_modernMaterial;
 }
 
 void CGrannyMaterial::__ApplyDiffuseRenderState()

@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "GrpObjectInstance.h"
+#include "Renderer/ModernFrame.h"
 #include "EterBase/Timer.h"
 
 void CGraphicObjectInstance::OnInitialize()
@@ -18,6 +19,7 @@ void CGraphicObjectInstance::Clear()
 	ClearHeightInstance();
 
 	m_isVisible = TRUE;
+    m_shadowHidden=false;
 
 	m_v3Position.x = m_v3Position.y = m_v3Position.z = 0.0f;
 	m_v3Scale.x = m_v3Scale.y = m_v3Scale.z = 1.0f;
@@ -193,11 +195,15 @@ void CGraphicObjectInstance::SetScale(float x, float y, float z)
 
 void CGraphicObjectInstance::Show()
 {
+    if(Renderer::shadowCasterCollection)return;
+    m_shadowHidden=false;
 	m_isVisible = true;
 }
 
 void CGraphicObjectInstance::Hide()
 {
+    if(Renderer::shadowCasterCollection)return;
+    m_shadowHidden=true;
 	m_isVisible = false;
 }
 
@@ -211,7 +217,13 @@ void CGraphicObjectInstance::ReleaseAlwaysHidden() {
 
 bool CGraphicObjectInstance::isShow()
 {
-	return m_isVisible;
+    if(Renderer::shadowCasterCollection && Renderer::modernFrame) {
+        if(m_isAlwaysHidden||m_shadowHidden)return false;
+        Math::Vector3 center;float radius;
+        if(GetBoundingSphere(center,radius))
+            return Renderer::modernFrame->ShadowCasterVisible({center.x,center.y,center.z},radius);
+    }
+    return m_isVisible;
 }
 
 // 
@@ -282,7 +294,8 @@ void CGraphicObjectInstance::Initialize()
 
 	m_pHeightAttributeInstance = NULL;
 	
-	m_isVisible = TRUE;	
+	m_isVisible = TRUE;
+    m_shadowHidden=false;
 
 	m_BlockCamera = false;
 	m_isAlwaysHidden = false;

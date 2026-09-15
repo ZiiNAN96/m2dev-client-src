@@ -10,6 +10,7 @@
 #include "Renderer/AssetMaterialRenderData.h"
 #include "Renderer/SkinningBenchmark.h"
 #include "GlTFFixtures.h"
+#include "../Graphics/ModernSceneTest.h"
 #include <algorithm>
 #include <cstring>
 #include <fstream>
@@ -29,7 +30,7 @@ static void SaveBMP(const std::vector<std::uint8_t>& rgb, std::uint32_t width, s
     BITMAPINFOHEADER info{};
     info.biSize = sizeof(info); info.biWidth = LONG(width); info.biHeight = -LONG(height);
     info.biPlanes = 1; info.biBitCount = 24; info.biSizeImage = pitch * height;
-    std::ofstream out(std::string(offline ? "e2x-converted-stall-" : "e1x-market-stall-") + (special ? "blend" : "static") + "-camera-" + std::to_string(camera) + ".bmp", std::ios::binary);
+    std::ofstream out(std::string(gdxTestModern?"gdx-modern-":"")+std::string(offline ? "e2x-converted-stall-" : "e1x-market-stall-") + (special ? "blend" : "static") + "-camera-" + std::to_string(camera) + ".bmp", std::ios::binary);
     out.write(reinterpret_cast<const char*>(&file), sizeof(file));
     out.write(reinterpret_cast<const char*>(&info), sizeof(info));
     std::vector<std::uint8_t> row(pitch);
@@ -47,7 +48,8 @@ int main(int argc, char** argv)
     HWND window = nullptr;
     try {
         const bool offline = argc == 3 && std::string_view(argv[2]) == "--offline-asset";
-        Check(argc == 2 || offline, "Expected GLB path and optional --offline-asset");
+        const bool modern=argc==3&&std::string_view(argv[2])=="--modern";
+        Check(argc == 2 || offline || modern, "Expected GLB path and optional --offline-asset or --modern");ConfigureModernScene(modern);
         CPackManager packs;
         CResourceManager resources;
         for (const auto extension : ModelExtensions()) resources.RegisterResourceNewFunctionPointer(extension.data(), NewModel);
@@ -62,6 +64,12 @@ int main(int argc, char** argv)
             Check(specialRenderer.Initialize(), "Existing special-object renderer initializes");
             Renderer::staticObjectRenderer = &renderer;
             Renderer::actorRenderer = &specialRenderer;
+            if(modern) {
+                MaterialAsset missing;missing.explicitRenderState=true;missing.materialTextures[1].id="gdx-deliberately-missing-normal.dds";
+                CGrannyMaterial material;Check(material.CreateFromAsset(missing),"optional invalid map keeps usable material");
+                const auto runtime=material.GetModernMaterial(renderer);
+                Check(runtime&&!runtime->textures[1]&&runtime==material.GetModernMaterial(renderer),"invalid optional map uses cached geometric-normal fallback");
+            }
             {
                 const auto bytes = GlTFFixtures::Triangle(1,false).Bytes();
                 auto plain = LoadModel("untextured.GLB",bytes);
@@ -105,6 +113,7 @@ int main(int argc, char** argv)
                     auto texture = image->GetAssetTexture(uploader);
                     Check(bool(texture) && texture == image->GetAssetTexture(uploader), "Image decode/upload cache is reused");
                     textures.push_back(texture);
+                    if(modern)material.GetModernMaterial(uploader);
                     const auto& asset = material.GetAsset();
                     embedded |= bool(asset.embeddedImages[0]);
                     mask |= asset.alphaTest; blend |= asset.blending; twoSided |= asset.culling == Culling::None;
@@ -118,6 +127,7 @@ int main(int argc, char** argv)
                     const std::uint32_t w = camera == 1 ? 720 : 640, h = 480;
                     Check(backend.Resize(w,h) && backend.BeginFrame(), "Camera/resize frame begins");
                     renderer.ResetFrame(); specialRenderer.ResetFrame(); backend.Clear({true,Renderer::ClearColor{.045f,.055f,.075f,1}});
+                    BeginModernScene();
                     Math::Vector3 eye(camera == 2 ? -360.f : 360.f, camera == 1 ? 520.f : -520.f, 330.f), target(0,0,110), up(0,0,1);
                     Math::Matrix view, projection;
                     Math::MatrixLookAtRH(&view,&eye,&target,&up);
@@ -131,6 +141,7 @@ int main(int argc, char** argv)
                                 std::memcpy(draw.matrices.view.data(), &view,64); std::memcpy(draw.matrices.projection.data(), &projection,64);
                                 draw.normalTransform = identity; draw.ambient = {.85f,.85f,.85f,1};
                                 Renderer::ApplyAssetMaterial(palette.GetMaterialRef(group->mtrlIndex).GetAsset(), draw);
+                                if(modern)draw.material=palette.GetMaterialRef(group->mtrlIndex).GetModernMaterial(uploader);
                                 draw.firstIndex=group->idxPos; draw.indexCount=group->triCount*3;
                                 draw.baseVertex=node->pMesh->GetVertexBasePosition(); draw.vertexCount=node->pMesh->GetVertexCount();
                                 if (special) specialRenderer.Draw(&instance,geometry,textures[group->mtrlIndex],draw);
@@ -141,6 +152,7 @@ int main(int argc, char** argv)
                     }
                     Check(!renderer.Failed() && !specialRenderer.Failed() && renderer.DrawCount()+specialRenderer.DrawCount()==expectedDraws && expectedDraws>=8, "All real scene meshes submit through normal Diligent renderer");
                     std::vector<std::uint8_t> image; std::uint32_t iw{},ih{};
+                    EndModernScene();
                     Check(backend.CaptureRGB(image,iw,ih), "Actual native image readback succeeds");
                     Check(std::count_if(image.begin(),image.end(),[](auto v){return v>70;}) > 2000, "Asset remains visible after camera change");
                     SaveBMP(image,iw,ih,camera,special,offline);

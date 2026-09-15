@@ -55,7 +55,7 @@ void CCullingManager::VisibilityCallback(const Frustum &/*f*/,SpherePack *sphere
 		}
 
 #endif
-		pInstance->Hide();
+		pInstance->SetCameraVisibility(false);
 	}
 	else
 	{
@@ -67,7 +67,7 @@ void CCullingManager::VisibilityCallback(const Frustum &/*f*/,SpherePack *sphere
 			Tracef("show size : %5d\n",showingcount);
 		}
 #endif
-		pInstance->Show();
+		pInstance->SetCameraVisibility(true);
 	}
 }
 

@@ -28,6 +28,7 @@ private:
     friend class BackendTestAccess;
     friend class DiligentTerrainRenderer;
     friend class DiligentStaticObjectRenderer;
+    friend class DiligentModernRenderer;
     friend class DiligentEffectRenderer; // ZiiNAN: Diligent effect rendering integration.
     struct Impl;
     std::unique_ptr<Impl> m_impl;

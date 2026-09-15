@@ -2,6 +2,8 @@
 #include "DiligentEffectRenderer.h"
 #include "DiligentD3D11BackendInternal.h"
 #include "Diagnostics.h"
+#include "ModernFrame.h"
+#include "FirstUseAudit.h"
 #include "Graphics/GraphicsEngine/interface/Buffer.h"
 #include "Graphics/GraphicsEngine/interface/PipelineState.h"
 #include "Graphics/GraphicsEngine/interface/Shader.h"
@@ -9,6 +11,7 @@
 #include "Graphics/GraphicsEngine/interface/Texture.h"
 #include "Graphics/GraphicsEngine/interface/Sampler.h"
 #include "Graphics/GraphicsTools/interface/MapHelper.hpp"
+#include "Graphics/GraphicsTools/interface/ShaderMacroHelper.hpp"
 #include <map>
 #include <cstring>
 
@@ -44,8 +47,12 @@ cbuffer EffectConstants {
  uint4 Color; uint4 Alpha; uint4 Modes; uint4 Coordinates;
  row_major float4x4 SecondaryTransform; uint4 SecondaryColor; uint4 SecondaryAlpha;
 };
+#if EFFECT_TEXTURE
 Texture2D EffectTexture; SamplerState EffectSampler;
+#endif
+#if SECONDARY_TEXTURE
 Texture2D SecondaryTexture; SamplerState SecondarySampler;
+#endif
 struct Output { float4 position:SV_POSITION; float4 diffuse:COLOR0; float2 uv:TEXCOORD0; float fog:TEXCOORD1; float2 secondaryUV:TEXCOORD2; };
 Output VS(float3 position:ATTRIB0,float4 diffuse:ATTRIB1,float2 uv:ATTRIB2,float2 uv2:ATTRIB3) {
  Output o; float4 eye=mul(mul(float4(position,1),World),View); o.position=mul(eye,Projection);
@@ -80,7 +87,10 @@ float4 SecondArgument(uint arg,float4 diffuse,float4 current,float4 tex) {
  float4 v=current; if((arg&32)!=0) v=v.aaaa; if((arg&16)!=0) v=1-v; return v;
 }
 float4 PS(Output i):SV_TARGET {
- float4 tex=Modes.z!=0 ? EffectTexture.Sample(EffectSampler,i.uv) : float4(1,1,1,1);
+ float4 tex=1;
+#if EFFECT_TEXTURE
+ tex=EffectTexture.Sample(EffectSampler,i.uv);
+#endif
  float4 c=i.diffuse;
  if(Color.x!=1 && !(Modes.z==0 && (Color.y&15)==2)) {
   c.rgb=Operation(Color.x,Argument(Color.y,i.diffuse,tex),Argument(Color.z,i.diffuse,tex),i.diffuse).rgb;
@@ -88,11 +98,13 @@ float4 PS(Output i):SV_TARGET {
   // ZiiNAN: Native textured sky with disabled alpha stage writes opaque alpha (GPU oracle).
   if(Alpha.x==1 && Modes.z!=0) c.a=1;
  }
- if(SecondaryColor.w!=0) {
+#if SECONDARY_TEXTURE
+ {
   float4 t=SecondaryTexture.Sample(SecondarySampler,i.secondaryUV); float4 previous=c;
   c.rgb=Operation(SecondaryColor.x,SecondArgument(SecondaryColor.y,i.diffuse,previous,t),SecondArgument(SecondaryColor.z,i.diffuse,previous,t),previous).rgb;
   c.a=Operation(SecondaryAlpha.x,SecondArgument(SecondaryAlpha.y,i.diffuse,previous,t),SecondArgument(SecondaryAlpha.z,i.diffuse,previous,t),previous).a;
  }
+#endif
  if(Modes.w!=0 && !Compare(Alpha.w,floor(saturate(c.a)*255+0.5),float(Color.w))) discard;
  c.rgb=lerp(FogColor.rgb,c.rgb,i.fog); return c;
 }
@@ -118,7 +130,8 @@ struct DiligentEffectRenderer::Impl
 {
     DiligentD3D11Backend& backend;
     RefCntAutoPtr<IBuffer> constants,vertices;
-    RefCntAutoPtr<IShader> vs,ps;
+    RefCntAutoPtr<IShader> vs;
+    std::array<RefCntAutoPtr<IShader>,4> ps;
     struct Pipeline { RefCntAutoPtr<IPipelineState> state; RefCntAutoPtr<IShaderResourceBinding> bindings; };
     std::map<uint64_t,Pipeline> pipelines;
     std::map<EffectSampler,RefCntAutoPtr<ISampler>> samplers;
@@ -154,14 +167,14 @@ void DiligentEffectRenderer::ReleaseBindings()
 {
     auto& s=*m_impl;
     for(auto& entry:s.pipelines) if(entry.second.bindings) {
-        entry.second.bindings->GetVariableByName(SHADER_TYPE_PIXEL,"EffectTexture")->Set(nullptr);
-        entry.second.bindings->GetVariableByName(SHADER_TYPE_PIXEL,"SecondaryTexture")->Set(nullptr);
+        for(const char* name:{"EffectTexture","SecondaryTexture"})
+            if(auto* variable=entry.second.bindings->GetVariableByName(SHADER_TYPE_PIXEL,name))variable->Set(nullptr);
     }
 }
 void DiligentEffectRenderer::Shutdown()
 {
     auto& s=*m_impl;
-    s.pipelines.clear(); s.samplers.clear(); s.vertices.Release(); s.constants.Release(); s.vs.Release(); s.ps.Release(); s.capacity=0;
+    s.pipelines.clear(); s.samplers.clear(); s.vertices.Release(); s.constants.Release(); s.vs.Release(); for(auto& ps:s.ps)ps.Release(); s.capacity=0;
 }
 bool DiligentEffectRenderer::Initialize()
 {
@@ -172,10 +185,14 @@ bool DiligentEffectRenderer::Initialize()
         s.backend.m_impl->device->CreateBuffer(desc,nullptr,&s.constants);
         ShaderCreateInfo shader; shader.SourceLanguage=SHADER_SOURCE_LANGUAGE_HLSL; shader.Source=source;
         shader.Desc.Name="Native CPU effect vertices"; shader.Desc.ShaderType=SHADER_TYPE_VERTEX; shader.EntryPoint="VS";
-        s.backend.m_impl->device->CreateShader(shader,&s.vs);
+        {FirstUseAudit timing("shader","effect");s.backend.m_impl->device->CreateShader(shader,&s.vs);}
         shader.Desc.Name="Native effect texture factor alpha fog"; shader.Desc.ShaderType=SHADER_TYPE_PIXEL; shader.EntryPoint="PS";
-        s.backend.m_impl->device->CreateShader(shader,&s.ps);
-        return s.constants && s.vs && s.ps;
+        for(unsigned variant=0;variant<4;++variant) {
+            ShaderMacroHelper macros;macros.Add("EFFECT_TEXTURE",bool(variant&1));macros.Add("SECONDARY_TEXTURE",bool(variant&2));
+            shader.Macros=macros;{FirstUseAudit timing("shader","effect");s.backend.m_impl->device->CreateShader(shader,&s.ps[variant]);}
+            if(!s.ps[variant])return false;
+        }
+        return s.constants && s.vs;
     } catch(...) { s.Fail("initialization exception", __LINE__); return false; }
 }
 TerrainTexturePtr DiligentEffectRenderer::UploadTexture(const TerrainTextureData& data)
@@ -214,6 +231,7 @@ TerrainTexturePtr DiligentEffectRenderer::UploadTexture(const TerrainTextureData
 }
 void DiligentEffectRenderer::Draw(const EffectVertex* vertices,uint32_t count,const TerrainTexturePtr& image,const EffectDraw& d,EffectPart part)
 {
+    if(shadowCasterCollection)return;
     auto& s=*m_impl; auto texture=std::dynamic_pointer_cast<Texture>(image);
     auto secondary=std::dynamic_pointer_cast<Texture>(d.secondaryTexture);
     if(!s.backend.m_impl || !s.backend.m_impl->inFrame || !s.constants || !vertices || count>UINT32_MAX/sizeof(UploadVertex) ||
@@ -241,7 +259,7 @@ void DiligentEffectRenderer::Draw(const EffectVertex* vertices,uint32_t count,co
         const uint64_t key=uint64_t(d.strip)|(uint64_t(d.blend)<<1)|(uint64_t(d.depthTest)<<2)|(uint64_t(d.depthWrite)<<3)|
             (uint64_t(d.cull)<<4)|(uint64_t(d.depthFunction)<<6)|(uint64_t(src)<<10)|(uint64_t(dst)<<14)|
             (uint64_t(d.blendOp)<<18)|(uint64_t(d.opaqueTargetAlpha)<<21)|(uint64_t(d.lines)<<22)|(uint64_t(d.scissor)<<23)|
-            (uint64_t(d.colorWriteMask)<<24);
+            (uint64_t(d.colorWriteMask)<<24)|(uint64_t(d.textured)<<28)|(uint64_t(bool(secondary))<<29);
         auto& p=s.pipelines[key];
         if(!p.state) {
             GraphicsPipelineStateCreateInfo info;
@@ -250,7 +268,10 @@ void DiligentEffectRenderer::Draw(const EffectVertex* vertices,uint32_t count,co
                 {SHADER_TYPE_PIXEL,"EffectSampler",SHADER_RESOURCE_VARIABLE_TYPE_DYNAMIC},
                 {SHADER_TYPE_PIXEL,"SecondaryTexture",SHADER_RESOURCE_VARIABLE_TYPE_DYNAMIC},
                 {SHADER_TYPE_PIXEL,"SecondarySampler",SHADER_RESOURCE_VARIABLE_TYPE_DYNAMIC}};
-            info.PSODesc.ResourceLayout.Variables=variables; info.PSODesc.ResourceLayout.NumVariables=4;
+            std::vector<ShaderResourceVariableDesc> activeVariables;
+            if(d.textured){activeVariables.push_back(variables[0]);activeVariables.push_back(variables[1]);}
+            if(secondary){activeVariables.push_back(variables[2]);activeVariables.push_back(variables[3]);}
+            info.PSODesc.ResourceLayout.Variables=activeVariables.data(); info.PSODesc.ResourceLayout.NumVariables=Uint32(activeVariables.size());
             auto& g=info.GraphicsPipeline; const auto& swap=b.swapChain->GetDesc();
             g.NumRenderTargets=1; g.RTVFormats[0]=swap.ColorBufferFormat; g.DSVFormat=swap.DepthBufferFormat;
             g.PrimitiveTopology=d.lines ? PRIMITIVE_TOPOLOGY_LINE_LIST : d.strip ? PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP : PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
@@ -264,8 +285,8 @@ void DiligentEffectRenderer::Draw(const EffectVertex* vertices,uint32_t count,co
             blend.SrcBlendAlpha=Factor(src,true,d.opaqueTargetAlpha); blend.DestBlendAlpha=Factor(dst,true,d.opaqueTargetAlpha);
             blend.BlendOp=blend.BlendOpAlpha=BLEND_OPERATION(d.blendOp);
             LayoutElement layout[]={{0,0,3,VT_FLOAT32,False,0,32},{1,0,4,VT_UINT8,True,12,32},{2,0,2,VT_FLOAT32,False,16,32},{3,0,2,VT_FLOAT32,False,24,32}};
-            g.InputLayout.LayoutElements=layout; g.InputLayout.NumElements=4; info.pVS=s.vs; info.pPS=s.ps;
-            b.device->CreateGraphicsPipelineState(info,&p.state); if(!p.state) { s.Fail("effect pipeline creation failed", __LINE__); return; }
+            g.InputLayout.LayoutElements=layout; g.InputLayout.NumElements=4; info.pVS=s.vs; info.pPS=s.ps[unsigned(d.textured)|unsigned(bool(secondary))<<1];
+            {FirstUseAudit timing("pso","effect");b.device->CreateGraphicsPipelineState(info,&p.state);} if(!p.state) { s.Fail("effect pipeline creation failed", __LINE__); return; }
             for(auto stage:{SHADER_TYPE_VERTEX,SHADER_TYPE_PIXEL}) if(auto* v=p.state->GetStaticVariableByName(stage,"EffectConstants")) v->Set(s.constants);
             p.state->CreateShaderResourceBinding(&p.bindings,true); if(!p.bindings) { s.Fail("effect shader resource binding creation failed", __LINE__); return; }
         }
@@ -312,10 +333,14 @@ void DiligentEffectRenderer::Draw(const EffectVertex* vertices,uint32_t count,co
             mapped->secondaryColor={d.secondaryColorOp,d.secondaryColorArg1,d.secondaryColorArg2,uint32_t(bool(secondary))};
             mapped->secondaryAlpha={d.secondaryAlphaOp,d.secondaryAlphaArg1,d.secondaryAlphaArg2,0};
         }
-        p.bindings->GetVariableByName(SHADER_TYPE_PIXEL,"EffectTexture")->Set(texture ? texture->image->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE) : nullptr);
-        p.bindings->GetVariableByName(SHADER_TYPE_PIXEL,"EffectSampler")->Set(sampler);
-        p.bindings->GetVariableByName(SHADER_TYPE_PIXEL,"SecondaryTexture")->Set(secondary ? secondary->image->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE) : nullptr);
-        p.bindings->GetVariableByName(SHADER_TYPE_PIXEL,"SecondarySampler")->Set(secondarySampler);
+        if(d.textured) {
+            p.bindings->GetVariableByName(SHADER_TYPE_PIXEL,"EffectTexture")->Set(texture->image->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE));
+            p.bindings->GetVariableByName(SHADER_TYPE_PIXEL,"EffectSampler")->Set(sampler);
+        }
+        if(secondary) {
+            p.bindings->GetVariableByName(SHADER_TYPE_PIXEL,"SecondaryTexture")->Set(secondary->image->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE));
+            p.bindings->GetVariableByName(SHADER_TYPE_PIXEL,"SecondarySampler")->Set(secondarySampler);
+        }
         b.context->SetPipelineState(p.state);
         // ZiiNAN: UI never inherits a world viewport or a previous widget's scissor state.
         if(d.ui) {

@@ -6,7 +6,11 @@ param(
     [switch]$MultiMap,
     [ValidateSet('ziinan')][string]$Vegetation = 'ziinan',
     [string]$VegetationAssets = 'build/hx/compiled',
-    [switch]$VegetationForest
+    [switch]$VegetationForest,
+    [switch]$Modern,
+    [ValidateRange(0,2)][int]$AO=2,
+    [ValidateRange(0,5)][int]$Shadows=4,
+    [switch]$Benchmark
 )
 $ErrorActionPreference = 'Stop'
 $source = (Resolve-Path -LiteralPath "$PSScriptRoot/../..").Path
@@ -20,11 +24,17 @@ if (Test-Path -LiteralPath $target) { throw 'A fresh F2-X evidence directory is 
 New-Item -ItemType Directory -Path "$target/test-root", "$target/pack", "$target/log", "$target/mark", "$target/upload" | Out-Null
 Copy-Item -LiteralPath $binary -Destination "$target/Metin2_Release.exe"
 Copy-Item -LiteralPath "$original/config" -Destination "$target/config" -Recurse
+if($Modern) { "VERSION 1`nPRESET 4`nSTYLE 1`nSHADOWS $Shadows`nAO $AO" | Set-Content -LiteralPath "$target/config/graphics.cfg" }
+elseif($Benchmark) { "VERSION 1`nPRESET 4`nSTYLE 0`nSHADOWS $Shadows`nAO $AO" | Set-Content -LiteralPath "$target/config/graphics.cfg" }
 Copy-Item -LiteralPath $rootTemplate -Destination "$target/test-root/root" -Recurse
 $fixture = Get-Content -LiteralPath "$PSScriptRoot/../AnimationRuntime/runtime_entry.py" -Raw
 $fixture = $fixture.Replace('chrmgr.CreateRace(0)', '').Replace('chrmgr.SelectRace(0)', '').Replace('chrmgr.LoadLocalRaceData("msm/warrior_m.msm")', '')
 $fixture = $fixture.Replace('playersettingmodule.__LoadGameWarriorEx(0, "d:/ymir work/pc/warrior/")', 'for phase in ("INIT", "WARRIOR", "ASSASSIN", "SURA", "SHAMAN"): playersettingmodule.LoadGameData(phase)')
 $fixture = $fixture.Replace('F1-X', 'F2-X')
+if($Benchmark) {
+    $fixture=$fixture.Replace('app.SetCameraMaxDistance(', "app.StartSkinningBenchmark()`napp.SetCameraMaxDistance(")
+    $fixture=$fixture.Replace('self.label.SetText(', "app.SkinningBenchmarkStage(phase, step)`n        self.label.SetText(")
+}
 $phases = if ($MultiMap) { 3 } else { 1 }
 if ($MultiMap) {
     $fixture = $fixture.Replace('SCENES = (("a1", 44000, 27200, 0),)', 'SCENES = (("a1", 44000, 27200, 0), ("b1", 69642, 54848, 0), ("a1", 44000, 27200, 0))')

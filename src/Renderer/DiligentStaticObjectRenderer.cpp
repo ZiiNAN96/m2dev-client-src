@@ -24,7 +24,7 @@ struct Counters { uint32_t geometry=0, textures=0; };
 // ZiiNAN: GPU skinning actor coverage
 struct SkinMeshBuffers
 {
-    RefCntAutoPtr<IBuffer> vertices, indices, rigidVertices;
+    RefCntAutoPtr<IBuffer> vertices, indices, rigidVertices,tangents;
     std::vector<std::shared_ptr<const StaticSkinnedMeshData>> meshes;
     std::vector<std::shared_ptr<const BoneRemap>> remaps;
     std::vector<uint16_t> validationIndices;
@@ -43,7 +43,7 @@ struct SkinPoseBuffer
 struct Geometry final : StaticObjectGeometry
 {
     RefCntAutoPtr<IBuffer> vertices, indices;
-    RefCntAutoPtr<IBuffer> extras;
+    RefCntAutoPtr<IBuffer> extras,tangents;
     std::shared_ptr<SkinMeshBuffers> skin;
     std::shared_ptr<SkinPoseBuffer> pose;
     std::vector<uint16_t> validationIndices;
@@ -334,6 +334,11 @@ bool DiligentStaticObjectRenderer::PreparePrototype(StaticObjectGeometryPtr& geo
                 desc.Name="Shared original mesh-local indices"; desc.Size=indices.size()*sizeof(uint16_t); desc.BindFlags=BIND_INDEX_BUFFER;
                 initial={indices.data(),desc.Size}; device->CreateBuffer(desc,&initial,&shared->indices);
                 if(!shared->vertices || !shared->indices) return false;
+                if(source&&!source->tangents.empty()) {
+                    if(source->tangents.size()!=source->vertexCount)return false;
+                    desc.Name="Shared authored tangents";desc.BindFlags=BIND_VERTEX_BUFFER;desc.Size=source->tangents.size()*sizeof(source->tangents[0]);
+                    initial={source->tangents.data(),desc.Size};device->CreateBuffer(desc,&initial,&shared->tangents);if(!shared->tangents)return false;
+                }
                 shared->validationIndices=std::move(indices); s.skinMeshes.emplace_back(shared);
             }
             std::shared_ptr<SkinPoseBuffer> pose;
@@ -349,7 +354,7 @@ bool DiligentStaticObjectRenderer::PreparePrototype(StaticObjectGeometryPtr& geo
             }
             mesh=std::make_shared<Geometry>();
             mesh->skin=shared; ++livePrototypeGeometry;
-            mesh->pose=pose; mesh->vertices=shared->vertices; mesh->indices=shared->indices;
+            mesh->pose=pose; mesh->vertices=shared->vertices; mesh->indices=shared->indices;mesh->tangents=shared->tangents;
             mesh->vertexCount=shared->vertexCount; mesh->validationIndices=shared->validationIndices;
             mesh->counters=s.counters; ++s.counters->geometry;
         }
@@ -400,6 +405,13 @@ StaticObjectGeometryPtr DiligentStaticObjectRenderer::CreateGeometry(const Stati
             static_assert(sizeof(StaticObjectVertexExtras)==64);
             desc.Name="Shared mesh auxiliary vertex channels";desc.Size=data.vertexExtras.size()*sizeof(StaticObjectVertexExtras);
             initial={data.vertexExtras.data(),desc.Size};s.backend.m_impl->device->CreateBuffer(desc,&initial,&result->extras);if(!result->extras)return fail(__LINE__);
+        }
+        if(!data.tangents.empty()) {
+            if(data.tangents.size()!=data.vertices.size())return fail(__LINE__);
+            for(const auto& tangent:data.tangents)for(float value:tangent)if(!std::isfinite(value))return fail(__LINE__);
+            desc.Name="Shared authored tangents";desc.Size=data.tangents.size()*sizeof(data.tangents[0]);desc.BindFlags=BIND_VERTEX_BUFFER;
+            desc.Usage=USAGE_IMMUTABLE;desc.CPUAccessFlags=CPU_ACCESS_NONE;
+            initial={data.tangents.data(),desc.Size};s.backend.m_impl->device->CreateBuffer(desc,&initial,&result->tangents);if(!result->tangents)return fail(__LINE__);
         }
         desc.Name=wide ? "Static uint32 indices" : "Original static uint16 indices";
         desc.Size=indexCount*indexStride; desc.BindFlags=BIND_INDEX_BUFFER;
@@ -516,6 +528,21 @@ void DiligentStaticObjectRenderer::Draw(const StaticObjectGeometryPtr& geometry,
         if(mesh->IndexAt(i)>=draw.vertexCount) { s.Fail("mesh-local index exceeds draw vertex count", __LINE__); return; }
     try {
         auto& b=*s.backend.m_impl;
+        if(b.modern&&b.modern->Active()) {
+            ModernMeshSubmission submission;
+            submission.vertices=rigid?mesh->skin->rigidVertices:mesh->vertices;
+            submission.indices=mesh->indices;submission.extras=mesh->extras;
+            submission.tangents=mesh->tangents;submission.tangentOffset=rigid?mesh->skin->deformCount*16:0;
+            if(skin)submission.palette=mesh->pose->buffer;
+            submission.skinned=skin;submission.auxiliary=auxiliary;submission.indexType=mesh->indexType;
+            submission.draw=draw;submission.baseVertex=draw.baseVertex-(rigid?mesh->skin->deformCount:0);
+            submission.textures[0]=image->texture->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE);
+            if(draw.cameraAlpha)submission.cameraAlpha=cameraImage->texture->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE);
+            if(draw.material)for(unsigned i=1;i<submission.textures.size();++i)
+                if(auto map=std::dynamic_pointer_cast<Texture>(draw.material->textures[i]))
+                    submission.textures[i]=map->texture->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE);
+            b.modern->Draw(submission);++s.draws;return;
+        }
         if(!image->sampler || !(image->sampling==draw.sampling) || image->anisotropic!=draw.anisotropic || image->maxAnisotropy!=draw.maxAnisotropy) {
             image->sampler.Release();
             SamplerDesc sampler;
@@ -615,7 +642,7 @@ void DiligentStaticObjectRenderer::ReleaseBindings()
     b.context->InvalidateState();
     if(b.inFrame) {
         auto* target=b.swapChain->GetCurrentBackBufferRTV();
-        b.context->SetRenderTargets(1,&target,b.swapChain->GetDepthBufferDSV(),RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
+        b.BindTargets();
     }
 }
 }

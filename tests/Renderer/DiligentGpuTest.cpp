@@ -16,6 +16,8 @@
 #include "Renderer/DiligentTextRenderer.h"
 #include "Renderer/TerrainPresentation.h"
 #include "Renderer/Diagnostics.h"
+#include "Graphics/GraphicsEngineD3D11/interface/EngineFactoryD3D11.h"
+#include <atomic>
 #include "Platform/PlatformWindow.h"
 #include "TerrainTextureFixtures.h"
 #include <fstream>
@@ -28,6 +30,13 @@ typedef struct _object PyObject;
 float CCamera::CAMERA_MAX_DISTANCE=2500.0f;
 int CPythonSystem::GetFogLevel() { return 2; }
 static void Check(bool condition,const char* message) { if(!condition) throw std::runtime_error(message); }
+static std::atomic<unsigned> diligentErrors{};
+static void DILIGENT_CALL_TYPE AuditDiligentMessage(Diligent::DEBUG_MESSAGE_SEVERITY severity,
+    const Diligent::Char* message,const Diligent::Char*,const Diligent::Char*,int)
+{
+    if(severity>=Diligent::DEBUG_MESSAGE_SEVERITY_ERROR)++diligentErrors;
+    std::cerr<<"Diligent["<<int(severity)<<"] "<<message<<'\n';
+}
 namespace Renderer
 {
 class BackendTestAccess
@@ -127,6 +136,7 @@ static void WorldMaterialChecks(Renderer::DiligentD3D11Backend& backend)
 
 int main()
 {
+    Diligent::GetEngineFactoryD3D11()->SetMessageCallback(AuditDiligentMessage);
     using namespace Renderer;
     Platform::PlatformWindow platformWindow;
     Platform::WindowCreateInfo windowInfo;
@@ -270,6 +280,8 @@ int main()
         graphics.Destroy();
         Check(liveSourceTextures==0 && liveSourceBuffers==0,"CPU owners released");
         WriteSourceResourceAudit(std::cout);
+        Check(diligentErrors==0,"Diligent ERROR/FATAL diagnostics must be zero, including effect SRV/CB/PSO bindings");
+        std::cout<<"Diligent ERROR/FATAL diagnostics: 0\n";
         platformWindow.Destroy(); return 0;
     } catch(const std::exception& e) { std::cerr<<e.what()<<'\n'; platformWindow.Destroy(); return 1; }
 }

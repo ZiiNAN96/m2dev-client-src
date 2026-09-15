@@ -3,6 +3,7 @@
 #include "AssetRuntime/AssetRuntime.h"
 #include <windows.h>
 #include "Renderer/DrawStateTypes.h"
+#include "Renderer/MaterialRuntimeData.h"
 
 #include "Eterlib/ReferenceObject.h"
 #include "Eterlib/Ref.h"
@@ -61,6 +62,7 @@ class CGrannyMaterial : public CReferenceObject
 
         TextureBinding GetTextureBinding(int stage) const;
         const AssetRuntime::MaterialAsset& GetAsset() const { return m_asset; }
+        std::shared_ptr<const Renderer::MaterialRuntimeData> GetModernMaterial(Renderer::ITextureUploader&) const;
 
 		// MR-12: Fix specular isolation issue
 		float					GetSpecularPower() const;
@@ -100,6 +102,9 @@ class CGrannyMaterial : public CReferenceObject
 	private:
 		AssetRuntime::MaterialAsset m_asset;
 		const AssetRuntime::MaterialAsset* m_sourceAsset{};
+        mutable std::shared_ptr<Renderer::MaterialRuntimeData> m_modernMaterial;
+        mutable std::weak_ptr<const void> m_modernUploader;
+        mutable std::array<CGraphicImage::TRef, AssetRuntime::MaterialTextureCount> m_modernImages;
 
 		enum
 		{

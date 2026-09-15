@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "Renderer/ModernFrame.h"
 #include "Platform/PlatformTime.h"
 #include "StaticObjectBridge.h"
 #include "MapOutdoor.h"
@@ -126,6 +127,8 @@ int	CMapOutdoor::__RenderTerrain_RecurseRenderQuadTree_CheckBoundingCircle(const
 
 	Math::Vector3 center = c_v3Center;
 	center.y = -center.y;
+    if(Renderer::shadowCasterCollection && Renderer::modernFrame)
+        return Renderer::modernFrame->ShadowCasterVisible({center.x,center.y,center.z},c_fRadius)?VIEW_PART:VIEW_NONE;
 
 	int i;
 
@@ -335,7 +338,7 @@ struct FAreaRenderShadow
 		pInstance->RenderShadow();
 		if (auto* thing = dynamic_cast<CGraphicThingInstance*>(pInstance))
 			SubmitStaticMapObject(*thing, StaticMapObjectPass::ShadowReceiver);
-		pInstance->Hide();
+		if(!Renderer::shadowCasterCollection)pInstance->SetCameraVisibility(false);
 	}
 };
 
@@ -343,7 +346,7 @@ struct FPCBlockerHide
 {
 	void operator () (CGraphicObjectInstance * pInstance)
 	{
-		pInstance->Hide();
+		if(!Renderer::shadowCasterCollection)pInstance->SetCameraVisibility(false);
 	}
 };
 
@@ -407,6 +410,7 @@ struct CMapOutdoor_FOpaqueThingInstanceRender
 {
 	inline void operator () (CGraphicThingInstance * pkThingInst)
 	{
+        if(Renderer::shadowCasterCollection&&!pkThingInst->IsCameraShown())pkThingInst->Deform();
         if(DrawSpecialMapObject(*pkThingInst,false)) return;
 		pkThingInst->Render();
         SubmitStaticMapObject(*pkThingInst);

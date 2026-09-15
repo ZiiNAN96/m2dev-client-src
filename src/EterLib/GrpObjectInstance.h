@@ -53,6 +53,8 @@ class CGraphicObjectInstance : public CGraphicCollisionObject
 		void					Deform();
 		void					Transform();
 		
+        bool IsCameraShown() const {return m_isVisible;}
+        void SetCameraVisibility(bool visible) {m_isVisible=visible;}
 		void					Show();
 		void					Hide();
 		bool					isShow();
@@ -112,6 +114,7 @@ class CGraphicObjectInstance : public CGraphicCollisionObject
 		Math::Matrix				m_mRotation;
 
 		bool					m_isVisible;
+        bool m_shadowHidden{};
 		bool					m_isAlwaysHidden;
 
 		Math::Matrix				m_worldMatrix;

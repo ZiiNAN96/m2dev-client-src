@@ -1,5 +1,6 @@
 #include "DiligentD3D11BackendInternal.h"
 #include "TerrainPresentation.h"
+#include "FirstUseAudit.h"
 #include "AssetRuntime/AnimationStallAudit.h"
 #include "Graphics/GraphicsEngineD3D11/interface/EngineFactoryD3D11.h"
 #include "Graphics/GraphicsEngine/interface/Texture.h"
@@ -50,8 +51,15 @@ bool DiligentD3D11Backend::BeginFrame()
         return false;
     const auto& config = GetGraphicsRuntimeConfig();
     if (m_graphicsConfig.revision != config.revision) m_graphicsConfig = config;
+    if(config.style==Graphics::GraphicsStyle::Modern){
+        if(!m_impl->modern)m_impl->modern=std::make_unique<DiligentModernRenderer>(*this);
+        m_impl->modern->ResetFrame();modernFrame=m_impl->modern.get();
+    } else {
+        if(modernFrame==m_impl->modern.get())modernFrame=nullptr;
+        m_impl->modern.reset();
+    }
     auto* target = m_impl->swapChain->GetCurrentBackBufferRTV();
-    auto* depth = m_impl->swapChain->GetDepthBufferDSV();
+    auto* depth = m_impl->DepthDSV();
     if (!target || !depth)
         return false;
     m_impl->context->SetRenderTargets(1, &target, depth, Diligent::RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
@@ -79,7 +87,7 @@ void DiligentD3D11Backend::Clear(const ClearInfo& info)
     if (info.colorAndDepth)
         m_impl->context->ClearRenderTarget(m_impl->swapChain->GetCurrentBackBufferRTV(),
                                           m_impl->color.data(), Diligent::RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
-    m_impl->context->ClearDepthStencil(m_impl->swapChain->GetDepthBufferDSV(),
+    m_impl->context->ClearDepthStencil(m_impl->DepthDSV(),
         Diligent::CLEAR_DEPTH_FLAG, info.depthValue, 0, Diligent::RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
 }
 
@@ -130,6 +138,7 @@ void DiligentD3D11Backend::Present()
         const auto start=skinningBenchmarkEnabled ? PrototypeClock::now() : PrototypeClock::time_point{};
         AssetRuntime::AnimationStallAudit::WorkScope stallPresentWait(AssetRuntime::AnimationStallAudit::Work::PresentWait);
         m_impl->swapChain->Present(1);
+        if(awaitingWorldPresent){awaitingWorldPresent=false;LogClientLifecycle("WorldPresented");}
         stallPresentWait.Stop();
         if (AssetRuntime::AnimationStallAudit::enabled) ++AssetRuntime::AnimationStallAudit::swapchainPresents;
         if(skinningBenchmarkEnabled) {
@@ -150,6 +159,7 @@ bool DiligentD3D11Backend::Resize(uint32_t width, uint32_t height)
     {
         // Release context bindings before DXGI replaces the back buffers.
         m_impl->context->SetRenderTargets(0, nullptr, nullptr, Diligent::RESOURCE_STATE_TRANSITION_MODE_NONE);
+        if(m_impl->modern)m_impl->modern->ReleaseWindowResources();
         m_impl->swapChain->Resize(width, height);
         const auto& desc = m_impl->swapChain->GetDesc();
         return desc.Width == width && desc.Height == height;
@@ -168,6 +178,8 @@ void DiligentD3D11Backend::Shutdown()
     m_impl->context->SetRenderTargets(0, nullptr, nullptr, Diligent::RESOURCE_STATE_TRANSITION_MODE_NONE);
     m_impl->context->Flush();
     m_impl->context->WaitForIdle();
+    if(modernFrame==m_impl->modern.get())modernFrame=nullptr;
+    m_impl->modern.reset();
     if(skinningBenchmarkEnabled) m_impl->CollectTimings();
     for(auto& slot:m_impl->benchmarkQueries) { slot.query.Release();slot.frame=0; }
     m_impl->swapChain.Release();

@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "Renderer/FirstUseAudit.h"
 #include "Renderer/ResourceData.h"
 #include "AssetRuntime/GR2/GR2AssetProvider.h"
 #include "EterLib/SourceResourceAudit.h"
@@ -360,6 +361,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	auto szArgv = CommandLineToArgv (lpCmdLine, &nArgc);
 
     // ZiiNAN: Backend-neutral graphics resource ownership
+    Renderer::LogClientLifecycle("Start");
     const int mainResult = Main(hInstance, lpCmdLine, rendererOptions.backend);
     ClearNativeVegetation();
     const int result = mainResult ? mainResult : (Vegetation::statistics.failures?6:0);
@@ -378,6 +380,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         << " VegetationLeaves=" << Vegetation::statistics.parts[2] << " VegetationBillboards=" << Vegetation::statistics.parts[3] << '\n';
     // ZiiNAN: GPU skinning production path — summary only; per-frame CSV is opt-in.
     Renderer::WriteSkinningBenchmark();
+    Renderer::LogClientLifecycle(result==0?"ShutdownClean":"ShutdownFailed");
     resourceLog << "AllCPUDeformationCalls=" << Renderer::skinningCpuCalls << " AllCPUDeformationVertices=" << Renderer::skinningCpuVertices
         << " GPUFallbacks=" << Renderer::skinningFallbacks << '\n';
     resourceLog << "AssetDocuments=" << AssetRuntime::liveDocuments

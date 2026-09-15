@@ -1,5 +1,7 @@
 #include "StdAfx.h"
+#include "Renderer/FirstUseAudit.h"
 #include "Renderer/GraphicsConfig.h"
+#include "Renderer/ModernFrame.h"
 #include "eterBase/Error.h"
 #include "eterlib/Camera.h"
 #include "eterlib/AttributeInstance.h"
@@ -177,8 +179,46 @@ void CPythonApplication::Exit()
 	GetPlatformWindow().RequestQuit(0);
 }
 
+bool CPythonApplication::PrewarmModernWorld()
+{
+    if(!Renderer::modernFrame)return true;
+    Renderer::LogClientLifecycle("LoadingPrewarmBegin");
+    struct LoadingScope {
+        LoadingScope(){Renderer::loadingPrewarm=true;}
+        ~LoadingScope(){Renderer::loadingPrewarm=false;}
+    } loading;
+    Renderer::FirstUseAudit total("world-total","prewarm");
+    // GameWindow::Open has installed the actual game camera. The previous
+    // presented image is still LoadingWindow; no world frame is presented here.
+    // Use the real scene once so its material, shadow, terrain and FX PSOs are ready.
+    try {
+        UpdateGame();
+        __UpdateCamera();
+        RenderGame();
+        m_pyGraphic.PopState();
+        m_pyGraphic.SetInterfaceRenderState();
+        Renderer::LogClientLifecycle("LoadingPrewarmEnd");
+        return true;
+    } catch(const std::exception& error) {
+        TraceError("Modern world prewarm failed: %s",error.what());
+        Renderer::LogClientLifecycle("LoadingPrewarmFailed");
+        return false;
+    }
+}
+
 void CPythonApplication::RenderGame()
 {
+    if(Renderer::worldPrewarmPending&&!Renderer::loadingPrewarm) {
+        Renderer::worldPrewarmPending=false;
+        // SetGamePhase schedules a curtain transition. Only this callback runs
+        // after GameWindow::Open installed the real camera and scene settings.
+        if(!PrewarmModernWorld()) {
+            m_rendererRuntimeFailed=true;GetPlatformWindow().RequestQuit(1);return;
+        }
+        Renderer::LogClientLifecycle("WorldReadyForPresent");
+        Renderer::awaitingWorldPresent=true;
+    }
+    Renderer::FirstUseAudit firstVisible("world-total","first-visible",Renderer::awaitingWorldPresent);
     const auto benchmarkStart=Renderer::skinningBenchmarkEnabled ? Renderer::PrototypeClock::now() : Renderer::PrototypeClock::time_point{};
     // ZiiNAN: Indoor worlds do not require a terrain submission in the previous frame.
     if(Renderer::uiFrame && Renderer::worldRenderer) {
@@ -214,6 +254,32 @@ void CPythonApplication::RenderGame()
 	m_pyBackground.RenderCloud();
 
 	m_pyBackground.BeginEnvironment();
+    if(Renderer::modernFrame) {
+        Graphics::SceneLighting light;
+        const TEnvironmentData* environment=nullptr;
+        m_pyBackground.GetCurrentEnvironmentData(&environment);
+        if(environment) {
+            const auto& sun=environment->DirLights[ENV_DIRLIGHT_BACKGROUND];
+            const auto& config=Renderer::GetGraphicsRuntimeConfig();
+            Graphics::LegacyEnvironmentLight source;
+            source.direction={sun.Direction.x,sun.Direction.y,sun.Direction.z};
+            source.diffuse={sun.Diffuse.r,sun.Diffuse.g,sun.Diffuse.b};
+            source.ambient={sun.Ambient.r,sun.Ambient.g,sun.Ambient.b};
+            const auto& material=environment->Material;
+            source.materialDiffuse={material.Diffuse.r,material.Diffuse.g,material.Diffuse.b};
+            source.materialAmbient={material.Ambient.r,material.Ambient.g,material.Ambient.b};
+            source.environmentFill={material.Emissive.r,material.Emissive.g,material.Emissive.b};
+            source.enabled=environment->bDirLightsEnable[ENV_DIRLIGHT_BACKGROUND]!=FALSE;
+            light=Graphics::ResolveLegacyEnvironmentLight(source);
+            light.fogColor={environment->FogColor.r,environment->FogColor.g,environment->FogColor.b};
+            light.fogEnabled=environment->bFogEnable!=FALSE;
+            light.densityFog=environment->bDensityFog&&environment->bFogLevel!=0;
+            light.fogDensity=environment->bFogLevel*config.fogDensity;
+            light.fogNear=environment->GetFogNearDistance()*config.fogDistanceScale;
+            light.fogFar=environment->GetFogFarDistance()*config.fogDistanceScale;
+        }
+        Renderer::modernFrame->Begin(light);
+    }
 	m_pyBackground.Render();
 
 	m_pyBackground.SetCharacterDirLight();
@@ -222,6 +288,19 @@ void CPythonApplication::RenderGame()
     if(Renderer::skinningBenchmarkEnabled) Renderer::skinningBenchmarkCurrent.renderUs+=Renderer::PrototypeMicroseconds(actorRenderStart);
 
 	m_pyBackground.SetBackgroundDirLight();
+    if(Renderer::modernFrame) {
+        if(Renderer::modernFrame->BeginShadowCollection()) {
+            try {
+                m_pyBackground.Render();
+                m_pyBackground.SetCharacterDirLight();
+                m_kChrMgr.Deform();
+                m_kChrMgr.Render();
+                m_pyBackground.SetBackgroundDirLight();
+            } catch(...) {Renderer::modernFrame->EndShadowCollection();throw;}
+            Renderer::modernFrame->EndShadowCollection();
+        }
+        Renderer::modernFrame->End();
+    }
 	m_pyBackground.RenderWater();
 	m_pyBackground.RenderSnow();
 	m_pyBackground.RenderEffect();
@@ -229,11 +308,15 @@ void CPythonApplication::RenderGame()
 	m_pyBackground.EndEnvironment();
 
 	m_kEftMgr.Render();
+    if(Renderer::modernFrame)Renderer::modernFrame->BeginForwardWorld();
 	m_pyItem.Render();
+    if(Renderer::modernFrame)Renderer::modernFrame->EndForwardWorld();
 	m_FlyingManager.Render();
 
 	m_pyBackground.BeginEnvironment();
+    if(Renderer::modernFrame)Renderer::modernFrame->BeginForwardWorld();
 	m_pyBackground.RenderPCBlocker();
+    if(Renderer::modernFrame)Renderer::modernFrame->EndForwardWorld();
 	m_pyBackground.EndEnvironment();
 
 	m_pyBackground.RenderAfterLensFlare();

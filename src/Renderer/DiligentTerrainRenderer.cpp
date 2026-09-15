@@ -1,6 +1,7 @@
 #include "DiligentTerrainRenderer.h"
 #include "DiligentD3D11BackendInternal.h"
 #include "Diagnostics.h"
+#include "Common/interface/BasicMath.hpp"
 #include "Graphics/GraphicsEngine/interface/Buffer.h"
 #include "Graphics/GraphicsEngine/interface/PipelineState.h"
 #include "Graphics/GraphicsEngine/interface/Shader.h"
@@ -137,6 +138,9 @@ struct DiligentTerrainRenderer::Impl
     RefCntAutoPtr<IPipelineState> splatPipelines[4]; // blend*2 + strip
     RefCntAutoPtr<IBuffer> splatConstants, whiteVertices, dynamicVertices;
     TerrainMatrices matrices{};
+    std::array<float,16> textureTransform{};
+    std::array<float,4> solidColor{.72f,.82f,.38f,1};
+    RefCntAutoPtr<ISampler> modernSampler;
     bool vertexAttributes = false;
     std::atomic<bool> failed{false};
     bool hasTerrain = false;
@@ -435,8 +439,7 @@ void DiligentTerrainRenderer::ReleaseTexture(TerrainTexturePtr& texture)
         backend.context->InvalidateState();
         if (backend.inFrame)
         {
-            auto* target=backend.swapChain->GetCurrentBackBufferRTV();
-            backend.context->SetRenderTargets(1,&target,backend.swapChain->GetDepthBufferDSV(),RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
+            backend.BindTargets();
         }
     }
     texture.reset();
@@ -465,6 +468,7 @@ void DiligentTerrainRenderer::BeginTerrain(const TerrainMatrices& matrices, bool
         mapped->textureTransform = textureTransform ? *textureTransform : std::array<float,16>{};
         mapped->solidColor = {0.72f,0.82f,0.38f,1};
         s.hasTerrain = true;
+        s.textureTransform=mapped->textureTransform;s.solidColor=mapped->solidColor;
     }
     catch (...) { s.Fail("terrain camera update exception", __LINE__); }
 }
@@ -481,6 +485,21 @@ void DiligentTerrainRenderer::DrawTerrain(const TerrainBufferPtr& vertices, cons
     { s.Fail("terrain geometry, texture or index count validation failed", __LINE__); return; }
     try
     {
+        if(auto* modern=s.backend.m_impl->modern.get();modern&&modern->Active()) {
+            ModernTerrainSubmission submission;submission.vertices=vb->buffer;submission.indices=ib->buffer;
+            submission.attributes=s.whiteVertices;submission.matrices=s.matrices;submission.count=count;submission.strip=strip;
+            submission.solid=!material;submission.parameters.blend=false;submission.parameters.alphaReference=-1;
+            submission.parameters.alphaOp=TerrainAlphaOp::Texture;submission.parameters.textureFactor=s.solidColor;
+            if(material) {
+                submission.color=submission.alpha=material->texture->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE);
+                if(!s.modernSampler){SamplerDesc desc;desc.AddressU=desc.AddressV=TEXTURE_ADDRESS_WRAP;s.backend.m_impl->device->CreateSampler(desc,&s.modernSampler);}
+                submission.colorSampler=s.modernSampler;
+                submission.alphaSampler=submission.colorSampler;
+                float4x4 view,textureTransform;memcpy(&view,s.matrices.view.data(),64);memcpy(&textureTransform,s.textureTransform.data(),64);
+                auto transform=view.Inverse()*textureTransform;memcpy(submission.parameters.colorTransform.data(),&transform,64);
+            }
+            modern->DrawTerrain(submission);++s.draws;if(material)++s.texturedDraws;return;
+        }
         auto* context = s.backend.m_impl->context.RawPtr();
         IBuffer* buffer = vb->buffer;
         Uint64 offset = 0;
@@ -535,8 +554,7 @@ void DiligentTerrainRenderer::ReleaseSplatMaterial(TerrainSplatMaterialPtr& mate
         backend.context->InvalidateState();
         if(backend.inFrame)
         {
-            auto* target=backend.swapChain->GetCurrentBackBufferRTV();
-            backend.context->SetRenderTargets(1,&target,backend.swapChain->GetDepthBufferDSV(),RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
+            backend.BindTargets();
         }
     }
     material.reset();
@@ -607,6 +625,16 @@ void DiligentTerrainRenderer::DrawSplat(const TerrainBufferPtr& vertices, const 
         if(!setSampler(params.colorSampling,material->colorSampling,material->colorSampler,"ColorSampler") ||
            !setSampler(params.alphaSampling,material->alphaSampling,material->alphaSampler,"AlphaSampler"))
         { s.Fail("splat sampler creation or shader variable lookup failed", __LINE__); return; }
+        if(auto* modern=s.backend.m_impl->modern.get();modern&&modern->Active()) {
+            ModernTerrainSubmission submission;
+            submission.vertices=vb->buffer;submission.indices=ib->buffer;
+            submission.attributes=s.vertexAttributes?s.dynamicVertices:s.whiteVertices;
+            submission.color=material->color->texture->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE);
+            submission.alpha=material->alpha->texture->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE);
+            submission.colorSampler=material->colorSampler;submission.alphaSampler=material->alphaSampler;
+            submission.matrices=s.matrices;submission.parameters=params;submission.count=count;submission.strip=strip;
+            modern->DrawTerrain(submission);++s.draws;++s.texturedDraws;++s.splatDraws;return;
+        }
         auto* context=s.backend.m_impl->context.RawPtr();
         {
             MapHelper<SplatConstants> constants(context,s.splatConstants,MAP_WRITE,MAP_FLAG_DISCARD);
@@ -642,6 +670,7 @@ void DiligentTerrainRenderer::DrawTerrainSolid(const TerrainBufferPtr& vertices,
             MapHelper<TerrainConstants> constants(s.backend.m_impl->context,s.camera,MAP_WRITE,MAP_FLAG_DISCARD);
             if(!constants) { s.Fail("solid terrain constants buffer map failed", __LINE__); return; }
             constants->matrices=s.matrices; constants->textureTransform={}; constants->solidColor=color;
+            s.solidColor=color;
         }
         DrawTerrain(vertices,indices,count,strip);
     }

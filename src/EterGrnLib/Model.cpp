@@ -400,6 +400,13 @@ bool CGrannyModel::CaptureStaticObjectSource()
         if (!m_meshs[i].NEW_LoadVertices(source->vertices.data()) ||
             !m_meshs[i].LoadIndices(indices, m_indexWidth)) return false;
     }
+    for(int i=0;i<GetMeshCount();++i) {
+        const auto* asset=m_meshs[i].GetAsset();
+        if(!asset||asset->tangents.empty())continue;
+        if(asset->tangents.size()!=std::size_t(m_meshs[i].GetVertexCount()))return false;
+        if(source->tangents.empty())source->tangents.resize(source->vertices.size());
+        std::copy(asset->tangents.begin(),asset->tangents.end(),source->tangents.begin()+m_meshs[i].GetVertexBasePosition());
+    }
     m_staticObjectSource = std::move(source);
     return true;
 }
@@ -423,6 +430,14 @@ bool CGrannyModel::CaptureActorSource(bool attachment)
     for(int i=0;i<GetMeshCount();++i) {
         if(!m_meshs[i].LoadIndices(indices, m_indexWidth)) return false;
         if(m_rigidVtxCount && !m_meshs[i].NEW_LoadVertices(source->rigidVertices.data())) return false;
+    }
+    for(int i=0;i<GetMeshCount();++i) {
+        const auto* asset=m_meshs[i].GetAsset();
+        if(!asset||asset->tangents.empty())continue;
+        if(asset->tangents.size()!=std::size_t(m_meshs[i].GetVertexCount()))return false;
+        if(source->tangents.empty())source->tangents.resize(source->vertexCount);
+        const auto offset=m_meshs[i].GetVertexBasePosition()+(asset->deformation==AssetRuntime::Deformation::Rigid?m_deformVtxCount:0);
+        std::copy(asset->tangents.begin(),asset->tangents.end(),source->tangents.begin()+offset);
     }
     m_actorSource=std::move(source);
     return true;

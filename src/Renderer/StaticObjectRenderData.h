@@ -1,5 +1,6 @@
 #pragma once
 #include "TerrainRenderData.h"
+#include "MaterialRuntimeData.h"
 
 namespace Renderer
 {
@@ -18,6 +19,7 @@ struct StaticObjectSource
     // ZiiNAN: Modern asset pipeline; exactly one index stream is populated.
     std::vector<uint32_t> indices32;
     std::vector<StaticObjectVertexExtras> vertexExtras;
+    std::vector<std::array<float,4>> tangents;
 };
 struct StaticObjectGeometry { virtual ~StaticObjectGeometry() = default; };
 using StaticObjectGeometryPtr = std::shared_ptr<StaticObjectGeometry>;
@@ -27,6 +29,7 @@ enum class StaticObjectAlphaTest : uint32_t { Disabled, GreaterEqual, Greater };
 enum class ActorMaterialStage : uint32_t { None, Add, Modulate, Specular };
 struct StaticObjectDraw
 {
+    std::shared_ptr<const MaterialRuntimeData> material;
     TerrainMatrices matrices{};
     std::array<float,16> normalTransform{};
     std::array<float,4> ambient{1,1,1,1}, diffuse{}, lightDirection{};

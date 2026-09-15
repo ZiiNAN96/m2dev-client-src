@@ -42,7 +42,7 @@ struct GraphicsRuntimeConfig
 {
     std::uint64_t revision{};
     GraphicsStyle style{GraphicsStyle::Classic};
-    ShadowQuality shadows{ShadowQuality::Off}; // No dynamic shadow renderer in the current D3D11 path.
+    ShadowQuality shadows{ShadowQuality::Off};
     int legacyShadowLevel{3};
     AmbientOcclusionQuality ambientOcclusion{AmbientOcclusionQuality::Off};
     WaterQuality water{WaterQuality::High};
