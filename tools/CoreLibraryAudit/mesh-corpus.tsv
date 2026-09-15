@@ -1,0 +1,6 @@
+building	Zone/ymir work/zone/n/obj/snow.m/snow-004-house2.gr2
+mob	Monster/ymir work/monster/wolf/wolf.gr2
+weapon	item/ymir work/item/weapon/00010.gr2
+terrain_rock	Zone/ymir work/zone/n/obj/snow.m/ob-bigstone01.gr2
+tree_compiled	../../m2dev-client-src/build/hx/compiled/vegetation/ymir work/zone/b/tree/1/baobab_rt.glb
+glb_character_fixture	../../m2dev-client-src/tests/AssetRuntime/fixtures/f5x/character.glb
