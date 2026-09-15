@@ -22,6 +22,11 @@ public:
     bool Resize(uint32_t width, uint32_t height) override;
     void Shutdown() override;
     bool CaptureRGB(std::vector<uint8_t>& pixels,uint32_t& width,uint32_t& height);
+    unsigned BeginModernScene(const Graphics::Matrix4& view,const Graphics::Matrix4& projection);
+    bool BeginSunCascade(unsigned index);
+    void EndSunCascades();
+    void EndModernScene();
+    void ResetModernScene();
     const Graphics::GraphicsRuntimeConfig& GetGraphicsConfig() const { return m_graphicsConfig; }
 
 private:

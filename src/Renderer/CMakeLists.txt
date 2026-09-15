@@ -11,6 +11,7 @@ if(M2_BUILD_WINDOWS_CLIENT)
         message(FATAL_ERROR "Diligent D3D11 needs the Windows SDK and Visual C++ ATL components")
     endif()
     add_library(M2RendererDiligent STATIC DiligentD3D11Backend.cpp DiligentTerrainRenderer.cpp DiligentStaticObjectRenderer.cpp)
+    target_sources(M2RendererDiligent PRIVATE DiligentShadowAmbient.cpp)
     # ZiiNAN: CPU-skinned actor submission reuses the existing D3D11 world renderer.
     target_sources(M2RendererDiligent PRIVATE DiligentActorRenderer.cpp)
     # ZiiNAN: Existing CPU effects, no simulation or other backend changes.

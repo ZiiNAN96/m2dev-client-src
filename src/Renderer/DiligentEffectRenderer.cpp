@@ -214,7 +214,9 @@ TerrainTexturePtr DiligentEffectRenderer::UploadTexture(const TerrainTextureData
 }
 void DiligentEffectRenderer::Draw(const EffectVertex* vertices,uint32_t count,const TerrainTexturePtr& image,const EffectDraw& d,EffectPart part)
 {
+    if(shadowPassIndex>=0)return;
     auto& s=*m_impl; auto texture=std::dynamic_pointer_cast<Texture>(image);
+    if(s.backend.m_impl)s.backend.m_impl->depthEffects.BindTargets(s.backend.m_impl->swapChain,false);
     auto secondary=std::dynamic_pointer_cast<Texture>(d.secondaryTexture);
     if(!s.backend.m_impl || !s.backend.m_impl->inFrame || !s.constants || !vertices || count>UINT32_MAX/sizeof(UploadVertex) ||
        !EffectDrawValid(d,count) || uint32_t(part)>=s.draws.size() || (d.textured && !texture) ||

@@ -111,7 +111,12 @@ GraphicsRuntimeConfig Resolve(const GraphicsSettings& requested, std::uint64_t r
     constexpr float fogDensity[]{.000006f, .000004f, .000002f};
     r.fogDistanceScale = fogScale[s.fogLevel]; r.fogDensity = fogDensity[s.fogLevel];
     r.shadowTextureSize = s.shadows == ShadowQuality::Ultra ? 2048 : s.shadows == ShadowQuality::High ? 1024 : 512;
-    // G0 capabilities: AO/HDR/bloom/sky/HQ fog unavailable even in Modern.
+    if(r.usePBR) {
+        r.shadows=s.shadows;r.ambientOcclusion=s.ambientOcclusion;
+        r.shadowConfig=ResolveShadowQuality(unsigned(s.shadows),s.viewDistance);
+        r.ambientConfig=AmbientQuality(unsigned(s.ambientOcclusion));
+    }
+    // HDR/bloom/sky/HQ fog remain unavailable.
     // Water/texture quality use the accepted current path at every requested level.
     // Add capability + style gates here when an actual G1-G8 renderer exists.
     return r;

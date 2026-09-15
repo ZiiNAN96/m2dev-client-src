@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "Renderer/ShadowAmbientRuntime.h"
 #include "InstanceBase.h"
 #include "PythonBackground.h"
 #include "PythonNonPlayer.h"
@@ -1994,6 +1995,7 @@ void CInstanceBase::Deform()
 
 void CInstanceBase::RenderTrace()
 {
+    if(Renderer::shadowPassIndex>=0)return;
 	if (!__CanRender())
 		return;
 
@@ -2017,6 +2019,7 @@ void CInstanceBase::Render()
 	m_GraphicThingInstance.Render();
 
 	CPythonCharacterManager& rkChrMgr = CPythonCharacterManager::Instance();
+    if(Renderer::shadowPassIndex>=0)return;
 
 	for (auto ptr = rkChrMgr.CharacterInstanceBegin(); ptr != rkChrMgr.CharacterInstanceEnd(); ++ptr)
 	{

@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <vector>
 #include <functional>
+#include "Graphics/ShadowAmbient.h"
 
 namespace Platform { class PlatformWindow; }
 
@@ -19,6 +20,9 @@ public:
     virtual bool Present() = 0;
     virtual bool Resize(uint32_t width, uint32_t height) = 0;
     virtual void ClearDepth(float depth) = 0;
+    virtual void BeginModernScene(const Graphics::Matrix4&,const Graphics::Matrix4&,const std::function<void()>& prepare,const std::function<void()>&) {prepare();}
+    virtual void EndModernScene() {}
+    virtual void ResetModernScene() {}
     using ScreenshotSink=std::function<bool(std::vector<uint8_t>&,uint32_t,uint32_t)>;
     virtual bool RequestScreenshot(ScreenshotSink sink) = 0;
 };

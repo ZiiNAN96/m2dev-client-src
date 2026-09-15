@@ -5,6 +5,7 @@
 #include <string>
 #include <string_view>
 #include <thread>
+#include "ShadowAmbient.h"
 
 // Platform-neutral settings. Only the owner (game/main) thread may access a Store.
 // Asset loading never accesses it; render consumers receive resolved value copies.
@@ -18,7 +19,7 @@ enum class GraphicsPreset { Low, Medium, High, Ultra, Custom };
 enum class GraphicsStyle { Classic, Modern };
 // Keep all six existing shadow modes, including old configs with solo shadows.
 enum class ShadowQuality { Off, Low, LegacySolo, Medium, High, Ultra };
-enum class AmbientOcclusionQuality { Off, SSAO, GTAO };
+enum class AmbientOcclusionQuality { Off, Low, High, SSAO=Low, GTAO=High }; // Preserve G0 file values.
 enum class WaterQuality { Low, Medium, High };
 enum class VegetationQuality { Low, Medium, High, Ultra };
 enum class TextureQuality { Medium, High, Ultra };
@@ -43,7 +44,9 @@ struct GraphicsRuntimeConfig
     bool usePBR{};
     std::uint64_t revision{};
     GraphicsStyle style{GraphicsStyle::Classic};
-    ShadowQuality shadows{ShadowQuality::Off}; // No dynamic shadow renderer in the current D3D11 path.
+    ShadowQuality shadows{ShadowQuality::Off};
+    ShadowQualityConfig shadowConfig;
+    AmbientDepthConfig ambientConfig;
     int legacyShadowLevel{3};
     AmbientOcclusionQuality ambientOcclusion{AmbientOcclusionQuality::Off};
     WaterQuality water{WaterQuality::High};

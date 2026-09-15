@@ -2,6 +2,7 @@
 #include "GpuSkinningShader.h"
 #include "PBRShader.h"
 #include "SceneLightingShader.h"
+#include "ShadowAmbientShader.h"
 #include "GraphicsConfig.h"
 #include "AssetRuntime/AnimationStallAudit.h"
 #include "ActorRenderData.h"
@@ -58,6 +59,8 @@ struct Geometry final : StaticObjectGeometry
     uint32_t IndexAt(std::size_t index) const { return indexType==VT_UINT32 ? validationIndices32[index] : validationIndices[index]; }
     uint32_t vertexCount=0;
     bool dynamic=false; // ZiiNAN: Only actor VBs use discard updates.
+    Graphics::Vector3 boundsCenter{};
+    float boundsRadius{};
     std::shared_ptr<Counters> counters;
     ~Geometry() override {
         if(skin) --livePrototypeGeometry;
@@ -69,7 +72,7 @@ struct Texture final : TerrainTexture
     RefCntAutoPtr<ITexture> texture;
     RefCntAutoPtr<ITextureView> linearView, srgbView;
     RefCntAutoPtr<ISampler> sampler;
-    RefCntAutoPtr<IShaderResourceBinding> bindings[36];
+    RefCntAutoPtr<IShaderResourceBinding> bindings[48];
     RefCntAutoPtr<ISampler> cameraSampler;
     std::weak_ptr<Texture> cameraImage;
     TerrainSampling cameraSampling{};
@@ -112,10 +115,10 @@ struct PBRBinding
     unsigned maps{},srgb{};
     std::array<std::shared_ptr<Texture>,AssetRuntime::MaterialMapCount> images;
     std::weak_ptr<const MaterialRuntime> material;
-    RefCntAutoPtr<IShaderResourceBinding> bindings[24];
-    IShaderResourceVariable* palettes[24]{};
-    IShaderResourceVariable* cameraVariables[24]{};
-    IShaderResourceVariable* cameraSamplers[24]{};
+    RefCntAutoPtr<IShaderResourceBinding> bindings[48];
+    IShaderResourceVariable* palettes[48]{};
+    IShaderResourceVariable* cameraVariables[48]{};
+    IShaderResourceVariable* cameraSamplers[48]{};
     PBRBinding(){++livePBRBindings;}
     ~PBRBinding(){--livePBRBindings;}
 };
@@ -139,12 +142,16 @@ SamplerState CameraAlphaSampler;
 struct Output { float4 position:SV_POSITION; float2 uv:TEXCOORD0; float4 diffuse:COLOR0; float fog:TEXCOORD1; float2 cameraUV:TEXCOORD2;
 #ifdef MODERN_VEGETATION
  float3 worldNormal:TEXCOORD3;
+ float3 worldPosition:TEXCOORD4;
 #endif
 };
 Output VS(float3 position:ATTRIB0, float3 normal:ATTRIB1, float2 uv:ATTRIB2) {
  Output o;
  float4 eye=mul(mul(float4(position,1),World),View);
  o.position=mul(eye,Projection); o.uv=uv;
+#ifdef MODERN_VEGETATION
+ o.worldPosition=mul(float4(position,1),World).xyz;
+#endif
  float3 n=mul(float4(normal,0),NormalTransform).xyz;
  if(Modes.z!=0) n=normalize(n);
  float3 lighting=Ambient.rgb + Diffuse.rgb*max(0,dot(n,LightDirection.xyz));
@@ -178,13 +185,25 @@ Output VS(float3 position:ATTRIB0, float3 normal:ATTRIB1, float2 uv:ATTRIB2) {
  o.fog=saturate(o.fog);
  return o;
 }
-float4 PS(Output i,bool front:SV_IsFrontFace):SV_TARGET {
+#ifdef SHADOW_CASTER
+cbuffer ShadowMaterial {float4 ShadowBase;float4 ShadowUV[2];};
+void PS(Output i,bool front:SV_IsFrontFace) {
+ float2 materialUV=float2(dot(ShadowUV[0].xyz,float3(i.uv,1)),dot(ShadowUV[1].xyz,float3(i.uv,1)));
+ float4 color=DiffuseTexture.Sample(ObjectSampler,materialUV)*ShadowBase;
+#else
+float4 PS(Output i,bool front:SV_IsFrontFace
+#ifdef AMBIENT_MRT
+ ,out float4 ambientDelta:SV_TARGET1
+#endif
+):SV_TARGET0 {
  float4 color=DiffuseTexture.Sample(ObjectSampler,i.uv);
+#endif
 #ifdef MODERN_VEGETATION
  float3 n=LightingNormal(i.worldNormal,float3(0,0,1));if(!front)n=-n;
  float3 base=(VertexModes.w&2)?color.rgb:LightingToLinear(color.rgb);
  // Native vegetation COLOR_0 is a linear modulation factor, like glTF colors.
- color.rgb=SceneDiffuse(base*i.diffuse.rgb,n);
+ float3 indirect=base*i.diffuse.rgb*SceneAmbient(n);
+ color.rgb=indirect+base*i.diffuse.rgb*SceneSunColor.rgb*saturate(dot(n,SceneSunDirection.xyz))/3.14159265*SunVisibility(i.worldPosition,n);
 #else
  color.rgb*=i.diffuse.rgb;
 #endif
@@ -201,6 +220,7 @@ float4 PS(Output i,bool front:SV_IsFrontFace):SV_TARGET {
 #ifdef MODERN_VEGETATION
    float3 shadow=CameraAlphaTexture.Sample(CameraAlphaSampler,i.cameraUV).rgb;
    color.rgb*=(VertexModes.w&4)?shadow:LightingToLinear(shadow);
+   indirect*=(VertexModes.w&4)?shadow:LightingToLinear(shadow);
 #else
    color.rgb*=CameraAlphaTexture.Sample(CameraAlphaSampler,i.cameraUV).rgb;
 #endif
@@ -209,11 +229,25 @@ float4 PS(Output i,bool front:SV_IsFrontFace):SV_TARGET {
  float testedAlpha=floor(saturate(color.a)*255+0.5);
  if(AlphaModes.y==1 && testedAlpha<float(AlphaModes.z)) discard;
  if(AlphaModes.y==2 && testedAlpha<=float(AlphaModes.z)) discard;
+#ifdef SHADOW_CASTER
+ return;
+#else
+#ifdef AMBIENT_MRT
+ float3 withoutAmbient=LightingToSRGB(max(0,color.rgb-indirect));
+ withoutAmbient=lerp(FogColor.rgb,withoutAmbient,i.fog);
+#endif
 #ifdef MODERN_VEGETATION
  color.rgb=LightingToSRGB(color.rgb);
 #endif
  color.rgb=lerp(FogColor.rgb,color.rgb,i.fog);
+#ifdef AMBIENT_MRT
+ ambientDelta=float4(max(0,LightingToLinear(color.rgb)-LightingToLinear(withoutAmbient)),color.a);
+#endif
+#ifdef MODERN_VEGETATION
+ if(ShadowSettings.w!=0)color.rgb=lerp(color.rgb,CascadeColor(i.worldPosition),.5);
+#endif
  return color;
+#endif
 }
 Output AuxiliaryVS(float3 position:ATTRIB0,float3 normal:ATTRIB1,float2 uv:ATTRIB2,
                    float4 color:ATTRIB3,float2 uv1:ATTRIB4,float3 pivot:ATTRIB5,float flexibility:ATTRIB6,float3 pitchCos:ATTRIB7,float3 pitchSin:ATTRIB8) {
@@ -250,8 +284,12 @@ struct DiligentStaticObjectRenderer::Impl
 {
     DiligentD3D11Backend& backend;
     RefCntAutoPtr<IBuffer> constants;
-    RefCntAutoPtr<IPipelineState> pipelines[48];
-    RefCntAutoPtr<IPipelineState> pbrPipelines[24];
+    RefCntAutoPtr<IPipelineState> pipelines[60];
+    RefCntAutoPtr<IPipelineState> pbrPipelines[48];
+    RefCntAutoPtr<IPipelineState> shadowPipelines[9];
+    RefCntAutoPtr<IShaderResourceBinding> shadowBindings[9];
+    RefCntAutoPtr<IBuffer> shadowMaterial;
+    RefCntAutoPtr<ISampler> shadowSampler;
     RefCntAutoPtr<IBuffer> pbrConstants;
     RefCntAutoPtr<ISampler> pbrSampler;
     std::unordered_map<const MaterialRuntime*,std::unique_ptr<PBRBinding>> pbrBindings;
@@ -269,12 +307,16 @@ struct DiligentStaticObjectRenderer::Impl
     }
     explicit Impl(DiligentD3D11Backend& b):backend(b) {}
     ~Impl(){for(const auto& pipeline:pbrPipelines)if(pipeline)--livePBRPipelines;
-        for(unsigned i=36;i<48;++i)if(pipelines[i])--liveLightingPipelines;}
+        for(unsigned i=36;i<60;++i)if(pipelines[i])--liveLightingPipelines;
+        for(const auto& p:shadowPipelines)if(p)--liveShadowPipelines;if(shadowMaterial)--liveShadowBuffers;}
+    bool InitializeShadows(bool gpu);
+    void DrawShadow(const std::shared_ptr<Geometry>&,const std::shared_ptr<Texture>&,const StaticObjectDraw&,bool,bool,bool);
     bool InitializePBR(bool gpu);
     void DrawPBR(const std::shared_ptr<Geometry>&,const std::shared_ptr<Texture>&,
         const StaticObjectDraw&,bool skin,bool rigid,unsigned variant);
 };
 #include "DiligentPBRMaterial.inl"
+#include "DiligentShadowCaster.inl"
 DiligentStaticObjectRenderer::DiligentStaticObjectRenderer(DiligentD3D11Backend& b):m_impl(std::make_unique<Impl>(b)) {}
 DiligentStaticObjectRenderer::~DiligentStaticObjectRenderer() = default;
 void DiligentStaticObjectRenderer::ResetFrame() {
@@ -321,12 +363,14 @@ Output SkinningVS(float3 position:ATTRIB0, float3 normal:ATTRIB1, float2 uv:ATTR
         shader.Source=shaderSource;shader.Desc.Name="Mesh auxiliary colors and card pivots";
         shader.Desc.ShaderType=SHADER_TYPE_VERTEX;shader.EntryPoint="AuxiliaryVS";
         device->CreateShader(shader,&auxiliaryVS);if(!auxiliaryVS)return false;
-        const std::string modernVegetationSource=std::string("#define MODERN_VEGETATION\n")+sceneLightingShader+shaderSource;
+        const std::string modernVegetationSource=std::string("#define MODERN_VEGETATION\n")+sceneLightingShader+shadowReceiverShader+shaderSource;
         RefCntAutoPtr<IShader> modernVegetationVS,modernVegetationPS;
         shader.Source=modernVegetationSource.c_str();shader.Desc.Name="G2 vegetation world normals";
         device->CreateShader(shader,&modernVegetationVS);
         shader.Desc.ShaderType=SHADER_TYPE_PIXEL;shader.EntryPoint="PS";shader.Desc.Name="G2 vegetation scene lighting";
         device->CreateShader(shader,&modernVegetationPS);if(!modernVegetationVS||!modernVegetationPS)return false;
+        const std::string ambientSource=std::string("#define AMBIENT_MRT\n")+modernVegetationSource;
+        RefCntAutoPtr<IShader> ambientPS;shader.Source=ambientSource.c_str();device->CreateShader(shader,&ambientPS);if(!ambientPS)return false;
         LayoutElement layout[]={{0,0,3,VT_FLOAT32,False,0,32},{1,0,3,VT_FLOAT32,False,12,32},{2,0,2,VT_FLOAT32,False,24,32}};
         LayoutElement skinLayout[]={{0,0,3,VT_FLOAT32,False,0,40},{1,0,3,VT_FLOAT32,False,20,40},
             {2,0,2,VT_FLOAT32,False,32,40},{3,0,4,VT_UINT8,False,12,40},{4,0,4,VT_UINT8,False,16,40}};
@@ -336,17 +380,19 @@ Output SkinningVS(float3 position:ATTRIB0, float3 normal:ATTRIB1, float2 uv:ATTR
             {SHADER_TYPE_PIXEL,"ObjectSampler",SHADER_RESOURCE_VARIABLE_TYPE_MUTABLE},
             {SHADER_TYPE_PIXEL,"CameraAlphaTexture",SHADER_RESOURCE_VARIABLE_TYPE_MUTABLE},
             {SHADER_TYPE_PIXEL,"CameraAlphaSampler",SHADER_RESOURCE_VARIABLE_TYPE_MUTABLE},
-            {SHADER_TYPE_VERTEX,"SkinningPalette",SHADER_RESOURCE_VARIABLE_TYPE_MUTABLE}};
-        for(unsigned variant=0;variant<48;++variant) {
+            {SHADER_TYPE_VERTEX,"SkinningPalette",SHADER_RESOURCE_VARIABLE_TYPE_MUTABLE},
+            {SHADER_TYPE_PIXEL,"SunShadowDepth",SHADER_RESOURCE_VARIABLE_TYPE_DYNAMIC}};
+        for(unsigned variant=0;variant<60;++variant) {
             const bool auxiliary=variant>=24;const bool skin=variant>=12&&!auxiliary;
             if(skin&&!gpuPrototype)continue;
             const auto cull=variant%3;
             GraphicsPipelineStateCreateInfo info;
             info.PSODesc.Name="Static object opaque diffuse"; info.PSODesc.PipelineType=PIPELINE_TYPE_GRAPHICS;
-            info.PSODesc.ResourceLayout.Variables=variables; info.PSODesc.ResourceLayout.NumVariables=skin ? 5 : 4;
+            info.PSODesc.ResourceLayout.Variables=variables; info.PSODesc.ResourceLayout.NumVariables=variant>=36?6:(skin ? 5 : 4);
             auto& g=info.GraphicsPipeline;
             const auto& swap=s.backend.m_impl->swapChain->GetDesc();
             g.NumRenderTargets=1; g.RTVFormats[0]=swap.ColorBufferFormat; g.DSVFormat=swap.DepthBufferFormat;
+            if(variant>=48){g.NumRenderTargets=2;g.RTVFormats[1]=TEX_FORMAT_RGBA8_UNORM;}
             g.PrimitiveTopology=PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
             g.RasterizerDesc.CullMode=cull==0 ? CULL_MODE_NONE : CULL_MODE_BACK;
             g.RasterizerDesc.FrontCounterClockwise=variant>=36?cull!=2:cull==1;
@@ -358,15 +404,16 @@ Output SkinningVS(float3 position:ATTRIB0, float3 normal:ATTRIB1, float2 uv:ATTR
             blend.SrcBlend=blend.SrcBlendAlpha=BLEND_FACTOR_SRC_ALPHA;
             blend.DestBlend=blend.DestBlendAlpha=BLEND_FACTOR_INV_SRC_ALPHA;
             g.InputLayout.LayoutElements=auxiliary?auxiliaryLayout:(skin ? skinLayout : layout); g.InputLayout.NumElements=auxiliary?9:(skin ? 5 : 3);
-            info.pVS=variant>=36?modernVegetationVS:(auxiliary?auxiliaryVS:(skin ? skinVS : vs)); info.pPS=variant>=36?modernVegetationPS:ps;
+            info.pVS=variant>=36?modernVegetationVS:(auxiliary?auxiliaryVS:(skin ? skinVS : vs)); info.pPS=variant>=48?ambientPS:variant>=36?modernVegetationPS:ps;
             auto& pipeline=s.pipelines[variant];
             device->CreateGraphicsPipelineState(info,&pipeline);
             if(!pipeline) return false;
             for(auto stage:{SHADER_TYPE_VERTEX,SHADER_TYPE_PIXEL})
                 if(auto* variable=pipeline->GetStaticVariableByName(stage,"ObjectConstants")) variable->Set(s.constants);
             if(variant>=36){++liveLightingPipelines;pipeline->GetStaticVariableByName(SHADER_TYPE_PIXEL,"SceneLightingConstants")->Set(s.backend.m_impl->lightBuffer);}
+            if(variant>=36)s.backend.m_impl->depthEffects.BindReceiver(pipeline);
         }
-        return s.InitializePBR(gpuPrototype);
+        return s.InitializePBR(gpuPrototype)&&s.InitializeShadows(gpuPrototype);
     } catch(...) { s.Fail("initialization exception", __LINE__); return false; }
 }
 StaticObjectGeometryPtr DiligentStaticObjectRenderer::UploadGeometry(const StaticObjectSource& data)
@@ -515,6 +562,12 @@ StaticObjectGeometryPtr DiligentStaticObjectRenderer::CreateGeometry(const Stati
         s.backend.m_impl->device->CreateBuffer(desc,&initial,&result->indices);
         if(!result->vertices || !result->indices) return fail(__LINE__);
         result->vertexCount=static_cast<uint32_t>(data.vertices.size()); result->validationIndices=data.indices;
+        if(!data.vertices.empty()){
+            Graphics::Vector3 lo{data.vertices[0][0],data.vertices[0][1],data.vertices[0][2]},hi=lo;
+            for(const auto& v:data.vertices)for(unsigned c=0;c<3;++c){lo[c]=std::min(lo[c],v[c]);hi[c]=std::max(hi[c],v[c]);}
+            for(unsigned c=0;c<3;++c)result->boundsCenter[c]=(lo[c]+hi[c])*.5f;
+            result->boundsRadius=std::hypot(hi[0]-lo[0],hi[1]-lo[1],hi[2]-lo[2])*.5f;
+        }
         result->validationIndices32=data.indices32; result->indexType=wide ? VT_UINT32 : VT_UINT16;
         result->dynamic=dynamic;
         result->counters=s.counters; ++s.counters->geometry;
@@ -605,7 +658,8 @@ void DiligentStaticObjectRenderer::Draw(const StaticObjectGeometryPtr& geometry,
     const bool skin=mesh && mesh->skin && !rigid;
     const bool auxiliary=mesh&&mesh->extras;
     const bool modernVegetation=auxiliary&&Graphics::GraphicsFeatures{GetGraphicsRuntimeConfig()}.UsePBR();
-    const auto variant=materialVariant+(modernVegetation?36:(auxiliary?24:(skin ? 12 : 0)));
+    const bool ambient=modernVegetation&&s.backend.m_impl&&s.backend.m_impl->depthEffects.ambientActive;
+    const auto variant=materialVariant+(modernVegetation?(ambient?48:36):(auxiliary?24:(skin ? 12 : 0)));
     if(!s.backend.m_impl || !s.backend.m_impl->inFrame || !mesh || !image || !cameraImage ||
        mesh->counters!=s.counters || image->counters!=s.counters || cameraImage->counters!=s.counters ||
        cull>=3 || !s.pipelines[variant] || draw.alphaReference>255 || static_cast<uint32_t>(draw.alphaTest)>2 ||
@@ -634,6 +688,7 @@ void DiligentStaticObjectRenderer::Draw(const StaticObjectGeometryPtr& geometry,
     }
     if((rigid && !mesh->skin->rigidVertices) ||
        (skin && draw.vertexCount>mesh->skin->deformCount-draw.baseVertex)) { s.Fail("rigid/deform vertex range or rigid buffer mismatch", __LINE__); return; }
+    if(shadowPassIndex>=0){s.DrawShadow(mesh,image,draw,skin,rigid,auxiliary);return;}
     for(size_t i=draw.firstIndex;i<size_t(draw.firstIndex)+draw.indexCount;++i)
         if(mesh->IndexAt(i)>=draw.vertexCount) { s.Fail("mesh-local index exceeds draw vertex count", __LINE__); return; }
     if(draw.material && !auxiliary && Graphics::GraphicsFeatures{GetGraphicsRuntimeConfig()}.UsePBR()) {
@@ -683,7 +738,7 @@ void DiligentStaticObjectRenderer::Draw(const StaticObjectGeometryPtr& geometry,
         }
         // ZiiNAN: Diligent GPU skinning prototype
         RefCntAutoPtr<IShaderResourceBinding> skinBinding;
-        auto& binding=skin ? skinBinding : image->bindings[materialVariant+(modernVegetation?24:(auxiliary?12:0))];
+        auto& binding=skin ? skinBinding : image->bindings[materialVariant+(modernVegetation?(ambient?36:24):(auxiliary?12:0))];
         if(!binding) {
             s.pipelines[variant]->CreateShaderResourceBinding(&binding,true);
             if(!binding) { s.Fail("mesh shader resource binding creation failed", __LINE__); return; }
@@ -720,6 +775,8 @@ void DiligentStaticObjectRenderer::Draw(const StaticObjectGeometryPtr& geometry,
                 (draw.modulateCameraAlpha?1u:0u)|(modernVegetation&&image->srgbView?2u:0u)|(modernVegetation&&cameraImage->srgbView?4u:0u)};
             mapped->alphaModes={draw.factorAlphaOnly ? 4u : (draw.factorAlpha ? 3u : (draw.diffuseAlphaOnly ? 2u : uint32_t(draw.textureAlpha))),static_cast<uint32_t>(draw.alphaTest),draw.alphaReference,draw.cameraAlpha ? 1u : 0u};
         }
+        b.depthEffects.BindTargets(b.swapChain,modernVegetation);
+        if(modernVegetation)b.depthEffects.SetReceiver(binding);
         b.context->SetPipelineState(s.pipelines[variant]);
         const auto& extent=b.swapChain->GetDesc();
         Viewport viewport{float(draw.viewport[0]),float(draw.viewport[1]),float(draw.viewport[2] ? draw.viewport[2] : extent.Width),float(draw.viewport[3] ? draw.viewport[3] : extent.Height),0,1};
@@ -733,6 +790,7 @@ void DiligentStaticObjectRenderer::Draw(const StaticObjectGeometryPtr& geometry,
         attributes.FirstIndexLocation=draw.firstIndex;
         attributes.BaseVertex=draw.baseVertex-(rigid ? mesh->skin->deformCount : 0);
         b.context->DrawIndexed(attributes); ++s.draws;
+        if(modernVegetation)b.depthEffects.SetReceiver(binding,true);
         if(modernVegetation)++modernVegetationDraws;
     } catch(...) { s.Fail("mesh draw exception", __LINE__); }
 }

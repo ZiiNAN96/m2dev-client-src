@@ -5,6 +5,7 @@
 #include "PythonApplication.h"
 #include "../../tests/Graphics/GraphicsClientProbe.h"
 #include "../../tests/Lighting/LightingClientProbe.h"
+#include "../../tests/Shadows/ShadowClientProbe.h"
 #endif
 
 PyObject* systemGetGraphicsSettings(PyObject*, PyObject*)
@@ -482,6 +483,8 @@ void initsystem()
         { "TestGraphicsWindow", systemTestGraphicsWindow, METH_VARARGS },
         { "SetLightingProof", systemSetLightingProof, METH_VARARGS },
         { "GetLightingProof", systemGetLightingProof, METH_VARARGS },
+        { "SetDepthProof", systemSetDepthProof, METH_VARARGS },
+        { "GetDepthProof", systemGetDepthProof, METH_VARARGS },
 #endif
 		// MR-14: Fog update by Alaric
 		{ "GetFogLevel",				systemGetFogLevel,				METH_VARARGS },

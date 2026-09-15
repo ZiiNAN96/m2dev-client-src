@@ -1,5 +1,7 @@
 #include "StdAfx.h"
 #include "Renderer/GraphicsConfig.h"
+#include "Renderer/ShadowAmbientRuntime.h"
+#include "EterLib/DrawState.h"
 #include "eterBase/Error.h"
 #include "eterlib/Camera.h"
 #include "eterlib/AttributeInstance.h"
@@ -192,9 +194,13 @@ void CPythonApplication::RenderGame()
 
 	CCullingManager::Instance().Process();
 
-    const auto deformStart=Renderer::skinningBenchmarkEnabled ? Renderer::PrototypeClock::now() : Renderer::PrototypeClock::time_point{};
-	m_kChrMgr.Deform();
-    if(Renderer::skinningBenchmarkEnabled) Renderer::skinningBenchmarkCurrent.deformUs+=Renderer::PrototypeMicroseconds(deformStart);
+    const auto prepareActors=[&] {
+        const auto deformStart=Renderer::skinningBenchmarkEnabled ? Renderer::PrototypeClock::now() : Renderer::PrototypeClock::time_point{};
+        m_kChrMgr.Deform();
+        if(Renderer::skinningBenchmarkEnabled)Renderer::skinningBenchmarkCurrent.deformUs+=Renderer::PrototypeMicroseconds(deformStart);
+    };
+    const bool modernDepth=m_terrainPresentation&&Renderer::GetGraphicsRuntimeConfig().usePBR;
+    if(!modernDepth)prepareActors();
 
 	m_pyBackground.RenderCharacterShadowToTexture();
 
@@ -214,12 +220,23 @@ void CPythonApplication::RenderGame()
 	m_pyBackground.RenderCloud();
 
 	m_pyBackground.BeginEnvironment();
+
+    if(modernDepth){
+        Math::Matrix view,projection;DRAWSTATE.GetTransform(Renderer::MatrixView,&view);DRAWSTATE.GetTransform(Renderer::MatrixProjection,&projection);
+        Graphics::Matrix4 v,p;memcpy(v.data(),&view,64);memcpy(p.data(),&projection,64);
+        m_terrainPresentation->BeginModernScene(v,p,prepareActors,[&]{
+            m_pyBackground.SetBackgroundDirLight();m_pyBackground.Render();
+            m_pyBackground.SetCharacterDirLight();m_kChrMgr.Render();
+        });
+        m_pyBackground.SetBackgroundDirLight();
+    }
 	m_pyBackground.Render();
 
 	m_pyBackground.SetCharacterDirLight();
     const auto actorRenderStart=Renderer::skinningBenchmarkEnabled ? Renderer::PrototypeClock::now() : Renderer::PrototypeClock::time_point{};
 	m_kChrMgr.Render();
     if(Renderer::skinningBenchmarkEnabled) Renderer::skinningBenchmarkCurrent.renderUs+=Renderer::PrototypeMicroseconds(actorRenderStart);
+    if(modernDepth)m_terrainPresentation->EndModernScene();
 
 	m_pyBackground.SetBackgroundDirLight();
 	m_pyBackground.RenderWater();

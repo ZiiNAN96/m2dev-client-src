@@ -12,10 +12,13 @@ struct SkinningBenchmarkFrame {
     uint64_t serial=0,cpuCalls=0,cpuVertices=0,gpuCalls=0,boneBytes=0,vertexBytes=0,uploads=0,draws=0,visible=0,fallbacks=0;
     int stage=-1,sample=-1;
     double skinUs=0,prepUs=0,deformUs=0,renderUs=0,worldUs=0,processUs=0,presentUs=0,wallUs=0;
+    std::uint64_t shadowDraws{},shadowCasters{},shadowBytes{},aoBytes{};
+    double shadowCpuUs{},aoCpuUs{};
 };
 inline SkinningBenchmarkFrame skinningBenchmarkCurrent;
 inline std::vector<SkinningBenchmarkFrame> skinningBenchmarkFrames;
 inline std::map<uint64_t,double> skinningBenchmarkGpuTimes;
+inline std::map<uint64_t,double> ambientBenchmarkGpuTimes;
 inline uint64_t skinningBenchmarkSerial=0,skinningBenchmarkDropped=0;
 inline constexpr size_t skinningBenchmarkLimit=100000;
 struct SkinningBenchmarkProcessScope {
@@ -46,11 +49,13 @@ inline void WriteSkinningBenchmark()
 {
     if(!skinningBenchmarkEnabled) return;
     std::ofstream csv("skinning-benchmark.csv");csv<<std::setprecision(12);
-    csv<<"serial,stage,sample,cpu_calls,cpu_vertices,gpu_deforms,bone_bytes,vertex_bytes,vertex_updates,draws,visible,fallbacks,cpu_skin_us,gpu_prep_us,deform_us,render_cpu_us,world_cpu_us,process_cpu_us,present_us,wall_frame_us,gpu_frame_us\n";
+    csv<<"serial,stage,sample,cpu_calls,cpu_vertices,gpu_deforms,bone_bytes,vertex_bytes,vertex_updates,draws,visible,fallbacks,cpu_skin_us,gpu_prep_us,deform_us,render_cpu_us,world_cpu_us,process_cpu_us,present_us,wall_frame_us,gpu_frame_us,shadow_draws,shadow_casters,shadow_bytes,ao_bytes,shadow_cpu_us,ao_cpu_us,ao_gpu_us\n";
     for(const auto& s:skinningBenchmarkFrames) {
         csv<<s.serial<<','<<s.stage<<','<<s.sample<<','<<s.cpuCalls<<','<<s.cpuVertices<<','<<s.gpuCalls<<','<<s.boneBytes<<','<<s.vertexBytes<<','<<s.uploads<<','<<s.draws<<','<<s.visible<<','<<s.fallbacks<<','
             <<s.skinUs<<','<<s.prepUs<<','<<s.deformUs<<','<<s.renderUs<<','<<s.worldUs<<','<<s.processUs<<','<<s.presentUs<<','<<s.wallUs<<',';
         auto found=skinningBenchmarkGpuTimes.find(s.serial);if(found!=skinningBenchmarkGpuTimes.end()) csv<<found->second;
+        csv<<','<<s.shadowDraws<<','<<s.shadowCasters<<','<<s.shadowBytes<<','<<s.aoBytes<<','<<s.shadowCpuUs<<','<<s.aoCpuUs<<',';
+        auto ao=ambientBenchmarkGpuTimes.find(s.serial);if(ao!=ambientBenchmarkGpuTimes.end())csv<<ao->second;
         csv<<'\n';
     }
     std::ofstream meta("skinning-benchmark-meta.txt");

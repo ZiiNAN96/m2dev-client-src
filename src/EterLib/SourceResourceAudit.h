@@ -4,6 +4,7 @@
 #include "Graphics/GraphicsSettings.h"
 #include "Renderer/MaterialRuntime.h"
 #include "Renderer/SceneLightingRuntime.h"
+#include "Renderer/ShadowAmbientRuntime.h"
 #include <ostream>
 
 namespace Renderer
@@ -12,6 +13,8 @@ namespace Renderer
 inline void WriteSourceResourceAudit(std::ostream& output)
 {
     output << "GraphicsSettingsObjects=" << Graphics::liveSettingsStores << std::endl;
+    output << "ShadowMaps=" << liveShadowMaps << " ShadowViews=" << liveShadowViews << " ShadowPipelines=" << liveShadowPipelines << " ShadowBuffers=" << liveShadowBuffers
+           << " AOTargets=" << liveAOTargets << " AOViews=" << liveAOViews << " AOPipelines=" << liveAOPipelines << " AOBuffers=" << liveAOBuffers << std::endl;
     output << "SceneLightingResources=" << liveSceneLightingResources << " LightBuffers=" << liveLightBuffers
            << " LightingPipelines=" << liveLightingPipelines
            << " LightBufferUpdates=" << lightBufferUpdates << " SceneLightingRevision=" << sceneLighting.Revision()

@@ -8,12 +8,14 @@ bool DiligentStaticObjectRenderer::Impl::InitializePBR(bool gpu)
     SamplerDesc sampler;sampler.MinFilter=sampler.MagFilter=sampler.MipFilter=FILTER_TYPE_LINEAR;
     sampler.AddressU=sampler.AddressV=TEXTURE_ADDRESS_WRAP;
     device->CreateSampler(sampler,&pbrSampler);if(!pbrSampler)return false;
-    const std::string litSource=std::string(sceneLightingShader)+pbrShader;
+    const std::string litSource=std::string(sceneLightingShader)+shadowReceiverShader+pbrShader;
     ShaderCreateInfo shader;shader.SourceLanguage=SHADER_SOURCE_LANGUAGE_HLSL;shader.Source=litSource.c_str();
     shader.Desc.Name="G1 PBR rigid";shader.Desc.ShaderType=SHADER_TYPE_VERTEX;shader.EntryPoint="PBRVS";
     RefCntAutoPtr<IShader> vs,skinVS,ps;device->CreateShader(shader,&vs);
     shader.Desc.Name="G1 metallic roughness GGX";shader.Desc.ShaderType=SHADER_TYPE_PIXEL;shader.EntryPoint="PBRPS";
     device->CreateShader(shader,&ps);if(!vs||!ps)return false;
+    const std::string ambientSource=std::string("#define AMBIENT_MRT\n")+litSource;
+    RefCntAutoPtr<IShader> ambientPS;shader.Source=ambientSource.c_str();device->CreateShader(shader,&ambientPS);if(!ambientPS)return false;
     const std::string skinned=litSource+gpuSkinningShader+R"(
 POutput PBRSkinVS(float3 position:ATTRIB0,float3 normal:ATTRIB1,float2 oldUV:ATTRIB2,
  uint4 weights:ATTRIB3,uint4 indices:ATTRIB4,float4 tangent:ATTRIB5,float2 uv:ATTRIB6) {
@@ -36,13 +38,15 @@ POutput PBRSkinVS(float3 position:ATTRIB0,float3 normal:ATTRIB1,float2 oldUV:ATT
         {SHADER_TYPE_PIXEL,"PEmissiveTexture",SHADER_RESOURCE_VARIABLE_TYPE_MUTABLE},
         {SHADER_TYPE_PIXEL,"PCameraTexture",SHADER_RESOURCE_VARIABLE_TYPE_DYNAMIC},
         {SHADER_TYPE_PIXEL,"PCameraSampler",SHADER_RESOURCE_VARIABLE_TYPE_DYNAMIC},
+        {SHADER_TYPE_PIXEL,"SunShadowDepth",SHADER_RESOURCE_VARIABLE_TYPE_DYNAMIC},
         {SHADER_TYPE_VERTEX,"SkinningPalette",SHADER_RESOURCE_VARIABLE_TYPE_DYNAMIC}};
-    for(unsigned variant=0;variant<24;++variant) {
-        const bool skin=variant>=12;if(skin&&!gpu)continue;
+    for(unsigned variant=0;variant<48;++variant) {
+        const bool skin=variant%24>=12;if(skin&&!gpu)continue;
         GraphicsPipelineStateCreateInfo info;info.PSODesc.Name="G1 PBR material";info.PSODesc.PipelineType=PIPELINE_TYPE_GRAPHICS;
-        info.PSODesc.ResourceLayout.Variables=variables;info.PSODesc.ResourceLayout.NumVariables=skin?8:7;
+        info.PSODesc.ResourceLayout.Variables=variables;info.PSODesc.ResourceLayout.NumVariables=skin?9:8;
         auto& g=info.GraphicsPipeline;const auto& swap=backend.m_impl->swapChain->GetDesc();
         g.NumRenderTargets=1;g.RTVFormats[0]=swap.ColorBufferFormat;g.DSVFormat=swap.DepthBufferFormat;
+        if(variant>=24){g.NumRenderTargets=2;g.RTVFormats[1]=TEX_FORMAT_RGBA8_UNORM;}
         g.PrimitiveTopology=PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
         g.RasterizerDesc.CullMode=variant%3==0?CULL_MODE_NONE:CULL_MODE_BACK;
         // Disabling culling must not reverse the definition of a front face.
@@ -53,12 +57,13 @@ POutput PBRSkinVS(float3 position:ATTRIB0,float3 normal:ATTRIB1,float2 oldUV:ATT
         auto& blend=g.BlendDesc.RenderTargets[0];blend.BlendEnable=(variant/3)%2!=0;
         blend.SrcBlend=blend.SrcBlendAlpha=BLEND_FACTOR_SRC_ALPHA;blend.DestBlend=blend.DestBlendAlpha=BLEND_FACTOR_INV_SRC_ALPHA;
         g.InputLayout.LayoutElements=skin?skinLayout:rigidLayout;g.InputLayout.NumElements=skin?7:5;
-        info.pVS=skin?skinVS:vs;info.pPS=ps;
+        info.pVS=skin?skinVS:vs;info.pPS=variant>=24?ambientPS:ps;
         auto& pipeline=pbrPipelines[variant];device->CreateGraphicsPipelineState(info,&pipeline);if(!pipeline)return false;
         ++livePBRPipelines;
         for(auto stage:{SHADER_TYPE_VERTEX,SHADER_TYPE_PIXEL})if(auto* v=pipeline->GetStaticVariableByName(stage,"PBRConstants"))v->Set(pbrConstants);
         if(auto* v=pipeline->GetStaticVariableByName(SHADER_TYPE_PIXEL,"SceneLightingConstants"))v->Set(backend.m_impl->lightBuffer);
         if(auto* v=pipeline->GetStaticVariableByName(SHADER_TYPE_PIXEL,"PMaterialSampler"))v->Set(pbrSampler);
+        backend.m_impl->depthEffects.BindReceiver(pipeline);
     }
     return true;
 }
@@ -68,6 +73,7 @@ void DiligentStaticObjectRenderer::Impl::DrawPBR(const std::shared_ptr<Geometry>
 {
     try {
         auto& b=*backend.m_impl;const auto& runtime=*draw.material;const auto& p=runtime.parameters;
+        if(b.depthEffects.ambientActive)variant+=24;
         if(!b.SyncSceneLighting()){Fail("scene lighting upload",__LINE__);return;}
         if(!pbrPipelines[variant]||!mesh->materialVertices){Fail("missing PBR pipeline or material vertex stream",__LINE__);return;}
         auto& owned=pbrBindings[draw.material.get()];
@@ -133,6 +139,7 @@ void DiligentStaticObjectRenderer::Impl::DrawPBR(const std::shared_ptr<Geometry>
             mapped->alpha={alpha,unsigned(draw.alphaTest),draw.alphaReference,draw.cameraAlpha?1u:0u};
             mapped->fade={draw.ambient[3],draw.textureFactor[3],0,0};mapped->camera=draw.cameraAlphaTransform;
         }
+        b.depthEffects.BindTargets(b.swapChain,true);b.depthEffects.SetReceiver(binding);
         b.context->SetPipelineState(pbrPipelines[variant]);const auto& size=b.swapChain->GetDesc();
         Viewport viewport{float(draw.viewport[0]),float(draw.viewport[1]),float(draw.viewport[2]?draw.viewport[2]:size.Width),float(draw.viewport[3]?draw.viewport[3]:size.Height),0,1};
         b.context->SetViewports(1,&viewport,size.Width,size.Height);
@@ -144,6 +151,7 @@ void DiligentStaticObjectRenderer::Impl::DrawPBR(const std::shared_ptr<Geometry>
         DrawIndexedAttribs attributes{draw.indexCount,mesh->indexType,DRAW_FLAG_VERIFY_ALL};
         attributes.FirstIndexLocation=draw.firstIndex;attributes.BaseVertex=draw.baseVertex-(rigid?mesh->skin->deformCount:0);
         b.context->DrawIndexed(attributes);++draws;++pbrDraws;
+        b.depthEffects.SetReceiver(binding,true);
         pbrTextureSamples+=1+bool(maps&2)+bool(maps&4)+bool(maps&8)+bool(maps&16)+bool(draw.cameraAlpha);
     }catch(...){Fail("PBR draw exception",__LINE__);}
 }

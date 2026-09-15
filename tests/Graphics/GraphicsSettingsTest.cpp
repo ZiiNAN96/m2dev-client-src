@@ -29,8 +29,9 @@ void Presets()
         {
             const auto r = Resolve(PresetSettings(p, style));
             const GraphicsFeatures features{r};
-            Check(!features.ShadowsEnabled() && !features.UseHDR() && !features.UseBloom() &&
-                !features.UseModernSky() && features.AOQuality() == AmbientOcclusionQuality::Off, "unimplemented feature gates");
+            Check(!features.UseHDR() && !features.UseBloom() && !features.UseModernSky(), "future feature gates");
+            Check(features.ShadowsEnabled()==(style==GraphicsStyle::Modern&&i!=0)&&
+                features.AOQuality()==(style==GraphicsStyle::Modern?ao[i]:AmbientOcclusionQuality::Off),"G34 modern shadow and AO gates");
             Check(r.water == WaterQuality::High && r.waterFrameMilliseconds == 70 && r.textures == TextureQuality::High, "existing water/texture path");
         }
     }

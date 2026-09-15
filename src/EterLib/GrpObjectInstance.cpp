@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "Renderer/ShadowAmbientRuntime.h"
 #include "GrpObjectInstance.h"
 #include "EterBase/Timer.h"
 
@@ -211,6 +212,16 @@ void CGraphicObjectInstance::ReleaseAlwaysHidden() {
 
 bool CGraphicObjectInstance::isShow()
 {
+    if(Renderer::shadowPassIndex>=0||Renderer::preparingShadowCasters){
+        Math::Vector3 center;float radius{};
+        if(!GetBoundingSphere(center,radius))return false;
+        const Graphics::Vector3 p{center.x,center.y,center.z};
+        if(Renderer::shadowPassIndex>=0)return Renderer::ShadowVisible(p,radius);
+        if(m_isVisible)return true;
+        for(unsigned i=0;i<Renderer::shadowCullingCascades.count;++i)
+            if(Graphics::IntersectsCascade(Renderer::shadowCullingCascades.cascade[i],p,radius))return true;
+        return false;
+    }
 	return m_isVisible;
 }
 

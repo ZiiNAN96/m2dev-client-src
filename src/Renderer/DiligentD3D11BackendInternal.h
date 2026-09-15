@@ -9,6 +9,7 @@
 #include "Graphics/GraphicsEngine/interface/Query.h"
 #include "SkinningBenchmark.h"
 #include "SceneLightingRuntime.h"
+#include "DiligentShadowAmbient.h"
 #include "Graphics/GraphicsEngine/interface/Buffer.h"
 #include "Graphics/GraphicsTools/interface/MapHelper.hpp"
 
@@ -18,6 +19,7 @@ struct Renderer::DiligentD3D11Backend::Impl
     Diligent::RefCntAutoPtr<Diligent::IDeviceContext> context;
     Diligent::RefCntAutoPtr<Diligent::ISwapChain> swapChain;
     Diligent::RefCntAutoPtr<Diligent::IBuffer> lightBuffer;
+    Renderer::DiligentShadowAmbient depthEffects;
     std::uint64_t lightRevision{};
     ~Impl() { if(lightBuffer) { --Renderer::liveLightBuffers; --Renderer::liveSceneLightingResources; } }
     bool SyncSceneLighting() {

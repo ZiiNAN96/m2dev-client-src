@@ -36,6 +36,7 @@ bool DiligentD3D11Backend::Initialize(const InitializeInfo& info)
         const auto& adapter=state->device->GetAdapterInfo();
         graphicsCapabilities={adapter.Texture.MaxTexture2DDimension,adapter.Memory.LocalMemory};
         if(!state->SyncSceneLighting())return false;
+        if(!state->depthEffects.Initialize(state->device,state->context))return false;
         m_impl = std::move(state);
         return true;
     }
@@ -50,6 +51,7 @@ bool DiligentD3D11Backend::BeginFrame()
     if (!m_impl || m_impl->suspended || m_impl->inFrame)
         return false;
     const auto& config = GetGraphicsRuntimeConfig();
+    if(config.style==Graphics::GraphicsStyle::Classic)m_impl->depthEffects.Reset();
     if (m_graphicsConfig.revision != config.revision) m_graphicsConfig = config;
     auto* target = m_impl->swapChain->GetCurrentBackBufferRTV();
     auto* depth = m_impl->swapChain->GetDepthBufferDSV();
@@ -145,6 +147,8 @@ bool DiligentD3D11Backend::Resize(uint32_t width, uint32_t height)
     if (!m_impl || m_impl->inFrame)
         return false;
     m_impl->suspended = width == 0 || height == 0;
+    m_impl->context->InvalidateState();
+    m_impl->depthEffects.Resize();
     if (m_impl->suspended)
         return true;
     try
@@ -171,9 +175,19 @@ void DiligentD3D11Backend::Shutdown()
     m_impl->context->WaitForIdle();
     if(skinningBenchmarkEnabled) m_impl->CollectTimings();
     for(auto& slot:m_impl->benchmarkQueries) { slot.query.Release();slot.frame=0; }
+    m_impl->context->InvalidateState();
+    m_impl->depthEffects.Shutdown();
     m_impl->swapChain.Release();
     m_impl->context.Release();
     m_impl->device.Release();
     m_impl.reset();
 }
+unsigned DiligentD3D11Backend::BeginModernScene(const Graphics::Matrix4& view,const Graphics::Matrix4& projection){
+    if(!m_impl||!m_impl->inFrame)return 0;const auto& size=m_impl->swapChain->GetDesc();
+    return m_impl->depthEffects.Begin(view,projection,GetGraphicsRuntimeConfig(),size.Width,size.Height);
+}
+bool DiligentD3D11Backend::BeginSunCascade(unsigned index){return m_impl&&m_impl->inFrame&&m_impl->depthEffects.BeginCascade(index);}
+void DiligentD3D11Backend::EndSunCascades(){if(m_impl)m_impl->depthEffects.EndShadows(m_impl->swapChain);}
+void DiligentD3D11Backend::EndModernScene(){if(m_impl&&m_impl->inFrame)m_impl->depthEffects.Composite(m_impl->swapChain,m_impl->swapChain->GetDepthBufferDSV());}
+void DiligentD3D11Backend::ResetModernScene(){if(m_impl){m_impl->context->InvalidateState();m_impl->depthEffects.Reset();if(m_impl->inFrame)m_impl->depthEffects.BindTargets(m_impl->swapChain,false);}}
 }

@@ -63,7 +63,14 @@ float3 SurfaceNormal(POutput i,bool front) {
  float3 result=SafeNormal(t*mapped.x+b*mapped.y+n*mapped.z,n);
  return front?result:-result;
 }
-float4 PBRPS(POutput i,bool front:SV_IsFrontFace):SV_TARGET {
+float4 PBRPS(POutput i,bool front:SV_IsFrontFace
+#ifdef AMBIENT_MRT
+ ,out float4 ambientDelta:SV_TARGET1
+#endif
+):SV_TARGET0 {
+#ifdef AMBIENT_MRT
+ ambientDelta=0;
+#endif
  float4 base=PBaseTexture.Sample(PMaterialSampler,MaterialUV(0,i.uv));
  if((PFlags.y&1)==0)base.rgb=ToLinear(base.rgb);
  base*=PBaseColor;
@@ -91,10 +98,14 @@ float4 PBRPS(POutput i,bool front:SV_IsFrontFace):SV_TARGET {
  float gl=2*nl/max(nl+sqrt(a2+(1-a2)*nl*nl),1e-5);
  float3 diffuse=(1-f)*(1-metallic)*base.rgb/3.14159265;
  float3 specular=distribution*gv*gl*f/max(4*nv*nl,1e-5);
- float3 direct=(diffuse+specular)*SceneSunColor.rgb*nl;
+ float3 direct=(diffuse+specular)*SceneSunColor.rgb*nl*SunVisibility(i.world,n);
  // World-normal hemisphere approximation, deliberately no environment specular/IBL.
  float3 indirect=SceneAmbient(n)*((1-f0)*(1-metallic)*base.rgb+f0)*ao;
  float3 color=direct+indirect+emissive;
+#ifdef AMBIENT_MRT
+ float3 withoutAmbient=ToSRGB(direct+emissive);
+ withoutAmbient=lerp(PFogColor.rgb,withoutAmbient,i.fog);
+#endif
  if(PFlags.w==1)color=base.rgb;
  if(PFlags.w==2)return float4(n*.5+.5,alpha);
  if(PFlags.w==3)return float4(roughness.xxx,alpha);
@@ -102,6 +113,10 @@ float4 PBRPS(POutput i,bool front:SV_IsFrontFace):SV_TARGET {
  if(PFlags.w==5)return float4(ao.xxx,alpha);
  if(PFlags.w==6)color=emissive;
  color=ToSRGB(color);if(PFlags.w==0)color=lerp(PFogColor.rgb,color,i.fog);
+#ifdef AMBIENT_MRT
+ if(PFlags.w==0)ambientDelta=float4(max(0,ToLinear(color)-ToLinear(withoutAmbient)),alpha);
+#endif
+ if(ShadowSettings.w!=0)color=lerp(color,CascadeColor(i.world),.5);
  return float4(color,alpha);
 }
 )";

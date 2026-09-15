@@ -69,6 +69,7 @@ static void Draw(CGrannyModelInstance& actor,DiligentActorRenderer& renderer,con
     }
     Check(!renderer.Failed(),"normal Diligent actor draw");
 }
+#include "../Shadows/NativeCharacterProof.h"
 static void Numeric(DiligentD3D11Backend& backend,CGrannyModelInstance& actor)
 {
     const auto palette=actor.GetSkinningPalette();Check(bool(palette),"native bone palette");
@@ -97,7 +98,7 @@ int main(int argc,char** argv)
     std::cout << std::unitbuf;
     HWND window=nullptr;
     try {
-        Check(argc==2||(argc==3&&std::string_view(argv[2])=="--modern"),"character fixture path and optional --modern");
+        Check(argc==2||(argc==3&&(std::string_view(argv[2])=="--modern"||std::string_view(argv[2])=="--shadows")),"character fixture path and optional --modern or --shadows");
         if(argc==3){Graphics::GraphicsSettings s;s.style=Graphics::GraphicsStyle::Modern;ApplyGraphicsRuntimeConfig(Graphics::Resolve(s,1));}
         CPackManager packs;CResourceManager resources;
         for(const auto extension:AssetRuntime::ModelExtensions())resources.RegisterResourceNewFunctionPointer(extension.data(),NewThing);
@@ -135,7 +136,8 @@ int main(int argc,char** argv)
                 }
                 std::cout<<"Multi-instance draws="<<renderer.DrawCount()<<" geometry wrappers="<<livePrototypeGeometry
                     <<" shared mesh buffers="<<livePrototypeStaticMeshes<<" textures="<<renderer.LiveTextureCount()<<'\n';
-                Check(renderer.DrawCount()==40&&livePrototypeStaticMeshes==1&&renderer.LiveTextureCount()==(argc==3?2u:1u),"20 actors share immutable mesh buffers and texture, all primitives draw");
+                const bool pbrFixture=argc==3&&std::string_view(argv[2])=="--modern";
+                Check(renderer.DrawCount()==40&&livePrototypeStaticMeshes==1&&renderer.LiveTextureCount()==(pbrFixture?2u:1u),"20 actors share immutable mesh buffers and texture, all primitives draw");
                 if(argc==3){Check(liveLightBuffers==1&&lightBufferUpdates==lightUpdatesBefore,"20 animated actors share one warm scene light buffer without uploads");std::cout<<"SceneLightBuffers=1 additionalUploadsFor20Actors=0\n";}
                 std::vector<std::uint8_t> rgb;unsigned w{},h{};Check(backend.CaptureRGB(rgb,w,h),"20 actors native readback");Save(rgb,w,h,"f5x-20-actors.bmp");
                 backend.EndFrame();backend.Present();renderer.ReleaseBindings();
@@ -153,7 +155,9 @@ int main(int argc,char** argv)
                     Check(expected&&actual,"attachment world matrices available");
                     for(unsigned k=0;k<16;++k)Check(std::abs(expected[k]-actual[k])<.001,"rigid prop follows animated hand matrix");
                     Check(backend.CaptureRGB(rgb,w,h),"attachment image readback");Save(rgb,w,h,"f5x-hand-attachment.bmp");
-                    backend.EndFrame();backend.Present();renderer.ReleaseBindings();prop.Clear();propThing.Clear();
+                    backend.EndFrame();backend.Present();renderer.ReleaseBindings();
+                    if(argc==3&&std::string_view(argv[2])=="--shadows")NativeShadowProof(backend,renderer,*thing.GetPointer(),*actors[0],prop,view,projection);
+                    prop.Clear();propThing.Clear();
                 }
                 Check(SetWindowPos(window,nullptr,0,0,720,480,SWP_NOMOVE|SWP_NOZORDER|SWP_NOACTIVATE)!=FALSE,"owned native window resize");
                 Check(backend.Resize(720,480),"resize backend");

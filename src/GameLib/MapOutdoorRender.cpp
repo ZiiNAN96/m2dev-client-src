@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "Renderer/ShadowAmbientRuntime.h"
 #include "Platform/PlatformTime.h"
 #include "StaticObjectBridge.h"
 #include "MapOutdoor.h"
@@ -74,6 +75,13 @@ void CMapOutdoor::RenderTerrain()
 		Renderer::terrainRenderer->BeginTerrain(matrices, statesMatch);
 	}
 
+    if(Renderer::shadowPassIndex>=0&&Renderer::terrainRenderer){
+        WORD primitiveCount{};Renderer::PrimitiveTopology primitiveType;
+        SelectIndexBuffer(0,&primitiveCount,&primitiveType);
+        for(const auto& patch:m_PatchVector)SubmitTerrainGeometry(patch.second);
+        return;
+    }
+
 	// 그리기 위한 벡터 세팅
 	if (CTerrainPatch::SOFTWARE_TRANSFORM_PATCH_ENABLE)
 		__RenderTerrain_RenderSoftwareTransformPatch();
@@ -126,6 +134,8 @@ int	CMapOutdoor::__RenderTerrain_RecurseRenderQuadTree_CheckBoundingCircle(const
 
 	Math::Vector3 center = c_v3Center;
 	center.y = -center.y;
+    if(Renderer::shadowPassIndex>=0)
+        return Renderer::ShadowVisible({center.x,center.y,center.z},c_fRadius)?VIEW_PART:VIEW_NONE;
 
 	int i;
 

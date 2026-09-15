@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "Renderer/GraphicsConfig.h"
 #include "Renderer/SceneLightingRuntime.h"
+#include "Renderer/TerrainPresentation.h"
 #include "EterLib/DrawStateView.h"
 #include "EterLib/DrawState.h"
 #include "PackLib/PackManager.h"
@@ -79,6 +80,7 @@ void CMapManager::Create()
 
 void CMapManager::Destroy()
 {
+    if(Renderer::activePresentation)Renderer::activePresentation->ResetModernScene();
     Renderer::sceneLighting.Set({});
     mc_pcurEnvironmentData=nullptr;
 	stl_wipe_second(m_EnvironmentDataMap);
@@ -93,6 +95,7 @@ void CMapManager::Destroy()
 
 void CMapManager::Clear()
 {
+    if(Renderer::activePresentation)Renderer::activePresentation->ResetModernScene();
     Renderer::sceneLighting.Set({});
 	if (m_pkMap)
 		m_pkMap->Clear();
