@@ -4,6 +4,7 @@
 #include "Renderer/DiligentEffectRenderer.h"
 #include "Renderer/ModernFrame.h"
 #include "Renderer/FirstUseAudit.h"
+#include "Graphics/AtmosphereConfig.h"
 #include "Graphics/GraphicsEngineD3D11/interface/EngineFactoryD3D11.h"
 #include "Platform/PlatformWindow.h"
 #include <atomic>
@@ -155,6 +156,22 @@ int main() {
                 Save(file,sky,width,height);
             }
             Check(diskX[0]>diskX[1]+100&&diskY[2]<diskY[0]-60,"left/right/elevation follow SceneLighting");
+            {
+                const auto savedLight=light;
+                light.cloudCoverage=.65f;Graphics::developmentSkySeconds=10;
+                const auto clouds=render(0,false,0,false);
+                Check(render(0,false,0,false)==clouds,"fixed sky time is repeatable");
+                Graphics::developmentSkySeconds=130;
+                Check(render(0,false,0,false)!=clouds,"clouds advance with time");
+                Graphics::developmentSkySeconds=10;
+                Check(render(0,false,0,false)==clouds,"cloud motion does not accumulate per frame");
+                const auto withBloom=render(0,true,0,false);
+                Save("g8-sky-clouds.ppm",clouds,width,height);
+                Save("g8-sky-clouds-bloom.ppm",withBloom,width,height);
+                light.fogColor={.15f,.08f,.05f};
+                Check(render(0,false,0,false)!=clouds,"map horizon change invalidates cached sky without changing the sun");
+                light=savedLight;Graphics::developmentSkySeconds=-1;
+            }
             // Put an opaque world quad in front of the high sun direction.
             draw.matrices.world[14]=1.44f;
             const auto occluded=render(0,false);

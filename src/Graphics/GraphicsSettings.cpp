@@ -73,6 +73,7 @@ GraphicsSettings PresetSettings(GraphicsPreset preset, GraphicsStyle style)
     }
     if(s.style==GraphicsStyle::Modern) {
         s.hdr=true;
+        if(s.preset==GraphicsPreset::Low)s.shadows=ShadowQuality::Low;
         if(s.preset==GraphicsPreset::Medium)s.modernSky=true;
     }
     return s;

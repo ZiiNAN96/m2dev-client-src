@@ -80,8 +80,7 @@ float4 CompositePS(float4 pixel:SV_POSITION):SV_TARGET {
  float3 ray=normalize(world.xyz-Camera.f4Position.xyz);
  float2 skyUV=float2(atan2(ray.y,ray.x)/(2*3.14159265359)+.5,1-saturate(ray.z));
  float3 sky=Sky.SampleLevel(SkySampler,skyUV,0).rgb;
- // Map tint belongs to the sky horizon only. Never mix it into world pixels.
- sky=lerp(sky,HorizonColor.rgb,.12*pow(1-saturate(ray.z),4));
+ // Horizon tint and soft clouds are already in the shared atmosphere atlas.
  if(depth>=1) {
   if(Options.z==0)return float4(FastSRGBToLinear(Background.Load(int3(coord,0)).rgb),1);
   // A 32 arc-minute disk in sky space; the direction is opposite the rays.

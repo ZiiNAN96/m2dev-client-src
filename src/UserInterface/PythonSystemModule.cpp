@@ -480,6 +480,7 @@ void initsystem()
         { "TestGraphicsWindow", systemTestGraphicsWindow, METH_VARARGS },
         { "TestGraphicsSun", systemTestGraphicsSun, METH_VARARGS },
         { "TestWaterTime", systemTestWaterTime, METH_VARARGS },
+        { "TestSkyTime", systemTestSkyTime, METH_VARARGS },
 #endif
 		// MR-14: Fog update by Alaric
 		{ "GetFogLevel",				systemGetFogLevel,				METH_VARARGS },

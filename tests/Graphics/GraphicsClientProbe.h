@@ -1,6 +1,12 @@
 #pragma once
 #include "Graphics/AtmosphereConfig.h"
 #include "Renderer/WaterDiagnostics.h"
+static PyObject* systemTestSkyTime(PyObject*,PyObject* args)
+{
+    double seconds;if(!PyArg_ParseTuple(args,"d",&seconds))return nullptr;
+    Graphics::developmentSkySeconds=std::isfinite(seconds)?seconds:-1;
+    return Py_BuildNone();
+}
 static PyObject* systemTestWaterTime(PyObject*,PyObject* args)
 {
     double seconds;int view=0;if(!PyArg_ParseTuple(args,"d|i",&seconds,&view))return nullptr;

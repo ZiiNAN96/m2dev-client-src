@@ -272,6 +272,9 @@ void CPythonApplication::RenderGame()
             source.enabled=environment->bDirLightsEnable[ENV_DIRLIGHT_BACKGROUND]!=FALSE;
             light=Graphics::ResolveLegacyEnvironmentLight(source);
             light.fogColor={environment->FogColor.r,environment->FogColor.g,environment->FogColor.b};
+            // Reuse the authored environment's cloud presence. The lightweight
+            // Modern layer shares the atmosphere atlas with water reflections.
+            light.cloudCoverage=environment->strCloudTextureFileName.empty()?0.f:.65f;
             // Authored fog colour is a sky-horizon input only in Modern.
         }
 #ifdef M2_RENDERER_DIAGNOSTICS

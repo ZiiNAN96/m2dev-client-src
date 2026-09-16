@@ -63,7 +63,7 @@ float4 WaterCompositePS(float4 pixel:SV_POSITION):SV_TARGET {
  float3 direction=reflect(-V,N);
  float2 skyUV=float2(atan2(direction.y,direction.x)/(2*3.14159265359)+.5,1-saturate(direction.z));
  float3 sky=Sky.SampleLevel(SkySampler,skyUV,0).rgb;
- sky=lerp(sky,Horizon.rgb,.12*pow(1-saturate(direction.z),4));
+ // Exact same calibrated atmosphere/cloud atlas as the visible background.
  float4 ssr=Options.z!=0?Reflection.Load(int3(coord,0)):float4(0,0,0,0);
  if(Absorption.w==1)return float4(ssr.rgb,1);
  if(Absorption.w==2)return float4(ssr.aaa,1);

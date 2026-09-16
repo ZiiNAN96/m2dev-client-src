@@ -29,12 +29,14 @@ void Presets()
         {
             const auto r = Resolve(PresetSettings(p, style));
             const GraphicsFeatures features{r};
-            Check(features.ShadowsEnabled()==(style==GraphicsStyle::Modern&&i!=0)&&
+            Check(features.ShadowsEnabled()==(style==GraphicsStyle::Modern)&&
                 features.AOQuality()==(style==GraphicsStyle::Modern?ao[i]:AmbientOcclusionQuality::Off), "style-gated FX shadows/AO");
             Check(features.UseHDR()==(style==GraphicsStyle::Modern)&&
                 features.UseBloom()==(style==GraphicsStyle::Modern&&i>=2)&&
                 features.UseModernSky()==(style==GraphicsStyle::Modern), "Modern HDR/sky and highlight bloom presets");
             Check(r.water == (style==GraphicsStyle::Modern?static_cast<WaterQuality>(i):WaterQuality::High) && r.waterFrameMilliseconds == 70 && r.textures == TextureQuality::High, "style-gated water quality / unchanged Classic animation");
+            if(style==GraphicsStyle::Modern&&i==0)
+                Check(r.shadows==ShadowQuality::Low&&r.shadowTextureSize==512,"Modern Low uses the cheapest real shadow tier");
         }
     }
     for (int shadowLevel = 0; shadowLevel <= 5; ++shadowLevel)

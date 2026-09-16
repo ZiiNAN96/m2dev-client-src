@@ -1,9 +1,12 @@
 # ZiiNAN: Removed final D3D9 compile-time dependency. Read-only build/import audit.
 param([Parameter(Mandatory=$true)][ValidateSet('Release','Debug')][string]$Configuration,
-    [Parameter(Mandatory=$true)][string]$OutputDirectory)
+    [Parameter(Mandatory=$true)][string]$OutputDirectory,
+    [string]$BuildDirectory)
 $ErrorActionPreference='Stop'
 $source=(Resolve-Path -LiteralPath "$PSScriptRoot/../..").Path
-$binary=(Resolve-Path -LiteralPath "$source/build/bin/$Configuration/Metin2_$Configuration.exe").Path
+if(-not $BuildDirectory) {$BuildDirectory="$source/build"}
+$build=(Resolve-Path -LiteralPath $BuildDirectory).Path
+$binary=(Resolve-Path -LiteralPath "$build/bin/$Configuration/Metin2_$Configuration.exe").Path
 $dumpbin='C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\dumpbin.exe'
 if(-not(Test-Path -LiteralPath $dumpbin)) { throw 'Set the installed Visual C++ dumpbin path in the audit script.' }
 New-Item -ItemType Directory -Path $OutputDirectory -Force | Out-Null
@@ -29,7 +32,7 @@ $dependencyRows | Export-Csv -LiteralPath "$OutputDirectory/$Configuration-impor
 $headerHits=[Collections.Generic.List[object]]::new()
 $oldWindowsHeaders=[Collections.Generic.HashSet[string]]::new()
 $units=[Collections.Generic.HashSet[string]]::new()
-Get-ChildItem -LiteralPath "$source/build/src","$source/build/vendor","$source/build/_deps" -Recurse -Filter 'CL.read.1.tlog' |
+Get-ChildItem -LiteralPath "$build/src","$build/vendor","$build/_deps" -Recurse -Filter 'CL.read.1.tlog' |
     Where-Object { $_.FullName -match "\\$Configuration\\" } | ForEach-Object {
     $active=$false; $unit=''
     foreach($line in Get-Content -LiteralPath $_.FullName -Encoding Unicode) {
@@ -43,7 +46,7 @@ Get-ChildItem -LiteralPath "$source/build/src","$source/build/vendor","$source/b
     }
 }
 if($headerHits.Count) { $headerHits | Export-Csv -LiteralPath "$OutputDirectory/$Configuration-forbidden-headers.csv" -NoTypeInformation; throw 'Forbidden compiler header dependencies.' }
-$commands=Get-Content -LiteralPath "$source/build/src/UserInterface/UserInterface.dir/$Configuration/UserInterface.tlog/link.command.1.tlog" -Encoding Unicode
+$commands=Get-Content -LiteralPath "$build/src/UserInterface/UserInterface.dir/$Configuration/UserInterface.tlog/link.command.1.tlog" -Encoding Unicode
 if($commands -match '(?i)(?:d3d9|d3dx9[^\\\s"]*)\.lib') { throw 'Forbidden library in actual link command.' }
 $hash=(Get-FileHash -LiteralPath $binary -Algorithm SHA256).Hash
 @(

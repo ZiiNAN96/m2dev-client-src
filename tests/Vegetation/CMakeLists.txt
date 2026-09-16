@@ -15,7 +15,7 @@ add_test(NAME Vegetation.NoLegacyDependency COMMAND ${CMAKE_COMMAND} -DSOURCE_RO
 set_tests_properties(Vegetation.NoLegacyDependency PROPERTIES TIMEOUT 15 LABELS "vegetation;portable;fast;hx")
 if(M2_BUILD_WINDOWS_CLIENT AND M2_BUILD_RENDERER_TESTS)
     add_executable(VegetationPackAudit ../../tools/Vegetation/PackAudit.cpp)
-    target_link_libraries(VegetationPackAudit PRIVATE PackLib EterLib EterBase M2FirstPartyArchitectureChecks)
+    target_link_libraries(VegetationPackAudit PRIVATE PackLib EterLib EterBase AssetRuntimeGR2 M2FirstPartyArchitectureChecks)
     get_target_property(vegetation_client_libraries UserInterface LINK_LIBRARIES)
     add_executable(VegetationRenderParity RenderParityTest.cpp)
     target_link_libraries(VegetationRenderParity PRIVATE ${vegetation_client_libraries} M2RendererDiligent VegetationRuntime)

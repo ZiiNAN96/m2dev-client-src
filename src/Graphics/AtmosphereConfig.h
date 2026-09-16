@@ -5,6 +5,15 @@
 namespace Graphics
 {
 inline int developmentSunState=-1; // Only selected by the renderer-test probe.
+inline double developmentSkySeconds=-1; // Negative selects the production monotonic clock.
+// Periodic offsets are computed in double precision before upload. One cycle
+// takes 40 minutes, independent of frame rate or time spent loading a map.
+inline std::array<float,2> CloudOffset(double seconds)
+{
+    if(!std::isfinite(seconds))return {};
+    const auto wrap=[](double x){return float(x-std::floor(x));};
+    return {wrap(seconds/2400.0),wrap(seconds/4800.0)};
+}
 struct AtmosphereConfig
 {
     float exposure{2.f};
@@ -16,7 +25,7 @@ inline AtmosphereConfig ResolveAtmosphere(const SceneLighting& input,const Graph
     const auto light=ValidateSceneLighting(input);
     AtmosphereConfig result;
     result.exposure*=std::exp2(light.exposureBias);
-    if(settings.modernSky){result.skyWidth=256;result.skyHeight=128;}
+    if(settings.modernSky){result.skyWidth=512;result.skyHeight=256;}
     return result;
 }
 // Development-only fixed states. All consumers still receive the same validated

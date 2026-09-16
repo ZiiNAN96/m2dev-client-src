@@ -13,7 +13,7 @@ int main() {
             auto atmosphere=ResolveAtmosphere({},config);
             Check(atmosphere.exposure==2.f,"fixed exposure is independent of quality");
             Check(config.bloom==(preset==GraphicsPreset::High||preset==GraphicsPreset::Ultra),"highlight-only bloom default");
-            Check(atmosphere.skyWidth==(preset==GraphicsPreset::Low?128u:256u),"two real sky resolutions");
+            Check(atmosphere.skyWidth==(preset==GraphicsPreset::Low?128u:512u),"two real sky resolutions");
             settings.style=GraphicsStyle::Classic;config=Resolve(settings);
             Check(!config.hdr&&!config.bloom&&!GraphicsFeatures{config}.UseModernSky(),"Classic bypasses all new effects");
         }
@@ -33,6 +33,15 @@ int main() {
         light.skyIBLIntensity=std::numeric_limits<float>::quiet_NaN();
         Check(ValidateSceneLighting(light).skyIBLIntensity==0,"invalid sky IBL rejected");
         light.skyIBLIntensity=10;Check(ValidateSceneLighting(light).skyIBLIntensity==1,"bounded sky IBL policy");
+        light.cloudCoverage=std::numeric_limits<float>::quiet_NaN();
+        Check(ValidateSceneLighting(light).cloudCoverage==0,"invalid clouds cannot poison the atlas");
+        light.cloudCoverage=4;Check(ValidateSceneLighting(light).cloudCoverage==1,"bounded cloud coverage");
+        double sixty=0,oneTwenty=0;
+        for(unsigned i=0;i<600;++i)sixty+=1.0/60;
+        for(unsigned i=0;i<1200;++i)oneTwenty+=1.0/120;
+        Check(CloudOffset(sixty)==CloudOffset(oneTwenty),"60/120 FPS produce identical ten-second cloud offsets");
+        Check(CloudOffset(4810)==CloudOffset(10),"cloud noise wraps after the common period");
+        Check(CloudOffset(std::numeric_limits<double>::infinity())==std::array<float,2>{},"nonfinite time is safe");
         std::cout<<"PASS G56 exposure, presets, sun and environment validation\n";
     } catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}
 }

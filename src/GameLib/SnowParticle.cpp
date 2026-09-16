@@ -54,6 +54,10 @@ void CSnowParticle::GetVerticies(SParticleVertex & rv3Vertex1, SParticleVertex &
 
 void CSnowParticle::Init(const Math::Vector3 & c_rv3Pos)
 {
+	// Modern can deform the scene for shadows before the first colour draw.
+	// Update must not read an uninitialized billboard basis in that interval.
+	m_v3Up = Math::Vector3(0.0f, 0.0f, 0.0f);
+	m_v3Cross = Math::Vector3(0.0f, 0.0f, 0.0f);
 	float fRot = frandom(0.0f, 36000.0f) / 100.0f;
 	float fDistance = frandom(0.0f, c_fSnowDistance) / 10.0f;
 

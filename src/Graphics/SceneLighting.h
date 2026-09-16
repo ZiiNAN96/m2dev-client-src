@@ -17,6 +17,7 @@ struct SceneLighting
     float fogNear{},fogFar{1.f},fogDensity{};
     float exposureBias{}; // Stops relative to the stable production exposure.
     float skyIBLIntensity{}; // Optional directional atmosphere fill; map policy owns its strength.
+    float cloudCoverage{}; // Sky-only soft layer; zero also permits clear-sky fixtures.
     bool fogEnabled{},densityFog{};
 };
 
@@ -35,6 +36,7 @@ inline SceneLighting ValidateSceneLighting(SceneLighting light)
     light.fogDensity=nonnegative(light.fogDensity);
     light.exposureBias=std::isfinite(light.exposureBias)?std::clamp(light.exposureBias,-3.f,3.f):0.f;
     light.skyIBLIntensity=std::min(nonnegative(light.skyIBLIntensity),1.f);
+    light.cloudCoverage=std::min(nonnegative(light.cloudCoverage),1.f);
     return light;
 }
 struct LegacyEnvironmentLight

@@ -1,5 +1,6 @@
 #include "DiligentAtmosphere.h"
 #include "FirstUseAudit.h"
+#include "Graphics/AtmosphereConfig.h"
 #include "Graphics/GraphicsEngine/interface/RenderDevice.h"
 #include "Graphics/GraphicsEngine/interface/DeviceContext.h"
 #include "Graphics/GraphicsEngine/interface/PipelineState.h"
@@ -10,6 +11,7 @@
 #include <stdexcept>
 #include <vector>
 #include <string>
+#include <chrono>
 
 namespace Diligent::G56Atmosphere
 {
@@ -28,9 +30,24 @@ void Require(bool result,const char* text){if(!result)throw std::runtime_error(t
 constexpr char skyShader[]=R"(
 #include "AtmosphereShadersCommon.fxh"
 cbuffer cbParticipatingMediaScatteringParams {AirScatteringAttribs g_MediaParams;}
-cbuffer SkyInputs {float4 Direction;float4 Radiance;}
+cbuffer SkyInputs {float4 Direction;float4 Radiance;float4 Horizon;float4 Clouds;}
 Texture3D<float3> Scattering;SamplerState ScatteringSampler;
 #include "LookUpTables.fxh"
+// Self-authored periodic value noise. Two-dimensional soft clouds only: no
+// volume, raymarching, downloaded texture or additional runtime dependency.
+float CloudHash(float2 p) {
+ p-=floor(p/64)*64; // Euclidean wrap also for negative sky-plane coordinates.
+ return frac(sin(dot(p,float2(127.1,311.7)))*43758.5453);
+}
+float CloudNoise(float2 p) {
+ float2 cell=floor(p),f=frac(p);f=f*f*(3-2*f);
+ return lerp(lerp(CloudHash(cell),CloudHash(cell+float2(1,0)),f.x),
+             lerp(CloudHash(cell+float2(0,1)),CloudHash(cell+1),f.x),f.y);
+}
+float CloudShape(float2 p) {
+ return .5*CloudNoise(p)+.25*CloudNoise(p*2)+.13*CloudNoise(p*4)+
+        .07*CloudNoise(p*8)+.035*CloudNoise(p*16)+.015*CloudNoise(p*32);
+}
 float4 SkyPS(FullScreenTriangleVSOutput input):SV_TARGET {
  float2 uv=NormalizedDeviceXYToTexUV(input.f2NormalizedXY);
  float elevation=saturate(1-uv.y);
@@ -43,7 +60,22 @@ float4 SkyPS(FullScreenTriangleVSOutput input):SV_TARGET {
  float3 scattering=LookUpPrecomputedScattering(float3(0,100,0),normalize(view),
   float3(0,-g_MediaParams.fEarthRadius,0),g_MediaParams.fEarthRadius,sun,
   g_MediaParams.fAtmBottomAltitude,g_MediaParams.fAtmTopAltitude,Scattering,ScatteringSampler,coords);
- return float4(max(scattering*Radiance.rgb,0),1);
+ // A sky-only radiometric/chromatic calibration; world exposure and the
+ // authored diffuse colours are unchanged. Keep blue above green (no cyan).
+ float3 sky=max(scattering*Radiance.rgb*float3(.82,1.08,1.28)*2.8,0);
+ // The authored tint belongs to the horizon, never to terrain/objects. Bake
+ // it here so the visible sky, water and filtered IBL consume the same colour.
+ sky=lerp(sky,Horizon.rgb,.06*pow(1-elevation,4));
+ if(Clouds.z>0) {
+  float2 plane=view.xz/(.18+view.y)*1.6+Clouds.xy*64;
+  float shape=CloudShape(plane);
+  float alpha=smoothstep(.49,.64,shape)*Clouds.z*smoothstep(.025,.22,elevation);
+  float daylight=smoothstep(-.08,.25,sun.y);
+  float3 colour=min(Radiance.rgb*.24+sky*.12,1.35);
+  colour*=lerp(.35,1,daylight)*lerp(.8,1,smoothstep(.5,.8,shape));
+  sky=lerp(sky,colour,alpha);
+ }
+ return float4(sky,1);
 }
 )";
 }
@@ -65,6 +97,7 @@ struct DiligentAtmosphere::Impl
     std::array<RefCntAutoPtr<IShaderResourceBinding>,2> filterSRBs;
     Graphics::SceneLighting previous;
     bool valid{},quality{};
+    std::array<float,2> previousOffset{};
     RefCntAutoPtr<IShader> Shader(const char* source,const char* entry,SHADER_TYPE stage) {
         FirstUseAudit timing("shader",entry);
         ShaderMacroHelper macros;
@@ -110,19 +143,22 @@ struct DiligentAtmosphere::Impl
         FirstUseAudit timing("fx-total","atmosphere-tables");
         G56Atmosphere::AirScatteringAttribs coefficients{};
         G56Atmosphere::EpipolarLightScatteringAttribs settings;
+        // Clear fantasy daylight: reduce the default dense aerosol veil, while
+        // retaining FX Rayleigh/ozone scattering and its single shared sun.
+        settings.fAerosolDensityScale=.12f;
         G56Atmosphere::InitializeAtmosphereCoefficients(coefficients,settings);
         BufferDesc desc;desc.Name="G56 FX physical media";desc.Size=sizeof(coefficients);
         desc.BindFlags=BIND_UNIFORM_BUFFER;desc.Usage=USAGE_IMMUTABLE;
         BufferData data{&coefficients,sizeof(coefficients)};device->CreateBuffer(desc,&data,&media);
         Require(bool(media),"G56 atmosphere media");
-        desc.Name="G56 shared sun sky inputs";desc.Size=32;desc.Usage=USAGE_DEFAULT;
+        desc.Name="G8 shared sun sky inputs";desc.Size=64;desc.Usage=USAGE_DEFAULT;
         device->CreateBuffer(desc,nullptr,&inputs);Require(bool(inputs),"G56 atmosphere inputs");
         SamplerDesc sampling;sampling.AddressU=sampling.AddressV=sampling.AddressW=TEXTURE_ADDRESS_CLAMP;
         device->CreateSampler(sampling,&sampler);Require(bool(sampler),"G56 atmosphere sampler");
         density=Texture("G56 FX optical depth",TEX_FORMAT_RG32_FLOAT,256,256);
         scattering=Texture("G56 FX single scattering",TEX_FORMAT_RGBA16_FLOAT,16,128,32*16);
         sky[0]=Texture("G56 sky low",TEX_FORMAT_RGBA16_FLOAT,128,64);
-        sky[1]=Texture("G56 sky high",TEX_FORMAT_RGBA16_FLOAT,256,128);
+        sky[1]=Texture("G8 sky high",TEX_FORMAT_RGBA16_FLOAT,512,256);
         auto opticalPSO=Fullscreen("G56 FX optical depth precompute","#include \"PrecomputeNetDensityToAtmTop.fx\"","PrecomputeNetDensityToAtmTopPS",TEX_FORMAT_RG32_FLOAT);
         RefCntAutoPtr<IShaderResourceBinding> opticalSRB;opticalPSO->CreateShaderResourceBinding(&opticalSRB,true);
         Set(opticalSRB,SHADER_TYPE_PIXEL,"cbParticipatingMediaScatteringParams",media);
@@ -209,15 +245,32 @@ DiligentAtmosphere::DiligentAtmosphere(IRenderDevice* d,IDeviceContext* c):impl_
 DiligentAtmosphere::~DiligentAtmosphere()=default;
 void DiligentAtmosphere::Prepare(const Graphics::SceneLighting& lighting,bool highQuality) {
     auto& s=*impl_;const auto light=Graphics::ValidateSceneLighting(lighting);
-    if(s.valid&&s.quality==highQuality&&s.previous.sunDirection==light.sunDirection&&s.previous.sunColor==light.sunColor&&s.previous.sunIntensity==light.sunIntensity)return;
-    struct {float4 direction,radiance;} data{{light.sunDirection[0],light.sunDirection[1],light.sunDirection[2],0},
-        {light.sunColor[0]*light.sunIntensity,light.sunColor[1]*light.sunIntensity,light.sunColor[2]*light.sunIntensity,0}};
+    static const auto epoch=std::chrono::steady_clock::now();
+    const double seconds=Graphics::developmentSkySeconds>=0?Graphics::developmentSkySeconds:
+        std::chrono::duration<double>(std::chrono::steady_clock::now()-epoch).count();
+    const auto offset=Graphics::CloudOffset(seconds);
+    const bool relight=!s.valid||s.quality!=highQuality||s.previous.sunDirection!=light.sunDirection||
+        s.previous.sunColor!=light.sunColor||s.previous.sunIntensity!=light.sunIntensity||s.previous.fogColor!=light.fogColor;
+    if(!relight&&s.previous.cloudCoverage==light.cloudCoverage&&
+       (light.cloudCoverage==0||s.previousOffset==offset))return;
+    struct {float4 direction,radiance,horizon,clouds;} data{{light.sunDirection[0],light.sunDirection[1],light.sunDirection[2],0},
+        {light.sunColor[0]*light.sunIntensity,light.sunColor[1]*light.sunIntensity,light.sunColor[2]*light.sunIntensity,0},
+        {std::pow(light.fogColor[0],2.2f),std::pow(light.fogColor[1],2.2f),std::pow(light.fogColor[2],2.2f),0},
+        {offset[0],offset[1],0,0}};
+    if(relight) {
+        // Slowly moving clouds do not rebuild the 42 IBL convolution faces.
+        // Low-frequency ambient fill uses the same calibrated clear atmosphere.
+        s.context->UpdateBuffer(s.inputs,0,sizeof(data),&data,RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
+        s.Draw(s.skyPSO,s.skySRB,s.sky[highQuality]);s.FilterSky(highQuality);
+    }
+    data.clouds.z=light.cloudCoverage;
     s.context->UpdateBuffer(s.inputs,0,sizeof(data),&data,RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
-    s.Draw(s.skyPSO,s.skySRB,s.sky[highQuality]);s.FilterSky(highQuality);s.previous=light;s.quality=highQuality;s.valid=true;
+    s.Draw(s.skyPSO,s.skySRB,s.sky[highQuality]);
+    s.previous=light;s.previousOffset=offset;s.quality=highQuality;s.valid=true;
 }
 ITextureView* DiligentAtmosphere::Sky() const {return impl_->sky[impl_->quality]->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE);}
 ISampler* DiligentAtmosphere::Sampler() const {return impl_->sampler;}
 ITextureView* DiligentAtmosphere::Irradiance() const {return impl_->cubes[0]->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE);}
 ITextureView* DiligentAtmosphere::PrefilteredEnvironment() const {return impl_->cubes[1]->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE);}
-std::uint64_t DiligentAtmosphere::TargetBytes() const {return 256*256*8+16*128*32*16*8+(128*64+256*128)*8+(16*16+1365)*6*8;}
+std::uint64_t DiligentAtmosphere::TargetBytes() const {return 256*256*8+16*128*32*16*8+(128*64+512*256)*8+(16*16+1365)*6*8;}
 }
