@@ -1,4 +1,4 @@
-add_library(VegetationRuntime STATIC VegetationRuntime.cpp VegetationFormat.cpp VegetationRenderer.cpp)
+add_library(VegetationRuntime STATIC VegetationRuntime.cpp VegetationFormat.cpp VegetationRenderer.cpp VegetationModern.cpp)
 target_include_directories(VegetationRuntime PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/..)
 target_include_directories(VegetationRuntime SYSTEM PRIVATE ${CMAKE_SOURCE_DIR}/extern/include)
 target_link_libraries(VegetationRuntime PUBLIC AssetRuntime PRIVATE AssetRuntimeGlTF M2FirstPartyArchitectureChecks)

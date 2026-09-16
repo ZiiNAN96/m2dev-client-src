@@ -25,12 +25,14 @@ struct ModernTerrainSubmission
 struct ModernMeshSubmission
 {
     Diligent::RefCntAutoPtr<Diligent::IBuffer> vertices,indices,extras,palette,tangents;
+    Diligent::RefCntAutoPtr<Diligent::IBuffer> instances;
     std::array<Diligent::RefCntAutoPtr<Diligent::ITextureView>,AssetRuntime::MaterialTextureCount> textures;
     Diligent::RefCntAutoPtr<Diligent::ITextureView> cameraAlpha,sphereMap;
     StaticObjectDraw draw;
     Diligent::VALUE_TYPE indexType{Diligent::VT_UINT16};
     unsigned baseVertex{};
     unsigned tangentOffset{};
+    unsigned instanceCount{1};
     bool skinned{},auxiliary{};
 };
 class DiligentModernRenderer final : public IModernFrame

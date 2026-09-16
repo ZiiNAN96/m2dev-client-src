@@ -269,6 +269,7 @@ void CMapOutdoor::RenderTree()
 {
 	if (IsVisiblePart(PART_TREE)) {
         RenderNativeVegetation();
+        RenderNativeGrass(*this);
     }
 }
 

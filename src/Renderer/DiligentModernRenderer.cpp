@@ -47,6 +47,7 @@ struct ObjectConstants
     float4 legacyAlpha;
     float4 legacyTint;
     float4x4 legacyView;
+    float4 worldWind,branchWind,foliage;
 };
 struct LightConstants {float4 direction,color,ambient,camera,environment;};
 struct TerrainConstants {
@@ -138,7 +139,7 @@ struct DiligentModernRenderer::Impl
     std::map<unsigned,RefCntAutoPtr<ISampler>> materialSamplers;
     struct Pipeline {RefCntAutoPtr<IPipelineState> pso;RefCntAutoPtr<IShaderResourceBinding> srb;};
     std::map<unsigned,Pipeline> pipelines;
-    std::array<RefCntAutoPtr<IShader>,18> vertexShaders,pixelShaders;
+    std::array<RefCntAutoPtr<IShader>,36> vertexShaders,pixelShaders;
     std::array<RefCntAutoPtr<IShader>,4> terrainVS,terrainPS;
     Pipeline composite;
     Pipeline tone;
@@ -225,14 +226,15 @@ struct DiligentModernRenderer::Impl
         if(vertexShaders[shaderIndex])return;
         const auto geometry=shaderIndex%3,pass=(shaderIndex%9)/3;
         ShaderMacroHelper macros;macros.Add("GDX_SKIN",geometry==1);macros.Add("GDX_AUX",geometry==2);
-        macros.Add("GDX_SHADOW",pass==1);macros.Add("GDX_FORWARD",pass==2);macros.Add("GDX_TANGENT",shaderIndex>=9);
+        macros.Add("GDX_SHADOW",pass==1);macros.Add("GDX_FORWARD",pass==2);macros.Add("GDX_TANGENT",shaderIndex%18>=9);
+        macros.Add("H2_INSTANCED",shaderIndex>=18);
         vertexShaders[shaderIndex]=Shader(modernMeshShader,"ModernVS",SHADER_TYPE_VERTEX,macros);
         pixelShaders[shaderIndex]=Shader(modernMeshShader,"ModernPS",SHADER_TYPE_PIXEL,macros);
         ++stats.meshShaderVariants;
     }
     Pipeline& GetPipeline(const ModernMeshSubmission& draw,bool shadowPass,bool forwardPass) {
         const unsigned geometry=draw.skinned?1:draw.auxiliary?2:0;
-        const unsigned shaderIndex=geometry+(shadowPass?3:forwardPass?6:0)+(draw.tangents?9:0);
+        const unsigned shaderIndex=geometry+(shadowPass?3:forwardPass?6:0)+(draw.tangents?9:0)+(draw.instances?18:0);
         unsigned cull=static_cast<unsigned>(draw.draw.cull);
         const auto world=Matrix(draw.draw.matrices.world);
         const bool mirrored=dot(cross(float3{world._11,world._12,world._13},float3{world._21,world._22,world._23}),float3{world._31,world._32,world._33})<0;
@@ -253,6 +255,7 @@ struct DiligentModernRenderer::Impl
         g.PrimitiveTopology=PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
         std::vector<LayoutElement> layout=draw.skinned?std::vector<LayoutElement>{skin,skin+5}:draw.auxiliary?std::vector<LayoutElement>{aux,aux+9}:std::vector<LayoutElement>{rigid,rigid+3};
         if(draw.tangents)layout.emplace_back(9,2,4,VT_FLOAT32,False,0,16);
+        if(draw.instances)for(unsigned i=0;i<5;++i)layout.emplace_back(10+i,3,4,VT_FLOAT32,False,i*16,80,INPUT_ELEMENT_FREQUENCY_PER_INSTANCE,1);
         g.InputLayout={layout.data(),static_cast<Uint32>(layout.size())};
         g.RasterizerDesc.CullMode=cull==0?CULL_MODE_NONE:CULL_MODE_BACK;
         // Legacy CW-cull convention also defines front faces when culling is off.
@@ -296,7 +299,8 @@ struct DiligentModernRenderer::Impl
         constants.maps={mask,material.roughnessChannel,material.metallicChannel,material.occlusionChannel};
         constants.alpha={float(item.draw.alphaReference),float(item.draw.alphaTest),item.draw.cull==StaticObjectCull::None?1.f:0.f,1};
         constants.cardRight=Vector(item.draw.cardRight);constants.cardForward=Vector(item.draw.cardForward);constants.cardUp=Vector(item.draw.cardUp);
-        constants.wind=Vector(item.draw.wind);constants.cardPitch=Vector(item.draw.cardPitch);constants.card={item.draw.cardMode,0,0,0};
+        constants.wind=Vector(item.draw.wind);constants.cardPitch=Vector(item.draw.cardPitch);constants.card={item.draw.cardMode,item.draw.modernVegetation?1u:0u,0,0};
+        constants.worldWind=Vector(item.draw.worldWind);constants.branchWind=Vector(item.draw.branchWind);constants.foliage=Vector(item.draw.foliage);
         constants.legacyView=Matrix(item.draw.matrices.view);
         constants.cameraMaskMatrix=item.sphereMap?Matrix(item.draw.cameraAlphaTransform):
             constants.legacyView*Matrix(item.draw.cameraAlphaTransform);
@@ -328,11 +332,12 @@ struct DiligentModernRenderer::Impl
             item.cameraAlpha?item.cameraAlpha.RawPtr():item.textures[0].RawPtr());
         Set(pipeline.srb,SHADER_TYPE_PIXEL,"CameraAlphaSampler",MaterialSampler(item.draw.cameraAlphaSampling,item.draw.cameraAlphaAnisotropic,item.draw.cameraAlphaMaxAnisotropy));
         state.context->SetPipelineState(pipeline.pso);
-        IBuffer* buffers[]{item.vertices,item.extras,item.tangents};Uint64 offsets[]{0,0,item.tangentOffset};
-        state.context->SetVertexBuffers(0,item.tangents?3:item.auxiliary?2:1,buffers,offsets,RESOURCE_STATE_TRANSITION_MODE_TRANSITION,SET_VERTEX_BUFFERS_FLAG_RESET);
+        IBuffer* buffers[]{item.vertices,item.extras,item.tangents,item.instances};Uint64 offsets[]{0,0,item.tangentOffset,0};
+        state.context->SetVertexBuffers(0,item.instances?4:item.tangents?3:item.auxiliary?2:1,buffers,offsets,RESOURCE_STATE_TRANSITION_MODE_TRANSITION,SET_VERTEX_BUFFERS_FLAG_RESET);
         state.context->SetIndexBuffer(item.indices,0,RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
         state.context->CommitShaderResources(pipeline.srb,RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
         DrawIndexedAttribs args{item.draw.indexCount,item.indexType,DRAW_FLAG_VERIFY_ALL};args.FirstIndexLocation=item.draw.firstIndex;args.BaseVertex=item.baseVertex;
+        args.NumInstances=item.instanceCount;
         state.context->DrawIndexed(args);
         if(shadowPass)++stats.shadowDraws;else {
             ++stats.meshDraws;
@@ -457,7 +462,10 @@ void DiligentModernRenderer::Begin(const Graphics::SceneLighting& light,bool def
     if(s.config.style!=Graphics::GraphicsStyle::Modern)return;
     s.Resources();s.IBL();
     if(loadingPrewarm) {
-        for(unsigned variant=0;variant<s.vertexShaders.size();++variant)s.MeshShaders(variant);
+        // H2 adds auxiliary instanced meshes only: color, shadow and forward,
+        // each with/without authored tangents. No unused instanced skin variants.
+        for(unsigned variant=0;variant<s.vertexShaders.size();++variant)
+            if(variant<18||variant%3==2)s.MeshShaders(variant);
         for(unsigned variant=0;variant<s.terrainVS.size();++variant)s.TerrainShaders(variant);
     }
     s.lighting=Graphics::ValidateSceneLighting(light);s.hasCamera=false;++s.frame;

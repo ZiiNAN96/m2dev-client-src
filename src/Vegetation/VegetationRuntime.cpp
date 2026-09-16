@@ -59,8 +59,17 @@ bool Instance::Update(const Vec3& camera,std::span<const std::array<float,4>> pl
     if(!std::isfinite(distance)||distance>asset->metadata.cullDistance||!Visible(TransformBounds(asset->metadata.renderBounds,transform),planes)){lod={};return false;}
     lod=SelectLOD(asset->metadata,distance);return true;
 }
-LoadResult Runtime::Load(std::string_view legacy,const ReadFile& read){
+LoadResult Runtime::Load(std::string_view legacy,const ReadFile& read,bool modern){
     const auto key=NormalizeKey(legacy);const auto* path=registry.Resolve(key);if(!path)return {{},"registry lookup missing: "+key};
+    if(modern)if(const auto* overridePath=registry.ResolveOverride(key)) {
+        auto result=LoadCompiled(*overridePath,read);if(result)return result;
+        // Optional content must never hide a working legacy tree.
+    }
+    return LoadCompiled(*path,read);
+}
+LoadResult Runtime::LoadCompiled(std::string_view compiled,const ReadFile& read){
+    const std::string normalized=NormalizeKey(compiled);const auto* path=&normalized;
+    if(!ValidCompiledPath(*path,".zveg"))return {{},"invalid compiled vegetation path"};
     if(const auto found=assets_.find(*path);found!=assets_.end())return {found->second,{}};
     if(const auto found=failures_.find(*path);found!=failures_.end())return {{},found->second};
     auto fail=[&](std::string error)->LoadResult{failures_[*path]=error;return {{},std::move(error)};};

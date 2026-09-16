@@ -39,7 +39,7 @@ int main()
             draw.matrices.projection={1,0,0,0,0,1,0,0,0,0,-100.f/99.9f,-1,0,0,-10.f/99.9f,0};
             Renderer::loadingPrewarm=true;
             light.sunDirection={0,0,-1};Renderer::modernFrame->Begin(light);
-            Check(Renderer::modernFrame->Stats().meshShaderVariants==18,"all mesh shader variants compiled during loading");
+            Check(Renderer::modernFrame->Stats().meshShaderVariants==24,"18 existing and six vegetation mesh shader variants compiled during loading");
             Check(Renderer::modernFrame->Stats().terrainShaderVariants==4,"all terrain shader variants compiled during loading");
             draw.indexCount=draw.vertexCount=3;draw.cull=Renderer::StaticObjectCull::None;
             meshRenderer.Draw(geometry,texture,draw);Check(!meshRenderer.Failed(),"FX mesh shader/draw");
@@ -154,7 +154,7 @@ int main()
             for(size_t i=0;i<withCaster.size();++i)outsideDarkening+=std::max(0,int(withoutCaster[i])-int(withCaster[i]));
             Check(outsideDarkening>1000,"off-camera caster produces a visible receiver shadow");
             Check(!Renderer::shadowCasterCollection,"camera visibility restored after collection");
-            Check(Renderer::modernFrame->Stats().meshShaderVariants==18,"no new mesh shader compilation in subsequent world frames");
+            Check(Renderer::modernFrame->Stats().meshShaderVariants==24,"no new mesh shader compilation in subsequent world frames");
             Check(Renderer::modernFrame->Stats().terrainShaderVariants==4,"no new terrain shader compilation in subsequent world frames");
             std::cout<<"offCameraReceiverDarkening="<<outsideDarkening<<'\n';
             for(bool present:{false,true}) {

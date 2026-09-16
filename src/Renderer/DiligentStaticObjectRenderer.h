@@ -26,6 +26,7 @@ public:
     TerrainTexturePtr UploadTexture(const TerrainTextureData&) override;
     void Draw(const StaticObjectGeometryPtr&, const TerrainTexturePtr&, const StaticObjectDraw&) override;
     void ReleaseBindings() override;
+    bool UpdateInstances(StaticObjectInstanceBufferPtr&,std::span<const StaticObjectInstance>) override;
 private:
     StaticObjectGeometryPtr CreateGeometry(const StaticObjectSource&, bool dynamic);
     struct Impl;

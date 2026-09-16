@@ -65,3 +65,8 @@ AssetTool.DiligentRoundtrip
 Graphics.WaterConfig
 Graphics.ModernWaterGpu
 Renderer.ClassicGoldens
+Vegetation.ModernContracts
+Vegetation.ModernAssetGeneration
+Vegetation.ModernAssets
+Vegetation.ModernGpu
+Vegetation.AllLegacyTypes

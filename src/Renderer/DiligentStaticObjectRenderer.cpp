@@ -21,6 +21,14 @@ using namespace Diligent;
 namespace
 {
 struct Counters { uint32_t geometry=0, textures=0; };
+struct InstanceBuffer final:StaticObjectInstanceBuffer {
+    RefCntAutoPtr<IBuffer> buffer;
+    std::vector<StaticObjectInstance> previous;
+    std::shared_ptr<Counters> owner;
+    std::size_t bytes{};
+    InstanceBuffer(){++liveVegetationInstanceBuffers;}
+    ~InstanceBuffer(){--liveVegetationInstanceBuffers;vegetationInstanceBytes-=bytes;}
+};
 // ZiiNAN: GPU skinning actor coverage
 struct SkinMeshBuffers
 {
@@ -530,6 +538,11 @@ void DiligentStaticObjectRenderer::Draw(const StaticObjectGeometryPtr& geometry,
         auto& b=*s.backend.m_impl;
         if(b.modern&&b.modern->Active()) {
             ModernMeshSubmission submission;
+            if(draw.instances) {
+                const auto instances=std::dynamic_pointer_cast<InstanceBuffer>(draw.instances);
+                if(!instances||instances->owner!=s.counters||!draw.instanceCount||draw.instanceCount>instances->previous.size()) {s.Fail("invalid vegetation instance buffer",__LINE__);return;}
+                submission.instances=instances->buffer;submission.instanceCount=draw.instanceCount;
+            }
             submission.vertices=rigid?mesh->skin->rigidVertices:mesh->vertices;
             submission.indices=mesh->indices;submission.extras=mesh->extras;
             submission.tangents=mesh->tangents;submission.tangentOffset=rigid?mesh->skin->deformCount*16:0;
@@ -635,6 +648,25 @@ void DiligentStaticObjectRenderer::Draw(const StaticObjectGeometryPtr& geometry,
         attributes.BaseVertex=draw.baseVertex-(rigid ? mesh->skin->deformCount : 0);
         b.context->DrawIndexed(attributes); ++s.draws;
     } catch(...) { s.Fail("mesh draw exception", __LINE__); }
+}
+bool DiligentStaticObjectRenderer::UpdateInstances(StaticObjectInstanceBufferPtr& handle,std::span<const StaticObjectInstance> values) {
+    auto& s=*m_impl;if(values.empty()||values.size()>1000000||!s.backend.m_impl)return false;
+    auto buffer=std::dynamic_pointer_cast<InstanceBuffer>(handle);
+    if(buffer&&buffer->owner!=s.counters)return false;
+    if(buffer&&buffer->previous.size()==values.size()&&std::equal(values.begin(),values.end(),buffer->previous.begin()))return true;
+    if(!buffer){buffer=std::make_shared<InstanceBuffer>();buffer->owner=s.counters;}
+    const auto bytes=values.size_bytes();auto& backend=*s.backend.m_impl;
+    if(buffer->bytes<bytes) {
+        BufferDesc desc;desc.Name="H2 shared vegetation instances";desc.Size=bytes;desc.Usage=USAGE_DYNAMIC;
+        desc.BindFlags=BIND_VERTEX_BUFFER;desc.CPUAccessFlags=CPU_ACCESS_WRITE;
+        RefCntAutoPtr<IBuffer> replacement;backend.device->CreateBuffer(desc,nullptr,&replacement);
+        if(!replacement)return false;
+        buffer->buffer=replacement;vegetationInstanceBytes-=buffer->bytes;buffer->bytes=bytes;vegetationInstanceBytes+=bytes;
+    }
+    MapHelper<StaticObjectInstance> mapped(backend.context,buffer->buffer,MAP_WRITE,MAP_FLAG_DISCARD);
+    if(!mapped)return false;
+    std::memcpy(mapped,values.data(),bytes);buffer->previous.assign(values.begin(),values.end());handle=buffer;
+    ++vegetationInstanceUploads;return true;
 }
 void DiligentStaticObjectRenderer::ReleaseBindings()
 {

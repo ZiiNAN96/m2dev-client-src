@@ -1,6 +1,20 @@
 #pragma once
 #include "Graphics/AtmosphereConfig.h"
 #include "Renderer/WaterDiagnostics.h"
+#include "Vegetation/VegetationRenderer.h"
+static PyObject* systemTestVegetationTime(PyObject*,PyObject* args)
+{
+    float seconds;if(!PyArg_ParseTuple(args,"f",&seconds))return nullptr;
+    Vegetation::developmentSeconds=std::isfinite(seconds)?seconds:-1;return Py_BuildNone();
+}
+static PyObject* systemTestVegetationStats(PyObject*,PyObject*)
+{
+    const auto&s=Vegetation::statistics;
+    const auto&g=Vegetation::grassPreparation;
+    return Py_BuildValue("{s:K,s:K,s:K,s:K,s:K,s:K,s:d,s:K,s:K,s:K,s:K,s:K,s:K,s:K,s:d}","visible",s.visible,"culled",s.culled,"draws",s.submitted,"triangles",s.triangles,
+        "uploads",std::uint64_t(Renderer::vegetationInstanceUploads.load()),"instanceBytes",std::uint64_t(Renderer::vegetationInstanceBytes.load()),"cpuMs",s.cpuMilliseconds,"instances",std::uint64_t(Vegetation::liveInstances.load()),
+        "grassPlacements",g.placements,"grassCells",g.cells,"grassTiles",g.tiles,"grassExpectedTiles",g.expectedTiles,"grassBytes",g.bytes,"grassSerial",g.serial,"grassLoadMs",g.milliseconds);
+}
 static PyObject* systemTestSkyTime(PyObject*,PyObject* args)
 {
     double seconds;if(!PyArg_ParseTuple(args,"d",&seconds))return nullptr;

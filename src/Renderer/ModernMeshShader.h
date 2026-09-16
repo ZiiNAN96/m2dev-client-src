@@ -25,6 +25,7 @@ cbuffer ModernObject {
  uint4 Card;
  row_major float4x4 CameraMaskMatrix;float4 LegacyAlpha;float4 LegacyTint;
  row_major float4x4 LegacyView;
+ float4 WorldWind;float4 BranchWind;float4 Foliage;
 };
 cbuffer ModernLighting {float4 SunDirection;float4 SunColor;float4 AmbientColor;float4 CameraPosition;float4 EnvironmentColor;};
 Texture2D PreintegratedBRDF;TextureCube IrradianceMap;SamplerState IBLSampler;
@@ -35,7 +36,7 @@ cbuffer SkinningPalette {row_major float4x4 Bones[256];};
 Texture2D BaseMap;Texture2D NormalMap;Texture2D RoughnessMap;Texture2D MetallicMap;Texture2D AOMap;Texture2D EmissiveMap;
 SamplerState MaterialSampler;
 Texture2D CameraAlphaTexture;SamplerState CameraAlphaSampler;
-struct ModernVertex {float4 position:SV_POSITION;float3 world:TEXCOORD0;float3 normal:TEXCOORD1;float2 uv:TEXCOORD2;float4 color:COLOR0;float4 tangent:TEXCOORD3;float2 shimmerUV:TEXCOORD4;};
+struct ModernVertex {float4 position:SV_POSITION;float3 world:TEXCOORD0;float3 normal:TEXCOORD1;float2 uv:TEXCOORD2;float4 color:COLOR0;float4 tangent:TEXCOORD3;float2 shimmerUV:TEXCOORD4;nointerpolation float3 lod:TEXCOORD5;};
 ModernVertex ModernVS(float3 position:ATTRIB0,float3 normal:ATTRIB1,float2 uv:ATTRIB2
 #if GDX_SKIN
 ,uint4 weights:ATTRIB3,uint4 indices:ATTRIB4
@@ -45,29 +46,51 @@ ModernVertex ModernVS(float3 position:ATTRIB0,float3 normal:ATTRIB1,float2 uv:AT
 #if GDX_TANGENT
 ,float4 tangent:ATTRIB9
 #endif
+#if H2_INSTANCED
+,float4 instance0:ATTRIB10,float4 instance1:ATTRIB11,float4 instance2:ATTRIB12,float4 instance3:ATTRIB13,float4 instanceParameters:ATTRIB14
+#endif
 ) {
  row_major float4x4 transform=World;
+ float phase=0;float3 lod=float3(0,Alpha.x,1);
+#if H2_INSTANCED
+ transform=float4x4(instance0,instance1,instance2,instance3);phase=instanceParameters.x;lod=instanceParameters.yzw;
+#endif
+ float rootFraction=saturate((position.z-BranchWind.z)/max(WorldWind.w,1));
 #if GDX_SKIN
  row_major float4x4 skin=0;
  [unroll]for(uint k=0;k<4;++k)if(weights[k]!=0)skin+=Bones[indices[k]]*(float(weights[k])*(1.0/255.0));
  transform=mul(skin,World);
 #elif GDX_AUX
  float3 offset=position-pivot;
- float sway=sin(Wind.x*Wind.z+pivot.x*.013+pivot.y*.017)*Wind.y*flexibility;
+ float sway=sin((Wind.x+phase)*Wind.z+pivot.x*.013+pivot.y*.017)*Wind.y*flexibility;
+ if(Card.y!=0)sway=sin(Wind.x*Wind.z*5+phase+pivot.x*.013+pivot.y*.017)*Wind.y*flexibility;
  if(Card.x!=0) {
+  float3 right=CardRight.xyz,forward=CardForward.xyz,up=CardUp.xyz;
+  if(Card.y!=0) {
+   right=normalize(mul(right,transpose((float3x3)transform)));
+   forward=normalize(mul(forward,transpose((float3x3)transform)));
+   up=normalize(mul(up,transpose((float3x3)transform)));
+  }
   float2 rocked=float2(offset.x*cos(sway)-offset.z*sin(sway),offset.x*sin(sway)+offset.z*cos(sway));
   offset.x=rocked.x;offset.z=rocked.y;
   if(Card.x==1)offset+=offset.z*(CardPitch.x*pitchCos+CardPitch.y*pitchSin);
-  position=pivot+offset.x*CardRight.xyz+offset.y*CardForward.xyz+offset.z*CardUp.xyz;
-  normal=normal.x*CardRight.xyz+normal.y*CardForward.xyz+normal.z*CardUp.xyz;
- } else position.xy+=sway*position.z*CardRight.xy;
+  position=pivot+offset.x*right+offset.y*forward+offset.z*up;
+  normal=normal.x*right+normal.y*forward+normal.z*up;
+ } else if(Card.y==0)position.xy+=sway*position.z*CardRight.xy;
+ else position.xy+=WorldWind.xy*sway*WorldWind.w*.04*rootFraction;
 #endif
  ModernVertex o;
+ o.lod=lod;
  o.color=1;
 #if GDX_AUX
  o.color=color;
 #endif
  o.world=mul(float4(position,1),transform).xyz;
+ if(Card.y!=0) {
+  float scale=length(transform[2].xyz);
+  float bend=sin(Wind.x*Wind.z*.65+phase)*BranchWind.x*WorldWind.w*scale*rootFraction*rootFraction;
+  o.world.xy+=WorldWind.xy*bend;
+ }
  float3x3 normalMatrix=(float3x3)transform;
  float determinant=dot(cross(normalMatrix[0],normalMatrix[1]),normalMatrix[2]);
  o.normal=abs(determinant)>1e-9?mul(normal,InverseTranspose3x3(normalMatrix)):float3(0,0,0);
@@ -83,7 +106,13 @@ ModernVertex ModernVS(float3 position:ATTRIB0,float3 normal:ATTRIB1,float2 uv:AT
 #if GDX_TANGENT
  o.tangent=float4(mul(tangent.xyz,(float3x3)transform),tangent.w*(determinant<0?-1:1));
 #endif
- o.position=mul(float4(o.world,1),ViewProjection);o.uv=uv;return o;
+ o.position=mul(float4(o.world,1),ViewProjection);o.uv=uv;
+ if(Card.x==2&&WorldWind.z>1) {
+  float angle=atan2(CardRight.y,CardRight.x)-atan2(transform[0].y,transform[0].x);
+  float view=fmod(floor(angle*(WorldWind.z/6.28318530718)+.5)+WorldWind.z*2,WorldWind.z);
+  o.uv.x=(clamp(uv.x,.002,.998)+view)/WorldWind.z;
+ }
+ return o;
 }
 float4 SampleBase(ModernVertex i) {
  float4 base=BaseMap.Sample(MaterialSampler,i.uv)*BaseColor*i.color;
@@ -97,8 +126,15 @@ float4 SampleBase(ModernVertex i) {
  }
  // Preserve the native 8-bit masked-material decision in both render passes.
  float tested=floor(saturate(base.a)*255+0.5);
- if(Alpha.y==1&&tested<Alpha.x)discard;
- if(Alpha.y==2&&tested<=Alpha.x)discard;
+ if(Alpha.y==1&&tested<i.lod.y)discard;
+ if(Alpha.y==2&&tested<=i.lod.y)discard;
+#if H2_INSTANCED
+ // Complementary ordered coverage for the two LODs, shared by color/shadows.
+ const uint bayer[16]={0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5};
+ uint2 pixel=uint2(i.position.xy)&3;float coverage=(bayer[pixel.y*4+pixel.x]+.5)/16.0;
+ if(coverage>=i.lod.z)discard;
+ if(i.lod.x>=0){if(coverage<i.lod.x)discard;}else if(coverage>=-i.lod.x)discard;
+#endif
  return base;
 }
 #if GDX_SHADOW
@@ -145,7 +181,13 @@ ModernOutput ModernPS(ModernVertex i,bool front:SV_IsFrontFace) {
   // irradiance (map sunlight was converted by pi), without invented specular,
   // metalness or reflected sky. Shadows/AO still affect their own light terms.
   o.direct=float4(color*SunColor.rgb*(saturate(dot(N,-SunDirection.xyz))/3.14159265359),base.a);
-  o.indirect=float4(color*AmbientColor.rgb,base.a);
+ o.indirect=float4(color*AmbientColor.rgb,base.a);
+ }
+ // Thin foliage uses the same shared sun radiance and shadow term. Tint is
+ // multiplied by authored albedo; transmission is never emission or bloom.
+ if(Foliage.w>0) {
+  float back=saturate(dot(-N,-SunDirection.xyz));
+  o.direct.rgb+=color*Foliage.rgb*SunColor.rgb*(back*Foliage.w/3.14159265359);
  }
  float3 emission=Emissive.rgb;
  if((Maps.x&32)!=0)emission*=FastSRGBToLinear(EmissiveMap.Sample(MaterialSampler,i.uv).rgb);

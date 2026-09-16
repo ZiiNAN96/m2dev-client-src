@@ -244,6 +244,8 @@ class CMapOutdoor : public CMapBase
 	public:
 		BOOL			GetTerrainPointer(BYTE c_ucTerrainNum, CTerrain ** ppTerrain);
 		float			GetTerrainHeight(float fx, float fy);
+        void VisitGrassTerrain(const std::function<void(CTerrain&)>& visitor);
+        static float SampleGrassDensity(CTerrain&,float x,float y,float& height,const std::array<bool,256>& layers);
 		bool			GetWaterHeight(int iX, int iY, long * plWaterHeight);
 		bool			GetNormal(int ix, int iy, Math::Vector3 * pv3Normal);
 

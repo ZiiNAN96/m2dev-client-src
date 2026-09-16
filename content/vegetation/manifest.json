@@ -1,0 +1,66 @@
+{
+  "generator": "tools/Vegetation/ModernAssets.cpp",
+  "provenance": "Original procedural H2 demonstration art; no external art",
+  "files": [
+    {
+      "file": "bark.dds",
+      "bytes": 16512,
+      "sha256": "72008a4c11223c8222fc4444471c5aef64dc76778b21b98a3daf5af1ead2294d"
+    },
+    {
+      "file": "beech-impostor.dds",
+      "bytes": 1179776,
+      "sha256": "d209352210859df9d7bfd82844264d0d2bff56ea0317aa070a2b62642f3fd81e"
+    },
+    {
+      "file": "beech.glb",
+      "bytes": 704668,
+      "sha256": "46d0e3912eb5bcd62e0ae6eae3107915d458ec041f5994deb78db8d76fbe0f1b"
+    },
+    {
+      "file": "beech.zveg",
+      "bytes": 757,
+      "sha256": "5b26a3463d4f4499847046191fc8a425b32e68b887fff8fcb46adaf597bbd223"
+    },
+    {
+      "file": "bush-impostor.dds",
+      "bytes": 1179776,
+      "sha256": "5bd2fa2a621dd71d54946a500f7a16bb078acfd3ebb7442a2540df4dc6e521d2"
+    },
+    {
+      "file": "bush.glb",
+      "bytes": 331032,
+      "sha256": "7818b496ad7ffa8c0209b9575a5836fd5b96208b3032b45287fed5743ca007c2"
+    },
+    {
+      "file": "bush.zveg",
+      "bytes": 746,
+      "sha256": "59a63a27fb684a9ddf9882941669dafe84603b3e31394d5cc072e909f24b8533"
+    },
+    {
+      "file": "foliage.dds",
+      "bytes": 262272,
+      "sha256": "8c181ad0f8aca34cdd7e5b317cd59a993faa40773c5f8ecfb4f7792f8b940c6f"
+    },
+    {
+      "file": "grass-impostor.dds",
+      "bytes": 1179776,
+      "sha256": "4ac09ee9e1272c1544251c4601922f42e9a740beb58fcd64a471b9cc1b2980e5"
+    },
+    {
+      "file": "grass.glb",
+      "bytes": 23768,
+      "sha256": "0dd7cef3fb40d8aef8144175c8db5c48bab551154fe79079a3df9384c17277bb"
+    },
+    {
+      "file": "grass.zveg",
+      "bytes": 706,
+      "sha256": "6962cd5d7ad9a4f6450233344aea1406fc1c8d0d03cdeea1bc9c2ed50c7fa646"
+    },
+    {
+      "file": "leaf.dds",
+      "bytes": 16512,
+      "sha256": "ccbf481d350f6774d2f8854388be41758def81c9fd047c8ba6db6e653e62eefe"
+    }
+  ]
+}

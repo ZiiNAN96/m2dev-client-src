@@ -38,6 +38,8 @@ class CTerrain : public CTerrainImpl, public CGraphicBase
 		bool			RAW_LoadTileMap(const char * c_pszFileName, bool bBGLoading = false);
 		
 		bool			LoadHeightMap(const char * c_pszFileName);
+        // CPU masks only: do not allocate splat textures or terrain geometry.
+        bool LoadGrassData(const std::string& directory);
 
 		void			CalculateTerrainPatch();
 		//////////////////////////////////////////////////////////////////////////

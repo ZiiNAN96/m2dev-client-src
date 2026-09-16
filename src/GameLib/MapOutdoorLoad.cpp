@@ -39,6 +39,10 @@ bool CMapOutdoor::Load(float x, float y, float z)
 
 	__HeightCache_Init();
 
+    // Prepare every grass cell while the map is loading, including terrain
+    // outside the streamed 3x3 render neighbourhood.
+    PrepareNativeGrass(*this);
+
 	// LOCAL_ENVIRONMENT_DATA
 	std::string local_envDataName = GetMapDataDirectory() + "\\" + m_settings_envDataName;
 	if (CPackManager::instance().IsExist(local_envDataName.c_str()))
@@ -59,6 +63,29 @@ bool CMapOutdoor::Load(float x, float y, float z)
 	}
 	// LOCAL_ENVIRONMENT_DATA_END
 	return true;
+}
+
+void CMapOutdoor::VisitGrassTerrain(const std::function<void(CTerrain&)>& visitor)
+{
+    Vegetation::grassPreparation.expectedTiles=std::uint64_t(m_sTerrainCountX)*m_sTerrainCountY;
+    auto scratch=std::make_unique<CTerrain>();
+    scratch->SetMapOutDoor(this);
+    scratch->CopySettingFromGlobalSetting();
+    for(WORD y=0;y<m_sTerrainCountY;++y)for(WORD x=0;x<m_sTerrainCountX;++x) {
+        CTerrain* terrain=nullptr;
+        for(auto* loaded:m_TerrainVector) {
+            WORD tx,ty;loaded->GetCoordinate(&tx,&ty);
+            if(tx==x&&ty==y&&loaded->IsReady()){terrain=loaded;break;}
+        }
+        if(!terrain) {
+            char tile[16];snprintf(tile,sizeof(tile),"%06u/",unsigned(x)*1000+unsigned(y));
+            scratch->SetCoordinate(x,y);
+            if(!scratch->LoadGrassData(GetMapDataDirectory()+"/"+tile))continue;
+            terrain=scratch.get();
+        }
+        visitor(*terrain);
+        ++Vegetation::grassPreparation.tiles;
+    }
 }
 
 std::string& CMapOutdoor::GetEnvironmentDataName()

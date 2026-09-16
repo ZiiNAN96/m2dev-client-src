@@ -376,9 +376,13 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     resourceLog << "CollisionResources=" << GetCollisionInstanceCapacity() << '\n';
     resourceLog << "VegetationAssets=" << Vegetation::liveAssets << " VegetationInstances=" << Vegetation::liveInstances
         << " VegetationRenderAssets=" << Vegetation::liveRenderAssets << " VegetationGeometry=" << Vegetation::liveGeometry
-        << " VegetationInstanceBuffers=0 VegetationFailures=" << Vegetation::statistics.failures
+        << " VegetationInstanceBuffers=" << Renderer::liveVegetationInstanceBuffers << " VegetationFailures=" << Vegetation::statistics.failures
         << " VegetationCreated=" << Vegetation::statistics.created << " VegetationDraws=" << Vegetation::statistics.submitted
         << " VegetationLODChanges=" << Vegetation::statistics.lodChanges << '\n';
+    resourceLog << "VegetationVisible=" << Vegetation::statistics.visible << " VegetationCulled=" << Vegetation::statistics.culled
+        << " VegetationBatches=" << Vegetation::statistics.batches << " VegetationTriangles=" << Vegetation::statistics.triangles
+        << " VegetationInstanceUploads=" << Renderer::vegetationInstanceUploads << " VegetationInstanceBytes=" << Renderer::vegetationInstanceBytes
+        << " VegetationCPUms=" << Vegetation::statistics.cpuMilliseconds << '\n';
     resourceLog << "VegetationBranches=" << Vegetation::statistics.parts[0] << " VegetationFronds=" << Vegetation::statistics.parts[1]
         << " VegetationLeaves=" << Vegetation::statistics.parts[2] << " VegetationBillboards=" << Vegetation::statistics.parts[3] << '\n';
     // ZiiNAN: GPU skinning production path — summary only; per-frame CSV is opt-in.

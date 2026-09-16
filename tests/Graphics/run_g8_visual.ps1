@@ -3,6 +3,7 @@ $ErrorActionPreference='Stop'
 $target=(Resolve-Path -LiteralPath $RuntimeDirectory).Path
 $views=Get-Content -LiteralPath "$target/views.json" -Raw | ConvertFrom-Json
 $process=Start-Process -FilePath "$target/Metin2_Release.exe" -WorkingDirectory $target -WindowStyle Hidden -ArgumentList '--renderer-diagnostics' -PassThru
+$process.Id | Set-Content -LiteralPath "$target/process-id.txt"
 $watch=[Diagnostics.Stopwatch]::StartNew()
 try {
     while(-not $process.WaitForExit(1000)) {

@@ -23,6 +23,15 @@ struct StaticObjectSource
 };
 struct StaticObjectGeometry { virtual ~StaticObjectGeometry() = default; };
 using StaticObjectGeometryPtr = std::shared_ptr<StaticObjectGeometry>;
+struct StaticObjectInstance {
+    std::array<float,16> world{};
+    std::array<float,4> parameters{}; // wind phase, signed LOD threshold, alpha cutoff, distance coverage
+    bool operator==(const StaticObjectInstance&)const=default;
+};
+inline std::atomic_size_t liveVegetationInstanceBuffers{},vegetationInstanceBytes{};
+inline std::atomic_uint64_t vegetationInstanceUploads{};
+struct StaticObjectInstanceBuffer {virtual ~StaticObjectInstanceBuffer()=default;};
+using StaticObjectInstanceBufferPtr=std::shared_ptr<StaticObjectInstanceBuffer>;
 enum class StaticObjectCull : uint32_t { None, Clockwise, CounterClockwise };
 enum class StaticObjectAlphaTest : uint32_t { Disabled, GreaterEqual, Greater };
 // ZiiNAN: Only the existing actor texture-stage operations, not a material graph.
@@ -67,6 +76,12 @@ struct StaticObjectDraw
     std::array<float,4> cardPitch{};
     bool cardFog{},modulateCameraAlpha{};
     TerrainTexturePtr vertexShadow;
+    StaticObjectInstanceBufferPtr instances;
+    std::uint32_t instanceCount{};
+    // Modern vegetation only. Direction is the shared world wind, w is height.
+    std::array<float,4> worldWind{1,0,0,1},branchWind{};
+    std::array<float,4> foliage{}; // transmission tint and strength
+    bool modernVegetation{};
 };
 class IStaticObjectRenderer : public ITextureUploader
 {
@@ -74,6 +89,7 @@ public:
     virtual StaticObjectGeometryPtr UploadGeometry(const StaticObjectSource&) = 0;
     virtual void Draw(const StaticObjectGeometryPtr&, const TerrainTexturePtr&, const StaticObjectDraw&) = 0;
     virtual void ReleaseBindings() = 0;
+    virtual bool UpdateInstances(StaticObjectInstanceBufferPtr&,std::span<const StaticObjectInstance>) {return false;}
 };
 inline IStaticObjectRenderer* staticObjectRenderer = nullptr;
 inline unsigned staticObjectLoadDepth = 0;

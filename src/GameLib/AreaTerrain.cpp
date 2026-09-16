@@ -462,7 +462,7 @@ bool CTerrain::RAW_LoadTileMap(const char * c_pszFileName, bool bBGLoading)
 
 bool CTerrain::LoadHeightMap(const char * c_pszFileName)
 {
-	CTerrainImpl::LoadHeightMap(c_pszFileName);
+	if (!CTerrainImpl::LoadHeightMap(c_pszFileName)) return false;
 	DWORD dwStart = ELTimer_GetMSec();
 
 	const float fHeightScale = m_fHeightScale;
@@ -497,6 +497,14 @@ bool CTerrain::LoadHeightMap(const char * c_pszFileName)
 		
 	Tracef("LoadHeightMap::CalculateNormal %d ms\n", ELTimer_GetMSec() - dwStart);
 	return true;
+}
+
+bool CTerrain::LoadGrassData(const std::string& directory)
+{
+    return LoadHeightMap((directory+"height.raw").c_str()) &&
+        CTerrainImpl::RAW_LoadTileMap((directory+"tile.raw").c_str()) &&
+        LoadAttrMap((directory+"attr.atr").c_str()) &&
+        LoadWaterMap((directory+"water.wtr").c_str());
 }
 
 bool CTerrain::LoadAttrMap(const char *c_pszFileName)

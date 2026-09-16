@@ -35,7 +35,7 @@ void WriteString(Writer&w,const char*k,const std::string&s){w.Key(k);w.String(s.
 Result ParseMetadata(std::string_view text,Metadata& result){
     try{
         rapidjson::Document d;Parse(text,d);Metadata m;
-        m.version=Unsigned(Field(d,"version"));Require(m.version==1,"unsupported ZVEG version");
+        m.version=Unsigned(Field(d,"version"));Require(m.version==1||m.version==2,"unsupported ZVEG version");
         m.geometry=String(Field(d,"geometry"));Require(ValidCompiledPath(m.geometry,".glb"),"invalid compiled geometry path");
         m.shadowTexture=String(Field(d,"shadowTexture"));
         Require(m.shadowTexture.empty()||(m.shadowTexture.starts_with("d:/ymir work/")&&m.shadowTexture.ends_with(".dds")&&m.shadowTexture.find("..") == m.shadowTexture.npos&&m.shadowTexture.find('\\') == m.shadowTexture.npos&&std::none_of(m.shadowTexture.begin(),m.shadowTexture.end(),[](unsigned char c){return c<32||c=='%';})),"invalid shadow texture path");
@@ -57,6 +57,25 @@ Result ParseMetadata(std::string_view text,Metadata& result){
         }
         const auto& collisions=Field(d,"collisions");Require(collisions.IsArray()&&collisions.Size()<=256,"invalid collision count");
         for(const auto& row:collisions.GetArray()){Require(row.IsArray()&&row.Size()==7,"invalid collision");Collision c;c.kind=Unsigned(row[0]);Require(c.kind<=2,"invalid collision type");for(unsigned k=0;k<3;++k){c.position[k]=Number(row[k+1]);c.dimensions[k]=Number(row[k+4]);Require(c.dimensions[k]>=0,"negative collision dimension");}m.collisions.push_back(c);}
+        if(m.version==2) {
+            const auto& modern=Field(d,"modern");
+            m.plantKind=static_cast<PlantKind>(Unsigned(Field(modern,"plantKind")));
+            Require(unsigned(m.plantKind)<=2,"invalid plant kind");
+            m.lodDistances=Array<3>(Field(modern,"lodDistances"));
+            m.transitionFraction=Number(Field(modern,"transitionFraction"));
+            Require(m.lods.size()==4&&m.transitionFraction>=0&&m.transitionFraction<=.25f,"invalid modern LOD transitions");
+            float previous=0;
+            for(float distance:m.lodDistances) {
+                Require(distance*(1-m.transitionFraction*.5f)>previous&&distance*(1+m.transitionFraction*.5f)<m.cullDistance,"overlapping or invalid modern LOD range");
+                previous=distance*(1+m.transitionFraction*.5f);
+            }
+            m.foliage.transmissionColor=Array<3>(Field(modern,"transmissionColor"));
+            m.foliage.transmissionStrength=Number(Field(modern,"transmissionStrength"));
+            for(float color:m.foliage.transmissionColor)Require(color>=0&&color<=1,"invalid transmission color");
+            Require(m.foliage.transmissionStrength>=0&&m.foliage.transmissionStrength<=.5f,"invalid transmission strength");
+            const float windMargin=(m.bounds.max[2]-m.bounds.min[2])*(m.wind.branchAmplitude+m.wind.leafAmplitude)*m.wind.strength;
+            for(unsigned k=0;k<2;++k)Require(m.renderBounds.min[k]<=m.bounds.min[k]-windMargin&&m.renderBounds.max[k]>=m.bounds.max[k]+windMargin,"modern bounds exclude wind displacement");
+        }
         result=std::move(m);return {true,{}};
     }catch(const std::exception&e){return {false,e.what()};}
 }
@@ -68,7 +87,9 @@ std::string SerializeMetadata(const Metadata&m){
     w.Key("wind");WriteArray(w,std::array<float,8>{m.wind.direction[0],m.wind.direction[1],m.wind.direction[2],m.wind.strength,m.wind.branchAmplitude,m.wind.frondAmplitude,m.wind.leafAmplitude,m.wind.frequency});
     w.Key("parts");w.StartArray();for(const auto&p:m.parts){w.StartArray();w.Uint(unsigned(p.kind));w.Uint(p.lod);w.Uint(p.mesh);w.EndArray();}w.EndArray();
     w.Key("lods");w.StartArray();for(const auto&s:m.lods){w.StartArray();for(auto i:s.meshes)w.Int(i);for(auto f:s.alpha)w.Double(f);w.EndArray();}w.EndArray();
-    w.Key("collisions");w.StartArray();for(const auto&c:m.collisions){w.StartArray();w.Uint(c.kind);for(float f:c.position)w.Double(f);for(float f:c.dimensions)w.Double(f);w.EndArray();}w.EndArray();w.EndObject();
+    w.Key("collisions");w.StartArray();for(const auto&c:m.collisions){w.StartArray();w.Uint(c.kind);for(float f:c.position)w.Double(f);for(float f:c.dimensions)w.Double(f);w.EndArray();}w.EndArray();
+    if(m.version==2){w.Key("modern");w.StartObject();w.Key("plantKind");w.Uint(unsigned(m.plantKind));w.Key("lodDistances");WriteArray(w,m.lodDistances);w.Key("transitionFraction");w.Double(m.transitionFraction);w.Key("transmissionColor");WriteArray(w,m.foliage.transmissionColor);w.Key("transmissionStrength");w.Double(m.foliage.transmissionStrength);w.EndObject();}
+    w.EndObject();
     Metadata checked;std::string out=b.GetString();const auto result=ParseMetadata(out,checked);if(!result)throw std::invalid_argument(result.error);return out+"\n";
 }
 Result Registry::Add(std::string_view legacy,std::string_view compiled){
@@ -80,11 +101,24 @@ Result Registry::Parse(std::string_view text){
     try{
         rapidjson::Document d;Vegetation::Parse(text,d);Require(Unsigned(Field(d,"version"))==1,"unsupported vegetation registry version");
         const auto& entries=Field(d,"entries");Require(entries.IsObject()&&entries.MemberCount()<=32768,"invalid registry entries");Registry candidate;
-        for(auto i=entries.MemberBegin();i!=entries.MemberEnd();++i){const auto r=candidate.Add(String(i->name),String(i->value));Require(r.ok,r.error.c_str());}entries_=std::move(candidate.entries_);return {true,{}};
+        for(auto i=entries.MemberBegin();i!=entries.MemberEnd();++i){const auto r=candidate.Add(String(i->name),String(i->value));Require(r.ok,r.error.c_str());}
+        if(d.HasMember("modernOverrides")) {
+            const auto& overrides=d["modernOverrides"];Require(overrides.IsObject()&&overrides.MemberCount()<=entries.MemberCount(),"invalid modern overrides");
+            for(auto i=overrides.MemberBegin();i!=overrides.MemberEnd();++i){const auto r=candidate.AddOverride(String(i->name),String(i->value));Require(r.ok,r.error.c_str());}
+        }
+        *this=std::move(candidate);return {true,{}};
     }catch(const std::exception&e){return {false,e.what()};}
 }
 const std::string* Registry::Resolve(std::string_view key)const{const auto it=entries_.find(NormalizeKey(key));return it==entries_.end()?nullptr:&it->second;}
+Result Registry::AddOverride(std::string_view legacy,std::string_view compiled){
+    const auto key=NormalizeKey(legacy),path=NormalizeKey(compiled);
+    if(!entries_.contains(key)||!ValidCompiledPath(path,".zveg"))return {false,"modern override requires legacy fallback and compiled path"};
+    if(!overrides_.emplace(key,path).second)return {false,"duplicate modern override"};return {true,{}};
+}
+const std::string* Registry::ResolveOverride(std::string_view key)const{const auto it=overrides_.find(NormalizeKey(key));return it==overrides_.end()?nullptr:&it->second;}
 std::string Registry::Serialize()const{
-    rapidjson::StringBuffer b;Writer w(b);w.StartObject();w.Key("version");w.Uint(1);w.Key("entries");w.StartObject();for(const auto&[key,path]:entries_){w.Key(key.c_str());w.String(path.c_str());}w.EndObject();w.EndObject();return std::string(b.GetString())+"\n";
+    rapidjson::StringBuffer b;Writer w(b);w.StartObject();w.Key("version");w.Uint(1);w.Key("entries");w.StartObject();for(const auto&[key,path]:entries_){w.Key(key.c_str());w.String(path.c_str());}w.EndObject();
+    if(!overrides_.empty()){w.Key("modernOverrides");w.StartObject();for(const auto&[key,path]:overrides_){w.Key(key.c_str());w.String(path.c_str());}w.EndObject();}
+    w.EndObject();return std::string(b.GetString())+"\n";
 }
 }
