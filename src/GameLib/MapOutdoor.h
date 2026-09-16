@@ -204,6 +204,9 @@ class CMapOutdoor : public CMapBase
 		std::vector<uint16_t> m_projectionIndices;
 		Renderer::TerrainTexturePtr m_projectionTexture;
 		std::vector<Renderer::TerrainTexturePtr> m_terrainTextures;
+		// Optional map/slot color assets; original texture set and masks stay intact.
+		struct ModernTerrainColor { std::string filename; Renderer::TerrainTexturePtr texture; };
+		std::vector<ModernTerrainColor> m_modernTerrainColors;
 		BYTE m_terrainGeometryLOD = 0;
 		void SubmitTerrainGeometry(long patchnum);
 		void SubmitTerrainSplat(long patchnum, CTerrain* terrain, uint32_t layer);
@@ -244,7 +247,6 @@ class CMapOutdoor : public CMapBase
 	public:
 		BOOL			GetTerrainPointer(BYTE c_ucTerrainNum, CTerrain ** ppTerrain);
 		float			GetTerrainHeight(float fx, float fy);
-        void VisitGrassTerrain(const std::function<void(CTerrain&)>& visitor);
         static float SampleGrassDensity(CTerrain&,float x,float y,float& height,const std::array<bool,256>& layers);
 		bool			GetWaterHeight(int iX, int iY, long * plWaterHeight);
 		bool			GetNormal(int ix, int iy, Math::Vector3 * pv3Normal);

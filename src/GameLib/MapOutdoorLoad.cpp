@@ -39,9 +39,7 @@ bool CMapOutdoor::Load(float x, float y, float z)
 
 	__HeightCache_Init();
 
-    // Prepare every grass cell while the map is loading, including terrain
-    // outside the streamed 3x3 render neighbourhood.
-    PrepareNativeGrass(*this);
+    // Grass coverage is terrain material. Do not prepare whole-map blade geometry.
 
 	// LOCAL_ENVIRONMENT_DATA
 	std::string local_envDataName = GetMapDataDirectory() + "\\" + m_settings_envDataName;
@@ -63,29 +61,6 @@ bool CMapOutdoor::Load(float x, float y, float z)
 	}
 	// LOCAL_ENVIRONMENT_DATA_END
 	return true;
-}
-
-void CMapOutdoor::VisitGrassTerrain(const std::function<void(CTerrain&)>& visitor)
-{
-    Vegetation::grassPreparation.expectedTiles=std::uint64_t(m_sTerrainCountX)*m_sTerrainCountY;
-    auto scratch=std::make_unique<CTerrain>();
-    scratch->SetMapOutDoor(this);
-    scratch->CopySettingFromGlobalSetting();
-    for(WORD y=0;y<m_sTerrainCountY;++y)for(WORD x=0;x<m_sTerrainCountX;++x) {
-        CTerrain* terrain=nullptr;
-        for(auto* loaded:m_TerrainVector) {
-            WORD tx,ty;loaded->GetCoordinate(&tx,&ty);
-            if(tx==x&&ty==y&&loaded->IsReady()){terrain=loaded;break;}
-        }
-        if(!terrain) {
-            char tile[16];snprintf(tile,sizeof(tile),"%06u/",unsigned(x)*1000+unsigned(y));
-            scratch->SetCoordinate(x,y);
-            if(!scratch->LoadGrassData(GetMapDataDirectory()+"/"+tile))continue;
-            terrain=scratch.get();
-        }
-        visitor(*terrain);
-        ++Vegetation::grassPreparation.tiles;
-    }
 }
 
 std::string& CMapOutdoor::GetEnvironmentDataName()
@@ -431,6 +406,16 @@ bool CMapOutdoor::LoadSetting(const char * c_szFileName)
 		}
 		// Existing layer selection triggers one load per actually used map color.
 		m_terrainTextures.resize(m_TextureSet.GetTextureCount());
+		for(auto& color:m_modernTerrainColors) Renderer::terrainRenderer->ReleaseTexture(color.texture);
+		m_modernTerrainColors.clear();
+		m_modernTerrainColors.resize(m_TextureSet.GetTextureCount());
+		// Opt-in content only: no payload means original colors in both styles.
+		// Key includes the map and slot; shared texture names on other maps cannot match.
+		for(unsigned layer=1;layer<m_modernTerrainColors.size();++layer) {
+			char slot[32];snprintf(slot,sizeof(slot),"/slot-%03u.dds",layer);
+			const auto filename="terrain/modern/"+GetName()+slot;
+			if(CPackManager::Instance().IsExist(filename.c_str())) m_modernTerrainColors[layer].filename=filename;
+		}
 	}
 	
 	if (stTokenVectorMap.end() != stTokenVectorMap.find("environment"))

@@ -15,7 +15,6 @@
 #include <algorithm>
 #include <cmath>
 #include <cstring>
-#include <chrono>
 
 namespace {
 class NativeTree;
@@ -25,8 +24,6 @@ struct State {
     std::map<const Vegetation::Asset*,std::shared_ptr<NativeResources>> resources;
     std::set<const Vegetation::Asset*> optionalResourceFailures;
     std::vector<std::weak_ptr<NativeTree>> instances;std::ofstream log;std::set<std::string> errors;
-    std::map<std::pair<int,int>,std::vector<Vegetation::GrassPlacement>> grassCells;
-    std::shared_ptr<NativeResources>grassResources;std::string grassMap;
     bool modernActive{};
 };
 State& World(){static State state;return state;}
@@ -148,57 +145,9 @@ void RenderNativeVegetation(){
     for(auto&[key,group]:groups)Vegetation::DrawBatch(group.instances,*group.resource->render,*Renderer::staticObjectRenderer,c);
 }
 void ClearNativeVegetation(){
-    auto&s=World();std::erase_if(s.instances,[](const auto&w){return w.expired();});s.grassCells.clear();s.grassResources.reset();s.grassMap.clear();s.resources.clear();s.optionalResourceFailures.clear();s.runtime.Clear();
+    auto&s=World();std::erase_if(s.instances,[](const auto&w){return w.expired();});s.resources.clear();s.optionalResourceFailures.clear();s.runtime.Clear();
     const auto serial=Vegetation::grassPreparation.serial;Vegetation::grassPreparation={};Vegetation::grassPreparation.serial=serial;
     if(s.log.is_open())Log("clear assets="+std::to_string(Vegetation::liveAssets.load())+" instances="+std::to_string(Vegetation::liveInstances.load())+" geometry="+std::to_string(Vegetation::liveGeometry.load())+" draws="+std::to_string(Vegetation::statistics.submitted));
-}
-void PrepareNativeGrass(CMapOutdoor& map) {
-    const auto start=std::chrono::steady_clock::now();auto&s=World();
-    s.grassCells.clear();s.grassResources.reset();s.grassMap=map.GetName();
-    const auto serial=Vegetation::grassPreparation.serial+1;Vegetation::grassPreparation={};Vegetation::grassPreparation.serial=serial;
-    const auto loaded=s.runtime.LoadCompiled("vegetation/modern/grass.zveg",Read);
-    if(loaded)s.grassResources=Resources(loaded.asset,true);
-    if(!s.grassResources)return;
-    std::uint64_t seed=14695981039346656037ull;for(unsigned char ch:s.grassMap){seed^=ch;seed*=1099511628211ull;}
-    std::array<bool,256> layers{};
-    auto*textures=CTerrainImpl::GetTextureSet();
-    for(unsigned i=1;i<std::min<unsigned>(256,textures->GetTextureCount());++i)
-        layers[i]=Vegetation::NormalizeKey(textures->GetTexture(i).stFilename).find("grass")!=std::string::npos;
-    if(std::none_of(layers.begin(),layers.end(),[](bool grass){return grass;}))return;
-    map.VisitGrassTerrain([&](CTerrain& terrain) {
-        WORD tx,ty;terrain.GetCoordinate(&tx,&ty);
-        constexpr int cellsX=CTerrainImpl::TERRAIN_XSIZE/400,cellsY=CTerrainImpl::TERRAIN_YSIZE/400;
-        for(int y=ty*cellsY;y<(ty+1)*cellsY;++y)for(int x=tx*cellsX;x<(tx+1)*cellsX;++x) {
-            std::vector<Vegetation::GrassPlacement> cell;
-            for(const auto&candidate:Vegetation::GrassCandidates(seed,x,y,400)) {
-                float height{};const float density=CMapOutdoor::SampleGrassDensity(terrain,candidate.x,candidate.y,height,layers);
-                if(density>0&&candidate.rank<density)cell.push_back(Vegetation::PlaceGrass(candidate,height,density));
-            }
-            if(cell.empty())continue;
-            cell.shrink_to_fit();
-            Vegetation::grassPreparation.placements+=cell.size();
-            Vegetation::grassPreparation.bytes+=cell.capacity()*sizeof(Vegetation::GrassPlacement);
-            s.grassCells.emplace(std::make_pair(x,y),std::move(cell));
-        }
-    });
-    auto&stats=Vegetation::grassPreparation;stats.cells=s.grassCells.size();
-    stats.milliseconds=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-start).count();
-    Log("grass prepared map="+s.grassMap+" tiles="+std::to_string(stats.tiles)+"/"+std::to_string(stats.expectedTiles)+
-        " placements="+std::to_string(stats.placements)+" cells="+std::to_string(stats.cells)+" placementBytes="+std::to_string(stats.bytes)+" ms="+std::to_string(stats.milliseconds));
-}
-void RenderNativeGrass(CMapOutdoor& map) {
-    if(!Renderer::vegetationWorldFrame||!Renderer::staticObjectRenderer)return;
-    const auto c=Context(false);const auto&s=World();
-    if(!c.modern||s.grassMap!=map.GetName()||!s.grassResources)return;
-    constexpr float cellSize=400;
-    const int minX=int(std::floor((c.camera[0]-c.quality.grassDistance)/cellSize)),maxX=int(std::floor((c.camera[0]+c.quality.grassDistance)/cellSize));
-    const int minY=int(std::floor((-c.camera[1]-c.quality.grassDistance)/cellSize)),maxY=int(std::floor((-c.camera[1]+c.quality.grassDistance)/cellSize));
-    std::vector<const Vegetation::GrassPlacement*> visible;
-    for(int y=minY;y<=maxY;++y)for(int x=minX;x<=maxX;++x) {
-        const auto it=s.grassCells.find({x,y});if(it==s.grassCells.end())continue;
-        for(const auto&grass:it->second)if(grass.rank<c.quality.grassDensity)visible.push_back(&grass);
-    }
-    Vegetation::DrawGrassBatch(visible,*s.grassResources->render,*Renderer::staticObjectRenderer,c);
 }
 void SetNativeVegetationWind(float strength){World().windStrength=std::clamp(strength,0.f,1.f);}
 VegetationCameraMaskScope::VegetationCameraMaskScope(CGraphicImage*image):previous_(World().cameraMask){World().cameraMask=image;}

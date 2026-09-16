@@ -3,6 +3,8 @@
 #include "AreaTerrain.h"
 #include "EterLib/DrawState.h"
 #include "EterLib/TerrainTextureLoader.h"
+#include "Renderer/GraphicsConfig.h"
+#include <fstream>
 
 namespace
 {
@@ -48,10 +50,17 @@ void CMapOutdoor::SubmitTerrainSplat(long patchnum, CTerrain* terrain, uint32_t 
         renderer->UploadTexture({});
     };
     if(!terrain || !layer || layer>=m_terrainTextures.size()) { fail(); return; }
-    auto& color=m_terrainTextures[layer];
-    if(!color) color=LoadTerrainTextureFile(m_TextureSet.GetTexture(layer).stFilename.c_str(),*renderer);
+    const bool modernColor=GetGraphicsRuntimeConfig().style==Graphics::GraphicsStyle::Modern &&
+        layer<m_modernTerrainColors.size() && !m_modernTerrainColors[layer].filename.empty();
+    auto& color=modernColor ? m_modernTerrainColors[layer].texture : m_terrainTextures[layer];
+    if(!color) {
+        const auto& filename=modernColor ? m_modernTerrainColors[layer].filename : m_TextureSet.GetTexture(layer).stFilename;
+        color=LoadTerrainTextureFile(filename.c_str(),*renderer);
+        if(modernColor && color) std::ofstream("terrain-content.log",std::ios::app)
+            << "modern color map=" << GetName() << " slot=" << layer << " source=" << filename << '\n';
+    }
     if(!color) return;
-    const auto material=terrain->GetSplatMaterial(layer,color);
+    const auto material=terrain->GetSplatMaterial(layer,color,modernColor);
     if(!material) { fail(); return; }
     TerrainSplatParameters params;
     params.vertexUV=CTerrainPatch::SOFTWARE_TRANSFORM_PATCH_ENABLE;

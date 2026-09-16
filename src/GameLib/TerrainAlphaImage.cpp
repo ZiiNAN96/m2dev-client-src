@@ -39,16 +39,23 @@ void TerrainAlphaImage::Clear()
     if(Renderer::terrainRenderer)
     {
         Renderer::terrainRenderer->ReleaseSplatMaterial(m_material);
+        Renderer::terrainRenderer->ReleaseSplatMaterial(m_modernMaterial);
         Renderer::terrainRenderer->ReleaseTexture(m_texture);
     }
-    else { m_material.reset(); m_texture.reset(); }
+    else { m_material.reset(); m_modernMaterial.reset(); m_texture.reset(); }
     for(auto& mip:m_mips) std::vector<uint8_t>().swap(mip);
 }
-Renderer::TerrainSplatMaterialPtr TerrainAlphaImage::Material(const Renderer::TerrainTexturePtr& color)
+Renderer::TerrainSplatMaterialPtr TerrainAlphaImage::Material(const Renderer::TerrainTexturePtr& color, bool modernColor)
 {
     auto* renderer=Renderer::terrainRenderer;
     if(!renderer) return {};
-    if(m_material) return m_material;
+    auto& material=modernColor ? m_modernMaterial : m_material;
+    if(material) return material;
+    // The same authored alpha is shared by both color bindings, including live style switches.
+    if(m_texture) {
+        material=renderer->CreateSplatMaterial(color,m_texture);
+        return material;
+    }
     Renderer::TerrainTextureData data;
     data.width=data.height=256; data.format=Renderer::TerrainTextureFormat::Alpha8;
     for(uint32_t level=0;level<m_mips.size();++level)
@@ -58,7 +65,7 @@ Renderer::TerrainSplatMaterialPtr TerrainAlphaImage::Material(const Renderer::Te
         data.mips.push_back({m_mips[level].data(),m_mips[level].size(),size});
     }
     m_texture=renderer->UploadTexture(data);
-    if(m_texture) m_material=renderer->CreateSplatMaterial(color,m_texture);
-    if(m_material) for(auto& mip:m_mips) std::vector<uint8_t>().swap(mip);
-    return m_material;
+    if(m_texture) material=renderer->CreateSplatMaterial(color,m_texture);
+    if(material) for(auto& mip:m_mips) std::vector<uint8_t>().swap(mip);
+    return material;
 }

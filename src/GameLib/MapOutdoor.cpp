@@ -191,6 +191,9 @@ bool CMapOutdoor::Destroy()
 	for(auto& texture:m_terrainTextures)
 		if (Renderer::terrainRenderer) Renderer::terrainRenderer->ReleaseTexture(texture);
 	m_terrainTextures.clear();
+	for(auto& color:m_modernTerrainColors)
+		if(Renderer::terrainRenderer) Renderer::terrainRenderer->ReleaseTexture(color.texture);
+	m_modernTerrainColors.clear();
 	m_bEnableTerrainOnlyForHeight = FALSE;
 	m_bEnablePortal = FALSE;
 
