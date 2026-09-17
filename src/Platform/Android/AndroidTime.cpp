@@ -15,6 +15,10 @@ std::uint64_t MonotonicNanoseconds() noexcept
 std::uint32_t TickMilliseconds() noexcept { return static_cast<std::uint32_t>(MonotonicNanoseconds() / 1000000); }
 std::uint32_t UptimeMilliseconds() noexcept { return TickMilliseconds(); }
 void SleepMilliseconds(std::uint32_t milliseconds) noexcept { std::this_thread::sleep_for(std::chrono::milliseconds{milliseconds}); }
+void SleepUntilNanoseconds(std::uint64_t deadline) noexcept
+{
+    std::this_thread::sleep_until(std::chrono::steady_clock::time_point{std::chrono::nanoseconds{deadline}});
+}
 bool BeginTimerPeriod() noexcept { return false; }
 void EndTimerPeriod() noexcept {}
 }

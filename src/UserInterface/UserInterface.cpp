@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "Graphics/FramePacingAudit.h"
 #include "Renderer/FirstUseAudit.h"
 #include "Renderer/ResourceData.h"
 #include "AssetRuntime/GR2/GR2AssetProvider.h"
@@ -337,6 +338,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     AssetRuntime::animationRuntimeErrorSink=[](const char* message) { TraceError("%s", message); };
     Renderer::verboseDiagnostics=rendererOptions.diagnostics && !rendererOptions.loadWarmupAudit;
     Renderer::auditDiligentDiagnostics=true;
+    if(rendererOptions.framePacingCapture) Graphics::FramePacingAudit::capture.Enable();
     rendererLog << "VerboseDiagnostics=" << Renderer::verboseDiagnostics << std::endl;
     rendererLog << "Skinning=" << (rendererOptions.skinning==Renderer::PrototypeSkinningMode::CPU ? "cpu" : "gpu") << std::endl;
     rendererLog << "SkinningSelection=" << (rendererOptions.skinningSelected ? "explicit" : "default") << std::endl;

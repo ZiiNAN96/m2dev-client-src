@@ -1,4 +1,8 @@
 find_package(Threads REQUIRED)
+add_executable(FramePacingTest FramePacingTest.cpp)
+target_link_libraries(FramePacingTest PRIVATE M2GraphicsSettings)
+add_test(NAME Graphics.FramePacing COMMAND FramePacingTest)
+set_tests_properties(Graphics.FramePacing PROPERTIES LABELS "graphics;portable;fast;p3" TIMEOUT 15)
 add_executable(WaterConfigTest WaterConfigTest.cpp)
 target_link_libraries(WaterConfigTest PRIVATE M2GraphicsSettings)
 add_test(NAME Graphics.WaterConfig COMMAND WaterConfigTest)

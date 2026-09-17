@@ -55,6 +55,28 @@ void SleepMilliseconds(std::uint32_t milliseconds) noexcept
     Sleep(milliseconds);
 }
 
+void SleepUntilNanoseconds(std::uint64_t deadline) noexcept
+{
+    struct Timer
+    {
+        HANDLE handle = CreateWaitableTimerExW(nullptr, nullptr,
+            CREATE_WAITABLE_TIMER_HIGH_RESOLUTION, TIMER_MODIFY_STATE | SYNCHRONIZE);
+        Timer() { if (!handle) handle = CreateWaitableTimerW(nullptr, FALSE, nullptr); }
+        ~Timer() { if (handle) CloseHandle(handle); }
+    };
+    thread_local Timer timer;
+    for (auto now = MonotonicNanoseconds(); now < deadline; now = MonotonicNanoseconds())
+    {
+        const auto remaining = deadline - now;
+        LARGE_INTEGER due;
+        due.QuadPart = -static_cast<LONGLONG>((remaining + 99) / 100);
+        if (timer.handle && SetWaitableTimer(timer.handle, &due, 0, nullptr, nullptr, FALSE) &&
+            WaitForSingleObject(timer.handle, INFINITE) == WAIT_OBJECT_0) continue;
+        // Portable-resolution fallback still blocks; never spin the remainder.
+        Sleep(static_cast<DWORD>(std::max<std::uint64_t>(1, (remaining + 999'999) / 1'000'000)));
+    }
+}
+
 bool BeginTimerPeriod() noexcept
 {
     TIMECAPS capabilities{};

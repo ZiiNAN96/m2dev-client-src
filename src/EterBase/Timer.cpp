@@ -106,6 +106,7 @@ void CTimer::Advance()
 void CTimer::Adjust(int iTimeGap)
 {
 	m_dwCurrentTime += iTimeGap;
+	m_fCurrentTime = m_dwCurrentTime / 1000.0f;
 }
 
 float CTimer::GetCurrentSecond()

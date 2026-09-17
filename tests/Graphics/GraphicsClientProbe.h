@@ -3,6 +3,20 @@
 #include "Renderer/WaterDiagnostics.h"
 #include "Vegetation/VegetationRenderer.h"
 #include "Renderer/WorldResidencyDiagnostics.h"
+#include "Renderer/EffectRenderData.h"
+static PyObject* systemTestActorTiming(PyObject*, PyObject* args)
+{
+    int vid;
+    if (!PyArg_ParseTuple(args, "i", &vid)) return nullptr;
+    auto* actor = CPythonCharacterManager::Instance().GetInstancePtr(vid);
+    if (!actor) return PyErr_Format(PyExc_ValueError, "Timing actor does not exist");
+    TPixelPosition position;
+    actor->NEW_GetPixelPosition(&position);
+    return Py_BuildValue("{s:f,s:f,s:f,s:f,s:i,s:i,s:I,s:I}",
+        "x", position.x, "y", position.y, "z", position.z, "localTime", actor->GetGraphicThingInstanceRef().GetLocalTime(),
+        "attacking", int(actor->IsAttacking()), "walking", int(actor->IsWalking()),
+        "effects", Renderer::effectRuntime.instances, "particles", Renderer::effectRuntime.particles);
+}
 static PyObject* systemTestWorldResidency(PyObject*,PyObject*)
 {
     const auto& w=Renderer::worldResidency;

@@ -10,6 +10,7 @@ namespace Platform::Time
 [[nodiscard]] std::uint32_t UptimeMilliseconds() noexcept;
 [[nodiscard]] std::uint64_t MonotonicNanoseconds() noexcept;
 void SleepMilliseconds(std::uint32_t milliseconds) noexcept;
+void SleepUntilNanoseconds(std::uint64_t deadline) noexcept;
 
 [[nodiscard]] bool BeginTimerPeriod() noexcept;
 void EndTimerPeriod() noexcept;

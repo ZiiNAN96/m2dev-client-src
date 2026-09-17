@@ -1072,6 +1072,11 @@ void CSlotWindow::OnUpdate()
 		__DestroyFinishCoolTimeEffect(pSlot);
 	}
 	m_ReserveDestroyEffectDeque.clear();
+	for (auto& slot : m_SlotList)
+	{
+		if (slot.pNumberLine) slot.pNumberLine->Update();
+		if (slot.pFinishCoolTimeEffect) slot.pFinishCoolTimeEffect->Update();
+	}
 
 	if (m_pSlotActiveEffect)
 		m_pSlotActiveEffect->Update();
@@ -1181,14 +1186,12 @@ void CSlotWindow::OnRender()
 			int ix = rSlot.byxPlacedItemSize*ITEM_WIDTH + rSlot.ixPosition - 4;
 			int iy = rSlot.iyPosition + rSlot.byyPlacedItemSize*ITEM_HEIGHT - 12 + 2;
 			rSlot.pNumberLine->SetPosition(ix, iy);
-			rSlot.pNumberLine->Update();
 			rSlot.pNumberLine->Render();
 		}
 
 		if (rSlot.pFinishCoolTimeEffect)
 		{
 			rSlot.pFinishCoolTimeEffect->SetPosition(rSlot.ixPosition, rSlot.iyPosition);
-			rSlot.pFinishCoolTimeEffect->Update();
 			rSlot.pFinishCoolTimeEffect->Render();
 		}
 

@@ -7,6 +7,7 @@
 #include "Renderer/IRenderBackend.h"
 #include "Renderer/StartupOptions.h"
 #include "Renderer/TerrainPresentation.h"
+#include "Graphics/FramePacing.h"
 #include <memory>
 #include "eterLib/NetDevice.h"
 #include "eterLib/GrpLightManager.h"
@@ -323,6 +324,8 @@ class CPythonApplication : public CMSApplication, public CInputKeyboard, public 
 
 	protected:
 		CTimer m_timer;
+        Graphics::FramePacer m_framePacer;
+        Graphics::SimulationClock m_simulationClock;
 
 		CLightManager				m_LightManager;
 		SoundEngine					m_SoundEngine;
@@ -376,7 +379,6 @@ class CPythonApplication : public CMSApplication, public CInputKeyboard, public 
 		PyObject *					m_poMouseHandler;
 		Math::Vector3					m_v3CenterPosition;
 
-		unsigned int				m_iFPS;
 		float						m_fAveRenderTime;
 		DWORD						m_dwCurRenderTime;
 		DWORD						m_dwCurUpdateTime;
@@ -439,7 +441,6 @@ class CPythonApplication : public CMSApplication, public CInputKeyboard, public 
 		bool						m_bLiarCursorOn;
 		int							m_iCursorMode;
 		bool						m_isWindowed;
-		bool						m_isFrameSkipDisable;
 
 		// Connect Data
 		std::string					m_strIP;

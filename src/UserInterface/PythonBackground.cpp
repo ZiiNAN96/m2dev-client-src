@@ -346,6 +346,8 @@ void CPythonBackground::Update(float fCenterX, float fCenterY, float fCenterZ)
 	DWORD t3=ELTimer_GetMSec();
 #endif
 	m_SnowEnvironment.Update(Math::Vector3(fCenterX, -fCenterY, fCenterZ));
+	// Snow emission belongs to simulation, including catch-up ticks.
+	m_SnowEnvironment.Deform();
 
 #ifdef __PERFORMANCE_CHECKER__
 	{
@@ -464,7 +466,6 @@ void CPythonBackground::Render()
 	if (!IsMapReady())
 		return;	
 
-	m_SnowEnvironment.Deform();
 
 	CMapOutdoor& rkMap=GetMapOutdoorRef();
 	rkMap.Render();

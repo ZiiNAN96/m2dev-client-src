@@ -3,6 +3,8 @@
 #include "TerrainPresentation.h"
 #include "FirstUseAudit.h"
 #include "Diagnostics.h"
+#include "Graphics/FramePacingAudit.h"
+#include "Platform/PlatformTime.h"
 #include <mutex>
 #include "AssetRuntime/AnimationStallAudit.h"
 #include "Graphics/GraphicsEngineD3D11/interface/EngineFactoryD3D11.h"
@@ -155,7 +157,11 @@ void DiligentD3D11Backend::Present()
     {
         const auto start=skinningBenchmarkEnabled ? PrototypeClock::now() : PrototypeClock::time_point{};
         AssetRuntime::AnimationStallAudit::WorkScope stallPresentWait(AssetRuntime::AnimationStallAudit::Work::PresentWait);
-        { MapLoadTrace::Scope p0lPresent("Synchronization","Present vsync","wait"); m_impl->swapChain->Present(1); }
+        auto& pacing = Graphics::FramePacingAudit::capture;
+        if (pacing.enabled) pacing.current.presentStart = Platform::Time::MonotonicNanoseconds();
+        { MapLoadTrace::Scope p0lPresent("Synchronization","Present","wait");
+          m_impl->swapChain->Present(Graphics::PresentInterval(m_graphicsConfig.vsync)); }
+        if (pacing.enabled) pacing.current.presentEnd = Platform::Time::MonotonicNanoseconds();
         MapLoadTrace::Presented();
         if(awaitingWorldPresent){awaitingWorldPresent=false;LogClientLifecycle("WorldPresented");}
         stallPresentWait.Stop();

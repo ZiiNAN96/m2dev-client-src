@@ -9,11 +9,12 @@
 PyObject* systemGetGraphicsSettings(PyObject*, PyObject*)
 {
     const auto& s = CPythonSystem::Instance().GetGraphicsSettings();
-    return Py_BuildValue("{s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:f,s:i}",
+    return Py_BuildValue("{s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:f,s:i,s:i,s:i}",
         "preset", int(s.preset), "style", int(s.style), "shadows", int(s.shadows),
         "ambientOcclusion", int(s.ambientOcclusion), "water", int(s.water), "vegetation", int(s.vegetation),
         "textures", int(s.textures), "hdr", int(s.hdr), "bloom", int(s.bloom), "modernSky", int(s.modernSky),
-        "viewDistance", s.viewDistance, "fogLevel", s.fogLevel);
+        "viewDistance", s.viewDistance, "fogLevel", s.fogLevel,
+        "frameRateLimit", int(s.frameRateLimit), "vsync", int(s.vsync));
 }
 
 PyObject* systemApplyGraphicsSettings(PyObject*, PyObject* args)
@@ -44,6 +45,8 @@ PyObject* systemApplyGraphicsSettings(PyObject*, PyObject* args)
         else if (!strcmp(name, "water")) s.water = static_cast<Graphics::WaterQuality>(number);
         else if (!strcmp(name, "vegetation")) s.vegetation = static_cast<Graphics::VegetationQuality>(number);
         else if (!strcmp(name, "textures")) s.textures = static_cast<Graphics::TextureQuality>(number);
+        else if (!strcmp(name, "frameRateLimit") && number <= 2) s.frameRateLimit = static_cast<Graphics::FrameRateLimit>(number);
+        else if (!strcmp(name, "vsync") && number <= 1) s.vsync = static_cast<Graphics::VSync>(number);
         else if (!strcmp(name, "fogLevel")) s.fogLevel = int(number);
         else if ((!strcmp(name, "hdr") || !strcmp(name, "bloom") || !strcmp(name, "modernSky")) && number <= 1)
         {
@@ -71,11 +74,12 @@ PyObject* systemSaveGraphicsSettings(PyObject*, PyObject*)
 PyObject* systemGetGraphicsRuntimeConfig(PyObject*, PyObject*)
 {
     const auto& r = Renderer::GetGraphicsRuntimeConfig();
-    return Py_BuildValue("{s:K,s:f,s:f,s:f,s:f,s:i,s:i,s:i,s:i,s:i,s:i}",
+    return Py_BuildValue("{s:K,s:f,s:f,s:f,s:f,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i}",
         "revision", static_cast<unsigned long long>(r.revision), "viewDistance", r.viewDistance,
         "vegetationDistanceScale", r.vegetationDistanceScale, "fogDistanceScale", r.fogDistanceScale,
         "fogDensity", r.fogDensity, "shadows", int(r.shadows), "ambientOcclusion", int(r.ambientOcclusion),
-        "hdr", int(r.hdr), "bloom", int(r.bloom), "modernSky", int(r.modernSky), "waterFrameMilliseconds", int(r.waterFrameMilliseconds));
+        "hdr", int(r.hdr), "bloom", int(r.bloom), "modernSky", int(r.modernSky), "waterFrameMilliseconds", int(r.waterFrameMilliseconds),
+        "frameRateLimit", int(r.frameRateLimit), "vsync", int(r.vsync));
 }
 
 PyObject * systemGetWidth(PyObject* poSelf, PyObject* poArgs)
@@ -484,6 +488,7 @@ void initsystem()
         { "TestVegetationTime", systemTestVegetationTime, METH_VARARGS },
         { "TestVegetationStats", systemTestVegetationStats, METH_VARARGS },
         { "TestWorldResidency", systemTestWorldResidency, METH_VARARGS },
+        { "TestActorTiming", systemTestActorTiming, METH_VARARGS },
 #endif
 		// MR-14: Fog update by Alaric
 		{ "GetFogLevel",				systemGetFogLevel,				METH_VARARGS },

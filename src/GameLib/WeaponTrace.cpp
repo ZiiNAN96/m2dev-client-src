@@ -28,6 +28,8 @@ CWeaponTrace* CWeaponTrace::New()
 void CWeaponTrace::Update(float fReachScale)
 {
 	float fElapsedTime = CTimer::Instance().GetCurrentSecond() - m_fLastUpdate;
+	// Multiple render/shadow passes at one game time must not add duplicate spline knots.
+	if (fElapsedTime <= 0.0f) return;
 	m_fLastUpdate = CTimer::Instance().GetCurrentSecond();
 	
 	if (!m_pInstance)

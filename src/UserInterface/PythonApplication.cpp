@@ -4,6 +4,7 @@
 #include "Renderer/GraphicsConfig.h"
 #include "Renderer/ModernFrame.h"
 #include "Graphics/AtmosphereConfig.h"
+#include "Graphics/FramePacingAudit.h"
 #include "eterBase/Error.h"
 #include "eterlib/Camera.h"
 #include "eterlib/AttributeInstance.h"
@@ -47,7 +48,6 @@ m_bCursorVisible(TRUE),
 m_bLiarCursorOn(false),
 m_iCursorMode(CURSOR_MODE_HARDWARE),
 m_isWindowed(false),
-m_isFrameSkipDisable(false),
 m_poMouseHandler(NULL),
 m_dwUpdateFPS(0),
 m_dwRenderFPS(0),
@@ -76,7 +76,6 @@ m_IsMovingMainWindow(false)
 	m_tLocalStartTime = 0;
 
 	m_iPort = 0;
-	m_iFPS = 60;
 
 	m_isActivateWnd = false;
 	m_isMinimizedWnd = true;
@@ -130,12 +129,10 @@ void CPythonApplication::SetMinFog(float fMinFog)
 	MIN_FOG = fMinFog;
 }
 
-void CPythonApplication::SetFrameSkip(bool isEnable)
+void CPythonApplication::SetFrameSkip(bool)
 {
-	if (isEnable)
-		m_isFrameSkipDisable=false;
-	else
-		m_isFrameSkipDisable=true;
+    // Compatibility entry for existing loading/game scripts. The fixed-step
+    // scheduler now bounds catch-up without suppressing presentation.
 }
 
 void CPythonApplication::NotifyHack(const char* c_szFormat, ...)
@@ -385,6 +382,10 @@ void CPythonApplication::UpdateGame()
 bool CPythonApplication::Process()
 {
     m_pySystem.FlushGraphicsSettings();
+    const auto frameStart = Platform::Time::MonotonicNanoseconds();
+    auto& pacing = Graphics::FramePacingAudit::capture;
+    if (pacing.enabled) { pacing.current = {}; pacing.current.start = frameStart; }
+    m_framePacer.Begin(frameStart, Renderer::GetGraphicsRuntimeConfig().frameRateLimit);
     if(AssetRuntime::AnimationStallAudit::fullCapture && !AssetRuntime::AnimationStallAudit::explicitPhase) {
         auto* actor=m_kChrMgr.GetMainInstancePtr();
         AssetRuntime::AnimationStallAudit::capturePhase=!m_pyNetworkStream.IsGamePhaseForDiagnostics()?0:
@@ -395,7 +396,7 @@ bool CPythonApplication::Process()
         m_isMinimizedWnd != 0, m_isActivateWnd != 0);
     // ZiiNAN: GPU skinning production path — no timers or capture in ordinary sessions.
     Renderer::SkinningBenchmarkProcessScope benchmarkProcess;
-	ELTimer_SetFrameMSec();
+
 
 	// 	m_Profiler.Clear();
 	DWORD dwStart = ELTimer_GetMSec();
@@ -419,10 +420,11 @@ bool CPythonApplication::Process()
 		s_uiLoad = s_dwFaceCount = s_dwUpdateFrameCount = s_dwRenderFrameCount = 0;
 	}
 
-	// Update Time
-	static BOOL s_bFrameSkip = false;
-	static UINT s_uiNextFrameTime = ELTimer_GetMSec();
-
+    const auto simulation = m_simulationClock.Poll(frameStart);
+    if (simulation.skippedMilliseconds) CTimer::Instance().Adjust(simulation.skippedMilliseconds);
+    for (unsigned step = 0; step < simulation.steps; ++step)
+    {
+    ELTimer_SetFrameMSec();
 #ifdef __PERFORMANCE_CHECK__
 	DWORD dwUpdateTime1=ELTimer_GetMSec();
 #endif
@@ -431,9 +433,6 @@ bool CPythonApplication::Process()
 
 	m_fGlobalTime = rkTimer.GetCurrentSecond();
 	m_fGlobalElapsedTime = rkTimer.GetElapsedSecond();
-
-	UINT uiFrameTime = rkTimer.GetElapsedMilliecond();
-	s_uiNextFrameTime += uiFrameTime;	//17 - 1ÃÊ´ç 60fps±âÁØ.
 
 	DWORD updatestart = ELTimer_GetMSec();
     AssetRuntime::AnimationStallAudit::WorkScope stallUpdate(AssetRuntime::AnimationStallAudit::Work::Update);
@@ -515,61 +514,12 @@ bool CPythonApplication::Process()
 	//UpdateÇÏ´Âµ¥ °É¸°½Ã°£.delta°ª
 	m_dwCurUpdateTime = ELTimer_GetMSec() - updatestart;
 
-	DWORD dwCurrentTime = ELTimer_GetMSec();
-	BOOL  bCurrentLateUpdate = FALSE;
+    // Authored legacy shimmer advances with simulation, never with render FPS.
+    CGrannyMaterial::TranslateSpecularMatrix(g_specularSpd, g_specularSpd, 0.0f);
+    ++s_dwUpdateFrameCount;
+    }
 
-	s_bFrameSkip = false;
-
-	if (dwCurrentTime > s_uiNextFrameTime)
-	{
-		int dt = dwCurrentTime - s_uiNextFrameTime;
-		int nAdjustTime = ((float)dt / (float)uiFrameTime) * uiFrameTime; 
-
-		if ( dt >= 500 )
-		{
-			s_uiNextFrameTime += nAdjustTime; 
-			printf("FrameSkip º¸Á¤ %d\n",nAdjustTime);
-			CTimer::Instance().Adjust(nAdjustTime);
-		}
-
-		s_bFrameSkip = true;
-		bCurrentLateUpdate = TRUE;
-	}
-
-	//s_bFrameSkip = false;
-
-	//if (dwCurrentTime > s_uiNextFrameTime)
-	//{
-	//	int dt = dwCurrentTime - s_uiNextFrameTime;
-
-	//	//³Ê¹« ´Ê¾úÀ» °æ¿ì µû¶óÀâ´Â´Ù.
-	//	//±×¸®°í m_dwCurUpdateTime´Â deltaÀÎµ¥ delta¶û absolute timeÀÌ¶û ºñ±³ÇÏ¸é ¾îÂ¼ÀÚ´Â°Ü?
-	//	//if (dt >= 500 || m_dwCurUpdateTime > s_uiNextFrameTime)
-
-	//	//±âÁ¸ÄÚµå´ë·Î ÇÏ¸é 0.5ÃÊ ÀÌÇÏ Â÷ÀÌ³­ »óÅÂ·Î update°¡ Áö¼ÓµÇ¸é °è¼Ó rendering frame skip¹ß»ý
-	//	if (dt >= 500 || m_dwCurUpdateTime > s_uiNextFrameTime)
-	//	{
-	//		s_uiNextFrameTime += dt / uiFrameTime * uiFrameTime; 
-	//		printf("FrameSkip º¸Á¤ %d\n", dt / uiFrameTime * uiFrameTime);
-	//		CTimer::Instance().Adjust((dt / uiFrameTime) * uiFrameTime);
-	//		s_bFrameSkip = true;
-	//	}
-	//}
-
-	if (m_isFrameSkipDisable)
-		s_bFrameSkip = false;
-
-#ifdef __VTUNE__
-	s_bFrameSkip = false;
-#endif
-	if (!s_bFrameSkip)
-	{
-		//		static double pos=0.0f;
-		//		CGrannyMaterial::TranslateSpecularMatrix(fabs(sin(pos)*0.005), fabs(cos(pos)*0.005), 0.0f);
-		//		pos+=0.01f;
-
-		CGrannyMaterial::TranslateSpecularMatrix(g_specularSpd, g_specularSpd, 0.0f);
-
+    {
 		DWORD dwRenderStartTime = ELTimer_GetMSec();		
 
 		bool canRender = true;
@@ -647,7 +597,7 @@ bool CPythonApplication::Process()
 					m_dwFaceAccCount += dwCurFaceCount;
 					m_dwFaceAccTime += m_dwCurRenderTime;
 
-					m_fFaceSpd=(m_dwFaceAccCount/m_dwFaceAccTime);
+					m_fFaceSpd = m_dwFaceAccCount / std::max(1ul, m_dwFaceAccTime);
 
 					// °Å¸® ÀÚµ¿ Á¶Àý
 					if (-1 == m_iForceSightRange)
@@ -682,16 +632,28 @@ bool CPythonApplication::Process()
 	}
 
     benchmarkProcess.BeforeFrameLimit();
-	int rest = s_uiNextFrameTime - ELTimer_GetMSec();
-
-	if (rest > 0 && !bCurrentLateUpdate )
-	{
-		s_uiLoad -= rest;	// ½® ½Ã°£Àº ·Îµå¿¡¼­ »«´Ù..
+    const auto waitStart = Platform::Time::MonotonicNanoseconds();
+    {
         AssetRuntime::AnimationStallAudit::WorkScope stallSleep(AssetRuntime::AnimationStallAudit::Work::Sleep);
-		Platform::Time::SleepMilliseconds(static_cast<std::uint32_t>(rest));
-	}	
+        if (m_isMinimizedWnd)
+            Platform::Time::SleepMilliseconds(16); // Background throttle, independent of foreground FPS.
+        else if (const auto deadline = m_framePacer.Deadline())
+            Platform::Time::SleepUntilNanoseconds(deadline);
+    }
+    const auto waitEnd = Platform::Time::MonotonicNanoseconds();
+    m_framePacer.End(waitEnd);
+    if (pacing.enabled)
+    {
+        pacing.current.wait = waitEnd - waitStart;
+        pacing.current.gameMilliseconds = CTimer::Instance().GetCurrentMillisecond();
+        pacing.current.steps = simulation.steps;
+        pacing.current.skippedMilliseconds = simulation.skippedMilliseconds;
+        pacing.current.limit = Graphics::FrameRate(Renderer::GetGraphicsRuntimeConfig().frameRateLimit);
+        pacing.current.vsync = Graphics::PresentInterval(Renderer::GetGraphicsRuntimeConfig().vsync);
+        pacing.Finish();
+    }
 
-	++s_dwUpdateFrameCount;
+    s_uiLoad -= static_cast<UINT>((waitEnd - waitStart) / Graphics::NanosecondsPerMillisecond);
 
 	s_uiLoad += ELTimer_GetMSec() - dwStart;
 	//m_Profiler.ProfileByScreen();	
@@ -1103,7 +1065,16 @@ float CPythonApplication::GetGlobalElapsedTime()
 
 void CPythonApplication::SetFPS(int iFPS)
 {
-	m_iFPS = iFPS;
+    // Legacy Python entry point uses the same central settings as the menu.
+    auto settings = m_pySystem.GetGraphicsSettings();
+    if (iFPS == int(Graphics::FrameRate(Graphics::FrameRateLimit::FPS60)))
+        settings.frameRateLimit = Graphics::FrameRateLimit::FPS60;
+    else if (iFPS == int(Graphics::FrameRate(Graphics::FrameRateLimit::FPS120)))
+        settings.frameRateLimit = Graphics::FrameRateLimit::FPS120;
+    else if (iFPS == int(Graphics::FrameRate(Graphics::FrameRateLimit::Unlimited)))
+        settings.frameRateLimit = Graphics::FrameRateLimit::Unlimited;
+    else return;
+    m_pySystem.ApplyGraphicsSettings(settings);
 }
 
 int CPythonApplication::GetWidth()

@@ -25,6 +25,7 @@ struct StartupOptions
     bool animationRuntimeSelected=false;
     bool animationStallAudit=false;
     bool loadWarmupAudit=false;
+    bool framePacingCapture=false;
     bool gr2Prewarm=true,gr2PrewarmSelected=false;
     AssetRuntime::GR2ReaderMode gr2Reader=AssetRuntime::GR2ReaderMode::ZiiNAN;
     bool gr2ReaderSelected=false;
@@ -44,6 +45,7 @@ struct StartupOptions
         }
         if (argument == L"--animation-stall-audit") { animationStallAudit=true; return; }
         if (argument == L"--load-warmup-audit") { loadWarmupAudit=true; return; }
+        if (argument == L"--frame-pacing-capture") { framePacingCapture=true; return; }
         if (argument.starts_with(L"--gr2-prewarm=")) {
             const auto value=argument.substr(14);
             if(value!=L"on" && value!=L"off") { valid=false; return; }

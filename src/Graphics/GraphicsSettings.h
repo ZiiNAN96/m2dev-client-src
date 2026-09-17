@@ -22,6 +22,13 @@ enum class AmbientOcclusionQuality { Off, SSAO, GTAO };
 enum class WaterQuality { Low, Medium, High, Ultra };
 enum class VegetationQuality { Low, Medium, High, Ultra };
 enum class TextureQuality { Medium, High, Ultra };
+enum class FrameRateLimit { FPS60, FPS120, Unlimited };
+enum class VSync { Off, On };
+constexpr unsigned FrameRate(FrameRateLimit limit)
+{
+    return limit == FrameRateLimit::FPS60 ? 60 : limit == FrameRateLimit::FPS120 ? 120 : 0;
+}
+constexpr unsigned PresentInterval(VSync vsync) { return vsync == VSync::On ? 1 : 0; }
 
 struct GraphicsSettings
 {
@@ -35,6 +42,8 @@ struct GraphicsSettings
     bool hdr{}, bloom{}, modernSky{};
     float viewDistance{DefaultViewDistance};
     int fogLevel{}; // Classic-only dense / middle / light choice.
+    FrameRateLimit frameRateLimit{FrameRateLimit::FPS60};
+    VSync vsync{VSync::On}; // Preserve the previous Present(1) default.
     bool operator==(const GraphicsSettings&) const = default;
 };
 
@@ -53,6 +62,8 @@ struct GraphicsRuntimeConfig
     float vegetationDistanceScale{1.f};
     float fogDistanceScale{.75f}, fogDensity{.000006f};
     unsigned shadowTextureSize{512}, waterFrameMilliseconds{70};
+    FrameRateLimit frameRateLimit{FrameRateLimit::FPS60};
+    VSync vsync{VSync::On};
 };
 
 struct GraphicsFeatures
@@ -69,7 +80,7 @@ enum Change : std::uint32_t
 {
     NoChange = 0, RendererChanged = 1, ShadowsChanged = 2,
     VegetationChanged = 4, ViewDistanceChanged = 8, FogChanged = 16,
-    WaterChanged = 32, ReservedChanged = 64, AllChanged = 127
+    WaterChanged = 32, ReservedChanged = 64, FramePacingChanged = 128, AllChanged = 255
 };
 enum class ApplyCategory { Live, PipelineRebuild, RestartRequired };
 struct GraphicsSettingsChanged
