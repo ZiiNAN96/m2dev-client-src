@@ -4,6 +4,7 @@
 #include "EterLib/Camera.h"
 #include "PackLib/PackManager.h"
 #include "Renderer/AssetMaterialRenderData.h"
+#include "Renderer/EffectRenderData.h"
 #include <stb_image_write.h>
 #include <iostream>
 #include <stdexcept>
@@ -31,13 +32,46 @@ static std::shared_ptr<AssetRuntime::EncodedImage> Image(bool jpeg = false)
 struct UploadProbe final : Renderer::ITextureUploader
 {
     unsigned uploads{};
+    std::vector<uint8_t> pixels;
     Renderer::TerrainTexturePtr UploadTexture(const Renderer::TerrainTextureData& data) override
     {
         ++uploads;
         Check(data.width && data.height && !data.mips.empty(), "Decoded image reaches existing uploader");
+        const auto* begin = static_cast<const uint8_t*>(data.mips[0].data);
+        pixels.assign(begin, begin + data.mips[0].size);
         return std::make_shared<Renderer::TerrainTexture>();
     }
 };
+
+static void CheckEffectImageLifetime()
+{
+    struct FileImage : CGraphicImage {
+        FileImage() : CGraphicImage("asset-test:effect.png") {}
+        using CGraphicImage::OnLoad;
+        using CGraphicImage::OnClear;
+    } image;
+    const auto encoded = Image();
+    Check(image.OnLoad(static_cast<int>(encoded->bytes.size()), encoded->bytes.data()), "Ordinary effect image decoded");
+    const auto source = image.GetTexturePointer()->GetTextureBinding().source;
+    UploadProbe uploader;
+    std::weak_ptr<Renderer::TerrainTexture> retained;
+    for (unsigned instance = 0; instance != 30; ++instance) {
+        Renderer::EffectResources effect;
+        effect.textures[image.GetFileName()] = image.GetAssetTexture(uploader);
+        Check(bool(effect.textures.begin()->second), "Short-lived effect receives image texture");
+        if (instance == 0) retained = effect.textures.begin()->second;
+        else Check(retained.lock() == effect.textures.begin()->second, "Repeated effects reuse the native image upload");
+    }
+    Check(uploader.uploads == 1 && !retained.expired(), "Ending particle instances does not evict a live image");
+    Check(uploader.pixels == source->mips[0].pixels, "Effect upload preserves decoded image bytes and alpha");
+    image.DestroyDeviceObjects();
+    Check(retained.expired(), "Device destruction releases the image-owned GPU texture");
+    Check(image.OnLoad(static_cast<int>(encoded->bytes.size()), encoded->bytes.data()), "Effect image reload");
+    retained = image.GetAssetTexture(uploader);
+    Check(uploader.uploads == 2 && !retained.expired(), "Reload receives a fresh GPU upload");
+    image.OnClear();
+    Check(retained.expired(), "Resource clear releases the cached effect texture");
+}
 
 static void CheckStates()
 {
@@ -80,6 +114,7 @@ int main()
         CPackManager packs;
         CResourceManager resources;
         const auto initialSources = Renderer::liveSourceTextures.load();
+        CheckEffectImageLifetime();
         UploadProbe firstUploader, secondUploader;
         std::weak_ptr<const AssetRuntime::EncodedImage> retainedPayload;
         {

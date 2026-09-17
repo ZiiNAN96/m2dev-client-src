@@ -5,10 +5,10 @@
 #include "EterLib/MaterialStateSnapshot.h"
 #include "EterLib/DrawState.h"
 #include "EterLib/GrpImage.h"
-#include "EterLib/StaticObjectTextureLoader.h"
 #include "Renderer/Diagnostics.h"
 #include <fstream>
 #include <set>
+#include <vector>
 
 namespace
 {
@@ -17,16 +17,32 @@ EffectResources* owner=nullptr;
 const char* asset=nullptr;
 EffectPart part=EffectPart::Particle;
 uint64_t serial=~uint64_t(0);
-std::unordered_map<const void*,std::string> textureNames;
-std::unordered_map<std::string,std::weak_ptr<TerrainTexture>> textures;
+// Native effect images own decoded pixels and uploader-specific GPU textures.
+// This lookup is only used synchronously within the current effect frame.
+std::unordered_map<const void*,CGraphicImage*> textureImages;
 std::set<std::string> reported;
-std::ofstream diagnostics;
+struct EffectDiagnostics {
+    std::ofstream stream;
+    std::vector<std::string> pending;
+    ~EffectDiagnostics() { Flush(); }
+    void Flush() {
+        if(pending.empty()) return;
+        if(!stream.is_open()) stream.open("effect-renderer.log",std::ios::trunc);
+        for(const auto& line:pending) stream << line << '\n';
+        pending.clear();stream.flush();
+    }
+    void Record(const std::string& key,bool error) {
+        // Report caps unique messages at 256. Successful first-use diagnostics
+        // must not stall rendering on file I/O; errors still flush immediately.
+        pending.push_back(error ? "ERROR "+key : key);
+        if(error) Flush();
+    }
+} diagnostics;
 bool Active() { return owner && effectWorldFrame && effectRenderer; }
 void Frame()
 {
     if(serial==effectFrameSerial) return;
-    serial=effectFrameSerial; textureNames.clear();
-    for(auto it=textures.begin();it!=textures.end();) if(it->second.expired()) it=textures.erase(it); else ++it;
+    serial=effectFrameSerial; textureImages.clear();
 }
 void Report(const std::string& reason,bool error)
 {
@@ -34,8 +50,7 @@ void Report(const std::string& reason,bool error)
     if(!verboseDiagnostics) return;
     const std::string key=std::string(asset ? asset : "trail")+" "+reason;
     if(reported.size()>=256 || !reported.insert(key).second) return;
-    if(!diagnostics.is_open()) diagnostics.open("effect-renderer.log",std::ios::trunc);
-    diagnostics << (error ? "ERROR " : "") << key << std::endl;
+    diagnostics.Record(key,error);
 }
 bool Snapshot(EffectDraw& d)
 {
@@ -60,7 +75,7 @@ void EffectRenderBridge::Texture(CGraphicImage* image)
 {
     if(!Active() || !image) return;
     Frame();
-    if(auto* texture=image->GetTexturePointer()->GetTextureBinding().Identity()) textureNames[texture]=image->GetFileName();
+    if(auto* texture=image->GetTexturePointer()->GetTextureBinding().Identity()) textureImages[texture]=image;
 }
 void EffectRenderBridge::Part(Renderer::EffectPart p) { part=p; }
 void EffectRenderBridge::VisibleParticle() { if(Active()) ++Renderer::effectVisibleParticles; }
@@ -76,15 +91,19 @@ void EffectRenderBridge::Submit(Renderer::PrimitiveTopology topology,UINT primit
     draw.textured=bool(bound);
     TerrainTexturePtr texture;
     if(bound) {
-        auto found=textureNames.find(bound.Identity());
-        if(found==textureNames.end()) { Report("unresolved native texture",true); return; }
-        auto& owned=owner->textures[found->second];
+        auto found=textureImages.find(bound.Identity());
+        if(found==textureImages.end()) { Report("unresolved native texture",true); return; }
+        const std::string filename=found->second->GetFileName();
+        auto& owned=owner->textures[filename];
         if(!owned) {
-            auto& shared=textures[found->second]; owned=shared.lock();
-            if(!owned) { owned=LoadStaticObjectTextureFile(found->second.c_str(),*effectRenderer); shared=owned; }
-            if(owned) Report("texture "+found->second,false);
+            // Reuse the already decoded native image instead of reopening its pack
+            // whenever a short-lived particle instance drops its last weak handle.
+            // The image cache is invalidated by device/resource destruction and
+            // distinguishes uploader lifetimes, including recreation at one address.
+            owned=found->second->GetAssetTexture(*effectRenderer);
+            if(owned) Report("texture "+filename,false);
         }
-        if(!owned) { Report("texture upload "+found->second,true); return; }
+        if(!owned) { Report("texture upload "+filename,true); return; }
         texture=owned;
     }
     if(!Snapshot(draw) || !EffectDrawValid(draw,count)) {

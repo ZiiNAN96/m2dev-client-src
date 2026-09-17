@@ -76,6 +76,30 @@ int main()
             const auto stats=Renderer::modernFrame->Stats();
             Check(stats.lightBufferCreations==1&&stats.lightUploads==3,"one shared light buffer and one upload per rendered scene");
             Check(stats.meshDraws==41&&stats.terrainDraws==2&&stats.shadowDraws==126,"all geometry uses shared color and cascade passes");
+            // Exercise one cached mesh SRB with changing resources, then reuse it
+            // after End clears asset bindings. Constants and draws remain live.
+            const std::array<unsigned char,4> redPixel{255,0,0,255},bluePixel{0,0,255,255};
+            Renderer::TerrainTextureData bindingImage;
+            bindingImage.width=bindingImage.height=1;bindingImage.format=Renderer::TerrainTextureFormat::RGBA8;
+            bindingImage.mips.push_back({redPixel.data(),4,4});auto redTexture=meshRenderer.UploadTexture(bindingImage);
+            bindingImage.mips[0]={bluePixel.data(),4,4};auto blueTexture=meshRenderer.UploadTexture(bindingImage);
+            Check(redTexture&&blueTexture,"binding cache fixture textures");
+            const auto renderBindings=[&](const Renderer::TerrainTexturePtr& last) {
+                Check(backend.BeginFrame(),"binding cache frame");
+                backend.Clear({true,Renderer::ClearColor{0,0,0,1}});
+                Renderer::modernFrame->Begin(light);
+                meshRenderer.Draw(geometry,redTexture,draw);
+                meshRenderer.Draw(geometry,blueTexture,draw);
+                meshRenderer.Draw(geometry,last,draw);
+                Renderer::modernFrame->End();
+                Check(backend.CaptureRGB(pixels,width,height),"binding cache readback");
+                const std::array<unsigned char,3> result{pixels[center],pixels[center+1],pixels[center+2]};
+                backend.EndFrame();backend.Present();meshRenderer.ReleaseBindings();
+                return result;
+            };
+            const auto redFrame=renderBindings(redTexture),blueFrame=renderBindings(blueTexture),redAgain=renderBindings(redTexture);
+            Check(redFrame[0]>redFrame[2]+60&&blueFrame[2]>blueFrame[0]+60,"Resource changes on one mesh pipeline reach the GPU");
+            Check(redFrame==redAgain,"Asset unbind and rebind preserves the next frame output");
             // Upstream SSAO fades in over one second after pipeline creation.
             // Wait once, then compare actual contact shading rather than the
             // initial neutral image or merely successful resource allocation.

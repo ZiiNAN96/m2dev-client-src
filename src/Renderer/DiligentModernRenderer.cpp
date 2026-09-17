@@ -140,7 +140,51 @@ struct DiligentModernRenderer::Impl
     RefCntAutoPtr<ISampler> shadowSampler;
     std::map<unsigned,RefCntAutoPtr<ISampler>> materialSamplers;
     struct Pipeline {RefCntAutoPtr<IPipelineState> pso;RefCntAutoPtr<IShaderResourceBinding> srb;};
-    std::map<unsigned,Pipeline> pipelines;
+    // A mesh SRB owns its bindings. Resolve optional shader variables once,
+    // then only change resources whose identity differs from the current binding.
+    enum class MeshBinding {ObjectVS,ObjectPS,Lighting,BRDF,Irradiance,SkyIrradiance,SkyEnvironment,IBLSampler,Composite,ShadowMap,ShadowSampler,ScreenAO,Palette,BaseMap,NormalMap,RoughnessMap,MetallicMap,AOMap,EmissiveMap,MaterialSampler,CameraAlpha,CameraAlphaSampler,Count};
+    struct MeshPipeline : Pipeline {
+        struct Binding {IShaderResourceVariable* variable{};IDeviceObject* resource{};};
+        std::array<Binding,static_cast<size_t>(MeshBinding::Count)> bindings{};
+        void InitializeBindings() {
+            bindings[static_cast<size_t>(MeshBinding::ObjectVS)].variable=srb->GetVariableByName(SHADER_TYPE_VERTEX,"ModernObject");
+            bindings[static_cast<size_t>(MeshBinding::ObjectPS)].variable=srb->GetVariableByName(SHADER_TYPE_PIXEL,"ModernObject");
+            bindings[static_cast<size_t>(MeshBinding::Lighting)].variable=srb->GetVariableByName(SHADER_TYPE_PIXEL,"ModernLighting");
+            bindings[static_cast<size_t>(MeshBinding::BRDF)].variable=srb->GetVariableByName(SHADER_TYPE_PIXEL,"PreintegratedBRDF");
+            bindings[static_cast<size_t>(MeshBinding::Irradiance)].variable=srb->GetVariableByName(SHADER_TYPE_PIXEL,"IrradianceMap");
+            bindings[static_cast<size_t>(MeshBinding::SkyIrradiance)].variable=srb->GetVariableByName(SHADER_TYPE_PIXEL,"SkyIrradiance");
+            bindings[static_cast<size_t>(MeshBinding::SkyEnvironment)].variable=srb->GetVariableByName(SHADER_TYPE_PIXEL,"SkyEnvironment");
+            bindings[static_cast<size_t>(MeshBinding::IBLSampler)].variable=srb->GetVariableByName(SHADER_TYPE_PIXEL,"IBLSampler");
+            bindings[static_cast<size_t>(MeshBinding::Composite)].variable=srb->GetVariableByName(SHADER_TYPE_PIXEL,"Composite");
+            bindings[static_cast<size_t>(MeshBinding::ShadowMap)].variable=srb->GetVariableByName(SHADER_TYPE_PIXEL,"ShadowMap");
+            bindings[static_cast<size_t>(MeshBinding::ShadowSampler)].variable=srb->GetVariableByName(SHADER_TYPE_PIXEL,"ShadowSampler");
+            bindings[static_cast<size_t>(MeshBinding::ScreenAO)].variable=srb->GetVariableByName(SHADER_TYPE_PIXEL,"ScreenAO");
+            bindings[static_cast<size_t>(MeshBinding::Palette)].variable=srb->GetVariableByName(SHADER_TYPE_VERTEX,"SkinningPalette");
+            bindings[static_cast<size_t>(MeshBinding::BaseMap)].variable=srb->GetVariableByName(SHADER_TYPE_PIXEL,"BaseMap");
+            bindings[static_cast<size_t>(MeshBinding::NormalMap)].variable=srb->GetVariableByName(SHADER_TYPE_PIXEL,"NormalMap");
+            bindings[static_cast<size_t>(MeshBinding::RoughnessMap)].variable=srb->GetVariableByName(SHADER_TYPE_PIXEL,"RoughnessMap");
+            bindings[static_cast<size_t>(MeshBinding::MetallicMap)].variable=srb->GetVariableByName(SHADER_TYPE_PIXEL,"MetallicMap");
+            bindings[static_cast<size_t>(MeshBinding::AOMap)].variable=srb->GetVariableByName(SHADER_TYPE_PIXEL,"AOMap");
+            bindings[static_cast<size_t>(MeshBinding::EmissiveMap)].variable=srb->GetVariableByName(SHADER_TYPE_PIXEL,"EmissiveMap");
+            bindings[static_cast<size_t>(MeshBinding::MaterialSampler)].variable=srb->GetVariableByName(SHADER_TYPE_PIXEL,"MaterialSampler");
+            bindings[static_cast<size_t>(MeshBinding::CameraAlpha)].variable=srb->GetVariableByName(SHADER_TYPE_PIXEL,"CameraAlphaTexture");
+            bindings[static_cast<size_t>(MeshBinding::CameraAlphaSampler)].variable=srb->GetVariableByName(SHADER_TYPE_PIXEL,"CameraAlphaSampler");
+        }
+        void Bind(MeshBinding slot,IDeviceObject* resource) {
+            auto& binding=bindings[static_cast<size_t>(slot)];
+            if(binding.variable&&binding.resource!=resource) {
+                binding.variable->Set(resource);binding.resource=resource;
+            }
+        }
+        void UnbindAssets() {
+            // Preserve the existing map-change lifetime boundary, and invalidate
+            // the cache together with the SRB so the next draw always rebinds.
+            for(auto slot:{MeshBinding::BaseMap,MeshBinding::NormalMap,MeshBinding::RoughnessMap,
+                MeshBinding::MetallicMap,MeshBinding::AOMap,MeshBinding::EmissiveMap,
+                MeshBinding::Palette,MeshBinding::ScreenAO,MeshBinding::ShadowMap,MeshBinding::CameraAlpha})Bind(slot,nullptr);
+        }
+    };
+    std::map<unsigned,MeshPipeline> pipelines;
     std::array<RefCntAutoPtr<IShader>,36> vertexShaders,pixelShaders;
     std::array<RefCntAutoPtr<IShader>,4> terrainVS,terrainPS;
     Pipeline composite;
@@ -245,7 +289,7 @@ struct DiligentModernRenderer::Impl
         pixelShaders[shaderIndex]=Shader(modernMeshShader,"ModernPS",SHADER_TYPE_PIXEL,macros);
         ++stats.meshShaderVariants;
     }
-    Pipeline& GetPipeline(const ModernMeshSubmission& draw,bool shadowPass,bool forwardPass) {
+    MeshPipeline& GetPipeline(const ModernMeshSubmission& draw,bool shadowPass,bool forwardPass) {
         ShaderLoadAudit::Domain p0lDomain(shadowPass?"shadow":draw.auxiliary||draw.instances?"vegetation":"PBR");
         const unsigned geometry=draw.skinned?1:draw.auxiliary?2:0;
         const unsigned shaderIndex=geometry+(shadowPass?3:forwardPass?6:0)+(draw.tangents?9:0)+(draw.instances?18:0);
@@ -288,7 +332,7 @@ struct DiligentModernRenderer::Impl
         ci.pVS=vertexShaders[shaderIndex];ci.pPS=pixelShaders[shaderIndex];
         {FirstUseAudit timing("pso",ci.PSODesc.Name);{ MapLoadTrace::Scope p0lCreate("Shaders / PSOs","CreateGraphicsPipelineState","gpu-api"); MapLoadTrace::Count("CreateGraphicsPipelineState","",0,true); State().device->CreateGraphicsPipelineState(ci,&result.pso); }}Require(bool(result.pso),"G-DX mesh PSO");
         ++stats.psoCount;
-        ShaderLoadAudit::CreateSRB(result.pso,&result.srb,true);Require(bool(result.srb),"G-DX mesh SRB");return result;
+        ShaderLoadAudit::CreateSRB(result.pso,&result.srb,true);Require(bool(result.srb),"G-DX mesh SRB");result.InitializeBindings();return result;
     }
     static void Set(IShaderResourceBinding* srb,SHADER_TYPE stage,const char* name,IDeviceObject* resource) {
         if(auto* variable=srb->GetVariableByName(stage,name))variable->Set(resource);
@@ -328,26 +372,27 @@ struct DiligentModernRenderer::Impl
         constants.legacyTint={item.draw.textureFactor[0],item.draw.textureFactor[1],item.draw.textureFactor[2],
             item.draw.materialBaseColorInFactor?0.f:float(item.draw.actorStage)};
         {MapHelper<ObjectConstants> mapped(state.context,objectCB,MAP_WRITE,MAP_FLAG_DISCARD);Require(bool(mapped),"G-DX object map");*mapped=constants;}
-        for(auto stage:{SHADER_TYPE_VERTEX,SHADER_TYPE_PIXEL})Set(pipeline.srb,stage,"ModernObject",objectCB);
-        Set(pipeline.srb,SHADER_TYPE_PIXEL,"ModernLighting",lightCB);
-        Set(pipeline.srb,SHADER_TYPE_PIXEL,"PreintegratedBRDF",brdf->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE));
-        Set(pipeline.srb,SHADER_TYPE_PIXEL,"IrradianceMap",unitEnvironment->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE));
-        Set(pipeline.srb,SHADER_TYPE_PIXEL,"SkyIrradiance",atmosphere->Irradiance());
-        Set(pipeline.srb,SHADER_TYPE_PIXEL,"SkyEnvironment",atmosphere->PrefilteredEnvironment());
-        Set(pipeline.srb,SHADER_TYPE_PIXEL,"IBLSampler",iblSampler);
+        pipeline.Bind(MeshBinding::ObjectVS,objectCB);pipeline.Bind(MeshBinding::ObjectPS,objectCB);
+        pipeline.Bind(MeshBinding::Lighting,lightCB);
+        pipeline.Bind(MeshBinding::BRDF,brdf->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE));
+        pipeline.Bind(MeshBinding::Irradiance,unitEnvironment->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE));
+        pipeline.Bind(MeshBinding::SkyIrradiance,atmosphere->Irradiance());
+        pipeline.Bind(MeshBinding::SkyEnvironment,atmosphere->PrefilteredEnvironment());
+        pipeline.Bind(MeshBinding::IBLSampler,iblSampler);
         if(forwardPass) {
-            Set(pipeline.srb,SHADER_TYPE_PIXEL,"Composite",compositeCB);
-            Set(pipeline.srb,SHADER_TYPE_PIXEL,"ShadowMap",shadow->GetSRV());Set(pipeline.srb,SHADER_TYPE_PIXEL,"ShadowSampler",shadowSampler);
+            pipeline.Bind(MeshBinding::Composite,compositeCB);
+            pipeline.Bind(MeshBinding::ShadowMap,shadow->GetSRV());pipeline.Bind(MeshBinding::ShadowSampler,shadowSampler);
             auto* aoTexture=config.ambientOcclusion!=Graphics::AmbientOcclusionQuality::Off&&ao?ao->GetAmbientOcclusionSRV():white->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE);
-            Set(pipeline.srb,SHADER_TYPE_PIXEL,"ScreenAO",aoTexture);
+            pipeline.Bind(MeshBinding::ScreenAO,aoTexture);
         }
-        Set(pipeline.srb,SHADER_TYPE_VERTEX,"SkinningPalette",item.palette);
-        const char* names[]{"BaseMap","NormalMap","RoughnessMap","MetallicMap","AOMap","EmissiveMap"};
-        for(unsigned i=0;i<6;++i)Set(pipeline.srb,SHADER_TYPE_PIXEL,names[i],item.textures[i]?item.textures[i].RawPtr():item.textures[0].RawPtr());
-        Set(pipeline.srb,SHADER_TYPE_PIXEL,"MaterialSampler",MaterialSampler(item.draw.sampling,item.draw.anisotropic,item.draw.maxAnisotropy));
-        Set(pipeline.srb,SHADER_TYPE_PIXEL,"CameraAlphaTexture",item.sphereMap?item.sphereMap.RawPtr():
+        pipeline.Bind(MeshBinding::Palette,item.palette);
+        constexpr MeshBinding maps[]{MeshBinding::BaseMap,MeshBinding::NormalMap,MeshBinding::RoughnessMap,
+            MeshBinding::MetallicMap,MeshBinding::AOMap,MeshBinding::EmissiveMap};
+        for(unsigned i=0;i<6;++i)pipeline.Bind(maps[i],item.textures[i]?item.textures[i].RawPtr():item.textures[0].RawPtr());
+        pipeline.Bind(MeshBinding::MaterialSampler,MaterialSampler(item.draw.sampling,item.draw.anisotropic,item.draw.maxAnisotropy));
+        pipeline.Bind(MeshBinding::CameraAlpha,item.sphereMap?item.sphereMap.RawPtr():
             item.cameraAlpha?item.cameraAlpha.RawPtr():item.textures[0].RawPtr());
-        Set(pipeline.srb,SHADER_TYPE_PIXEL,"CameraAlphaSampler",MaterialSampler(item.draw.cameraAlphaSampling,item.draw.cameraAlphaAnisotropic,item.draw.cameraAlphaMaxAnisotropy));
+        pipeline.Bind(MeshBinding::CameraAlphaSampler,MaterialSampler(item.draw.cameraAlphaSampling,item.draw.cameraAlphaAnisotropic,item.draw.cameraAlphaMaxAnisotropy));
         state.context->SetPipelineState(pipeline.pso);
         IBuffer* buffers[]{item.vertices,item.extras,item.tangents,item.instances};Uint64 offsets[]{0,0,item.tangentOffset,0};
         state.context->SetVertexBuffers(0,item.instances?4:item.tangents?3:item.auxiliary?2:1,buffers,offsets,RESOURCE_STATE_TRANSITION_MODE_TRANSITION,SET_VERTEX_BUFFERS_FLAG_RESET);
@@ -450,8 +495,7 @@ bool DiligentModernRenderer::Active() const {return impl_->active||impl_->forwar
 void DiligentModernRenderer::BeginForwardWorld() {impl_->forward=impl_->hasCamera&&impl_->hasDepth&&!impl_->active;if(impl_->forward){impl_->worldOpen=true;BindWorldTarget();}}
 void DiligentModernRenderer::EndForwardWorld() {
     auto& s=*impl_;s.forward=false;
-    for(auto& pair:s.pipelines)for(auto stage:{SHADER_TYPE_VERTEX,SHADER_TYPE_PIXEL})
-        for(const char* name:{"BaseMap","NormalMap","RoughnessMap","MetallicMap","AOMap","EmissiveMap","SkinningPalette","ScreenAO","ShadowMap","CameraAlphaTexture"})Impl::Set(pair.second.srb,stage,name,nullptr);
+    for(auto& pair:s.pipelines)pair.second.UnbindAssets();
     if(!s.deferToneMapping)FinishWorld();
 }
 void DiligentModernRenderer::ResetFrame() {shadowCasterCollection=false;impl_->worldOpen=impl_->sceneReady=impl_->active=impl_->forward=impl_->hasDepth=false;impl_->casters.clear();impl_->terrainCasters.clear();impl_->transparent.clear();if(impl_->water)impl_->water->ResetFrame();impl_->waterStarted=impl_->waterFinished=false;}
@@ -691,8 +735,7 @@ void DiligentModernRenderer::End() {
     s.casters.clear();
     s.terrainCasters.clear();
     // Dynamic SRBs must not keep assets or palettes alive across map changes.
-    for(auto& pair:s.pipelines)for(auto stage:{SHADER_TYPE_VERTEX,SHADER_TYPE_PIXEL})
-        for(const char* name:{"BaseMap","NormalMap","RoughnessMap","MetallicMap","AOMap","EmissiveMap","SkinningPalette","ScreenAO","ShadowMap","CameraAlphaTexture"})Impl::Set(pair.second.srb,stage,name,nullptr);
+    for(auto& pair:s.pipelines)pair.second.UnbindAssets();
     for(auto& pair:s.terrainPipelines)for(const char* name:{"ColorTexture","AlphaTexture"})Impl::Set(pair.second.srb,SHADER_TYPE_PIXEL,name,nullptr);
     if(!s.deferToneMapping)FinishWorld();
 }
