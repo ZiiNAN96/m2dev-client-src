@@ -1,4 +1,5 @@
 #include "GR2File.h"
+#include "EterBase/MapLoadTrace.h"
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -23,6 +24,8 @@ std::uint32_t U32(std::span<const std::byte> bytes, std::size_t offset)
 }
 Header Inspect(std::span<const std::byte> bytes, bool verifyChecksum)
 {
+    MapLoadTrace::Scope p0lScope("Assets","GR2 header checksum","cpu");
+
     Require(bytes.size() <= MaximumFileBytes, "file allocation limit");
     Range(0, 32, bytes.size());
     const std::array<std::uint32_t, 4> oldMagic{0xcab067b8,0x0fb16df8,0x7e8c7284,0x1e00195e};
@@ -92,7 +95,16 @@ Header Inspect(std::span<const std::byte> bytes, bool verifyChecksum)
 }
 File::File(std::span<const std::byte> bytes) : header(Inspect(bytes))
 {
-    for (const auto& section : header.sections) sections_.push_back(Decompress(section, bytes.subspan(section.offset, section.compressed)));
+    MapLoadTrace::Scope p0lScope("Assets","GR2 relocations","cpu");
+    MapLoadTrace::Count("gr2-payload-crc",MapLoadTrace::state.gr2Path,header.crc);
+
+    for (std::size_t i=0;i<header.sections.size();++i) {
+        const auto& section=header.sections[i];
+        MapLoadTrace::Count("gr2-section-compressed",MapLoadTrace::state.gr2Path+"|"+std::to_string(i),section.compressed);
+        MapLoadTrace::Count("gr2-section-expanded",MapLoadTrace::state.gr2Path+"|"+std::to_string(i),section.expanded);
+        MapLoadTrace::Scope sectionTrace("Assets","GR2 section "+std::to_string(i));
+        sections_.push_back(Decompress(section,bytes.subspan(section.offset,section.compressed)));
+    }
     for (std::uint32_t i = 0; i < header.sections.size(); ++i) {
         const auto& s = header.sections[i];
         for (std::uint32_t j = 0; j < s.fixupCount; ++j) {
@@ -125,6 +137,7 @@ float File::Float(Ref ref) const
 }
 Ref File::Pointer(Ref ref) const
 {
+    MapLoadTrace::GR2ReferenceScope gr2Reference;
     Bytes(ref,4);
     const auto found=relocations_.find(ref);
     if(found!=relocations_.end()) return found->second;

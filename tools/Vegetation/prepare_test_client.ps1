@@ -1,6 +1,6 @@
 param(
-    [string]$BuildDirectory = 'build-hx-clean',
-    [string]$CompiledDirectory = 'build/hx/compiled',
+    [string]$BuildDirectory = 'build',
+    [string]$CompiledDirectory = 'test-data/vegetation',
     [string]$OutputDirectory = 'build/hx/final-test-client'
 )
 $ErrorActionPreference = 'Stop'

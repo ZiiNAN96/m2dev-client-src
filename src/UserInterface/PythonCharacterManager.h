@@ -60,6 +60,7 @@ class CPythonCharacterManager : public CSingleton<CPythonCharacterManager>, publ
 		void								Update();
 		void								Deform();
 		void								Render();
+        void RenderWorldTraces();
 		void								RenderShadowMainInstance();
 		void								RenderShadowAllInstances();
 		void								RenderCollision();

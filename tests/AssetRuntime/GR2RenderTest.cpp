@@ -1,6 +1,3 @@
-#if defined(_DEBUG)
-#include <crtdbg.h>
-#endif
 #include "EterGrnLib/StdAfx.h"
 #include "EterGrnLib/ModelInstance.h"
 #include "EterGrnLib/Thing.h"
@@ -293,11 +290,6 @@ void StaticWorld(const std::filesystem::path& root,DiligentD3D11Backend& backend
 
 int main(int argc,char**argv)
 {
-#if defined(_DEBUG)
-    _CrtSetReportMode(_CRT_ASSERT,_CRTDBG_MODE_FILE);
-    _CrtSetReportFile(_CRT_ASSERT,_CRTDBG_FILE_STDERR);
-#endif
-    std::cout << std::unitbuf;
     HWND window=nullptr;
     try
     {

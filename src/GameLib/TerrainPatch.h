@@ -15,6 +15,7 @@
 #include "Renderer/WorldRenderData.h"
 
 #include <cstdint>
+class CTerrain;
 
 #pragma pack(push)
 #pragma pack(1)
@@ -56,6 +57,7 @@ public:
 
 	static bool SOFTWARE_TRANSFORM_PATCH_ENABLE;
 	Renderer::TerrainBufferPtr terrainGeometry;
+    int stableLod{-1};
 	std::vector<Renderer::EffectVertex> projectionVertices;
 	// ZiiNAN: Original water vertices, owned and released by their native terrain patch.
 	Renderer::WaterGeometryPtr waterGeometry;
@@ -185,6 +187,9 @@ public:
 	void SetTerrainNum(BYTE byTerrainNum)											{ m_byTerrainNum = byTerrainNum; }
 
 	void SetTerrainPatch(CTerrainPatch * pTerrainPatch)								{ m_pTerrainPatch = pTerrainPatch;}
+    CTerrain* terrainOwner{};
+    int GetStableLod() const {return m_pTerrainPatch?m_pTerrainPatch->stableLod:-1;}
+    void SetStableLod(int lod) {if(m_pTerrainPatch)m_pTerrainPatch->stableLod=lod;}
 	Renderer::TerrainBufferPtr GetTerrainGeometry() const { return m_pTerrainPatch ? m_pTerrainPatch->terrainGeometry : nullptr; }
 	const std::vector<Renderer::EffectVertex>* GetProjectionVertices() const { return m_pTerrainPatch ? &m_pTerrainPatch->projectionVertices : nullptr; }
 	Renderer::WaterGeometryPtr GetWaterGeometry() const { return m_pTerrainPatch ? m_pTerrainPatch->waterGeometry : nullptr; }

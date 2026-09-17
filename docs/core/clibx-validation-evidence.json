@@ -1,0 +1,538 @@
+{
+  "builds": {
+    "release": {
+      "exit": 0,
+      "seconds": 74.8061284
+    },
+    "debug": {
+      "exit": 0,
+      "seconds": 30.786895
+    },
+    "portable": {
+      "exit": 1,
+      "seconds": 13.0227081
+    }
+  },
+  "portable_build_retry": {
+    "exit": 0,
+    "seconds": 27.1010529
+  },
+  "gates": {
+    "release": {
+      "exit": 0,
+      "seconds": 102.5279255
+    },
+    "debug": {
+      "exit": 0,
+      "seconds": 181.8422149
+    },
+    "portable": {
+      "exit": 8,
+      "seconds": 4.592142
+    }
+  },
+  "portable_restart_retry": {
+    "exit": 0,
+    "seconds": 0.096155
+  },
+  "classic": {
+    "Release": [
+      {
+        "image": "e1x-market-stall-blend-camera-0.bmp",
+        "baseline_sha256": "aa2dde1349757b9ff0ef01f068b18eedffd57e9825ec4b205ee3f6e8206fbb06",
+        "current_sha256": "aa2dde1349757b9ff0ef01f068b18eedffd57e9825ec4b205ee3f6e8206fbb06",
+        "identical": true,
+        "mtime_ns": 1789493009506506800
+      },
+      {
+        "image": "e1x-market-stall-blend-camera-1.bmp",
+        "baseline_sha256": "98598d8659fde418ead346fba7b6107448aa04422a9f7e586f84c9a8ccd1ad0d",
+        "current_sha256": "98598d8659fde418ead346fba7b6107448aa04422a9f7e586f84c9a8ccd1ad0d",
+        "identical": true,
+        "mtime_ns": 1789493009537178200
+      },
+      {
+        "image": "e1x-market-stall-blend-camera-2.bmp",
+        "baseline_sha256": "ec183c0594b899c66e67fc4eb9e9f6c6216583a1d922a3334053ce5f57e5556a",
+        "current_sha256": "ec183c0594b899c66e67fc4eb9e9f6c6216583a1d922a3334053ce5f57e5556a",
+        "identical": true,
+        "mtime_ns": 1789493009567799500
+      },
+      {
+        "image": "f5x-20-actors.bmp",
+        "baseline_sha256": "aeb3c2ca8c882b7d362d0d02fc3a9c043037219658fb835d374a6ffa0dbb0043",
+        "current_sha256": "aeb3c2ca8c882b7d362d0d02fc3a9c043037219658fb835d374a6ffa0dbb0043",
+        "identical": true,
+        "mtime_ns": 1789492991192412700
+      },
+      {
+        "image": "f5x-clip-0.bmp",
+        "baseline_sha256": "8d123a50a1751d2daa8000364b6559b34e83a38cf9ddd52af7b75ed4a1df0335",
+        "current_sha256": "8d123a50a1751d2daa8000364b6559b34e83a38cf9ddd52af7b75ed4a1df0335",
+        "identical": true,
+        "mtime_ns": 1789492984735943700
+      },
+      {
+        "image": "f5x-clip-1.bmp",
+        "baseline_sha256": "063577e0667f5ed2bf253507d0993a24bedd37d57f92bcbe779a9c843fcd3ab8",
+        "current_sha256": "063577e0667f5ed2bf253507d0993a24bedd37d57f92bcbe779a9c843fcd3ab8",
+        "identical": true,
+        "mtime_ns": 1789492986174562200
+      },
+      {
+        "image": "f5x-clip-2.bmp",
+        "baseline_sha256": "7a8d624f515513d8d3c642aa8c9b26f1c6802da41fb86bd9ea33f701f287b367",
+        "current_sha256": "7a8d624f515513d8d3c642aa8c9b26f1c6802da41fb86bd9ea33f701f287b367",
+        "identical": true,
+        "mtime_ns": 1789492987769805300
+      },
+      {
+        "image": "f5x-clip-3.bmp",
+        "baseline_sha256": "f52cec5030ce18f273f7439d766351176bdf61923f97313cb54d64d680d968dc",
+        "current_sha256": "f52cec5030ce18f273f7439d766351176bdf61923f97313cb54d64d680d968dc",
+        "identical": true,
+        "mtime_ns": 1789492988628319900
+      },
+      {
+        "image": "f5x-clip-4.bmp",
+        "baseline_sha256": "4cbaa6827db8cbbe9076cf105ab3a3d95636d6181291d4e81be598acca08a810",
+        "current_sha256": "4cbaa6827db8cbbe9076cf105ab3a3d95636d6181291d4e81be598acca08a810",
+        "identical": true,
+        "mtime_ns": 1789492989499712900
+      },
+      {
+        "image": "f5x-clip-5.bmp",
+        "baseline_sha256": "0a66966bfdcccc36bad124b6cd57cdb3cb9527486b52fcb7c7f1a09cc1f2c0bf",
+        "current_sha256": "0a66966bfdcccc36bad124b6cd57cdb3cb9527486b52fcb7c7f1a09cc1f2c0bf",
+        "identical": true,
+        "mtime_ns": 1789492990353703900
+      },
+      {
+        "image": "f5x-hand-attachment.bmp",
+        "baseline_sha256": "e3f3a0f9dc8a1eb2919d44a462b9295a3830966ade1969b2a4844a4f19f2684f",
+        "current_sha256": "e3f3a0f9dc8a1eb2919d44a462b9295a3830966ade1969b2a4844a4f19f2684f",
+        "identical": true,
+        "mtime_ns": 1789492991223412500
+      },
+      {
+        "image": "f5x-window-restored.bmp",
+        "baseline_sha256": "4ee5ddf834cc756ead641876e2b91ee04b4d2586695ad5053d7e98007da9ab68",
+        "current_sha256": "4ee5ddf834cc756ead641876e2b91ee04b4d2586695ad5053d7e98007da9ab68",
+        "identical": true,
+        "mtime_ns": 1789492991284703700
+      }
+    ],
+    "Debug": [
+      {
+        "image": "e1x-market-stall-blend-camera-0.bmp",
+        "baseline_sha256": "aa2dde1349757b9ff0ef01f068b18eedffd57e9825ec4b205ee3f6e8206fbb06",
+        "current_sha256": "aa2dde1349757b9ff0ef01f068b18eedffd57e9825ec4b205ee3f6e8206fbb06",
+        "identical": true,
+        "mtime_ns": 1789493361168208000
+      },
+      {
+        "image": "e1x-market-stall-blend-camera-1.bmp",
+        "baseline_sha256": "98598d8659fde418ead346fba7b6107448aa04422a9f7e586f84c9a8ccd1ad0d",
+        "current_sha256": "98598d8659fde418ead346fba7b6107448aa04422a9f7e586f84c9a8ccd1ad0d",
+        "identical": true,
+        "mtime_ns": 1789493361200125100
+      },
+      {
+        "image": "e1x-market-stall-blend-camera-2.bmp",
+        "baseline_sha256": "ec183c0594b899c66e67fc4eb9e9f6c6216583a1d922a3334053ce5f57e5556a",
+        "current_sha256": "ec183c0594b899c66e67fc4eb9e9f6c6216583a1d922a3334053ce5f57e5556a",
+        "identical": true,
+        "mtime_ns": 1789493361216129300
+      },
+      {
+        "image": "f5x-20-actors.bmp",
+        "baseline_sha256": "aeb3c2ca8c882b7d362d0d02fc3a9c043037219658fb835d374a6ffa0dbb0043",
+        "current_sha256": "aeb3c2ca8c882b7d362d0d02fc3a9c043037219658fb835d374a6ffa0dbb0043",
+        "identical": true,
+        "mtime_ns": 1789493267269737900
+      },
+      {
+        "image": "f5x-clip-0.bmp",
+        "baseline_sha256": "8d123a50a1751d2daa8000364b6559b34e83a38cf9ddd52af7b75ed4a1df0335",
+        "current_sha256": "8d123a50a1751d2daa8000364b6559b34e83a38cf9ddd52af7b75ed4a1df0335",
+        "identical": true,
+        "mtime_ns": 1789493261342723700
+      },
+      {
+        "image": "f5x-clip-1.bmp",
+        "baseline_sha256": "063577e0667f5ed2bf253507d0993a24bedd37d57f92bcbe779a9c843fcd3ab8",
+        "current_sha256": "063577e0667f5ed2bf253507d0993a24bedd37d57f92bcbe779a9c843fcd3ab8",
+        "identical": true,
+        "mtime_ns": 1789493262328166400
+      },
+      {
+        "image": "f5x-clip-2.bmp",
+        "baseline_sha256": "7a8d624f515513d8d3c642aa8c9b26f1c6802da41fb86bd9ea33f701f287b367",
+        "current_sha256": "7a8d624f515513d8d3c642aa8c9b26f1c6802da41fb86bd9ea33f701f287b367",
+        "identical": true,
+        "mtime_ns": 1789493263264955700
+      },
+      {
+        "image": "f5x-clip-3.bmp",
+        "baseline_sha256": "f52cec5030ce18f273f7439d766351176bdf61923f97313cb54d64d680d968dc",
+        "current_sha256": "f52cec5030ce18f273f7439d766351176bdf61923f97313cb54d64d680d968dc",
+        "identical": true,
+        "mtime_ns": 1789493264198984800
+      },
+      {
+        "image": "f5x-clip-4.bmp",
+        "baseline_sha256": "4cbaa6827db8cbbe9076cf105ab3a3d95636d6181291d4e81be598acca08a810",
+        "current_sha256": "4cbaa6827db8cbbe9076cf105ab3a3d95636d6181291d4e81be598acca08a810",
+        "identical": true,
+        "mtime_ns": 1789493265189991200
+      },
+      {
+        "image": "f5x-clip-5.bmp",
+        "baseline_sha256": "0a66966bfdcccc36bad124b6cd57cdb3cb9527486b52fcb7c7f1a09cc1f2c0bf",
+        "current_sha256": "0a66966bfdcccc36bad124b6cd57cdb3cb9527486b52fcb7c7f1a09cc1f2c0bf",
+        "identical": true,
+        "mtime_ns": 1789493266182755000
+      },
+      {
+        "image": "f5x-hand-attachment.bmp",
+        "baseline_sha256": "e3f3a0f9dc8a1eb2919d44a462b9295a3830966ade1969b2a4844a4f19f2684f",
+        "current_sha256": "e3f3a0f9dc8a1eb2919d44a462b9295a3830966ade1969b2a4844a4f19f2684f",
+        "identical": true,
+        "mtime_ns": 1789493267300739000
+      },
+      {
+        "image": "f5x-window-restored.bmp",
+        "baseline_sha256": "4ee5ddf834cc756ead641876e2b91ee04b4d2586695ad5053d7e98007da9ab68",
+        "current_sha256": "4ee5ddf834cc756ead641876e2b91ee04b4d2586695ad5053d7e98007da9ab68",
+        "identical": true,
+        "mtime_ns": 1789493267345970500
+      }
+    ]
+  },
+  "binaries": [
+    {
+      "path": "build-hx-clean\\bin\\Release\\Metin2_Release.exe",
+      "before_bytes": 30716928,
+      "after_bytes": 30716928,
+      "before_sha256": "7f87f90d7c149da63fb9f307a69afb27ab4ec6246fb68a6f2afcf5971e991ceb",
+      "after_sha256": "f7fcb1fcd8522465660b7d48c88c347c83e6193bc92f1b7363fcbb2cdf153563"
+    },
+    {
+      "path": "build-hx-clean\\bin\\Debug\\Metin2_Debug.exe",
+      "before_bytes": 42526208,
+      "after_bytes": 42526208,
+      "before_sha256": "5950d766a72ab07ccbe0c8a7ae42a118d38618590ac57c78d82f4aeae943aafa",
+      "after_sha256": "2e137a2781cabd5019ad5f3b3519d696b16fa868055aff9f5c61e5827dbfa7f1"
+    }
+  ],
+  "smokes": {
+    "gr2": {
+      "path": "build/f2x/runtime/clibx-gr2",
+      "exit": "PID=19564 ExitCode=0 Seconds=63.3",
+      "counters": {
+        "GraphicsSettingsObjects": 0,
+        "SourceTextures": 0,
+        "SourceBuffers": 0,
+        "SkinMeshes": 0,
+        "BoneRemaps": 0,
+        "BonePalettes": 0,
+        "PaletteUpdates": 23086,
+        "SkinPreparationFailures": 0,
+        "CollisionResources": 0,
+        "VegetationAssets": 0,
+        "VegetationInstances": 0,
+        "VegetationRenderAssets": 0,
+        "VegetationGeometry": 0,
+        "VegetationInstanceBuffers": 0,
+        "VegetationFailures": 0,
+        "VegetationCreated": 591,
+        "VegetationDraws": 329278,
+        "VegetationLODChanges": 160,
+        "VegetationBranches": 80279,
+        "VegetationFronds": 77318,
+        "VegetationLeaves": 136585,
+        "VegetationBillboards": 35096,
+        "AllCPUDeformationCalls": 0,
+        "AllCPUDeformationVertices": 0,
+        "GPUFallbacks": 0,
+        "AssetDocuments": 0,
+        "AnimationInstances": 0,
+        "MeshBindings": 0,
+        "GR2ReaderResources": 0,
+        "NativeGR2Reads": 933,
+        "GrannyFileReads": 0,
+        "NativeAnimationDecodes": 23,
+        "NativeBoundClipHits": 129,
+        "NativeBoundClipBypasses": 0,
+        "NativePrewarmRequests": 0,
+        "NativePrewarmFailures": 0,
+        "NativePrewarmLimited": 0,
+        "IndependentAnimationInstances": 0,
+        "IndependentPoseSamples": 70202,
+        "ReferencePoseSamples": 0,
+        "AnimationRuntimeFailures": 0,
+        "ImportPoseSamples": 0,
+        "ImportedAnimationClips": 0,
+        "ImportedBindingWarnings": 0,
+        "ImportTotalMicroseconds": 0,
+        "ImportPeakMicroseconds": 0,
+        "RetainedImportKeyBytes": 0,
+        "PeakRetainedImportKeyBytes": 0,
+        "ImportCacheHits": 0,
+        "ImportCacheEvictions": 0,
+        "RuntimeSkeletons": 0,
+        "RuntimeAnimationClips": 0,
+        "PrototypeGeometry": 0,
+        "PrototypePalettes": 0,
+        "GPUFrames": 29809,
+        "BoneBufferWrittenBytes": 375734272,
+        "PrepareUs": 61996,
+        "CPUReferenceFrames": 0,
+        "CPUSkinUs": 0,
+        "CPUVertexBytes": 0,
+        "StaticSkinMeshes": 0
+      },
+      "audit_sha256": "453f6a50beeb0a944e88e16a6f7640434f1259b30b825066b55e6463b6aed2bf",
+      "binary_sha256": "f7fcb1fcd8522465660b7d48c88c347c83e6193bc92f1b7363fcbb2cdf153563"
+    },
+    "glb": {
+      "path": "build/f5x/runtime/clibx-glb",
+      "exit": "ExitCode=0 Seconds=17.8667555",
+      "counters": {
+        "GraphicsSettingsObjects": 0,
+        "SourceTextures": 0,
+        "SourceBuffers": 0,
+        "SkinMeshes": 0,
+        "BoneRemaps": 0,
+        "BonePalettes": 0,
+        "PaletteUpdates": 17920,
+        "SkinPreparationFailures": 0,
+        "CollisionResources": 0,
+        "VegetationAssets": 0,
+        "VegetationInstances": 0,
+        "VegetationRenderAssets": 0,
+        "VegetationGeometry": 0,
+        "VegetationInstanceBuffers": 0,
+        "VegetationFailures": 0,
+        "VegetationCreated": 194,
+        "VegetationDraws": 103246,
+        "VegetationLODChanges": 39,
+        "VegetationBranches": 26116,
+        "VegetationFronds": 24680,
+        "VegetationLeaves": 44552,
+        "VegetationBillboards": 7898,
+        "AllCPUDeformationCalls": 0,
+        "AllCPUDeformationVertices": 0,
+        "GPUFallbacks": 0,
+        "AssetDocuments": 0,
+        "AnimationInstances": 0,
+        "MeshBindings": 0,
+        "GR2ReaderResources": 0,
+        "NativeGR2Reads": 124,
+        "GrannyFileReads": 0,
+        "NativeAnimationDecodes": 0,
+        "NativeBoundClipHits": 0,
+        "NativeBoundClipBypasses": 0,
+        "NativePrewarmRequests": 0,
+        "NativePrewarmFailures": 0,
+        "NativePrewarmLimited": 0,
+        "IndependentAnimationInstances": 0,
+        "IndependentPoseSamples": 21734,
+        "ReferencePoseSamples": 0,
+        "AnimationRuntimeFailures": 0,
+        "ImportPoseSamples": 0,
+        "ImportedAnimationClips": 0,
+        "ImportedBindingWarnings": 0,
+        "ImportTotalMicroseconds": 0,
+        "ImportPeakMicroseconds": 0,
+        "RetainedImportKeyBytes": 0,
+        "PeakRetainedImportKeyBytes": 0,
+        "ImportCacheHits": 0,
+        "ImportCacheEvictions": 0,
+        "RuntimeSkeletons": 0,
+        "RuntimeAnimationClips": 0,
+        "PrototypeGeometry": 0,
+        "PrototypePalettes": 0,
+        "GPUFrames": 17880,
+        "BoneBufferWrittenBytes": 292945920,
+        "PrepareUs": 22794,
+        "CPUReferenceFrames": 0,
+        "CPUSkinUs": 0,
+        "CPUVertexBytes": 0,
+        "StaticSkinMeshes": 0
+      },
+      "audit_sha256": "162d6560088d149bde486b64c7e0f896c7d953801b86afb70d459861b1979dd5",
+      "binary_sha256": "f7fcb1fcd8522465660b7d48c88c347c83e6193bc92f1b7363fcbb2cdf153563"
+    }
+  },
+  "file_hashes": {
+    "tools/CoreLibraryAudit/animation-corpus.tsv": "5a593abc14d8f1a4421dfeb4dba6fa62ee5bf23f669685d6cc794ef79bcd4ca9",
+    "tools/CoreLibraryAudit/AnimationAudit.cpp": "97f762f3587220d0729d58ea97d0c0100b5be901be87be7641b7fb68fa5128c1",
+    "tools/CoreLibraryAudit/AuditCommon.h": "fa5751bc7d987f5b3c93c65edd043d5615715448dcb65dcac79ea90421f6f39c",
+    "tools/CoreLibraryAudit/CMakeLists.txt": "0c509b3692e656b063d722562a46a326447357c0d026c9948a7a296e839671f9",
+    "tools/CoreLibraryAudit/mesh-corpus.tsv": "ab7e4f12ee689e1248e922968afec7057b18370dba08746dd740d9e0e7d86b01",
+    "tools/CoreLibraryAudit/MeshAudit.cpp": "d96c5dc19414767ef6fd4171b231e58603af613fba3b20e46df84305ebf6415b",
+    "tools/CoreLibraryAudit/prepare_dependencies.py": "ffa09d33801d40d0a7068a94b34f27ce4ca56bbe203fd916708e4b95b2f7964f",
+    "tools/CoreLibraryAudit/README.md": "94105a705c498664b189bbac0738ba3c05588f132d8a01d8cc2f4fee0932a812",
+    "tools/CoreLibraryAudit/texture_audit.py": "2bbd909df4a5f5b69e79599bcfd20cce3154f9660d698940e8f9b01e08f37704",
+    "tools/CoreLibraryAudit/TextureAudit.cpp": "8fd9f7f883a97e6ead68f2bf966ae2afada6fc6dd866b5375e4885629b13f820"
+  },
+  "logs": {
+    "animation-build-final.log": {
+      "bytes": 1575,
+      "sha256": "b44380f02222c26116f656be6ee019257bb209ee7c05b02c434c8114e384af01"
+    },
+    "animation-build.log": {
+      "bytes": 1575,
+      "sha256": "44f129c68aebfb012e61675f4f9a3628d4393b42f79267c94978615f78c7528d"
+    },
+    "animation-configure.log": {
+      "bytes": 834,
+      "sha256": "3b4001f5ba9b328c929d849ab7663c25a63300c000c2750c8e5c575c12e39c7e"
+    },
+    "animation-diagnostic-build.log": {
+      "bytes": 2851,
+      "sha256": "5cbff9fdbbc7d445650fd88b4bc3d546953928c1e1130a48a58bf9a72a88f696"
+    },
+    "animation-diagnostic-errors.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "animation-diagnostic-full-errors.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "animation-errors.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "animation-final-errors.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "animation-measured-errors.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "animation-quality240-errors.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "animation-quality60-errors.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "asan-build.log": {
+      "bytes": 4713,
+      "sha256": "56f80e8cea805c4ea9126710b3774e7719bb333613d105f0e5eaf1db23d13b0f"
+    },
+    "asan-configure.log": {
+      "bytes": 1547,
+      "sha256": "22beb32ecceca2760f91de75d99d831ea3e5b793269fc28286e1abb2c83cc409"
+    },
+    "asan-errors.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "basis-build.log": {
+      "bytes": 1501,
+      "sha256": "e046167a7137d289c5cb849ca817180540809018455a73895fac33792b8ae588"
+    },
+    "basis-configure.log": {
+      "bytes": 1935,
+      "sha256": "439481bb493aecaa03825c3031270289a5d32b74b4ecf92c952cb25ee4197c3b"
+    },
+    "debug-build.log": {
+      "bytes": 116600,
+      "sha256": "80f3efc50b1737a8dd4dff167b2dcbbae84c4e7885be4d107771f9e6b0ddbf77"
+    },
+    "debug-tests.log": {
+      "bytes": 162981,
+      "sha256": "f2f13418f1afe6a471c39d2198174f7abf6537568058e628b4b17b4aa4af00f1"
+    },
+    "glb-only-errors.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "glb-smoke.log": {
+      "bytes": 2354,
+      "sha256": "9fb9e7ea34cfd25893c72eaa57cb6e7d29c1eeb8da5df1bde618b935434aa6f4"
+    },
+    "gr2-smoke.log": {
+      "bytes": 1688,
+      "sha256": "c77041a8638e6682c2e812b30a2f4ed51b1350bbab167f0def62b31487121d7f"
+    },
+    "mesh-errors.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "mesh-texture-build.log": {
+      "bytes": 2620,
+      "sha256": "394ef113366d16ba335f2cb468f809c15420dc03085cdff52b738fe42fbce8f6"
+    },
+    "mount-glb-errors.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "portable-build-retry.log": {
+      "bytes": 13693,
+      "sha256": "c11ebd5d36b70f3bb5509162b06f75a3165ba7f3959b6aaa6a009ab3a0726266"
+    },
+    "portable-build.log": {
+      "bytes": 13636,
+      "sha256": "346ef70bc1151b6e5ded4826ba4f89122dbd19e41d724778a242ac264cdbdee2"
+    },
+    "portable-restart-retry.log": {
+      "bytes": 1727,
+      "sha256": "3725022a326595b66ee32c88425dec3e3c2953e785db1c9437db8d88085555f9"
+    },
+    "portable-tests.log": {
+      "bytes": 5281,
+      "sha256": "6e838fce3c647ee2cd4e7d477df6751ecd733901a0e35a0494ce18b9af6d51eb"
+    },
+    "proof-build.log": {
+      "bytes": 1814,
+      "sha256": "40a5ed5b8955a3bfce7910594738c718d62073d5de6fd927bebc874daddd2333"
+    },
+    "release-build.log": {
+      "bytes": 132775,
+      "sha256": "7c20e4fcda7cf6b9947a156087d49da732cf06090856a28e5cc0a76352713d88"
+    },
+    "release-tests.log": {
+      "bytes": 8722,
+      "sha256": "46e39aa97ef40a0b42033fa17b2cd52b086b86f67838da31a079557e1a67c527"
+    },
+    "texture-corpus.log": {
+      "bytes": 4520,
+      "sha256": "4dec30d259f1dd2c5c7aec00b2b2c087e306cf281e490d9fa432bbca697bfe60"
+    },
+    "texture-normal-run.log": {
+      "bytes": 68,
+      "sha256": "691a38f69386fa408762057320fae62665c382d4cc089e33cd594093e6fabaa9"
+    },
+    "texture-quality.log": {
+      "bytes": 23740,
+      "sha256": "3cfaadd3dd46bec73346ce13f37b61340b791c1d7cdac9c0cdc43072e1a3cd11"
+    },
+    "texture-run.log": {
+      "bytes": 390,
+      "sha256": "3fb1111fd33cd6d85ce1f2da3456925f0e7a7197ef1fc941d5dd04fa50939188"
+    }
+  },
+  "source": {
+    "head": "d92dc48ca945b9d015924b64e0026563e55b8812",
+    "branch": "feature/gdx-diligentfx",
+    "status": "## feature/gdx-diligentfx...origin/feature/gdx-diligentfx\n M CMakeLists.txt\n?? docs/core/\n?? tools/CoreLibraryAudit/"
+  },
+  "client": {
+    "head": "72d925937bc5d93982190ce00660ffefe839e824",
+    "branch": "main",
+    "status": "## main...origin/main"
+  },
+  "redthief_sha256": "2e0f34887edff2f4cfddbb97ae7d9f1a15236752f1330ddaf4f998f4479c51b4",
+  "debug_renderer_diagnostics": "Diligent ERROR/FATAL diagnostics: 0",
+  "debug_log_error_lines": [
+    "26: Diligent ERROR/FATAL diagnostics: 0"
+  ],
+  "production_link_contains_audit_library": false
+}

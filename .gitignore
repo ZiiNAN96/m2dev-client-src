@@ -1,8 +1,5 @@
-﻿/build/
-
-# =======================================================
+﻿# =======================================================
 # FULLY CASE-INSENSITIVE BACKUP EXCLUSIONS
-/build-c2x-clean/
 # Matches all files and folders ending in:
 # _BK, _BAK, .BK, .BAK (and all case permutations)
 # =======================================================
@@ -72,3 +69,23 @@
 /android/**/build/
 /android/**/.cxx/
 /android/**/generated/
+
+# Local, hash-inventoried game corpus; see test-data/README.md.
+/test-data/vegetation/
+/test-data/legacy-renderer/
+
+# Generated diagnostics. Keep asset formats and fixture data visible.
+*.log
+*.pdb
+*.ilk
+*.tmp
+*.cache
+__pycache__/
+/logs/
+/test-output/
+/benchmark-output/
+/shader-dumps/
+/screenshots/
+/captures/
+/temporary/
+/temp/

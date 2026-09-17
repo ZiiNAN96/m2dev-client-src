@@ -1,11 +1,14 @@
 #include "StdAfx.h"
-#include "Renderer/ShadowAmbientRuntime.h"
+#include "Renderer/ModernFrame.h"
 #include "Platform/PlatformTime.h"
 #include "StaticObjectBridge.h"
 #include "MapOutdoor.h"
 #include "TerrainPatch.h"
 #include "AreaTerrain.h"
 #include "TerrainQuadtree.h"
+#include "WorldResidencyPolicy.h"
+#include "Renderer/WorldResidencyDiagnostics.h"
+#include "Renderer/GraphicsConfig.h"
 
 #include "EterLib/Camera.h"
 #include "EterLib/DrawState.h"
@@ -39,6 +42,7 @@ void CMapOutdoor::RenderTerrain()
 	BuildViewFrustum(vv);
 
 	Math::Vector3 v3Eye = pCamera->GetEye();
+    if(m_stableWorld)StabilizeTerrainLods();
 	m_fXforDistanceCaculation = -v3Eye.x;
 	m_fYforDistanceCaculation = -v3Eye.y;
 	
@@ -51,6 +55,7 @@ void CMapOutdoor::RenderTerrain()
 	
 	// 거리순 정렬
 	std::sort(m_PatchVector.begin(),m_PatchVector.end());
+    if(Renderer::verboseDiagnostics&&!Renderer::shadowCasterCollection)Renderer::worldResidency.terrainVisible=m_PatchVector.size();
 
 	if (Renderer::terrainRenderer)
 	{
@@ -75,18 +80,33 @@ void CMapOutdoor::RenderTerrain()
 		Renderer::terrainRenderer->BeginTerrain(matrices, statesMatch);
 	}
 
-    if(Renderer::shadowPassIndex>=0&&Renderer::terrainRenderer){
-        WORD primitiveCount{};Renderer::PrimitiveTopology primitiveType;
-        SelectIndexBuffer(0,&primitiveCount,&primitiveType);
-        for(const auto& patch:m_PatchVector)SubmitTerrainGeometry(patch.second);
-        return;
-    }
-
 	// 그리기 위한 벡터 세팅
 	if (CTerrainPatch::SOFTWARE_TRANSFORM_PATCH_ENABLE)
 		__RenderTerrain_RenderSoftwareTransformPatch();
 	else
 		__RenderTerrain_RenderHardwareTransformPatch();
+    if(Renderer::verboseDiagnostics&&!Renderer::shadowCasterCollection)Renderer::worldResidency.terrainDrawn=m_iRenderedPatchNum;
+}
+
+void CMapOutdoor::StabilizeTerrainLods()
+{
+    // Store history on the terrain patch, never on a movable proxy slot.
+    const auto eye=CCameraManager::Instance().GetCurrentCamera()->GetEye();
+    const int count=int(m_wPatchCount)*m_wPatchCount;
+    for(int i=0;i<count;++i) {
+        auto& patch=m_pTerrainPatchProxyList[i];if(!patch.isUsed())continue;
+        const float x=(patch.GetMinX()+patch.GetMaxX())*.5f,y=-(patch.GetMinY()+patch.GetMaxY())*.5f;
+        const float distance=std::max(std::abs(x-eye.x),std::abs(y-eye.y));
+        patch.SetStableLod(int(WorldResidency::TerrainLod(distance,__GetNoFogDistance(),__GetFogDistance(),patch.GetStableLod())));
+    }
+    // Three levels need at most two propagation passes. Existing full-resolution
+    // border indices stitch these neighbors without additional skirts/meshes.
+    for(int pass=0;pass<2;++pass)for(int i=0;i<count;++i) {
+        auto& patch=m_pTerrainPatchProxyList[i];if(!patch.isUsed())continue;
+        const int neighbors[]{i%m_wPatchCount?i-1:-1,(i+1)%m_wPatchCount?i+1:-1,i-m_wPatchCount,i+m_wPatchCount};
+        for(int j:neighbors)if(j>=0&&j<count&&m_pTerrainPatchProxyList[j].isUsed())
+            patch.SetStableLod(std::min(patch.GetStableLod(),m_pTerrainPatchProxyList[j].GetStableLod()+1));
+    }
 }
 
 void CMapOutdoor::__RenderTerrain_RecurseRenderQuadTree(CTerrainQuadtreeNode *Node, bool bCullCheckNeed)
@@ -134,8 +154,8 @@ int	CMapOutdoor::__RenderTerrain_RecurseRenderQuadTree_CheckBoundingCircle(const
 
 	Math::Vector3 center = c_v3Center;
 	center.y = -center.y;
-    if(Renderer::shadowPassIndex>=0)
-        return Renderer::ShadowVisible({center.x,center.y,center.z},c_fRadius)?VIEW_PART:VIEW_NONE;
+    if(Renderer::shadowCasterCollection && Renderer::modernFrame)
+        return Renderer::modernFrame->ShadowCasterVisible({center.x,center.y,center.z},c_fRadius)?VIEW_PART:VIEW_NONE;
 
 	int i;
 
@@ -247,10 +267,10 @@ void CMapOutdoor::RenderAfterLensFlare()
 
 void CMapOutdoor::RenderCollision()
 {
-	for (int i = 0; i < AROUND_AREA_NUM; ++i)
+	for (int i = 0; i < RenderAreaCount(); ++i)
 	{
 		CArea * pArea;
-		if (GetAreaPointer(i, &pArea))
+		if (GetRenderAreaPointer(i, &pArea))
 			pArea->RenderCollision();
 	}
 }
@@ -345,7 +365,7 @@ struct FAreaRenderShadow
 		pInstance->RenderShadow();
 		if (auto* thing = dynamic_cast<CGraphicThingInstance*>(pInstance))
 			SubmitStaticMapObject(*thing, StaticMapObjectPass::ShadowReceiver);
-		pInstance->Hide();
+		if(!Renderer::shadowCasterCollection)pInstance->SetCameraVisibility(false);
 	}
 };
 
@@ -353,7 +373,7 @@ struct FPCBlockerHide
 {
 	void operator () (CGraphicObjectInstance * pInstance)
 	{
-		pInstance->Hide();
+		if(!Renderer::shadowCasterCollection)pInstance->SetCameraVisibility(false);
 	}
 };
 
@@ -387,10 +407,10 @@ void CMapOutdoor::RenderEffect()
 {
 	if (!IsVisiblePart(PART_OBJECT))
 		return;
-	for (int i = 0; i < AROUND_AREA_NUM; ++i)
+	for (int i = 0; i < RenderAreaCount(); ++i)
 	{
 		CArea * pArea;
-		if (GetAreaPointer(i, &pArea))
+		if (GetRenderAreaPointer(i, &pArea))
 		{
 			pArea->RenderEffect();
 		}
@@ -417,6 +437,7 @@ struct CMapOutdoor_FOpaqueThingInstanceRender
 {
 	inline void operator () (CGraphicThingInstance * pkThingInst)
 	{
+        if(Renderer::shadowCasterCollection&&!pkThingInst->IsCameraShown())pkThingInst->Deform();
         if(DrawSpecialMapObject(*pkThingInst,false)) return;
 		pkThingInst->Render();
         SubmitStaticMapObject(*pkThingInst);
@@ -440,10 +461,10 @@ void CMapOutdoor::RenderArea(bool bRenderAmbience)
 	m_dwRenderedCRCWithNumberVector.clear();
 
 	// NOTE - 20041201.levites.던젼 그림자 추가
-	for (int j = 0; j < AROUND_AREA_NUM; ++j)
+	for (int j = 0; j < RenderAreaCount(); ++j)
 	{
 		CArea * pArea;
-		if (GetAreaPointer(j, &pArea))
+		if (GetRenderAreaPointer(j, &pArea))
 		{
 			pArea->RenderDungeon();
 		}
@@ -498,10 +519,10 @@ void CMapOutdoor::RenderArea(bool bRenderAmbience)
 
 	if (m_isDisableSortRendering)
 	{
-		for (int i = 0; i < AROUND_AREA_NUM; ++i)
+		for (int i = 0; i < RenderAreaCount(); ++i)
 		{
 			CArea * pArea;
-			if (GetAreaPointer(i, &pArea))
+			if (GetRenderAreaPointer(i, &pArea))
 			{
 				pArea->Render();
 
@@ -542,10 +563,10 @@ void CMapOutdoor::RenderArea(bool bRenderAmbience)
 		s_kVct_pkOpaqueThingInstSort.clear();
 		s_kVct_pkOpaqueThingInstSort.reserve(512);  // Pre-allocate to avoid reallocations
 
-		for (int i = 0; i < AROUND_AREA_NUM; ++i)
+		for (int i = 0; i < RenderAreaCount(); ++i)
 		{
 			CArea * pArea;
-			if (GetAreaPointer(i, &pArea))
+			if (GetRenderAreaPointer(i, &pArea))
 			{
 				pArea->CollectRenderingObject(s_kVct_pkOpaqueThingInstSort);
 			}
@@ -574,10 +595,10 @@ void CMapOutdoor::RenderBlendArea()
 	s_kVct_pkBlendThingInstSort.clear();
 	s_kVct_pkBlendThingInstSort.reserve(256);  // Pre-allocate to avoid reallocations
 
-	for (int i = 0; i < AROUND_AREA_NUM; ++i)
+	for (int i = 0; i < RenderAreaCount(); ++i)
 	{
 		CArea * pArea;
-		if (GetAreaPointer(i, &pArea))
+		if (GetRenderAreaPointer(i, &pArea))
 		{
 			pArea->CollectBlendRenderingObject(s_kVct_pkBlendThingInstSort);
 		}
@@ -636,10 +657,10 @@ void CMapOutdoor::RenderBlendArea()
 }
 void CMapOutdoor::RenderDungeon()
 {
-	for (int i = 0; i < AROUND_AREA_NUM; ++i)
+	for (int i = 0; i < RenderAreaCount(); ++i)
 	{
 		CArea * pArea;
-		if (!GetAreaPointer(i, &pArea))
+		if (!GetRenderAreaPointer(i, &pArea))
 			continue;
 		pArea->RenderDungeon();
 	}
@@ -752,8 +773,8 @@ void CMapOutdoor::SetPatchDrawVector()
 			continue;
 		}
 
-		CTerrain * pTerrain;
-		if (!GetTerrainPointer(byTerrainNum, &pTerrain))
+		CTerrain * pTerrain=pTerrainPatchProxy->terrainOwner;
+		if (!pTerrain&&!GetTerrainPointer(byTerrainNum, &pTerrain))
 		{
 			++aDistancePatchVectorIterator;
 			continue;
@@ -966,8 +987,8 @@ void CMapOutdoor::DrawPatchAttr(long patchnum)
 		return;
 
 	// Deal with this material buffer
-	CTerrain * pTerrain;
-	if (!GetTerrainPointer(ucTerrainNum, &pTerrain))
+	CTerrain * pTerrain=pTerrainPatchProxy->terrainOwner;
+	if (!pTerrain&&!GetTerrainPointer(ucTerrainNum, &pTerrain))
 		return;
 
 	if (!pTerrain->IsMarked())

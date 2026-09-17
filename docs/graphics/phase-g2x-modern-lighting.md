@@ -1,3 +1,5 @@
+> Historischer G1/G2/G3/4-Bericht vom frueheren main. Die damalige eigene Renderer-Implementierung wurde durch den [DiligentFX-Neuaufbau](phase-gdx-diligentfx-rebuild.md) und G8/H2/P0 ersetzt. Dieser Bericht beschreibt keine aktuelle Implementierung oder erneute Abnahme. Bei MAIN-INTEGRATION-X als Historie erhalten.
+
 # G2-X — Modern Lighting
 
 Abnahmebericht, 2026-09-15. Ausgangsstand G1: `1835e66`. **G2-X: GO.** Automatisierte und neue manuelle G2-Abnahme bestanden. Kein Stage/Commit/Push; STOP nach G2.

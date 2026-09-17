@@ -1,4 +1,4 @@
-"""G0-X short real-client settings/UI test, separate from server login acceptance."""
+"""Short real-client settings test, separate from server login acceptance."""
 import app, background, builtins, grp, json, mouseModule, systemSetting, time, ui, wndMgr
 import uisystemoption
 
@@ -46,7 +46,15 @@ class World(ui.Window):
     def OnUpdate(self):
         elapsed = time.monotonic() - self.started
         step = int(elapsed / 2)
-        if step >= (2 if expected_restart else 12):
+        changed = step != self.step
+        if step >= (2 if expected_restart else 14):
+            if not expected_restart:
+                # Step 13 proves Classic teardown. Persist Modern again so
+                # the second process proves its startup and saved settings.
+                systemSetting.ApplyGraphicsSettings({"style": 1})
+                assert systemSetting.SaveGraphicsSettings()
+                with builtins.old_open("g0x-expected.json", "w") as stream:
+                    json.dump(systemSetting.GetGraphicsSettings(), stream)
             app.Exit()
             return
         if step != self.step:
@@ -58,6 +66,8 @@ class World(ui.Window):
                 self.options.OpenGraphics()
                 self.options.graphicsDialog.SetPosition(355, 90)
             dialog = self.options.graphicsDialog
+            assert not hasattr(dialog, "fogQuality")
+            assert "highQualityFog" not in systemSetting.GetGraphicsSettings()
             if not expected_restart:
                 if 1 <= step <= 4:
                     dialog.preset.SelectItem(step - 1)
@@ -74,9 +84,9 @@ class World(ui.Window):
                 elif step == 7:
                     dialog.fog.SelectItem(2)
                 elif step == 8:
-                    # Configuration is retained; unavailable rendering must stay off.
+                    # G56 enables the existing Modern HDR/atmosphere controls.
                     systemSetting.ApplyGraphicsSettings({"style": 1, "ambientOcclusion": 2, "hdr": 1,
-                        "bloom": 1, "modernSky": 1, "highQualityFog": 1, "shadows": 2, "water": 0, "textures": 2})
+                        "bloom": 1, "modernSky": 1, "shadows": 2, "water": 0, "textures": 2})
                     assert systemSetting.SaveGraphicsSettings()
                     self.expected = systemSetting.GetGraphicsSettings()
                     systemSetting.ApplyGraphicsPreset(0)
@@ -96,9 +106,16 @@ class World(ui.Window):
                     log.write("window=%s\n" % json.dumps(window_result, sort_keys=True))
                 elif step == 10:
                     dialog.preset.CloseListBox()
+                    systemSetting.ApplyGraphicsSettings({"bloom": 0, "modernSky": 0})
+                    dialog.Refresh()
+                elif step == 11:
+                    systemSetting.ApplyGraphicsSettings({"bloom": 1, "modernSky": 1})
+                    dialog.Refresh()
+                elif step == 12:
                     background.Destroy()
                     self.loadMap("b1", 69642, 54848)
-                elif step == 11:
+                elif step == 13:
+                    systemSetting.ApplyGraphicsSettings({"style": 0})
                     self.options.Close()
                     self.options.Show()
                     self.options.OpenGraphics()
@@ -106,10 +123,23 @@ class World(ui.Window):
             log.write("step=%d settings=%s\n" % (step, json.dumps(current, sort_keys=True)))
             log.flush()
         runtime = systemSetting.GetGraphicsRuntimeConfig()
+        current = systemSetting.GetGraphicsSettings()
         # Query for assertions only in this test root; production UI has no polling.
-        if self.frames > 1:
-            assert runtime["shadows"] == 0 and runtime["ambientOcclusion"] == 0
-            assert runtime["hdr"] == 0 and runtime["bloom"] == 0 and runtime["modernSky"] == 0
+        # Renderer snapshots are consumed at the next frame boundary, after
+        # this callback has applied the requested setting.
+        if self.frames > 1 and not changed:
+            expected_shadows = current["shadows"] if current["style"] == 1 else 0
+            expected_ao = current["ambientOcclusion"] if current["style"] == 1 else 0
+            assert runtime["shadows"] == expected_shadows and runtime["ambientOcclusion"] == expected_ao
+            modern = current["style"] == 1
+            dialog = self.options.graphicsDialog
+            assert bool(dialog.fog.IsShow()) == (not modern)
+            assert bool(dialog.fog.label.IsShow()) == (not modern)
+            for control in self.options.fogModeButtonList + [self.options.fogLabel]:
+                assert bool(control.IsShow()) == (not modern)
+            assert runtime["hdr"] == int(modern)
+            assert runtime["bloom"] == (current["bloom"] if modern else 0)
+            assert runtime["modernSky"] == (current["modernSky"] if modern else 0)
             assert runtime["waterFrameMilliseconds"] == 70
             if runtime["revision"] != self.last_revision:
                 log.write("runtime=%s\n" % json.dumps(runtime, sort_keys=True))

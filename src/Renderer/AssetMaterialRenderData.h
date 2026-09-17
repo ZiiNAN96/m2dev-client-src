@@ -19,6 +19,7 @@ inline void ApplyAssetMaterial(const AssetRuntime::MaterialAsset& material, Stat
     if (material.alphaTest && material.alphaCutoff > 1.0f) draw.alphaTest = StaticObjectAlphaTest::Greater;
     draw.actorStage = ActorMaterialStage::Modulate;
     draw.textureFactor = material.baseColorFactor;
+    draw.materialBaseColorInFactor = true;
     draw.factorAlpha = material.alphaTest || material.blending;
     draw.factorAlphaOnly = !draw.factorAlpha;
     if (draw.factorAlphaOnly) draw.textureFactor[3] = 1.0f;

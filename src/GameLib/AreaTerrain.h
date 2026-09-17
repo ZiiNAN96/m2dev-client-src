@@ -38,6 +38,8 @@ class CTerrain : public CTerrainImpl, public CGraphicBase
 		bool			RAW_LoadTileMap(const char * c_pszFileName, bool bBGLoading = false);
 		
 		bool			LoadHeightMap(const char * c_pszFileName);
+        // CPU masks only: do not allocate splat textures or terrain geometry.
+        bool LoadGrassData(const std::string& directory);
 
 		void			CalculateTerrainPatch();
 		//////////////////////////////////////////////////////////////////////////
@@ -104,8 +106,8 @@ class CTerrain : public CTerrainImpl, public CGraphicBase
 
 		CMapOutdoor *	GetOwner() { return m_pOwnerOutdoorMap; }
 		void			RAW_GenerateSplat(bool bBGLoading = false);
-		Renderer::TerrainSplatMaterialPtr GetSplatMaterial(uint32_t layer, const Renderer::TerrainTexturePtr& color)
-		{ return layer<MAXTERRAINTEXTURES ? m_rendererAlpha[layer].Material(color) : Renderer::TerrainSplatMaterialPtr{}; }
+		Renderer::TerrainSplatMaterialPtr GetSplatMaterial(uint32_t layer, const Renderer::TerrainTexturePtr& color, bool modernColor=false)
+		{ return layer<MAXTERRAINTEXTURES ? m_rendererAlpha[layer].Material(color,modernColor) : Renderer::TerrainSplatMaterialPtr{}; }
 
 	protected:
 		bool	Initialize();

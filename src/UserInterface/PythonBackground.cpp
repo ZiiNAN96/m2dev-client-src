@@ -1,4 +1,5 @@
 // PythonBackground.cpp: implementation of the CPythonBackground class.
+#include "EterBase/MapLoadTrace.h"
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -236,6 +237,8 @@ CPythonBackground::~CPythonBackground()
 
 void CPythonBackground::Initialize()
 {
+    MapLoadTrace::Scope p0lScope("Metadata","background initialize","cpu");
+
 	std::string stAtlasInfoFileName(GetLocalePath());
 	stAtlasInfoFileName += "/AtlasInfo.txt";
 	SetAtlasInfoFileName(stAtlasInfoFileName.c_str());

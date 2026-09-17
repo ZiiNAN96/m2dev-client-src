@@ -15,16 +15,14 @@ $target="$source/build/$phase/$Name"
 if(Test-Path -LiteralPath $target) { throw 'Fresh evidence directory required.' }
 New-Item -ItemType Directory -Path $target | Out-Null
 Copy-Item -LiteralPath "$source/build/bin/$Configuration/Metin2_$Configuration.exe" -Destination "$target/Metin2_Release.exe"
-$configurationRoot=if($Normal) { "$original/config" } else { "$source/build/milestone13c/world-release-final/default-runtime/config" }
+$configurationRoot=if($Normal) { "$original/config" } else { "$source/test-data/legacy-renderer/world-config" }
 Copy-Item -LiteralPath $configurationRoot -Destination "$target/config" -Recurse
 if($Normal) {
     New-Item -ItemType Junction -Path "$target/pack" -Target "$original/pack" | Out-Null
-} elseif($OriginalWorld) {
-    New-Item -ItemType Junction -Path "$target/pack" -Target "$source/build/milestone13c/world-release-final/pack" | Out-Null
 } else {
     New-Item -ItemType Directory -Path "$target/test-root","$target/pack" | Out-Null
-    Copy-Item -LiteralPath "$source/build/milestone13c/world-release-final/test-root/root" -Destination "$target/test-root/root" -Recurse
-    $fixture=if($Benchmark) { 'gpu_skinning_benchmark_entry.py' } elseif($Stability) { 'gpu_skinning_stability_entry.py' } elseif($Coverage) { 'gpu_skinning_coverage_entry.py' } else { 'gpu_skinning_entry.py' }
+    Copy-Item -LiteralPath "$source/test-data/legacy-renderer/world-root" -Destination "$target/test-root/root" -Recurse
+    $fixture=if($OriginalWorld) { 'special_world_entry.py' } elseif($Benchmark) { 'gpu_skinning_benchmark_entry.py' } elseif($Stability) { 'gpu_skinning_stability_entry.py' } elseif($Coverage) { 'gpu_skinning_coverage_entry.py' } else { 'gpu_skinning_entry.py' }
     Copy-Item -LiteralPath "$PSScriptRoot/$fixture" -Destination "$target/test-root/root/prototype.py"
     if($Production -and $Stability) {
         Copy-Item -LiteralPath "$PSScriptRoot/gpu_skinning_stability_entry.py" -Destination "$target/test-root/root/gpu_skinning_stability_entry.py"

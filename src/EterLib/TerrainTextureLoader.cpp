@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "EterBase/MapLoadTrace.h"
 #include "TerrainTextureLoader.h"
 #include "ImageDecoder.h"
 #include "EterImageLib/DDSImageData.h"
@@ -7,6 +8,8 @@
 
 Renderer::TerrainTexturePtr LoadTerrainTextureMemory(const void* data, size_t size, Renderer::ITextureUploader& renderer)
 {
+    MapLoadTrace::Scope p0lScope("Textures","DDS view mip processing","cpu");
+
     using namespace Renderer;
     TerrainTextureData upload;
     const auto fail = [&]() { return renderer.UploadTexture({}); }; // Explicit backend error, never silent fallback.
@@ -44,6 +47,9 @@ Renderer::TerrainTexturePtr LoadTerrainTextureMemory(const void* data, size_t si
 
 Renderer::TerrainTexturePtr LoadTerrainTextureFile(const char* filename, Renderer::ITextureUploader& renderer)
 {
+    MapLoadTrace::Scope p0lScope("Textures","terrain texture load","cpu");
+    MapLoadTrace::Count("terrain-texture-load",filename?filename:"");
+
     TPackFile file;
     if (!filename || !CPackManager::Instance().GetFile(filename, file))
     {

@@ -1,0 +1,4720 @@
+{
+  "milestone": "C-LIB-X-C Closure",
+  "final_decision": "C-LIB-X = GO",
+  "date_utc": "2026-09-15T18:05:02.715874+00:00",
+  "meaning": "Audit closed; retain existing core; no production adoption",
+  "decisions": {
+    "ACL": "LATER",
+    "KTX2/Basis": "LATER",
+    "ozz": "NO-GO",
+    "EnTT cache": "NO-GO",
+    "Jolt": "NO-GO",
+    "meshoptimizer": "KEEP"
+  },
+  "supersedes": {
+    "file": "clibx-benchmark-evidence.json",
+    "scope": "All original GLB ACL payload/error/timing records; original data retained as history",
+    "reason": "Harness encoder input order violated full-pose ACL metric parent-before-child requirement"
+  },
+  "crashes": [
+    {
+      "id": 1,
+      "original": "animation-quality60.jsonl",
+      "last_completed": "mount_run",
+      "next_input": "glb_fixture_0",
+      "exit": -1073741819,
+      "original_dump_available": false,
+      "historical_profile_replays": [
+        {
+          "case": 0,
+          "attempt": 1,
+          "exit": 0
+        },
+        {
+          "case": 0,
+          "attempt": 2,
+          "exit": 0
+        },
+        {
+          "case": 0,
+          "attempt": 3,
+          "exit": 0
+        },
+        {
+          "case": 0,
+          "attempt": 4,
+          "exit": 0
+        },
+        {
+          "case": 0,
+          "attempt": 5,
+          "exit": 0
+        }
+      ],
+      "deterministic_contract_failure": "ACL metric reads unwritten parent: bone=0 parent=20"
+    },
+    {
+      "id": 2,
+      "original": "animation-final.jsonl",
+      "last_completed": "glb_fixture_1 / warm / 100",
+      "next_input": "glb_fixture_2",
+      "exit": -1073741819,
+      "original_dump_available": false,
+      "historical_profile_replays": [
+        {
+          "case": 2,
+          "attempt": 1,
+          "exit": 0
+        },
+        {
+          "case": 2,
+          "attempt": 2,
+          "exit": 0
+        },
+        {
+          "case": 2,
+          "attempt": 3,
+          "exit": 0
+        },
+        {
+          "case": 2,
+          "attempt": 4,
+          "exit": 0
+        },
+        {
+          "case": 2,
+          "attempt": 5,
+          "exit": 0
+        }
+      ],
+      "deterministic_contract_failure": "ACL metric reads unwritten parent: bone=0 parent=20"
+    }
+  ],
+  "reproduced_native_failure": {
+    "sequence": "mount -> GLB0 -> GLB1 -> GLB2",
+    "attempt": 2,
+    "exit": -1073741819,
+    "captured_stack": "Native audit exception 0xc0000005\n0x7ff691b2456e acl::acl_impl::find_contributing_error+3342 C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\deps\\acl-2.1.0\\includes\\acl\\compression\\impl\\quantize.transform.h:1797\n0x7ff691b2456e acl::acl_impl::find_contributing_error+3342 C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\deps\\acl-2.1.0\\includes\\acl\\compression\\impl\\quantize.transform.h:1797\n0x7ff691b1d03c acl::acl_impl::compress_transform_track_list+2540 C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\deps\\acl-2.1.0\\includes\\acl\\compression\\impl\\compress.transform.impl.h:259\n0x7ff691b0afaa Audit+2858 C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\tools\\CoreLibraryAudit\\AnimationAudit.cpp:184\n0x7ff691b3953b main+3499 C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\tools\\CoreLibraryAudit\\AnimationAudit.cpp:234\n0x7ff691c1f804 __scrt_common_main_seh+268 D:\\a\\_work\\1\\s\\src\\vctools\\crt\\vcstartup\\src\\startup\\exe_common.inl:288\n0x7ffb859acd87 BaseThreadInitThunk+23\n0x7ffb8752caec RtlUserThreadStart+44\n",
+    "limitation": "Same failure class reproduced; exact two historical AV schedules not deterministically replayed, no original stacks retained"
+  },
+  "classification": {
+    "cause": "Harness ACL conversion copied native IndexedForest storage IDs as parent-first input order",
+    "production_bug_found": false,
+    "test_asset_invalid": false,
+    "ozz_crash": false,
+    "fix": "Input uses native EvaluationOrder; inverse parent remap; output_index preserves native IDs",
+    "independent_quality_limit": "Bake/resample and real full-shear projection remain adoption blockers"
+  },
+  "animation": {
+    "runs": [
+      {
+        "name": "fixed-glb60",
+        "poison": false,
+        "hz": 60,
+        "exit": 0,
+        "records": [
+          {
+            "kind": "clip",
+            "case": "glb_fixture_0",
+            "joints": 21,
+            "duration": 2,
+            "runtime_clip_bytes": 880,
+            "acl_bytes": 1090,
+            "ozz_clip_bytes": 1701,
+            "ozz_skeleton_bytes": 1615,
+            "acl_encoder_peak_requested_bytes": 468127,
+            "resample_hz": 60,
+            "resample_us": 307.6,
+            "acl_compress_us": 2743.5,
+            "ozz_build_us": 56.6,
+            "import_bind_us": 674.4,
+            "max_source_shear": 0,
+            "step_tracks": 0,
+            "slerp_tracks": 1,
+            "quality_samples": 493,
+            "acl_error": {
+              "translation": 0.0007705688477,
+              "rotation_degrees": 0.0002581391361,
+              "scale_shear": 3.576278687e-06,
+              "world_position": 0.0008468713846,
+              "world_matrix": 0.000846862793
+            },
+            "ozz_error": {
+              "translation": 0.0003662109375,
+              "rotation_degrees": 0.00458203,
+              "scale_shear": 0.0003551244736,
+              "world_position": 0.1008282677,
+              "world_matrix": 0.07336425781
+            },
+            "resample_error": {
+              "translation": 7.629394531e-06,
+              "rotation_degrees": 2.414836539e-06,
+              "scale_shear": 1.192092896e-07,
+              "world_position": 3.051781095e-05,
+              "world_matrix": 3.051757812e-05
+            },
+            "acl_quantization_error": {
+              "translation": 0.0007705688477,
+              "rotation_degrees": 0.0002583423686,
+              "scale_shear": 3.516674042e-06,
+              "world_position": 0.0008468713846,
+              "world_matrix": 0.000846862793
+            },
+            "ozz_actual_world_matrix_error": 0.07336425781,
+            "acl_reordered_tracks": 21
+          },
+          {
+            "kind": "clip",
+            "case": "glb_fixture_1",
+            "joints": 21,
+            "duration": 1.200000048,
+            "runtime_clip_bytes": 2328,
+            "acl_bytes": 2029,
+            "ozz_clip_bytes": 1836,
+            "ozz_skeleton_bytes": 1615,
+            "acl_encoder_peak_requested_bytes": 343704,
+            "resample_hz": 60.83333206,
+            "resample_us": 183.9,
+            "acl_compress_us": 1687.7,
+            "ozz_build_us": 27.9,
+            "import_bind_us": 520.9,
+            "max_source_shear": 0,
+            "step_tracks": 0,
+            "slerp_tracks": 6,
+            "quality_samples": 306,
+            "acl_error": {
+              "translation": 0.05158233643,
+              "rotation_degrees": 0.4931719037,
+              "scale_shear": 0.0001032948494,
+              "world_position": 1.026676773,
+              "world_matrix": 0.7924613953
+            },
+            "ozz_error": {
+              "translation": 0.0006103515625,
+              "rotation_degrees": 0.01981521101,
+              "scale_shear": 0.0001183748245,
+              "world_position": 0.1008282677,
+              "world_matrix": 0.07336425781
+            },
+            "resample_error": {
+              "translation": 0.05136871338,
+              "rotation_degrees": 0.4931521232,
+              "scale_shear": 0.0001027584076,
+              "world_position": 1.02655344,
+              "world_matrix": 0.7924766541
+            },
+            "acl_quantization_error": {
+              "translation": 0.0005569458008,
+              "rotation_degrees": 0.0003457182411,
+              "scale_shear": 4.172325134e-06,
+              "world_position": 0.0006363132371,
+              "world_matrix": 0.0006332397461
+            },
+            "ozz_actual_world_matrix_error": 0.07336425781,
+            "acl_reordered_tracks": 21
+          },
+          {
+            "kind": "clip",
+            "case": "glb_fixture_2",
+            "joints": 21,
+            "duration": 0.6999999881,
+            "runtime_clip_bytes": 2328,
+            "acl_bytes": 1756,
+            "ozz_clip_bytes": 1836,
+            "ozz_skeleton_bytes": 1615,
+            "acl_encoder_peak_requested_bytes": 275466,
+            "resample_hz": 60,
+            "resample_us": 111.8,
+            "acl_compress_us": 1127.2,
+            "ozz_build_us": 29.8,
+            "import_bind_us": 533.3,
+            "max_source_shear": 0,
+            "step_tracks": 0,
+            "slerp_tracks": 6,
+            "quality_samples": 269,
+            "acl_error": {
+              "translation": 0.1192016602,
+              "rotation_degrees": 2.047616785,
+              "scale_shear": 0.0002384185791,
+              "world_position": 4.091699691,
+              "world_matrix": 3.803924561
+            },
+            "ozz_error": {
+              "translation": 0.0006103515625,
+              "rotation_degrees": 0.1017293288,
+              "scale_shear": 0.0001183748245,
+              "world_position": 0.2118801449,
+              "world_matrix": 0.2067995071
+            },
+            "resample_error": {
+              "translation": 0.1190490723,
+              "rotation_degrees": 2.047616785,
+              "scale_shear": 0.0002381205559,
+              "world_position": 4.091577643,
+              "world_matrix": 3.803787231
+            },
+            "acl_quantization_error": {
+              "translation": 0.0004959106445,
+              "rotation_degrees": 0.0008615045696,
+              "scale_shear": 1.907348633e-06,
+              "world_position": 0.001661169264,
+              "world_matrix": 0.001426696777
+            },
+            "ozz_actual_world_matrix_error": 0.2067995071,
+            "acl_reordered_tracks": 21
+          },
+          {
+            "kind": "clip",
+            "case": "glb_fixture_3",
+            "joints": 21,
+            "duration": 0.8000000119,
+            "runtime_clip_bytes": 1376,
+            "acl_bytes": 1183,
+            "ozz_clip_bytes": 1755,
+            "ozz_skeleton_bytes": 1615,
+            "acl_encoder_peak_requested_bytes": 274995,
+            "resample_hz": 61.25,
+            "resample_us": 114,
+            "acl_compress_us": 1086.8,
+            "ozz_build_us": 24.9,
+            "import_bind_us": 457,
+            "max_source_shear": 0,
+            "step_tracks": 0,
+            "slerp_tracks": 3,
+            "quality_samples": 269,
+            "acl_error": {
+              "translation": 0,
+              "rotation_degrees": 2.550892993,
+              "scale_shear": 0.0001533031464,
+              "world_position": 4.010985651,
+              "world_matrix": 3.344287872
+            },
+            "ozz_error": {
+              "translation": 9.536743164e-07,
+              "rotation_degrees": 1.273583789,
+              "scale_shear": 0.0001183748245,
+              "world_position": 1.481621848,
+              "world_matrix": 1.447691917
+            },
+            "resample_error": {
+              "translation": 0,
+              "rotation_degrees": 2.551018673,
+              "scale_shear": 0.0001530647278,
+              "world_position": 4.010962252,
+              "world_matrix": 3.344295502
+            },
+            "acl_quantization_error": {
+              "translation": 0,
+              "rotation_degrees": 0.005308011764,
+              "scale_shear": 5.066394806e-06,
+              "world_position": 0.006303844654,
+              "world_matrix": 0.00602722168
+            },
+            "ozz_actual_world_matrix_error": 1.44769001,
+            "acl_reordered_tracks": 21
+          },
+          {
+            "kind": "clip",
+            "case": "glb_fixture_4",
+            "joints": 21,
+            "duration": 0.5500000119,
+            "runtime_clip_bytes": 984,
+            "acl_bytes": 652,
+            "ozz_clip_bytes": 1701,
+            "ozz_skeleton_bytes": 1615,
+            "acl_encoder_peak_requested_bytes": 231522,
+            "resample_hz": 61.81818008,
+            "resample_us": 64.5,
+            "acl_compress_us": 705.4,
+            "ozz_build_us": 23.2,
+            "import_bind_us": 497.4,
+            "max_source_shear": 0,
+            "step_tracks": 0,
+            "slerp_tracks": 1,
+            "quality_samples": 269,
+            "acl_error": {
+              "translation": 0,
+              "rotation_degrees": 0.9410977015,
+              "scale_shear": 0.0002944469452,
+              "world_position": 0.872719116,
+              "world_matrix": 0.8147106171
+            },
+            "ozz_error": {
+              "translation": 9.536743164e-07,
+              "rotation_degrees": 0.01185831737,
+              "scale_shear": 0.0001183748245,
+              "world_position": 0.1008282677,
+              "world_matrix": 0.07336425781
+            },
+            "resample_error": {
+              "translation": 0,
+              "rotation_degrees": 0.9411761742,
+              "scale_shear": 0.0002940893173,
+              "world_position": 0.8727942857,
+              "world_matrix": 0.8147735596
+            },
+            "acl_quantization_error": {
+              "translation": 0,
+              "rotation_degrees": 0.000342161972,
+              "scale_shear": 4.529953003e-06,
+              "world_position": 0.0003195879885,
+              "world_matrix": 0.0003161430359
+            },
+            "ozz_actual_world_matrix_error": 0.07336425781,
+            "acl_reordered_tracks": 21
+          },
+          {
+            "kind": "clip",
+            "case": "glb_fixture_5",
+            "joints": 21,
+            "duration": 1.299999952,
+            "runtime_clip_bytes": 880,
+            "acl_bytes": 1086,
+            "ozz_clip_bytes": 1701,
+            "ozz_skeleton_bytes": 1615,
+            "acl_encoder_peak_requested_bytes": 351792,
+            "resample_hz": 60.00000381,
+            "resample_us": 160.6,
+            "acl_compress_us": 1972.4,
+            "ozz_build_us": 21.8,
+            "import_bind_us": 475,
+            "max_source_shear": 0,
+            "step_tracks": 0,
+            "slerp_tracks": 1,
+            "quality_samples": 326,
+            "acl_error": {
+              "translation": 0.2178688049,
+              "rotation_degrees": 0.3204883629,
+              "scale_shear": 0.0001285076141,
+              "world_position": 0.6361748074,
+              "world_matrix": 0.6352539062
+            },
+            "ozz_error": {
+              "translation": 0.00732421875,
+              "rotation_degrees": 0.05355750871,
+              "scale_shear": 0.0001183748245,
+              "world_position": 0.1008282677,
+              "world_matrix": 0.07336425781
+            },
+            "resample_error": {
+              "translation": 0.2179489136,
+              "rotation_degrees": 0.3205177581,
+              "scale_shear": 0.0001282095909,
+              "world_position": 0.6362909873,
+              "world_matrix": 0.6353702545
+            },
+            "acl_quantization_error": {
+              "translation": 0.0004119873047,
+              "rotation_degrees": 0.0002659008083,
+              "scale_shear": 3.635883331e-06,
+              "world_position": 0.0005455550588,
+              "world_matrix": 0.000545501709
+            },
+            "ozz_actual_world_matrix_error": 0.07336425781,
+            "acl_reordered_tracks": 21
+          }
+        ]
+      },
+      {
+        "name": "fixed-glb240",
+        "poison": false,
+        "hz": 240,
+        "exit": 0,
+        "records": [
+          {
+            "kind": "clip",
+            "case": "glb_fixture_0",
+            "joints": 21,
+            "duration": 2,
+            "runtime_clip_bytes": 880,
+            "acl_bytes": 2991,
+            "ozz_clip_bytes": 1701,
+            "ozz_skeleton_bytes": 1615,
+            "acl_encoder_peak_requested_bytes": 1479573,
+            "resample_hz": 240,
+            "resample_us": 1305.5,
+            "acl_compress_us": 9936.4,
+            "ozz_build_us": 38.3,
+            "import_bind_us": 568.3,
+            "max_source_shear": 0,
+            "step_tracks": 0,
+            "slerp_tracks": 1,
+            "quality_samples": 1933,
+            "acl_error": {
+              "translation": 0.0007858276367,
+              "rotation_degrees": 0.0003073395393,
+              "scale_shear": 4.053115845e-06,
+              "world_position": 0.0008944712691,
+              "world_matrix": 0.0008926391602
+            },
+            "ozz_error": {
+              "translation": 0.0003662109375,
+              "rotation_degrees": 0.00458203,
+              "scale_shear": 0.0003551244736,
+              "world_position": 0.1008282677,
+              "world_matrix": 0.07336425781
+            },
+            "resample_error": {
+              "translation": 7.629394531e-06,
+              "rotation_degrees": 2.414836539e-06,
+              "scale_shear": 1.192092896e-07,
+              "world_position": 3.051763633e-05,
+              "world_matrix": 3.051757812e-05
+            },
+            "acl_quantization_error": {
+              "translation": 0.0007858276367,
+              "rotation_degrees": 0.0003073395393,
+              "scale_shear": 4.053115845e-06,
+              "world_position": 0.0008944712691,
+              "world_matrix": 0.0008926391602
+            },
+            "ozz_actual_world_matrix_error": 0.07336425781,
+            "acl_reordered_tracks": 21
+          },
+          {
+            "kind": "clip",
+            "case": "glb_fixture_1",
+            "joints": 21,
+            "duration": 1.200000048,
+            "runtime_clip_bytes": 2328,
+            "acl_bytes": 3738,
+            "ozz_clip_bytes": 1836,
+            "ozz_skeleton_bytes": 1615,
+            "acl_encoder_peak_requested_bytes": 956310,
+            "resample_hz": 240.8333282,
+            "resample_us": 512.6,
+            "acl_compress_us": 5790,
+            "ozz_build_us": 27.3,
+            "import_bind_us": 486,
+            "max_source_shear": 0,
+            "step_tracks": 0,
+            "slerp_tracks": 6,
+            "quality_samples": 1170,
+            "acl_error": {
+              "translation": 0.01295471191,
+              "rotation_degrees": 0.1246728376,
+              "scale_shear": 2.598762512e-05,
+              "world_position": 0.2593770252,
+              "world_matrix": 0.1993789673
+            },
+            "ozz_error": {
+              "translation": 0.0006103515625,
+              "rotation_degrees": 0.0198153129,
+              "scale_shear": 0.0001183748245,
+              "world_position": 0.1008282677,
+              "world_matrix": 0.07336425781
+            },
+            "resample_error": {
+              "translation": 0.0129776001,
+              "rotation_degrees": 0.1245719612,
+              "scale_shear": 2.598762512e-05,
+              "world_position": 0.2593052167,
+              "world_matrix": 0.1993179321
+            },
+            "acl_quantization_error": {
+              "translation": 0.0005569458008,
+              "rotation_degrees": 0.000432060081,
+              "scale_shear": 4.172325134e-06,
+              "world_position": 0.0007060385316,
+              "world_matrix": 0.0007019042969
+            },
+            "ozz_actual_world_matrix_error": 0.07336425781,
+            "acl_reordered_tracks": 21
+          },
+          {
+            "kind": "clip",
+            "case": "glb_fixture_2",
+            "joints": 21,
+            "duration": 0.6999999881,
+            "runtime_clip_bytes": 2328,
+            "acl_bytes": 3364,
+            "ozz_clip_bytes": 1836,
+            "ozz_skeleton_bytes": 1615,
+            "acl_encoder_peak_requested_bytes": 609162,
+            "resample_hz": 240,
+            "resample_us": 268.9,
+            "acl_compress_us": 3525.8,
+            "ozz_build_us": 26.8,
+            "import_bind_us": 485.7,
+            "max_source_shear": 0,
+            "step_tracks": 0,
+            "slerp_tracks": 6,
+            "quality_samples": 686,
+            "acl_error": {
+              "translation": 0.0006103515625,
+              "rotation_degrees": 0.0003771631449,
+              "scale_shear": 6.496906281e-06,
+              "world_position": 0.0007334741345,
+              "world_matrix": 0.0006980895996
+            },
+            "ozz_error": {
+              "translation": 0.0006103515625,
+              "rotation_degrees": 0.1017343737,
+              "scale_shear": 0.0001183748245,
+              "world_position": 0.2119408733,
+              "world_matrix": 0.206829071
+            },
+            "resample_error": {
+              "translation": 7.629394531e-06,
+              "rotation_degrees": 1.527276728e-05,
+              "scale_shear": 1.192092896e-07,
+              "world_position": 3.433227539e-05,
+              "world_matrix": 3.433227539e-05
+            },
+            "acl_quantization_error": {
+              "translation": 0.0006103515625,
+              "rotation_degrees": 0.0003788600714,
+              "scale_shear": 6.437301636e-06,
+              "world_position": 0.0007334741345,
+              "world_matrix": 0.0006980895996
+            },
+            "ozz_actual_world_matrix_error": 0.2068328857,
+            "acl_reordered_tracks": 21
+          },
+          {
+            "kind": "clip",
+            "case": "glb_fixture_3",
+            "joints": 21,
+            "duration": 0.8000000119,
+            "runtime_clip_bytes": 1376,
+            "acl_bytes": 2344,
+            "ozz_clip_bytes": 1755,
+            "ozz_skeleton_bytes": 1615,
+            "acl_encoder_peak_requested_bytes": 675936,
+            "resample_hz": 241.25,
+            "resample_us": 331.9,
+            "acl_compress_us": 3991.6,
+            "ozz_build_us": 25.4,
+            "import_bind_us": 466.4,
+            "max_source_shear": 0,
+            "step_tracks": 0,
+            "slerp_tracks": 3,
+            "quality_samples": 786,
+            "acl_error": {
+              "translation": 0,
+              "rotation_degrees": 0.6477616848,
+              "scale_shear": 3.892183304e-05,
+              "world_position": 1.018046087,
+              "world_matrix": 0.8379096985
+            },
+            "ozz_error": {
+              "translation": 9.536743164e-07,
+              "rotation_degrees": 1.274196111,
+              "scale_shear": 0.0001183748245,
+              "world_position": 1.482308024,
+              "world_matrix": 1.44896698
+            },
+            "resample_error": {
+              "translation": 0,
+              "rotation_degrees": 0.647668013,
+              "scale_shear": 3.886222839e-05,
+              "world_position": 1.018079113,
+              "world_matrix": 0.8379402161
+            },
+            "acl_quantization_error": {
+              "translation": 0,
+              "rotation_degrees": 0.0004241356368,
+              "scale_shear": 6.377696991e-06,
+              "world_position": 0.0005338941051,
+              "world_matrix": 0.00048828125
+            },
+            "ozz_actual_world_matrix_error": 1.44896698,
+            "acl_reordered_tracks": 21
+          },
+          {
+            "kind": "clip",
+            "case": "glb_fixture_4",
+            "joints": 21,
+            "duration": 0.5500000119,
+            "runtime_clip_bytes": 984,
+            "acl_bytes": 1078,
+            "ozz_clip_bytes": 1701,
+            "ozz_skeleton_bytes": 1615,
+            "acl_encoder_peak_requested_bytes": 502140,
+            "resample_hz": 241.8181763,
+            "resample_us": 218.3,
+            "acl_compress_us": 2680.2,
+            "ozz_build_us": 23.6,
+            "import_bind_us": 475.7,
+            "max_source_shear": 0,
+            "step_tracks": 0,
+            "slerp_tracks": 1,
+            "quality_samples": 546,
+            "acl_error": {
+              "translation": 0,
+              "rotation_degrees": 0.1804913911,
+              "scale_shear": 5.722045898e-05,
+              "world_position": 0.1673915575,
+              "world_matrix": 0.1558494568
+            },
+            "ozz_error": {
+              "translation": 9.536743164e-07,
+              "rotation_degrees": 0.01186042536,
+              "scale_shear": 0.0001183748245,
+              "world_position": 0.1008282677,
+              "world_matrix": 0.07336425781
+            },
+            "resample_error": {
+              "translation": 0,
+              "rotation_degrees": 0.1804502419,
+              "scale_shear": 5.638599396e-05,
+              "world_position": 0.1673444308,
+              "world_matrix": 0.1558227539
+            },
+            "acl_quantization_error": {
+              "translation": 0,
+              "rotation_degrees": 0.000236000086,
+              "scale_shear": 4.649162292e-06,
+              "world_position": 0.0003182047651,
+              "world_matrix": 0.0003051757812
+            },
+            "ozz_actual_world_matrix_error": 0.07336425781,
+            "acl_reordered_tracks": 21
+          },
+          {
+            "kind": "clip",
+            "case": "glb_fixture_5",
+            "joints": 21,
+            "duration": 1.299999952,
+            "runtime_clip_bytes": 880,
+            "acl_bytes": 2302,
+            "ozz_clip_bytes": 1701,
+            "ozz_skeleton_bytes": 1615,
+            "acl_encoder_peak_requested_bytes": 997935,
+            "resample_hz": 240.0000153,
+            "resample_us": 375.9,
+            "acl_compress_us": 6783,
+            "ozz_build_us": 25.7,
+            "import_bind_us": 486,
+            "max_source_shear": 0,
+            "step_tracks": 0,
+            "slerp_tracks": 1,
+            "quality_samples": 1262,
+            "acl_error": {
+              "translation": 0.000602722168,
+              "rotation_degrees": 0.0002784611248,
+              "scale_shear": 4.053115845e-06,
+              "world_position": 0.0007309725449,
+              "world_matrix": 0.00071144104
+            },
+            "ozz_error": {
+              "translation": 0.00732421875,
+              "rotation_degrees": 0.05356404116,
+              "scale_shear": 0.0001183748245,
+              "world_position": 0.1008282677,
+              "world_matrix": 0.07336425781
+            },
+            "resample_error": {
+              "translation": 7.629394531e-06,
+              "rotation_degrees": 9.659346158e-06,
+              "scale_shear": 1.192092896e-07,
+              "world_position": 4.578630022e-05,
+              "world_matrix": 4.577636719e-05
+            },
+            "acl_quantization_error": {
+              "translation": 0.000602722168,
+              "rotation_degrees": 0.0002803603383,
+              "scale_shear": 4.172325134e-06,
+              "world_position": 0.0007309725449,
+              "world_matrix": 0.00071144104
+            },
+            "ozz_actual_world_matrix_error": 0.07336425781,
+            "acl_reordered_tracks": 21
+          }
+        ]
+      },
+      {
+        "name": "fixed-gr2-controls",
+        "poison": false,
+        "hz": 60,
+        "exit": 0,
+        "records": [
+          {
+            "kind": "clip",
+            "case": "player_attack",
+            "joints": 75,
+            "duration": 1,
+            "runtime_clip_bytes": 4254592,
+            "acl_bytes": 26777,
+            "ozz_clip_bytes": 1492574,
+            "ozz_skeleton_bytes": 5261,
+            "acl_encoder_peak_requested_bytes": 1117077,
+            "resample_hz": 60,
+            "resample_us": 813.2,
+            "acl_compress_us": 13541,
+            "ozz_build_us": 18511.2,
+            "import_bind_us": 52950.8,
+            "max_source_shear": 3.042640273e-08,
+            "step_tracks": 0,
+            "slerp_tracks": 0,
+            "quality_samples": 26594,
+            "acl_error": {
+              "translation": 0.770115042,
+              "rotation_degrees": 4.300019653,
+              "scale_shear": 3.042640273e-08,
+              "world_position": 6.7578939,
+              "world_matrix": 6.728464603
+            },
+            "ozz_error": {
+              "translation": 0.04382195528,
+              "rotation_degrees": 0.01745654027,
+              "scale_shear": 0.0004568099976,
+              "world_position": 0.06481676043,
+              "world_matrix": 0.06190490723
+            },
+            "resample_error": {
+              "translation": 0.7701226471,
+              "rotation_degrees": 4.300056376,
+              "scale_shear": 3.042640273e-08,
+              "world_position": 6.75793961,
+              "world_matrix": 6.728509426
+            },
+            "acl_quantization_error": {
+              "translation": 0.000862121582,
+              "rotation_degrees": 0.01967037779,
+              "scale_shear": 0,
+              "world_position": 0.0008622862703,
+              "world_matrix": 0.000862121582
+            },
+            "ozz_actual_world_matrix_error": 0.06190490723,
+            "acl_reordered_tracks": 0
+          },
+          {
+            "kind": "clip",
+            "case": "mob_run",
+            "joints": 40,
+            "duration": 0.6000000238,
+            "runtime_clip_bytes": 2796872,
+            "acl_bytes": 13687,
+            "ozz_clip_bytes": 968104,
+            "ozz_skeleton_bytes": 2806,
+            "acl_encoder_peak_requested_bytes": 479844,
+            "resample_hz": 61.66666412,
+            "resample_us": 247.1,
+            "acl_compress_us": 8370.1,
+            "ozz_build_us": 11607.9,
+            "import_bind_us": 31888.1,
+            "max_source_shear": 1.870450017e-09,
+            "step_tracks": 0,
+            "slerp_tracks": 0,
+            "quality_samples": 20309,
+            "acl_error": {
+              "translation": 0.5631637573,
+              "rotation_degrees": 2.057483767,
+              "scale_shear": 1.870450017e-09,
+              "world_position": 2.202412434,
+              "world_matrix": 2.149709702
+            },
+            "ozz_error": {
+              "translation": 0.03124237082,
+              "rotation_degrees": 0.01656039088,
+              "scale_shear": 3.576278687e-07,
+              "world_position": 0.06051523635,
+              "world_matrix": 0.05355834961
+            },
+            "resample_error": {
+              "translation": 0.563117981,
+              "rotation_degrees": 2.057471252,
+              "scale_shear": 1.870450017e-09,
+              "world_position": 2.202409319,
+              "world_matrix": 2.149800301
+            },
+            "acl_quantization_error": {
+              "translation": 0.0009346008301,
+              "rotation_degrees": 0.02786381476,
+              "scale_shear": 0,
+              "world_position": 0.02364679863,
+              "world_matrix": 0.02362203598
+            },
+            "ozz_actual_world_matrix_error": 0.05355453491,
+            "acl_reordered_tracks": 0
+          },
+          {
+            "kind": "clip",
+            "case": "boss_attack",
+            "joints": 163,
+            "duration": 3.333333492,
+            "runtime_clip_bytes": 3458152,
+            "acl_bytes": 145805,
+            "ozz_clip_bytes": 1153756,
+            "ozz_skeleton_bytes": 11396,
+            "acl_encoder_peak_requested_bytes": 5578958,
+            "resample_hz": 60.29999542,
+            "resample_us": 3955.3,
+            "acl_compress_us": 60176.4,
+            "ozz_build_us": 14662.1,
+            "import_bind_us": 56956.9,
+            "max_source_shear": 0.05300044641,
+            "step_tracks": 0,
+            "slerp_tracks": 0,
+            "quality_samples": 25711,
+            "acl_error": {
+              "translation": 0,
+              "rotation_degrees": 0.2653151416,
+              "scale_shear": 0.05303896964,
+              "world_position": 5.263862903,
+              "world_matrix": 4.712295532
+            },
+            "ozz_error": {
+              "translation": 0.02443695068,
+              "rotation_degrees": 0.01696141452,
+              "scale_shear": 0.05303896964,
+              "world_position": 5.241346876,
+              "world_matrix": 4.664932251
+            },
+            "resample_error": {
+              "translation": 0,
+              "rotation_degrees": 0.2655717997,
+              "scale_shear": 0.05303896964,
+              "world_position": 5.263835843,
+              "world_matrix": 4.712303162
+            },
+            "acl_quantization_error": {
+              "translation": 0,
+              "rotation_degrees": 0.02195659156,
+              "scale_shear": 9.298324585e-06,
+              "world_position": 0.05478879851,
+              "world_matrix": 0.05139160156
+            },
+            "ozz_actual_world_matrix_error": 4.66494751,
+            "acl_reordered_tracks": 0
+          },
+          {
+            "kind": "clip",
+            "case": "mount_run",
+            "joints": 54,
+            "duration": 0.6666666865,
+            "runtime_clip_bytes": 2854752,
+            "acl_bytes": 16108,
+            "ozz_clip_bytes": 981666,
+            "ozz_skeleton_bytes": 3852,
+            "acl_encoder_peak_requested_bytes": 715328,
+            "resample_hz": 61.5,
+            "resample_us": 443.8,
+            "acl_compress_us": 7842.5,
+            "ozz_build_us": 11896.3,
+            "import_bind_us": 34900.1,
+            "max_source_shear": 4.47268933e-09,
+            "step_tracks": 0,
+            "slerp_tracks": 0,
+            "quality_samples": 15773,
+            "acl_error": {
+              "translation": 0.3823663762,
+              "rotation_degrees": 1.518097558,
+              "scale_shear": 4.47268933e-09,
+              "world_position": 1.858058346,
+              "world_matrix": 1.845878601
+            },
+            "ozz_error": {
+              "translation": 0.06279813268,
+              "rotation_degrees": 0.01661282784,
+              "scale_shear": 5.960464478e-08,
+              "world_position": 0.102011515,
+              "world_matrix": 0.09957122803
+            },
+            "resample_error": {
+              "translation": 0.3823647479,
+              "rotation_degrees": 1.518091809,
+              "scale_shear": 4.47268933e-09,
+              "world_position": 1.85809033,
+              "world_matrix": 1.845916748
+            },
+            "acl_quantization_error": {
+              "translation": 0.0003825640674,
+              "rotation_degrees": 0.02786426215,
+              "scale_shear": 0,
+              "world_position": 0.00542760142,
+              "world_matrix": 0.005390167236
+            },
+            "ozz_actual_world_matrix_error": 0.09954071045,
+            "acl_reordered_tracks": 0
+          }
+        ]
+      },
+      {
+        "name": "fixed-poison-0",
+        "poison": true,
+        "hz": 60,
+        "exit": 0,
+        "records": [
+          {
+            "kind": "clip",
+            "case": "glb_fixture_0",
+            "joints": 21,
+            "duration": 2,
+            "runtime_clip_bytes": 880,
+            "acl_bytes": 1090,
+            "ozz_clip_bytes": 1701,
+            "ozz_skeleton_bytes": 1615,
+            "acl_encoder_peak_requested_bytes": 468127,
+            "resample_hz": 60,
+            "resample_us": 314.8,
+            "acl_compress_us": 2786.5,
+            "ozz_build_us": 46.8,
+            "import_bind_us": 595.8,
+            "max_source_shear": 0,
+            "step_tracks": 0,
+            "slerp_tracks": 1,
+            "quality_samples": 493,
+            "acl_error": {
+              "translation": 0.0007705688477,
+              "rotation_degrees": 0.0002581391361,
+              "scale_shear": 3.576278687e-06,
+              "world_position": 0.0008468713846,
+              "world_matrix": 0.000846862793
+            },
+            "ozz_error": {
+              "translation": 0.0003662109375,
+              "rotation_degrees": 0.00458203,
+              "scale_shear": 0.0003551244736,
+              "world_position": 0.1008282677,
+              "world_matrix": 0.07336425781
+            },
+            "resample_error": {
+              "translation": 7.629394531e-06,
+              "rotation_degrees": 2.414836539e-06,
+              "scale_shear": 1.192092896e-07,
+              "world_position": 3.051781095e-05,
+              "world_matrix": 3.051757812e-05
+            },
+            "acl_quantization_error": {
+              "translation": 0.0007705688477,
+              "rotation_degrees": 0.0002583423686,
+              "scale_shear": 3.516674042e-06,
+              "world_position": 0.0008468713846,
+              "world_matrix": 0.000846862793
+            },
+            "ozz_actual_world_matrix_error": 0.07336425781,
+            "acl_reordered_tracks": 21
+          },
+          {
+            "kind": "clip",
+            "case": "glb_fixture_1",
+            "joints": 21,
+            "duration": 1.200000048,
+            "runtime_clip_bytes": 2328,
+            "acl_bytes": 2029,
+            "ozz_clip_bytes": 1836,
+            "ozz_skeleton_bytes": 1615,
+            "acl_encoder_peak_requested_bytes": 343704,
+            "resample_hz": 60.83333206,
+            "resample_us": 200.5,
+            "acl_compress_us": 1724.1,
+            "ozz_build_us": 31.4,
+            "import_bind_us": 595.9,
+            "max_source_shear": 0,
+            "step_tracks": 0,
+            "slerp_tracks": 6,
+            "quality_samples": 306,
+            "acl_error": {
+              "translation": 0.05158233643,
+              "rotation_degrees": 0.4931719037,
+              "scale_shear": 0.0001032948494,
+              "world_position": 1.026676773,
+              "world_matrix": 0.7924613953
+            },
+            "ozz_error": {
+              "translation": 0.0006103515625,
+              "rotation_degrees": 0.01981521101,
+              "scale_shear": 0.0001183748245,
+              "world_position": 0.1008282677,
+              "world_matrix": 0.07336425781
+            },
+            "resample_error": {
+              "translation": 0.05136871338,
+              "rotation_degrees": 0.4931521232,
+              "scale_shear": 0.0001027584076,
+              "world_position": 1.02655344,
+              "world_matrix": 0.7924766541
+            },
+            "acl_quantization_error": {
+              "translation": 0.0005569458008,
+              "rotation_degrees": 0.0003457182411,
+              "scale_shear": 4.172325134e-06,
+              "world_position": 0.0006363132371,
+              "world_matrix": 0.0006332397461
+            },
+            "ozz_actual_world_matrix_error": 0.07336425781,
+            "acl_reordered_tracks": 21
+          },
+          {
+            "kind": "clip",
+            "case": "glb_fixture_2",
+            "joints": 21,
+            "duration": 0.6999999881,
+            "runtime_clip_bytes": 2328,
+            "acl_bytes": 1756,
+            "ozz_clip_bytes": 1836,
+            "ozz_skeleton_bytes": 1615,
+            "acl_encoder_peak_requested_bytes": 275466,
+            "resample_hz": 60,
+            "resample_us": 90.2,
+            "acl_compress_us": 1123.5,
+            "ozz_build_us": 27.9,
+            "import_bind_us": 498.8,
+            "max_source_shear": 0,
+            "step_tracks": 0,
+            "slerp_tracks": 6,
+            "quality_samples": 269,
+            "acl_error": {
+              "translation": 0.1192016602,
+              "rotation_degrees": 2.047616785,
+              "scale_shear": 0.0002384185791,
+              "world_position": 4.091699691,
+              "world_matrix": 3.803924561
+            },
+            "ozz_error": {
+              "translation": 0.0006103515625,
+              "rotation_degrees": 0.1017293288,
+              "scale_shear": 0.0001183748245,
+              "world_position": 0.2118801449,
+              "world_matrix": 0.2067995071
+            },
+            "resample_error": {
+              "translation": 0.1190490723,
+              "rotation_degrees": 2.047616785,
+              "scale_shear": 0.0002381205559,
+              "world_position": 4.091577643,
+              "world_matrix": 3.803787231
+            },
+            "acl_quantization_error": {
+              "translation": 0.0004959106445,
+              "rotation_degrees": 0.0008615045696,
+              "scale_shear": 1.907348633e-06,
+              "world_position": 0.001661169264,
+              "world_matrix": 0.001426696777
+            },
+            "ozz_actual_world_matrix_error": 0.2067995071,
+            "acl_reordered_tracks": 21
+          },
+          {
+            "kind": "clip",
+            "case": "glb_fixture_3",
+            "joints": 21,
+            "duration": 0.8000000119,
+            "runtime_clip_bytes": 1376,
+            "acl_bytes": 1183,
+            "ozz_clip_bytes": 1755,
+            "ozz_skeleton_bytes": 1615,
+            "acl_encoder_peak_requested_bytes": 274995,
+            "resample_hz": 61.25,
+            "resample_us": 125.3,
+            "acl_compress_us": 1108.7,
+            "ozz_build_us": 28.9,
+            "import_bind_us": 530.4,
+            "max_source_shear": 0,
+            "step_tracks": 0,
+            "slerp_tracks": 3,
+            "quality_samples": 269,
+            "acl_error": {
+              "translation": 0,
+              "rotation_degrees": 2.550892993,
+              "scale_shear": 0.0001533031464,
+              "world_position": 4.010985651,
+              "world_matrix": 3.344287872
+            },
+            "ozz_error": {
+              "translation": 9.536743164e-07,
+              "rotation_degrees": 1.273583789,
+              "scale_shear": 0.0001183748245,
+              "world_position": 1.481621848,
+              "world_matrix": 1.447691917
+            },
+            "resample_error": {
+              "translation": 0,
+              "rotation_degrees": 2.551018673,
+              "scale_shear": 0.0001530647278,
+              "world_position": 4.010962252,
+              "world_matrix": 3.344295502
+            },
+            "acl_quantization_error": {
+              "translation": 0,
+              "rotation_degrees": 0.005308011764,
+              "scale_shear": 5.066394806e-06,
+              "world_position": 0.006303844654,
+              "world_matrix": 0.00602722168
+            },
+            "ozz_actual_world_matrix_error": 1.44769001,
+            "acl_reordered_tracks": 21
+          },
+          {
+            "kind": "clip",
+            "case": "glb_fixture_4",
+            "joints": 21,
+            "duration": 0.5500000119,
+            "runtime_clip_bytes": 984,
+            "acl_bytes": 652,
+            "ozz_clip_bytes": 1701,
+            "ozz_skeleton_bytes": 1615,
+            "acl_encoder_peak_requested_bytes": 231522,
+            "resample_hz": 61.81818008,
+            "resample_us": 83.6,
+            "acl_compress_us": 726.5,
+            "ozz_build_us": 24.5,
+            "import_bind_us": 583.4,
+            "max_source_shear": 0,
+            "step_tracks": 0,
+            "slerp_tracks": 1,
+            "quality_samples": 269,
+            "acl_error": {
+              "translation": 0,
+              "rotation_degrees": 0.9410977015,
+              "scale_shear": 0.0002944469452,
+              "world_position": 0.872719116,
+              "world_matrix": 0.8147106171
+            },
+            "ozz_error": {
+              "translation": 9.536743164e-07,
+              "rotation_degrees": 0.01185831737,
+              "scale_shear": 0.0001183748245,
+              "world_position": 0.1008282677,
+              "world_matrix": 0.07336425781
+            },
+            "resample_error": {
+              "translation": 0,
+              "rotation_degrees": 0.9411761742,
+              "scale_shear": 0.0002940893173,
+              "world_position": 0.8727942857,
+              "world_matrix": 0.8147735596
+            },
+            "acl_quantization_error": {
+              "translation": 0,
+              "rotation_degrees": 0.000342161972,
+              "scale_shear": 4.529953003e-06,
+              "world_position": 0.0003195879885,
+              "world_matrix": 0.0003161430359
+            },
+            "ozz_actual_world_matrix_error": 0.07336425781,
+            "acl_reordered_tracks": 21
+          },
+          {
+            "kind": "clip",
+            "case": "glb_fixture_5",
+            "joints": 21,
+            "duration": 1.299999952,
+            "runtime_clip_bytes": 880,
+            "acl_bytes": 1086,
+            "ozz_clip_bytes": 1701,
+            "ozz_skeleton_bytes": 1615,
+            "acl_encoder_peak_requested_bytes": 351792,
+            "resample_hz": 60.00000381,
+            "resample_us": 135.4,
+            "acl_compress_us": 1959.8,
+            "ozz_build_us": 23.5,
+            "import_bind_us": 508.5,
+            "max_source_shear": 0,
+            "step_tracks": 0,
+            "slerp_tracks": 1,
+            "quality_samples": 326,
+            "acl_error": {
+              "translation": 0.2178688049,
+              "rotation_degrees": 0.3204883629,
+              "scale_shear": 0.0001285076141,
+              "world_position": 0.6361748074,
+              "world_matrix": 0.6352539062
+            },
+            "ozz_error": {
+              "translation": 0.00732421875,
+              "rotation_degrees": 0.05355750871,
+              "scale_shear": 0.0001183748245,
+              "world_position": 0.1008282677,
+              "world_matrix": 0.07336425781
+            },
+            "resample_error": {
+              "translation": 0.2179489136,
+              "rotation_degrees": 0.3205177581,
+              "scale_shear": 0.0001282095909,
+              "world_position": 0.6362909873,
+              "world_matrix": 0.6353702545
+            },
+            "acl_quantization_error": {
+              "translation": 0.0004119873047,
+              "rotation_degrees": 0.0002659008083,
+              "scale_shear": 3.635883331e-06,
+              "world_position": 0.0005455550588,
+              "world_matrix": 0.000545501709
+            },
+            "ozz_actual_world_matrix_error": 0.07336425781,
+            "acl_reordered_tracks": 21
+          }
+        ]
+      },
+      {
+        "name": "fixed-poison-1",
+        "poison": true,
+        "hz": 60,
+        "exit": 0,
+        "records": [
+          {
+            "kind": "clip",
+            "case": "glb_fixture_0",
+            "joints": 21,
+            "duration": 2,
+            "runtime_clip_bytes": 880,
+            "acl_bytes": 1090,
+            "ozz_clip_bytes": 1701,
+            "ozz_skeleton_bytes": 1615,
+            "acl_encoder_peak_requested_bytes": 468127,
+            "resample_hz": 60,
+            "resample_us": 348,
+            "acl_compress_us": 2753.5,
+            "ozz_build_us": 39.7,
+            "import_bind_us": 581.8,
+            "max_source_shear": 0,
+            "step_tracks": 0,
+            "slerp_tracks": 1,
+            "quality_samples": 493,
+            "acl_error": {
+              "translation": 0.0007705688477,
+              "rotation_degrees": 0.0002581391361,
+              "scale_shear": 3.576278687e-06,
+              "world_position": 0.0008468713846,
+              "world_matrix": 0.000846862793
+            },
+            "ozz_error": {
+              "translation": 0.0003662109375,
+              "rotation_degrees": 0.00458203,
+              "scale_shear": 0.0003551244736,
+              "world_position": 0.1008282677,
+              "world_matrix": 0.07336425781
+            },
+            "resample_error": {
+              "translation": 7.629394531e-06,
+              "rotation_degrees": 2.414836539e-06,
+              "scale_shear": 1.192092896e-07,
+              "world_position": 3.051781095e-05,
+              "world_matrix": 3.051757812e-05
+            },
+            "acl_quantization_error": {
+              "translation": 0.0007705688477,
+              "rotation_degrees": 0.0002583423686,
+              "scale_shear": 3.516674042e-06,
+              "world_position": 0.0008468713846,
+              "world_matrix": 0.000846862793
+            },
+            "ozz_actual_world_matrix_error": 0.07336425781,
+            "acl_reordered_tracks": 21
+          },
+          {
+            "kind": "clip",
+            "case": "glb_fixture_1",
+            "joints": 21,
+            "duration": 1.200000048,
+            "runtime_clip_bytes": 2328,
+            "acl_bytes": 2029,
+            "ozz_clip_bytes": 1836,
+            "ozz_skeleton_bytes": 1615,
+            "acl_encoder_peak_requested_bytes": 343704,
+            "resample_hz": 60.83333206,
+            "resample_us": 188.8,
+            "acl_compress_us": 1719.7,
+            "ozz_build_us": 36.6,
+            "import_bind_us": 515.9,
+            "max_source_shear": 0,
+            "step_tracks": 0,
+            "slerp_tracks": 6,
+            "quality_samples": 306,
+            "acl_error": {
+              "translation": 0.05158233643,
+              "rotation_degrees": 0.4931719037,
+              "scale_shear": 0.0001032948494,
+              "world_position": 1.026676773,
+              "world_matrix": 0.7924613953
+            },
+            "ozz_error": {
+              "translation": 0.0006103515625,
+              "rotation_degrees": 0.01981521101,
+              "scale_shear": 0.0001183748245,
+              "world_position": 0.1008282677,
+              "world_matrix": 0.07336425781
+            },
+            "resample_error": {
+              "translation": 0.05136871338,
+              "rotation_degrees": 0.4931521232,
+              "scale_shear": 0.0001027584076,
+              "world_position": 1.02655344,
+              "world_matrix": 0.7924766541
+            },
+            "acl_quantization_error": {
+              "translation": 0.0005569458008,
+              "rotation_degrees": 0.0003457182411,
+              "scale_shear": 4.172325134e-06,
+              "world_position": 0.0006363132371,
+              "world_matrix": 0.0006332397461
+            },
+            "ozz_actual_world_matrix_error": 0.07336425781,
+            "acl_reordered_tracks": 21
+          },
+          {
+            "kind": "clip",
+            "case": "glb_fixture_2",
+            "joints": 21,
+            "duration": 0.6999999881,
+            "runtime_clip_bytes": 2328,
+            "acl_bytes": 1756,
+            "ozz_clip_bytes": 1836,
+            "ozz_skeleton_bytes": 1615,
+            "acl_encoder_peak_requested_bytes": 275466,
+            "resample_hz": 60,
+            "resample_us": 120.2,
+            "acl_compress_us": 1116.2,
+            "ozz_build_us": 30.1,
+            "import_bind_us": 509.1,
+            "max_source_shear": 0,
+            "step_tracks": 0,
+            "slerp_tracks": 6,
+            "quality_samples": 269,
+            "acl_error": {
+              "translation": 0.1192016602,
+              "rotation_degrees": 2.047616785,
+              "scale_shear": 0.0002384185791,
+              "world_position": 4.091699691,
+              "world_matrix": 3.803924561
+            },
+            "ozz_error": {
+              "translation": 0.0006103515625,
+              "rotation_degrees": 0.1017293288,
+              "scale_shear": 0.0001183748245,
+              "world_position": 0.2118801449,
+              "world_matrix": 0.2067995071
+            },
+            "resample_error": {
+              "translation": 0.1190490723,
+              "rotation_degrees": 2.047616785,
+              "scale_shear": 0.0002381205559,
+              "world_position": 4.091577643,
+              "world_matrix": 3.803787231
+            },
+            "acl_quantization_error": {
+              "translation": 0.0004959106445,
+              "rotation_degrees": 0.0008615045696,
+              "scale_shear": 1.907348633e-06,
+              "world_position": 0.001661169264,
+              "world_matrix": 0.001426696777
+            },
+            "ozz_actual_world_matrix_error": 0.2067995071,
+            "acl_reordered_tracks": 21
+          },
+          {
+            "kind": "clip",
+            "case": "glb_fixture_3",
+            "joints": 21,
+            "duration": 0.8000000119,
+            "runtime_clip_bytes": 1376,
+            "acl_bytes": 1183,
+            "ozz_clip_bytes": 1755,
+            "ozz_skeleton_bytes": 1615,
+            "acl_encoder_peak_requested_bytes": 274995,
+            "resample_hz": 61.25,
+            "resample_us": 142.5,
+            "acl_compress_us": 1097.7,
+            "ozz_build_us": 24,
+            "import_bind_us": 504.3,
+            "max_source_shear": 0,
+            "step_tracks": 0,
+            "slerp_tracks": 3,
+            "quality_samples": 269,
+            "acl_error": {
+              "translation": 0,
+              "rotation_degrees": 2.550892993,
+              "scale_shear": 0.0001533031464,
+              "world_position": 4.010985651,
+              "world_matrix": 3.344287872
+            },
+            "ozz_error": {
+              "translation": 9.536743164e-07,
+              "rotation_degrees": 1.273583789,
+              "scale_shear": 0.0001183748245,
+              "world_position": 1.481621848,
+              "world_matrix": 1.447691917
+            },
+            "resample_error": {
+              "translation": 0,
+              "rotation_degrees": 2.551018673,
+              "scale_shear": 0.0001530647278,
+              "world_position": 4.010962252,
+              "world_matrix": 3.344295502
+            },
+            "acl_quantization_error": {
+              "translation": 0,
+              "rotation_degrees": 0.005308011764,
+              "scale_shear": 5.066394806e-06,
+              "world_position": 0.006303844654,
+              "world_matrix": 0.00602722168
+            },
+            "ozz_actual_world_matrix_error": 1.44769001,
+            "acl_reordered_tracks": 21
+          },
+          {
+            "kind": "clip",
+            "case": "glb_fixture_4",
+            "joints": 21,
+            "duration": 0.5500000119,
+            "runtime_clip_bytes": 984,
+            "acl_bytes": 652,
+            "ozz_clip_bytes": 1701,
+            "ozz_skeleton_bytes": 1615,
+            "acl_encoder_peak_requested_bytes": 231522,
+            "resample_hz": 61.81818008,
+            "resample_us": 76.4,
+            "acl_compress_us": 699.8,
+            "ozz_build_us": 23.2,
+            "import_bind_us": 490.7,
+            "max_source_shear": 0,
+            "step_tracks": 0,
+            "slerp_tracks": 1,
+            "quality_samples": 269,
+            "acl_error": {
+              "translation": 0,
+              "rotation_degrees": 0.9410977015,
+              "scale_shear": 0.0002944469452,
+              "world_position": 0.872719116,
+              "world_matrix": 0.8147106171
+            },
+            "ozz_error": {
+              "translation": 9.536743164e-07,
+              "rotation_degrees": 0.01185831737,
+              "scale_shear": 0.0001183748245,
+              "world_position": 0.1008282677,
+              "world_matrix": 0.07336425781
+            },
+            "resample_error": {
+              "translation": 0,
+              "rotation_degrees": 0.9411761742,
+              "scale_shear": 0.0002940893173,
+              "world_position": 0.8727942857,
+              "world_matrix": 0.8147735596
+            },
+            "acl_quantization_error": {
+              "translation": 0,
+              "rotation_degrees": 0.000342161972,
+              "scale_shear": 4.529953003e-06,
+              "world_position": 0.0003195879885,
+              "world_matrix": 0.0003161430359
+            },
+            "ozz_actual_world_matrix_error": 0.07336425781,
+            "acl_reordered_tracks": 21
+          },
+          {
+            "kind": "clip",
+            "case": "glb_fixture_5",
+            "joints": 21,
+            "duration": 1.299999952,
+            "runtime_clip_bytes": 880,
+            "acl_bytes": 1086,
+            "ozz_clip_bytes": 1701,
+            "ozz_skeleton_bytes": 1615,
+            "acl_encoder_peak_requested_bytes": 351792,
+            "resample_hz": 60.00000381,
+            "resample_us": 141.8,
+            "acl_compress_us": 2032.5,
+            "ozz_build_us": 27.1,
+            "import_bind_us": 491.5,
+            "max_source_shear": 0,
+            "step_tracks": 0,
+            "slerp_tracks": 1,
+            "quality_samples": 326,
+            "acl_error": {
+              "translation": 0.2178688049,
+              "rotation_degrees": 0.3204883629,
+              "scale_shear": 0.0001285076141,
+              "world_position": 0.6361748074,
+              "world_matrix": 0.6352539062
+            },
+            "ozz_error": {
+              "translation": 0.00732421875,
+              "rotation_degrees": 0.05355750871,
+              "scale_shear": 0.0001183748245,
+              "world_position": 0.1008282677,
+              "world_matrix": 0.07336425781
+            },
+            "resample_error": {
+              "translation": 0.2179489136,
+              "rotation_degrees": 0.3205177581,
+              "scale_shear": 0.0001282095909,
+              "world_position": 0.6362909873,
+              "world_matrix": 0.6353702545
+            },
+            "acl_quantization_error": {
+              "translation": 0.0004119873047,
+              "rotation_degrees": 0.0002659008083,
+              "scale_shear": 3.635883331e-06,
+              "world_position": 0.0005455550588,
+              "world_matrix": 0.000545501709
+            },
+            "ozz_actual_world_matrix_error": 0.07336425781,
+            "acl_reordered_tracks": 21
+          }
+        ]
+      },
+      {
+        "name": "fixed-poison-2",
+        "poison": true,
+        "hz": 60,
+        "exit": 0,
+        "records": [
+          {
+            "kind": "clip",
+            "case": "glb_fixture_0",
+            "joints": 21,
+            "duration": 2,
+            "runtime_clip_bytes": 880,
+            "acl_bytes": 1090,
+            "ozz_clip_bytes": 1701,
+            "ozz_skeleton_bytes": 1615,
+            "acl_encoder_peak_requested_bytes": 468127,
+            "resample_hz": 60,
+            "resample_us": 303.5,
+            "acl_compress_us": 2731.1,
+            "ozz_build_us": 40.1,
+            "import_bind_us": 559,
+            "max_source_shear": 0,
+            "step_tracks": 0,
+            "slerp_tracks": 1,
+            "quality_samples": 493,
+            "acl_error": {
+              "translation": 0.0007705688477,
+              "rotation_degrees": 0.0002581391361,
+              "scale_shear": 3.576278687e-06,
+              "world_position": 0.0008468713846,
+              "world_matrix": 0.000846862793
+            },
+            "ozz_error": {
+              "translation": 0.0003662109375,
+              "rotation_degrees": 0.00458203,
+              "scale_shear": 0.0003551244736,
+              "world_position": 0.1008282677,
+              "world_matrix": 0.07336425781
+            },
+            "resample_error": {
+              "translation": 7.629394531e-06,
+              "rotation_degrees": 2.414836539e-06,
+              "scale_shear": 1.192092896e-07,
+              "world_position": 3.051781095e-05,
+              "world_matrix": 3.051757812e-05
+            },
+            "acl_quantization_error": {
+              "translation": 0.0007705688477,
+              "rotation_degrees": 0.0002583423686,
+              "scale_shear": 3.516674042e-06,
+              "world_position": 0.0008468713846,
+              "world_matrix": 0.000846862793
+            },
+            "ozz_actual_world_matrix_error": 0.07336425781,
+            "acl_reordered_tracks": 21
+          },
+          {
+            "kind": "clip",
+            "case": "glb_fixture_1",
+            "joints": 21,
+            "duration": 1.200000048,
+            "runtime_clip_bytes": 2328,
+            "acl_bytes": 2029,
+            "ozz_clip_bytes": 1836,
+            "ozz_skeleton_bytes": 1615,
+            "acl_encoder_peak_requested_bytes": 343704,
+            "resample_hz": 60.83333206,
+            "resample_us": 173.7,
+            "acl_compress_us": 1688.6,
+            "ozz_build_us": 30,
+            "import_bind_us": 613.2,
+            "max_source_shear": 0,
+            "step_tracks": 0,
+            "slerp_tracks": 6,
+            "quality_samples": 306,
+            "acl_error": {
+              "translation": 0.05158233643,
+              "rotation_degrees": 0.4931719037,
+              "scale_shear": 0.0001032948494,
+              "world_position": 1.026676773,
+              "world_matrix": 0.7924613953
+            },
+            "ozz_error": {
+              "translation": 0.0006103515625,
+              "rotation_degrees": 0.01981521101,
+              "scale_shear": 0.0001183748245,
+              "world_position": 0.1008282677,
+              "world_matrix": 0.07336425781
+            },
+            "resample_error": {
+              "translation": 0.05136871338,
+              "rotation_degrees": 0.4931521232,
+              "scale_shear": 0.0001027584076,
+              "world_position": 1.02655344,
+              "world_matrix": 0.7924766541
+            },
+            "acl_quantization_error": {
+              "translation": 0.0005569458008,
+              "rotation_degrees": 0.0003457182411,
+              "scale_shear": 4.172325134e-06,
+              "world_position": 0.0006363132371,
+              "world_matrix": 0.0006332397461
+            },
+            "ozz_actual_world_matrix_error": 0.07336425781,
+            "acl_reordered_tracks": 21
+          },
+          {
+            "kind": "clip",
+            "case": "glb_fixture_2",
+            "joints": 21,
+            "duration": 0.6999999881,
+            "runtime_clip_bytes": 2328,
+            "acl_bytes": 1756,
+            "ozz_clip_bytes": 1836,
+            "ozz_skeleton_bytes": 1615,
+            "acl_encoder_peak_requested_bytes": 275466,
+            "resample_hz": 60,
+            "resample_us": 86,
+            "acl_compress_us": 1113.3,
+            "ozz_build_us": 28.3,
+            "import_bind_us": 481.5,
+            "max_source_shear": 0,
+            "step_tracks": 0,
+            "slerp_tracks": 6,
+            "quality_samples": 269,
+            "acl_error": {
+              "translation": 0.1192016602,
+              "rotation_degrees": 2.047616785,
+              "scale_shear": 0.0002384185791,
+              "world_position": 4.091699691,
+              "world_matrix": 3.803924561
+            },
+            "ozz_error": {
+              "translation": 0.0006103515625,
+              "rotation_degrees": 0.1017293288,
+              "scale_shear": 0.0001183748245,
+              "world_position": 0.2118801449,
+              "world_matrix": 0.2067995071
+            },
+            "resample_error": {
+              "translation": 0.1190490723,
+              "rotation_degrees": 2.047616785,
+              "scale_shear": 0.0002381205559,
+              "world_position": 4.091577643,
+              "world_matrix": 3.803787231
+            },
+            "acl_quantization_error": {
+              "translation": 0.0004959106445,
+              "rotation_degrees": 0.0008615045696,
+              "scale_shear": 1.907348633e-06,
+              "world_position": 0.001661169264,
+              "world_matrix": 0.001426696777
+            },
+            "ozz_actual_world_matrix_error": 0.2067995071,
+            "acl_reordered_tracks": 21
+          },
+          {
+            "kind": "clip",
+            "case": "glb_fixture_3",
+            "joints": 21,
+            "duration": 0.8000000119,
+            "runtime_clip_bytes": 1376,
+            "acl_bytes": 1183,
+            "ozz_clip_bytes": 1755,
+            "ozz_skeleton_bytes": 1615,
+            "acl_encoder_peak_requested_bytes": 274995,
+            "resample_hz": 61.25,
+            "resample_us": 127.1,
+            "acl_compress_us": 1162.7,
+            "ozz_build_us": 26.7,
+            "import_bind_us": 492.8,
+            "max_source_shear": 0,
+            "step_tracks": 0,
+            "slerp_tracks": 3,
+            "quality_samples": 269,
+            "acl_error": {
+              "translation": 0,
+              "rotation_degrees": 2.550892993,
+              "scale_shear": 0.0001533031464,
+              "world_position": 4.010985651,
+              "world_matrix": 3.344287872
+            },
+            "ozz_error": {
+              "translation": 9.536743164e-07,
+              "rotation_degrees": 1.273583789,
+              "scale_shear": 0.0001183748245,
+              "world_position": 1.481621848,
+              "world_matrix": 1.447691917
+            },
+            "resample_error": {
+              "translation": 0,
+              "rotation_degrees": 2.551018673,
+              "scale_shear": 0.0001530647278,
+              "world_position": 4.010962252,
+              "world_matrix": 3.344295502
+            },
+            "acl_quantization_error": {
+              "translation": 0,
+              "rotation_degrees": 0.005308011764,
+              "scale_shear": 5.066394806e-06,
+              "world_position": 0.006303844654,
+              "world_matrix": 0.00602722168
+            },
+            "ozz_actual_world_matrix_error": 1.44769001,
+            "acl_reordered_tracks": 21
+          },
+          {
+            "kind": "clip",
+            "case": "glb_fixture_4",
+            "joints": 21,
+            "duration": 0.5500000119,
+            "runtime_clip_bytes": 984,
+            "acl_bytes": 652,
+            "ozz_clip_bytes": 1701,
+            "ozz_skeleton_bytes": 1615,
+            "acl_encoder_peak_requested_bytes": 231522,
+            "resample_hz": 61.81818008,
+            "resample_us": 73.3,
+            "acl_compress_us": 696.3,
+            "ozz_build_us": 22.8,
+            "import_bind_us": 546.8,
+            "max_source_shear": 0,
+            "step_tracks": 0,
+            "slerp_tracks": 1,
+            "quality_samples": 269,
+            "acl_error": {
+              "translation": 0,
+              "rotation_degrees": 0.9410977015,
+              "scale_shear": 0.0002944469452,
+              "world_position": 0.872719116,
+              "world_matrix": 0.8147106171
+            },
+            "ozz_error": {
+              "translation": 9.536743164e-07,
+              "rotation_degrees": 0.01185831737,
+              "scale_shear": 0.0001183748245,
+              "world_position": 0.1008282677,
+              "world_matrix": 0.07336425781
+            },
+            "resample_error": {
+              "translation": 0,
+              "rotation_degrees": 0.9411761742,
+              "scale_shear": 0.0002940893173,
+              "world_position": 0.8727942857,
+              "world_matrix": 0.8147735596
+            },
+            "acl_quantization_error": {
+              "translation": 0,
+              "rotation_degrees": 0.000342161972,
+              "scale_shear": 4.529953003e-06,
+              "world_position": 0.0003195879885,
+              "world_matrix": 0.0003161430359
+            },
+            "ozz_actual_world_matrix_error": 0.07336425781,
+            "acl_reordered_tracks": 21
+          },
+          {
+            "kind": "clip",
+            "case": "glb_fixture_5",
+            "joints": 21,
+            "duration": 1.299999952,
+            "runtime_clip_bytes": 880,
+            "acl_bytes": 1086,
+            "ozz_clip_bytes": 1701,
+            "ozz_skeleton_bytes": 1615,
+            "acl_encoder_peak_requested_bytes": 351792,
+            "resample_hz": 60.00000381,
+            "resample_us": 133.3,
+            "acl_compress_us": 2017.7,
+            "ozz_build_us": 29.2,
+            "import_bind_us": 565.4,
+            "max_source_shear": 0,
+            "step_tracks": 0,
+            "slerp_tracks": 1,
+            "quality_samples": 326,
+            "acl_error": {
+              "translation": 0.2178688049,
+              "rotation_degrees": 0.3204883629,
+              "scale_shear": 0.0001285076141,
+              "world_position": 0.6361748074,
+              "world_matrix": 0.6352539062
+            },
+            "ozz_error": {
+              "translation": 0.00732421875,
+              "rotation_degrees": 0.05355750871,
+              "scale_shear": 0.0001183748245,
+              "world_position": 0.1008282677,
+              "world_matrix": 0.07336425781
+            },
+            "resample_error": {
+              "translation": 0.2179489136,
+              "rotation_degrees": 0.3205177581,
+              "scale_shear": 0.0001282095909,
+              "world_position": 0.6362909873,
+              "world_matrix": 0.6353702545
+            },
+            "acl_quantization_error": {
+              "translation": 0.0004119873047,
+              "rotation_degrees": 0.0002659008083,
+              "scale_shear": 3.635883331e-06,
+              "world_position": 0.0005455550588,
+              "world_matrix": 0.000545501709
+            },
+            "ozz_actual_world_matrix_error": 0.07336425781,
+            "acl_reordered_tracks": 21
+          }
+        ]
+      },
+      {
+        "name": "fixed-glb1-warm",
+        "poison": false,
+        "hz": 60,
+        "exit": 0,
+        "records": [
+          {
+            "kind": "clip",
+            "case": "glb_fixture_1",
+            "joints": 21,
+            "duration": 1.200000048,
+            "runtime_clip_bytes": 2328,
+            "acl_bytes": 2029,
+            "ozz_clip_bytes": 1836,
+            "ozz_skeleton_bytes": 1615,
+            "acl_encoder_peak_requested_bytes": 343704,
+            "resample_hz": 60.83333206,
+            "resample_us": 282.2,
+            "acl_compress_us": 1840.4,
+            "ozz_build_us": 47.2,
+            "import_bind_us": 616.9,
+            "max_source_shear": 0,
+            "step_tracks": 0,
+            "slerp_tracks": 6,
+            "quality_samples": 306,
+            "acl_error": {
+              "translation": 0.05158233643,
+              "rotation_degrees": 0.4931719037,
+              "scale_shear": 0.0001032948494,
+              "world_position": 1.026676773,
+              "world_matrix": 0.7924613953
+            },
+            "ozz_error": {
+              "translation": 0.0006103515625,
+              "rotation_degrees": 0.01981521101,
+              "scale_shear": 0.0001183748245,
+              "world_position": 0.1008282677,
+              "world_matrix": 0.07336425781
+            },
+            "resample_error": {
+              "translation": 0.05136871338,
+              "rotation_degrees": 0.4931521232,
+              "scale_shear": 0.0001027584076,
+              "world_position": 1.02655344,
+              "world_matrix": 0.7924766541
+            },
+            "acl_quantization_error": {
+              "translation": 0.0005569458008,
+              "rotation_degrees": 0.0003457182411,
+              "scale_shear": 4.172325134e-06,
+              "world_position": 0.0006363132371,
+              "world_matrix": 0.0006332397461
+            },
+            "ozz_actual_world_matrix_error": 0.07336425781,
+            "acl_reordered_tracks": 21
+          },
+          {
+            "kind": "warm",
+            "case": "glb_fixture_1",
+            "actors": 1,
+            "repetitions": 31,
+            "batch_frames": 32,
+            "warm_allocations": 0,
+            "current_actor_pose_world_bytes": 5376,
+            "acl_context_bytes": 128,
+            "ozz_actor_requested_bytes": 7011,
+            "current_plus_acl_setup_us": 2.2,
+            "ozz_actor_setup_us": 3.9,
+            "current_sample": {
+              "median_us": 0.225,
+              "p95_us": 0.23125,
+              "max_us": 0.434375
+            },
+            "acl_decode": {
+              "median_us": 0.290625,
+              "p95_us": 0.29375,
+              "max_us": 0.29375
+            },
+            "ozz_sample": {
+              "median_us": 0.0875,
+              "p95_us": 0.10625,
+              "max_us": 0.115625
+            },
+            "current_blend": {
+              "median_us": 1.865625,
+              "p95_us": 1.94375,
+              "max_us": 2.028125
+            },
+            "ozz_blend": {
+              "median_us": 0.053125,
+              "p95_us": 0.05625,
+              "max_us": 0.05625
+            },
+            "current_local_to_model": {
+              "median_us": 1.678125,
+              "p95_us": 1.909375,
+              "max_us": 2.58125
+            },
+            "ozz_local_to_model": {
+              "median_us": 0.090625,
+              "p95_us": 0.121875,
+              "max_us": 0.13125
+            }
+          },
+          {
+            "kind": "warm",
+            "case": "glb_fixture_1",
+            "actors": 20,
+            "repetitions": 31,
+            "batch_frames": 32,
+            "warm_allocations": 0,
+            "current_actor_pose_world_bytes": 107520,
+            "acl_context_bytes": 2560,
+            "ozz_actor_requested_bytes": 140220,
+            "current_plus_acl_setup_us": 24.7,
+            "ozz_actor_setup_us": 59.2,
+            "current_sample": {
+              "median_us": 4.553125,
+              "p95_us": 4.8,
+              "max_us": 5.228125
+            },
+            "acl_decode": {
+              "median_us": 5.809375,
+              "p95_us": 6.39375,
+              "max_us": 6.675
+            },
+            "ozz_sample": {
+              "median_us": 1.775,
+              "p95_us": 1.828125,
+              "max_us": 1.990625
+            },
+            "current_blend": {
+              "median_us": 37.60625,
+              "p95_us": 42.778125,
+              "max_us": 44.89375
+            },
+            "ozz_blend": {
+              "median_us": 1.121875,
+              "p95_us": 1.18125,
+              "max_us": 1.1875
+            },
+            "current_local_to_model": {
+              "median_us": 33.978125,
+              "p95_us": 38.640625,
+              "max_us": 39.965625
+            },
+            "ozz_local_to_model": {
+              "median_us": 1.85,
+              "p95_us": 2.3375,
+              "max_us": 2.534375
+            }
+          },
+          {
+            "kind": "warm",
+            "case": "glb_fixture_1",
+            "actors": 100,
+            "repetitions": 31,
+            "batch_frames": 8,
+            "warm_allocations": 0,
+            "current_actor_pose_world_bytes": 537600,
+            "acl_context_bytes": 12800,
+            "ozz_actor_requested_bytes": 701100,
+            "current_plus_acl_setup_us": 186.3,
+            "ozz_actor_setup_us": 274.1,
+            "current_sample": {
+              "median_us": 22.675,
+              "p95_us": 26.725,
+              "max_us": 30.1375
+            },
+            "acl_decode": {
+              "median_us": 29.275,
+              "p95_us": 36.6875,
+              "max_us": 38.2
+            },
+            "ozz_sample": {
+              "median_us": 8.85,
+              "p95_us": 10.4125,
+              "max_us": 11.25
+            },
+            "current_blend": {
+              "median_us": 193.9375,
+              "p95_us": 221.5125,
+              "max_us": 259.125
+            },
+            "ozz_blend": {
+              "median_us": 5.5625,
+              "p95_us": 7.2875,
+              "max_us": 7.5375
+            },
+            "current_local_to_model": {
+              "median_us": 171.0375,
+              "p95_us": 203.4875,
+              "max_us": 214.7875
+            },
+            "ozz_local_to_model": {
+              "median_us": 9.2875,
+              "p95_us": 10.8875,
+              "max_us": 11.4375
+            }
+          }
+        ]
+      }
+    ],
+    "allocator_pattern_independent": true
+  },
+  "textures": {
+    "model": {
+      "source_url": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/d7a3cc8e51d7c573771ae77a57f16b0662a905c6/2.0/FlightHelmet/glTF-KTX-BasisU/",
+      "commit": "d7a3cc8e51d7c573771ae77a57f16b0662a905c6",
+      "license": "CC0; Microsoft FlightHelmet",
+      "source_gltf_sha256": "9a1faf3da0be662850b411a6d67c412f001466288d763d5d9941843f5b56c3de",
+      "geometry_sha256": "3d93548c0fee7d3695015e86171edaffe8cbb6d090459c54370d7acc6dc7999a",
+      "geometry_file": "FlightHelmet.bin",
+      "glb_sha256": "0314db84ace85cce82d5191eb79e19b732af0dcc0bcfa403bd951f13afdb4ff0",
+      "glb_bytes": 34033276,
+      "meshes": 6,
+      "primitives": 6,
+      "triangles": 94722,
+      "vertices": 55392,
+      "images": [
+        {
+          "uri": "FlightHelmet_Materials_RubberWoodMat_Normal.ktx2",
+          "sha256": "93265835afe710f20f3a67ac716cffeb27e5184a6082f2100d4cfb14e53eb061",
+          "bytes": 3465889,
+          "width": 2048,
+          "height": 2048,
+          "mips": 12,
+          "transfer": 1
+        },
+        {
+          "uri": "FlightHelmet_Materials_RubberWoodMat_OcclusionRoughMetal.ktx2",
+          "sha256": "9395e76e759c4832ec6d6086e4e69ff3ade1cf242e4526e7f783f85bf7fc1916",
+          "bytes": 3499777,
+          "width": 2048,
+          "height": 2048,
+          "mips": 12,
+          "transfer": 1
+        },
+        {
+          "uri": "FlightHelmet_Materials_RubberWoodMat_BaseColor.ktx2",
+          "sha256": "6cf92bfcaedb00d40e88abf3af44fd8d009c8be3e89ed7d9f277a071c1a1d806",
+          "bytes": 445129,
+          "width": 2048,
+          "height": 2048,
+          "mips": 12,
+          "transfer": 2
+        },
+        {
+          "uri": "FlightHelmet_Materials_GlassPlasticMat_Normal.ktx2",
+          "sha256": "7cf766f3d7b0264f77c8423c252a9bab36756259bf1b020438cba00ebd79748b",
+          "bytes": 2755265,
+          "width": 2048,
+          "height": 2048,
+          "mips": 12,
+          "transfer": 1
+        },
+        {
+          "uri": "FlightHelmet_Materials_GlassPlasticMat_OcclusionRoughMetal.ktx2",
+          "sha256": "bead200bae826b5b80c61ea1ff293209830b7d46d034933f6649821109ff74e5",
+          "bytes": 3820645,
+          "width": 2048,
+          "height": 2048,
+          "mips": 12,
+          "transfer": 1
+        },
+        {
+          "uri": "FlightHelmet_Materials_GlassPlasticMat_BaseColor.ktx2",
+          "sha256": "6e9e81234940a015c6bd1e91df5460b3bd2174b7531bc42bccf15555613e4d21",
+          "bytes": 310582,
+          "width": 2048,
+          "height": 2048,
+          "mips": 12,
+          "transfer": 2
+        },
+        {
+          "uri": "FlightHelmet_Materials_MetalPartsMat_Normal.ktx2",
+          "sha256": "49cf9205d0f8bcf45d758bb04fd91e663a04e814536c9f1b0eb95cc378795bb6",
+          "bytes": 3552557,
+          "width": 2048,
+          "height": 2048,
+          "mips": 12,
+          "transfer": 1
+        },
+        {
+          "uri": "FlightHelmet_Materials_MetalPartsMat_OcclusionRoughMetal.ktx2",
+          "sha256": "f7f1885c92fdc8f4a5af63f97674ee82d0c0ba8ed1ceac63197dac220b8cefe2",
+          "bytes": 3100510,
+          "width": 2048,
+          "height": 2048,
+          "mips": 12,
+          "transfer": 1
+        },
+        {
+          "uri": "FlightHelmet_Materials_MetalPartsMat_BaseColor.ktx2",
+          "sha256": "6401f1173be33e94a0c384bb01a7579ebcb1a3ab1fe854894134784e7d9f3064",
+          "bytes": 474058,
+          "width": 2048,
+          "height": 2048,
+          "mips": 12,
+          "transfer": 2
+        },
+        {
+          "uri": "FlightHelmet_Materials_LeatherPartsMat_Normal.ktx2",
+          "sha256": "48184b0e8130378687583a252307d20bbb59d7d491f2bc9e3d88ca3a00ac921d",
+          "bytes": 3809879,
+          "width": 2048,
+          "height": 2048,
+          "mips": 12,
+          "transfer": 1
+        },
+        {
+          "uri": "FlightHelmet_Materials_LeatherPartsMat_OcclusionRoughMetal.ktx2",
+          "sha256": "cf380bbe62ba2dcedaf8ccbf39389720a5d33d7742304eec5a7265acc7173791",
+          "bytes": 4156412,
+          "width": 2048,
+          "height": 2048,
+          "mips": 12,
+          "transfer": 1
+        },
+        {
+          "uri": "FlightHelmet_Materials_LeatherPartsMat_BaseColor.ktx2",
+          "sha256": "2c5d59a1961e0479276b0579cf32a99dc06a1ffd3aa18632b3f43333c7146e52",
+          "bytes": 494615,
+          "width": 2048,
+          "height": 2048,
+          "mips": 12,
+          "transfer": 2
+        },
+        {
+          "uri": "FlightHelmet_Materials_LensesMat_Normal.ktx2",
+          "sha256": "ea7ad25b064e5258bdce4a6d50b23fdeb9fbcfaeab3c4d6dcdc4f83fbb7c0106",
+          "bytes": 1670,
+          "width": 1024,
+          "height": 1024,
+          "mips": 11,
+          "transfer": 1
+        },
+        {
+          "uri": "FlightHelmet_Materials_LensesMat_OcclusionRoughMetal.ktx2",
+          "sha256": "557cf0706c90775fce45cd92ddbdeca73b8438420e2c36c4f1cf88b8ce5e6a58",
+          "bytes": 703074,
+          "width": 1024,
+          "height": 1024,
+          "mips": 11,
+          "transfer": 1
+        },
+        {
+          "uri": "FlightHelmet_Materials_LensesMat_BaseColor.ktx2",
+          "sha256": "f0bf199f430428dd5168d00d57c70236bb7c7c472c16d13aa46f6e3b8cee022a",
+          "bytes": 206414,
+          "width": 1024,
+          "height": 1024,
+          "mips": 11,
+          "transfer": 2
+        }
+      ],
+      "materials": [
+        {
+          "name": "HoseMat",
+          "alpha": "OPAQUE",
+          "basecolor": "FlightHelmet_Materials_RubberWoodMat_BaseColor.ktx2",
+          "normal": "FlightHelmet_Materials_RubberWoodMat_Normal.ktx2",
+          "rough_metal": "FlightHelmet_Materials_RubberWoodMat_OcclusionRoughMetal.ktx2"
+        },
+        {
+          "name": "RubberWoodMat",
+          "alpha": "OPAQUE",
+          "basecolor": "FlightHelmet_Materials_RubberWoodMat_BaseColor.ktx2",
+          "normal": "FlightHelmet_Materials_RubberWoodMat_Normal.ktx2",
+          "rough_metal": "FlightHelmet_Materials_RubberWoodMat_OcclusionRoughMetal.ktx2"
+        },
+        {
+          "name": "GlassPlasticMat",
+          "alpha": "OPAQUE",
+          "basecolor": "FlightHelmet_Materials_GlassPlasticMat_BaseColor.ktx2",
+          "normal": "FlightHelmet_Materials_GlassPlasticMat_Normal.ktx2",
+          "rough_metal": "FlightHelmet_Materials_GlassPlasticMat_OcclusionRoughMetal.ktx2"
+        },
+        {
+          "name": "MetalPartsMat",
+          "alpha": "OPAQUE",
+          "basecolor": "FlightHelmet_Materials_MetalPartsMat_BaseColor.ktx2",
+          "normal": "FlightHelmet_Materials_MetalPartsMat_Normal.ktx2",
+          "rough_metal": "FlightHelmet_Materials_MetalPartsMat_OcclusionRoughMetal.ktx2"
+        },
+        {
+          "name": "LeatherPartsMat",
+          "alpha": "OPAQUE",
+          "basecolor": "FlightHelmet_Materials_LeatherPartsMat_BaseColor.ktx2",
+          "normal": "FlightHelmet_Materials_LeatherPartsMat_Normal.ktx2",
+          "rough_metal": "FlightHelmet_Materials_LeatherPartsMat_OcclusionRoughMetal.ktx2"
+        },
+        {
+          "name": "LensesMat",
+          "alpha": "BLEND",
+          "basecolor": "FlightHelmet_Materials_LensesMat_BaseColor.ktx2",
+          "normal": "FlightHelmet_Materials_LensesMat_Normal.ktx2",
+          "rough_metal": "FlightHelmet_Materials_LensesMat_OcclusionRoughMetal.ktx2"
+        }
+      ],
+      "animations": 0,
+      "check": "PASS: geometry, all 15 encoded mip chains, materials, samplers and scene unchanged",
+      "scope": "External authored production-near static PBR model, not a Metin2 production character; offline container/texture proof"
+    },
+    "corpus": [
+      {
+        "name": "leather_basecolor",
+        "material": "LeatherPartsMat",
+        "semantic": "color",
+        "original": "FlightHelmet_Materials_LeatherPartsMat_BaseColor.ktx2",
+        "original_sha256": "2c5d59a1961e0479276b0579cf32a99dc06a1ffd3aa18632b3f43333c7146e52",
+        "baseline": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\closure\\textures\\leather_basecolor-baseline.dds",
+        "baseline_sha256": "c74690e8b6259a91f5c3ab8662696958f314619a5f5b2563cd80da9a4901d4fb",
+        "baseline_dxgi": 99,
+        "baseline_note": "Derived BC7 DDS, not an existing production-pack texture; RGB normal retained including negative Z",
+        "encoder_input": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\closure\\textures\\leather_basecolor-input.dds",
+        "encoder_input_sha256": "0dd688f7416c8d89b66a955f21567dd6d3c1ccfc56d52282d336e5dfa3677489",
+        "input_mip_sha256": [
+          "caecf650bbe5f16c3f3168bb816f931cc216afd47e434487616d3b785435fdb3",
+          "1e34a1ae65c3ebb0bc4b0825ede7ac4a6e6c70a2dff5025a946c1d84a692c462",
+          "195366b2e641f86f0aed7b7ab35e4089b3c34fc6a6eeb08cc78f3c73bf61a268",
+          "bb3a22425d0a04dd900d59a501ad87a3973c3a782886015b76d994843db7ec6e",
+          "a5ce704ed724ba47fe694503da97a237d08ae685ce8dd27cd1bbc059d8f3d8af",
+          "022b8b691332a1593c2f9b13db4bd6a5831c15a9a4134d61ff8db07be35b4741",
+          "283c2c346692b65da34abbe8b153c67ba21b9dcf37a3d4fc19ce46be9bc46369",
+          "aae5c24a84d9011be38a8c31f0b2ed1c99f258f3b9e6c34c5d2928e5d6fd31c1",
+          "a5442f3114068f156c1c90292d1145c7fc199b34dc24e3c3f139755e6c507e91",
+          "06c3fc766d079a22fe1bdf56d4b407b6c549353826722dee620ecf861008c01b",
+          "579877809543e053d7d6393fc13146a39b114f55f603b76768f574e6a845a33f",
+          "4c4bcb96977efe136638af4dca6149911ae0f8bc1c3d574a6be3241fd306a8ca"
+        ],
+        "normal_baseline_projection": [],
+        "width": 2048,
+        "height": 2048,
+        "mips": 12,
+        "transfer": 2
+      },
+      {
+        "name": "leather_normal",
+        "material": "LeatherPartsMat",
+        "semantic": "normal",
+        "original": "FlightHelmet_Materials_LeatherPartsMat_Normal.ktx2",
+        "original_sha256": "48184b0e8130378687583a252307d20bbb59d7d491f2bc9e3d88ca3a00ac921d",
+        "baseline": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\closure\\textures\\leather_normal-baseline.dds",
+        "baseline_sha256": "d45f0bd413f25d1a34d28ed98c95ef9d2b03baf85c21a99f7ce6bd4d949503ce",
+        "baseline_dxgi": 98,
+        "baseline_note": "Derived BC7 DDS, not an existing production-pack texture; RGB normal retained including negative Z",
+        "encoder_input": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\closure\\textures\\leather_normal-input.dds",
+        "encoder_input_sha256": "ac681a9d91df98ce48efdff78892637f0f222499685f3d9dd067b40ef272e364",
+        "input_mip_sha256": [
+          "650f0212a6b33079b1324f1705741fcb60ae592bd44cdba66c8b202c17179798",
+          "a325c763db80557e01294e9989174b1874f7b37e573b130aa079a34699d17a8a",
+          "a95112b9c9f8204400bf6b0091feee652a9b53b3d4d035419720ef837485b0d8",
+          "84d797252c525292fade35e5b62f5c689c6ae9b57445e9442b1ad02c34fc3878",
+          "cfeb8e1360bddc2cc0e558297f5f8926107a445d53d5b75b8382cb0ce05d7cf6",
+          "ae4dd66c353f348b51b6eaf67607e4afca70b9b6a2a88662c3974b3515fa6fab",
+          "4ae313bef9859b6ddfacf7c744fc6660bc699de6093f01a6d4302ff04649d939",
+          "6dbd9611bf7402f4a9b9b83c94b08e485689d7f697c715be1ca8f86a7992a5d9",
+          "8cc87547c05f6b699fe7296c8484e977a30ef8e647a159fafd950f0c6638a2a6",
+          "c5023a5e10865fcc8d6744bbc3f722fbbe5d8578a0a3ae2f200c0cfd9596228e",
+          "4cbed76aee02ff3a7a862f90ad2eb1c48234f8cad411a397b8b3ba7a0341290d",
+          "3bf34b3ef8144c7d2625430c680709b825285e7b3e9ff02044566059124bbf8d"
+        ],
+        "normal_baseline_projection": [
+          {
+            "mip": 0,
+            "negative_z_fraction": 2.3603439331054688e-05,
+            "angle_mean_deg": 0.14311257004737854,
+            "angle_p95_deg": 0.4689721167087555,
+            "angle_max_deg": 2.363970994949341
+          },
+          {
+            "mip": 1,
+            "negative_z_fraction": 1.621246337890625e-05,
+            "angle_mean_deg": 0.15281659364700317,
+            "angle_p95_deg": 0.4837595522403717,
+            "angle_max_deg": 2.3614859580993652
+          },
+          {
+            "mip": 2,
+            "negative_z_fraction": 0.0,
+            "angle_mean_deg": 0.1615225374698639,
+            "angle_p95_deg": 0.509372889995575,
+            "angle_max_deg": 2.016350507736206
+          },
+          {
+            "mip": 3,
+            "negative_z_fraction": 0.0,
+            "angle_mean_deg": 0.1707814633846283,
+            "angle_p95_deg": 0.6138932704925537,
+            "angle_max_deg": 2.551826000213623
+          },
+          {
+            "mip": 4,
+            "negative_z_fraction": 0.0,
+            "angle_mean_deg": 0.15833088755607605,
+            "angle_p95_deg": 0.49771517515182495,
+            "angle_max_deg": 1.2119230031967163
+          },
+          {
+            "mip": 5,
+            "negative_z_fraction": 0.0,
+            "angle_mean_deg": 0.11360201984643936,
+            "angle_p95_deg": 0.4721943736076355,
+            "angle_max_deg": 0.9587916135787964
+          },
+          {
+            "mip": 6,
+            "negative_z_fraction": 0.0,
+            "angle_mean_deg": 0.09987518191337585,
+            "angle_p95_deg": 0.4673001766204834,
+            "angle_max_deg": 0.6720213294029236
+          },
+          {
+            "mip": 7,
+            "negative_z_fraction": 0.0,
+            "angle_mean_deg": 0.0023182430304586887,
+            "angle_p95_deg": 0.01978234015405178,
+            "angle_max_deg": 0.01978234015405178
+          },
+          {
+            "mip": 8,
+            "negative_z_fraction": 0.0,
+            "angle_mean_deg": 0.0012363962596282363,
+            "angle_p95_deg": 0.016814958304166794,
+            "angle_max_deg": 0.01978234015405178
+          },
+          {
+            "mip": 9,
+            "negative_z_fraction": 0.0,
+            "angle_mean_deg": 0.0,
+            "angle_p95_deg": 0.0,
+            "angle_max_deg": 0.0
+          },
+          {
+            "mip": 10,
+            "negative_z_fraction": 0.0,
+            "angle_mean_deg": 0.0,
+            "angle_p95_deg": 0.0,
+            "angle_max_deg": 0.0
+          },
+          {
+            "mip": 11,
+            "negative_z_fraction": 0.0,
+            "angle_mean_deg": 0.0,
+            "angle_p95_deg": 0.0,
+            "angle_max_deg": 0.0
+          }
+        ],
+        "width": 2048,
+        "height": 2048,
+        "mips": 12,
+        "transfer": 1
+      },
+      {
+        "name": "leather_orm",
+        "material": "LeatherPartsMat",
+        "semantic": "data",
+        "original": "FlightHelmet_Materials_LeatherPartsMat_OcclusionRoughMetal.ktx2",
+        "original_sha256": "cf380bbe62ba2dcedaf8ccbf39389720a5d33d7742304eec5a7265acc7173791",
+        "baseline": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\closure\\textures\\leather_orm-baseline.dds",
+        "baseline_sha256": "12c03d1aea942a968df14a361f2ea505cbc371cafc3bfccfdda2a9bd5c932682",
+        "baseline_dxgi": 98,
+        "baseline_note": "Derived BC7 DDS, not an existing production-pack texture; RGB normal retained including negative Z",
+        "encoder_input": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\closure\\textures\\leather_orm-input.dds",
+        "encoder_input_sha256": "b79d466aeb7be695f3468dc48cafadd9d99826f735ce52ac0a095c273e3e59e0",
+        "input_mip_sha256": [
+          "3d05e7a7562df4ffb88bdc486f0484b6007e5a24671979e3fb682aaf6f02ab95",
+          "dc0c3ed4e9a614bfd9b8725e219492ea52f2914df854dcf467f7d8975ca79ff3",
+          "5410f80526d13d0d91bfb9cd56e9375bf1834979f9db5f7f4874846602ea0df8",
+          "71c09fef266210a921e1c834f1d85865923a44984fb017a65ce55be2615a39a4",
+          "e96b4ef0498f19b38c00c23426ab04e308ac478fe37c9f1702778cbbb627daad",
+          "87e3c15d859a198373977213f7f257d78864c6a7cba68211a3051e20200c4717",
+          "c5384b2b0c467d31b013f7ec10d6faecf5d044386013d99b8b4bad1bca76617d",
+          "f31f6fdb9e2145077e7fa3e9debd173269b02078fb82c157be0ce50797839fb7",
+          "c951c998923636893a07c29b7f391ba87fe908a7df3294d292c9c664977ab50e",
+          "d489efb073a327dcfc77990732b8ca7ac51a9bf3cb2a909a6c9a77364a35ca54",
+          "9cc0491e175ab5ce6255a4b8d963efa51c95e52d5d3b479a4ef50f33d27ea66f",
+          "ef722243d56a04a3b23073367bda974b1b84572dc26a4d844d4261986486cde2"
+        ],
+        "normal_baseline_projection": [],
+        "width": 2048,
+        "height": 2048,
+        "mips": 12,
+        "transfer": 1
+      },
+      {
+        "name": "lenses_alpha",
+        "material": "LensesMat",
+        "semantic": "color",
+        "original": "FlightHelmet_Materials_LensesMat_BaseColor.ktx2",
+        "original_sha256": "f0bf199f430428dd5168d00d57c70236bb7c7c472c16d13aa46f6e3b8cee022a",
+        "baseline": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\closure\\textures\\lenses_alpha-baseline.dds",
+        "baseline_sha256": "0015510fb3a0f5afe7c0950d326f05abe813821e70efa9ae2e6a06a9c1f11222",
+        "baseline_dxgi": 99,
+        "baseline_note": "Derived BC7 DDS, not an existing production-pack texture; RGB normal retained including negative Z",
+        "encoder_input": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\closure\\textures\\lenses_alpha-input.dds",
+        "encoder_input_sha256": "a32b8a68465e0df2611cbcd09a4e0e69108efd87e8f53d284f9ab52d76131df2",
+        "input_mip_sha256": [
+          "182c4d953bfd6c32b4310fa2247805a2070dbc48d0a740917c8b0a67ff1f4c9a",
+          "19ad946fce185b40de40fccb8f998c8e08bb7642406d1b619c3174c3c26ea94a",
+          "dfb86c5f5ad8fb8f827c02e6ad494f3ace8e11967d6a741e1860762d10d6d4ae",
+          "1c3ebf1659de6801ec5293390f7c30119cdbcfe2b65b7e05771282900e5122e5",
+          "834ba69e6c95b27622b2c6dc4976d1248023298dbe282692bffbba3330b4bc61",
+          "5d69c84434fdd32f3f474b670208d78f298579c0b43d733504ce1fecf34e3058",
+          "5cffa2c5d8953f7911bf12b3ec9ef241f00310635155bd43267b3014e7b9616b",
+          "cfc96febd2bb72efcf12839e1f69007dcb525d6c7a6f364b8923aa9af39659aa",
+          "198b00a9bb1ad2deae8d3395a31425e06fce806ca7db7947013da85d6d607f6e",
+          "3d8029c578f4f493cdea72f836dfb52b95af8f8e7d4de80830535d1596e82eaf",
+          "3610908f172326216837bcad45f7bf8b3305c11ff9a48d0f24009e41ff25a732"
+        ],
+        "normal_baseline_projection": [],
+        "width": 1024,
+        "height": 1024,
+        "mips": 11,
+        "transfer": 2
+      }
+    ],
+    "encoding": [
+      {
+        "case": "leather_basecolor",
+        "codec": "etc1s",
+        "command": [
+          "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\deps\\basis_universal-2_50\\bin\\basisu.exe",
+          "-file",
+          "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\closure\\textures\\leather_basecolor-input.dds",
+          "-output_file",
+          "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\closure\\textures\\leather_basecolor-etc1s.ktx2",
+          "-ktx2",
+          "-srgb",
+          "-no_multithreading",
+          "-etc1s",
+          "-q",
+          "255",
+          "-comp_level",
+          "1"
+        ],
+        "encode_process_ms": 1243.4598000036203,
+        "encoder_input_sha256": "0dd688f7416c8d89b66a955f21567dd6d3c1ccfc56d52282d336e5dfa3677489",
+        "format": "BC7"
+      },
+      {
+        "case": "leather_basecolor",
+        "codec": "uastc",
+        "command": [
+          "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\deps\\basis_universal-2_50\\bin\\basisu.exe",
+          "-file",
+          "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\closure\\textures\\leather_basecolor-input.dds",
+          "-output_file",
+          "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\closure\\textures\\leather_basecolor-uastc.ktx2",
+          "-ktx2",
+          "-srgb",
+          "-no_multithreading",
+          "-uastc",
+          "-uastc_level",
+          "2"
+        ],
+        "encode_process_ms": 11045.14680000284,
+        "encoder_input_sha256": "0dd688f7416c8d89b66a955f21567dd6d3c1ccfc56d52282d336e5dfa3677489",
+        "format": "BC7"
+      },
+      {
+        "case": "leather_normal",
+        "codec": "etc1s",
+        "command": [
+          "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\deps\\basis_universal-2_50\\bin\\basisu.exe",
+          "-file",
+          "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\closure\\textures\\leather_normal-input.dds",
+          "-output_file",
+          "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\closure\\textures\\leather_normal-etc1s.ktx2",
+          "-ktx2",
+          "-linear",
+          "-no_multithreading",
+          "-etc1s",
+          "-q",
+          "255",
+          "-comp_level",
+          "1",
+          "-normal_map"
+        ],
+        "encode_process_ms": 3347.9420999938156,
+        "encoder_input_sha256": "ac681a9d91df98ce48efdff78892637f0f222499685f3d9dd067b40ef272e364",
+        "format": "BC7"
+      },
+      {
+        "case": "leather_normal",
+        "codec": "uastc",
+        "command": [
+          "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\deps\\basis_universal-2_50\\bin\\basisu.exe",
+          "-file",
+          "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\closure\\textures\\leather_normal-input.dds",
+          "-output_file",
+          "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\closure\\textures\\leather_normal-uastc.ktx2",
+          "-ktx2",
+          "-linear",
+          "-no_multithreading",
+          "-uastc",
+          "-uastc_level",
+          "2",
+          "-normal_map"
+        ],
+        "encode_process_ms": 15300.395199999912,
+        "encoder_input_sha256": "ac681a9d91df98ce48efdff78892637f0f222499685f3d9dd067b40ef272e364",
+        "format": "BC7"
+      },
+      {
+        "case": "leather_orm",
+        "codec": "etc1s",
+        "command": [
+          "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\deps\\basis_universal-2_50\\bin\\basisu.exe",
+          "-file",
+          "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\closure\\textures\\leather_orm-input.dds",
+          "-output_file",
+          "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\closure\\textures\\leather_orm-etc1s.ktx2",
+          "-ktx2",
+          "-linear",
+          "-no_multithreading",
+          "-etc1s",
+          "-q",
+          "255",
+          "-comp_level",
+          "1"
+        ],
+        "encode_process_ms": 3223.476399994979,
+        "encoder_input_sha256": "b79d466aeb7be695f3468dc48cafadd9d99826f735ce52ac0a095c273e3e59e0",
+        "format": "BC7"
+      },
+      {
+        "case": "leather_orm",
+        "codec": "uastc",
+        "command": [
+          "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\deps\\basis_universal-2_50\\bin\\basisu.exe",
+          "-file",
+          "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\closure\\textures\\leather_orm-input.dds",
+          "-output_file",
+          "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\closure\\textures\\leather_orm-uastc.ktx2",
+          "-ktx2",
+          "-linear",
+          "-no_multithreading",
+          "-uastc",
+          "-uastc_level",
+          "2"
+        ],
+        "encode_process_ms": 16641.642499998852,
+        "encoder_input_sha256": "b79d466aeb7be695f3468dc48cafadd9d99826f735ce52ac0a095c273e3e59e0",
+        "format": "BC7"
+      },
+      {
+        "case": "lenses_alpha",
+        "codec": "etc1s",
+        "command": [
+          "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\deps\\basis_universal-2_50\\bin\\basisu.exe",
+          "-file",
+          "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\closure\\textures\\lenses_alpha-input.dds",
+          "-output_file",
+          "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\closure\\textures\\lenses_alpha-etc1s.ktx2",
+          "-ktx2",
+          "-srgb",
+          "-no_multithreading",
+          "-etc1s",
+          "-q",
+          "255",
+          "-comp_level",
+          "1"
+        ],
+        "encode_process_ms": 557.6050999952713,
+        "encoder_input_sha256": "a32b8a68465e0df2611cbcd09a4e0e69108efd87e8f53d284f9ab52d76131df2",
+        "format": "BC7"
+      },
+      {
+        "case": "lenses_alpha",
+        "codec": "uastc",
+        "command": [
+          "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\deps\\basis_universal-2_50\\bin\\basisu.exe",
+          "-file",
+          "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\closure\\textures\\lenses_alpha-input.dds",
+          "-output_file",
+          "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\closure\\textures\\lenses_alpha-uastc.ktx2",
+          "-ktx2",
+          "-srgb",
+          "-no_multithreading",
+          "-uastc",
+          "-uastc_level",
+          "2"
+        ],
+        "encode_process_ms": 2173.0336000036914,
+        "encoder_input_sha256": "a32b8a68465e0df2611cbcd09a4e0e69108efd87e8f53d284f9ab52d76131df2",
+        "format": "BC7"
+      }
+    ],
+    "comparisons": [
+      {
+        "case": "leather_basecolor",
+        "codec": "etc1s",
+        "format": "BC7",
+        "ktx2_sha256": "4c0ed751ef18e37895603f5908dab4433e7db1e83ede5682573d7216cf3c76d8",
+        "ktx_info": {
+          "width": 2048,
+          "height": 2048,
+          "mips": 12,
+          "transfer": 2
+        },
+        "mip_quality": [
+          {
+            "mip": 0,
+            "width": 2048,
+            "height": 2048,
+            "rgb_psnr_db": 52.881252645443595,
+            "rgb_max_abs": 41.0,
+            "alpha_rmse": 0.0,
+            "alpha_max_abs": 0.0,
+            "alpha_coverage_delta_at_128": 0.0
+          },
+          {
+            "mip": 1,
+            "width": 1024,
+            "height": 1024,
+            "rgb_psnr_db": 50.33257406318314,
+            "rgb_max_abs": 47.0,
+            "alpha_rmse": 0.0,
+            "alpha_max_abs": 0.0,
+            "alpha_coverage_delta_at_128": 0.0
+          },
+          {
+            "mip": 2,
+            "width": 512,
+            "height": 512,
+            "rgb_psnr_db": 51.950193300968735,
+            "rgb_max_abs": 34.0,
+            "alpha_rmse": 0.0,
+            "alpha_max_abs": 0.0,
+            "alpha_coverage_delta_at_128": 0.0
+          },
+          {
+            "mip": 3,
+            "width": 256,
+            "height": 256,
+            "rgb_psnr_db": 53.956930635271405,
+            "rgb_max_abs": 17.0,
+            "alpha_rmse": 0.0,
+            "alpha_max_abs": 0.0,
+            "alpha_coverage_delta_at_128": 0.0
+          },
+          {
+            "mip": 4,
+            "width": 128,
+            "height": 128,
+            "rgb_psnr_db": 52.44693376163929,
+            "rgb_max_abs": 10.0,
+            "alpha_rmse": 0.0,
+            "alpha_max_abs": 0.0,
+            "alpha_coverage_delta_at_128": 0.0
+          },
+          {
+            "mip": 5,
+            "width": 64,
+            "height": 64,
+            "rgb_psnr_db": 53.39555390994227,
+            "rgb_max_abs": 10.0,
+            "alpha_rmse": 0.0,
+            "alpha_max_abs": 0.0,
+            "alpha_coverage_delta_at_128": 0.0
+          },
+          {
+            "mip": 6,
+            "width": 32,
+            "height": 32,
+            "rgb_psnr_db": 51.3853495586331,
+            "rgb_max_abs": 6.0,
+            "alpha_rmse": 0.0,
+            "alpha_max_abs": 0.0,
+            "alpha_coverage_delta_at_128": 0.0
+          },
+          {
+            "mip": 7,
+            "width": 16,
+            "height": 16,
+            "rgb_psnr_db": null,
+            "rgb_max_abs": 0.0,
+            "alpha_rmse": 0.0,
+            "alpha_max_abs": 0.0,
+            "alpha_coverage_delta_at_128": 0.0
+          },
+          {
+            "mip": 8,
+            "width": 8,
+            "height": 8,
+            "rgb_psnr_db": null,
+            "rgb_max_abs": 0.0,
+            "alpha_rmse": 0.0,
+            "alpha_max_abs": 0.0,
+            "alpha_coverage_delta_at_128": 0.0
+          },
+          {
+            "mip": 9,
+            "width": 4,
+            "height": 4,
+            "rgb_psnr_db": null,
+            "rgb_max_abs": 0.0,
+            "alpha_rmse": 0.0,
+            "alpha_max_abs": 0.0,
+            "alpha_coverage_delta_at_128": 0.0
+          },
+          {
+            "mip": 10,
+            "width": 2,
+            "height": 2,
+            "rgb_psnr_db": null,
+            "rgb_max_abs": 0.0,
+            "alpha_rmse": 0.0,
+            "alpha_max_abs": 0.0,
+            "alpha_coverage_delta_at_128": 0.0
+          },
+          {
+            "mip": 11,
+            "width": 1,
+            "height": 1,
+            "rgb_psnr_db": null,
+            "rgb_max_abs": 0.0,
+            "alpha_rmse": 0.0,
+            "alpha_max_abs": 0.0,
+            "alpha_coverage_delta_at_128": 0.0
+          }
+        ],
+        "timing": [
+          {
+            "file": "leather_basecolor-etc1s.ktx2",
+            "source_bytes": 5592580,
+            "source_pack_zstd17_bytes": 814210,
+            "ktx2_bytes": 511543,
+            "ktx2_pack_zstd17_bytes": 511564,
+            "width": 2048,
+            "height": 2048,
+            "mips": 12,
+            "global_init_us": 24240.3,
+            "first_parse_start_us": 349,
+            "source_pack_decode": {
+              "median_us": 2325.25,
+              "p95_us": 2395.65,
+              "max_us": 2413.2
+            }
+          },
+          {
+            "file": "leather_basecolor-etc1s.ktx2",
+            "format": "BC7",
+            "supported": true,
+            "gpu_payload_bytes": 5592432,
+            "first_transcode_us": 21401.9,
+            "warm_transcode": {
+              "median_us": 21209.375,
+              "p95_us": 21435.425,
+              "max_us": 21510.025
+            },
+            "memory_load_prepare": {
+              "median_us": 21505.95,
+              "p95_us": 21701.1,
+              "max_us": 21811.8
+            }
+          }
+        ],
+        "input_sha256": "0dd688f7416c8d89b66a955f21567dd6d3c1ccfc56d52282d336e5dfa3677489"
+      },
+      {
+        "case": "leather_basecolor",
+        "codec": "uastc",
+        "format": "BC7",
+        "ktx2_sha256": "2cc0b8c7928a38a26f6315980d6a77f45cae80a252b1cd271e536575f2c19870",
+        "ktx_info": {
+          "width": 2048,
+          "height": 2048,
+          "mips": 12,
+          "transfer": 2
+        },
+        "mip_quality": [
+          {
+            "mip": 0,
+            "width": 2048,
+            "height": 2048,
+            "rgb_psnr_db": 60.45489495907755,
+            "rgb_max_abs": 2.0,
+            "alpha_rmse": 0.7942440509796143,
+            "alpha_max_abs": 1.0,
+            "alpha_coverage_delta_at_128": 0.0
+          },
+          {
+            "mip": 1,
+            "width": 1024,
+            "height": 1024,
+            "rgb_psnr_db": 63.781400939081266,
+            "rgb_max_abs": 3.0,
+            "alpha_rmse": 0.8376521468162537,
+            "alpha_max_abs": 1.0,
+            "alpha_coverage_delta_at_128": 0.0
+          },
+          {
+            "mip": 2,
+            "width": 512,
+            "height": 512,
+            "rgb_psnr_db": 63.24926180321525,
+            "rgb_max_abs": 3.0,
+            "alpha_rmse": 0.8436392545700073,
+            "alpha_max_abs": 1.0,
+            "alpha_coverage_delta_at_128": 0.0
+          },
+          {
+            "mip": 3,
+            "width": 256,
+            "height": 256,
+            "rgb_psnr_db": 62.01911920304677,
+            "rgb_max_abs": 3.0,
+            "alpha_rmse": 0.8456827998161316,
+            "alpha_max_abs": 1.0,
+            "alpha_coverage_delta_at_128": 0.0
+          },
+          {
+            "mip": 4,
+            "width": 128,
+            "height": 128,
+            "rgb_psnr_db": 60.958729590413334,
+            "rgb_max_abs": 2.0,
+            "alpha_rmse": 0.8646852970123291,
+            "alpha_max_abs": 1.0,
+            "alpha_coverage_delta_at_128": 0.0
+          },
+          {
+            "mip": 5,
+            "width": 64,
+            "height": 64,
+            "rgb_psnr_db": 60.12140544754433,
+            "rgb_max_abs": 2.0,
+            "alpha_rmse": 0.8860904574394226,
+            "alpha_max_abs": 1.0,
+            "alpha_coverage_delta_at_128": 0.0
+          },
+          {
+            "mip": 6,
+            "width": 32,
+            "height": 32,
+            "rgb_psnr_db": 59.88747695008684,
+            "rgb_max_abs": 2.0,
+            "alpha_rmse": 0.857526421546936,
+            "alpha_max_abs": 1.0,
+            "alpha_coverage_delta_at_128": 0.0
+          },
+          {
+            "mip": 7,
+            "width": 16,
+            "height": 16,
+            "rgb_psnr_db": 69.20290330515779,
+            "rgb_max_abs": 1.0,
+            "alpha_rmse": 0.9142961502075195,
+            "alpha_max_abs": 1.0,
+            "alpha_coverage_delta_at_128": 0.0
+          },
+          {
+            "mip": 8,
+            "width": 8,
+            "height": 8,
+            "rgb_psnr_db": 56.49223573021223,
+            "rgb_max_abs": 1.0,
+            "alpha_rmse": 0.7071067690849304,
+            "alpha_max_abs": 1.0,
+            "alpha_coverage_delta_at_128": 0.0
+          },
+          {
+            "mip": 9,
+            "width": 4,
+            "height": 4,
+            "rgb_psnr_db": null,
+            "rgb_max_abs": 0.0,
+            "alpha_rmse": 1.0,
+            "alpha_max_abs": 1.0,
+            "alpha_coverage_delta_at_128": 0.0
+          },
+          {
+            "mip": 10,
+            "width": 2,
+            "height": 2,
+            "rgb_psnr_db": null,
+            "rgb_max_abs": 0.0,
+            "alpha_rmse": 1.0,
+            "alpha_max_abs": 1.0,
+            "alpha_coverage_delta_at_128": 0.0
+          },
+          {
+            "mip": 11,
+            "width": 1,
+            "height": 1,
+            "rgb_psnr_db": null,
+            "rgb_max_abs": 0.0,
+            "alpha_rmse": 0.0,
+            "alpha_max_abs": 0.0,
+            "alpha_coverage_delta_at_128": 0.0
+          }
+        ],
+        "timing": [
+          {
+            "file": "leather_basecolor-uastc.ktx2",
+            "source_bytes": 5592580,
+            "source_pack_zstd17_bytes": 814210,
+            "ktx2_bytes": 1246333,
+            "ktx2_pack_zstd17_bytes": 1246372,
+            "width": 2048,
+            "height": 2048,
+            "mips": 12,
+            "global_init_us": 23844.9,
+            "first_parse_start_us": 10.3,
+            "source_pack_decode": {
+              "median_us": 2333.525,
+              "p95_us": 3005.725,
+              "max_us": 3451.4625
+            }
+          },
+          {
+            "file": "leather_basecolor-uastc.ktx2",
+            "format": "BC7",
+            "supported": true,
+            "gpu_payload_bytes": 5592432,
+            "first_transcode_us": 33049.3,
+            "warm_transcode": {
+              "median_us": 32543.575,
+              "p95_us": 33759.425,
+              "max_us": 35369.775
+            },
+            "memory_load_prepare": {
+              "median_us": 32996.25,
+              "p95_us": 35460.7,
+              "max_us": 35566.45
+            }
+          }
+        ],
+        "input_sha256": "0dd688f7416c8d89b66a955f21567dd6d3c1ccfc56d52282d336e5dfa3677489"
+      },
+      {
+        "case": "leather_normal",
+        "codec": "etc1s",
+        "format": "BC7",
+        "ktx2_sha256": "3208a3ed82d61855afba0e54d5a8d3ae22d6910a6ac7434348d7d3c0021ad293",
+        "ktx_info": {
+          "width": 2048,
+          "height": 2048,
+          "mips": 12,
+          "transfer": 1
+        },
+        "mip_quality": [
+          {
+            "mip": 0,
+            "width": 2048,
+            "height": 2048,
+            "rgb_max_abs": 145.0,
+            "alpha_rmse": 0.1990601122379303,
+            "alpha_max_abs": 2.0,
+            "alpha_coverage_delta_at_128": 0.0,
+            "angle_mean_deg": 4.9714555740356445,
+            "angle_p95_deg": 14.769028663635254,
+            "angle_max_deg": 118.86843872070312
+          },
+          {
+            "mip": 1,
+            "width": 1024,
+            "height": 1024,
+            "rgb_max_abs": 107.0,
+            "alpha_rmse": 0.22978496551513672,
+            "alpha_max_abs": 2.0,
+            "alpha_coverage_delta_at_128": 0.0,
+            "angle_mean_deg": 4.672381401062012,
+            "angle_p95_deg": 13.980688095092773,
+            "angle_max_deg": 73.32060241699219
+          },
+          {
+            "mip": 2,
+            "width": 512,
+            "height": 512,
+            "rgb_max_abs": 104.0,
+            "alpha_rmse": 0.30510038137435913,
+            "alpha_max_abs": 2.0,
+            "alpha_coverage_delta_at_128": 0.0,
+            "angle_mean_deg": 3.687796115875244,
+            "angle_p95_deg": 11.600790023803711,
+            "angle_max_deg": 73.30267333984375
+          },
+          {
+            "mip": 3,
+            "width": 256,
+            "height": 256,
+            "rgb_max_abs": 84.0,
+            "alpha_rmse": 0.39776673913002014,
+            "alpha_max_abs": 2.0,
+            "alpha_coverage_delta_at_128": 0.0,
+            "angle_mean_deg": 3.089496612548828,
+            "angle_p95_deg": 9.660415649414062,
+            "angle_max_deg": 57.36957550048828
+          },
+          {
+            "mip": 4,
+            "width": 128,
+            "height": 128,
+            "rgb_max_abs": 54.0,
+            "alpha_rmse": 0.38669902086257935,
+            "alpha_max_abs": 2.0,
+            "alpha_coverage_delta_at_128": 0.0,
+            "angle_mean_deg": 2.6403603553771973,
+            "angle_p95_deg": 7.756206035614014,
+            "angle_max_deg": 35.1455192565918
+          },
+          {
+            "mip": 5,
+            "width": 64,
+            "height": 64,
+            "rgb_max_abs": 30.0,
+            "alpha_rmse": 0.2939826250076294,
+            "alpha_max_abs": 2.0,
+            "alpha_coverage_delta_at_128": 0.0,
+            "angle_mean_deg": 1.9318163394927979,
+            "angle_p95_deg": 5.423947811126709,
+            "angle_max_deg": 15.63386344909668
+          },
+          {
+            "mip": 6,
+            "width": 32,
+            "height": 32,
+            "rgb_max_abs": 23.0,
+            "alpha_rmse": 0.28811076283454895,
+            "alpha_max_abs": 2.0,
+            "alpha_coverage_delta_at_128": 0.0,
+            "angle_mean_deg": 1.1057807207107544,
+            "angle_p95_deg": 2.9561827182769775,
+            "angle_max_deg": 11.012240409851074
+          },
+          {
+            "mip": 7,
+            "width": 16,
+            "height": 16,
+            "rgb_max_abs": 8.0,
+            "alpha_rmse": 0.2576940953731537,
+            "alpha_max_abs": 1.0,
+            "alpha_coverage_delta_at_128": 0.0,
+            "angle_mean_deg": 0.7463697791099548,
+            "angle_p95_deg": 1.8120992183685303,
+            "angle_max_deg": 3.7381644248962402
+          },
+          {
+            "mip": 8,
+            "width": 8,
+            "height": 8,
+            "rgb_max_abs": 5.0,
+            "alpha_rmse": 0.0,
+            "alpha_max_abs": 0.0,
+            "alpha_coverage_delta_at_128": 0.0,
+            "angle_mean_deg": 0.4626796245574951,
+            "angle_p95_deg": 1.051458477973938,
+            "angle_max_deg": 1.3310447931289673
+          },
+          {
+            "mip": 9,
+            "width": 4,
+            "height": 4,
+            "rgb_max_abs": 4.0,
+            "alpha_rmse": 0.0,
+            "alpha_max_abs": 0.0,
+            "alpha_coverage_delta_at_128": 0.0,
+            "angle_mean_deg": 0.4561927914619446,
+            "angle_p95_deg": 0.7315179705619812,
+            "angle_max_deg": 1.004831075668335
+          },
+          {
+            "mip": 10,
+            "width": 2,
+            "height": 2,
+            "rgb_max_abs": 3.0,
+            "alpha_rmse": 0.0,
+            "alpha_max_abs": 0.0,
+            "alpha_coverage_delta_at_128": 0.0,
+            "angle_mean_deg": 0.4912605881690979,
+            "angle_p95_deg": 0.6558112502098083,
+            "angle_max_deg": 0.6558112502098083
+          },
+          {
+            "mip": 11,
+            "width": 1,
+            "height": 1,
+            "rgb_max_abs": 2.0,
+            "alpha_rmse": 0.0,
+            "alpha_max_abs": 0.0,
+            "alpha_coverage_delta_at_128": 0.0,
+            "angle_mean_deg": 0.6558112502098083,
+            "angle_p95_deg": 0.6558112502098083,
+            "angle_max_deg": 0.6558112502098083
+          }
+        ],
+        "timing": [
+          {
+            "file": "leather_normal-etc1s.ktx2",
+            "source_bytes": 5592580,
+            "source_pack_zstd17_bytes": 3605980,
+            "ktx2_bytes": 742050,
+            "ktx2_pack_zstd17_bytes": 740541,
+            "width": 2048,
+            "height": 2048,
+            "mips": 12,
+            "global_init_us": 23912.3,
+            "first_parse_start_us": 1186.4,
+            "source_pack_decode": {
+              "median_us": 2827.5125,
+              "p95_us": 2882.5875,
+              "max_us": 2883.1375
+            }
+          },
+          {
+            "file": "leather_normal-etc1s.ktx2",
+            "format": "BC7",
+            "supported": true,
+            "gpu_payload_bytes": 5592432,
+            "first_transcode_us": 78101.1,
+            "warm_transcode": {
+              "median_us": 77843.2,
+              "p95_us": 78475.35,
+              "max_us": 78649.85
+            },
+            "memory_load_prepare": {
+              "median_us": 79007.65,
+              "p95_us": 83189.75,
+              "max_us": 88080.45
+            }
+          }
+        ],
+        "input_sha256": "ac681a9d91df98ce48efdff78892637f0f222499685f3d9dd067b40ef272e364"
+      },
+      {
+        "case": "leather_normal",
+        "codec": "uastc",
+        "format": "BC7",
+        "ktx2_sha256": "08e4fffa199ec1ca342473e5b6a92366c66cf4a02db587b13a0561c0f239d8c0",
+        "ktx_info": {
+          "width": 2048,
+          "height": 2048,
+          "mips": 12,
+          "transfer": 1
+        },
+        "mip_quality": [
+          {
+            "mip": 0,
+            "width": 2048,
+            "height": 2048,
+            "rgb_max_abs": 32.0,
+            "alpha_rmse": 0.1354476660490036,
+            "alpha_max_abs": 1.0,
+            "alpha_coverage_delta_at_128": 0.0,
+            "angle_mean_deg": 0.09587447345256805,
+            "angle_p95_deg": 0.6110178828239441,
+            "angle_max_deg": 15.600436210632324
+          },
+          {
+            "mip": 1,
+            "width": 1024,
+            "height": 1024,
+            "rgb_max_abs": 21.0,
+            "alpha_rmse": 0.16382399201393127,
+            "alpha_max_abs": 1.0,
+            "alpha_coverage_delta_at_128": 0.0,
+            "angle_mean_deg": 0.11946375668048859,
+            "angle_p95_deg": 0.711412787437439,
+            "angle_max_deg": 11.284127235412598
+          },
+          {
+            "mip": 2,
+            "width": 512,
+            "height": 512,
+            "rgb_max_abs": 21.0,
+            "alpha_rmse": 0.19996413588523865,
+            "alpha_max_abs": 1.0,
+            "alpha_coverage_delta_at_128": 0.0,
+            "angle_mean_deg": 0.1558973491191864,
+            "angle_p95_deg": 0.9017889499664307,
+            "angle_max_deg": 9.786590576171875
+          },
+          {
+            "mip": 3,
+            "width": 256,
+            "height": 256,
+            "rgb_max_abs": 12.0,
+            "alpha_rmse": 0.2190636694431305,
+            "alpha_max_abs": 1.0,
+            "alpha_coverage_delta_at_128": 0.0,
+            "angle_mean_deg": 0.18203839659690857,
+            "angle_p95_deg": 0.9202609062194824,
+            "angle_max_deg": 4.366503715515137
+          },
+          {
+            "mip": 4,
+            "width": 128,
+            "height": 128,
+            "rgb_max_abs": 9.0,
+            "alpha_rmse": 0.20191949605941772,
+            "alpha_max_abs": 1.0,
+            "alpha_coverage_delta_at_128": 0.0,
+            "angle_mean_deg": 0.1729109138250351,
+            "angle_p95_deg": 0.9065501689910889,
+            "angle_max_deg": 4.147937297821045
+          },
+          {
+            "mip": 5,
+            "width": 64,
+            "height": 64,
+            "rgb_max_abs": 4.0,
+            "alpha_rmse": 0.11899645626544952,
+            "alpha_max_abs": 1.0,
+            "alpha_coverage_delta_at_128": 0.0,
+            "angle_mean_deg": 0.10750782489776611,
+            "angle_p95_deg": 0.6327286958694458,
+            "angle_max_deg": 1.960544466972351
+          },
+          {
+            "mip": 6,
+            "width": 32,
+            "height": 32,
+            "rgb_max_abs": 3.0,
+            "alpha_rmse": 0.12884704768657684,
+            "alpha_max_abs": 1.0,
+            "alpha_coverage_delta_at_128": 0.0,
+            "angle_mean_deg": 0.0943857878446579,
+            "angle_p95_deg": 0.6404135823249817,
+            "angle_max_deg": 1.0239288806915283
+          },
+          {
+            "mip": 7,
+            "width": 16,
+            "height": 16,
+            "rgb_max_abs": 2.0,
+            "alpha_rmse": 0.0,
+            "alpha_max_abs": 0.0,
+            "alpha_coverage_delta_at_128": 0.0,
+            "angle_mean_deg": 0.017762450501322746,
+            "angle_p95_deg": 0.01978234015405178,
+            "angle_max_deg": 0.6584911346435547
+          },
+          {
+            "mip": 8,
+            "width": 8,
+            "height": 8,
+            "rgb_max_abs": 0.0,
+            "alpha_rmse": 0.0,
+            "alpha_max_abs": 0.0,
+            "alpha_coverage_delta_at_128": 0.0,
+            "angle_mean_deg": 0.0018545943312346935,
+            "angle_p95_deg": 0.01978234015405178,
+            "angle_max_deg": 0.01978234015405178
+          },
+          {
+            "mip": 9,
+            "width": 4,
+            "height": 4,
+            "rgb_max_abs": 1.0,
+            "alpha_rmse": 1.0,
+            "alpha_max_abs": 1.0,
+            "alpha_coverage_delta_at_128": 0.0,
+            "angle_mean_deg": 0.14290916919708252,
+            "angle_p95_deg": 0.4579954743385315,
+            "angle_max_deg": 0.4579954743385315
+          },
+          {
+            "mip": 10,
+            "width": 2,
+            "height": 2,
+            "rgb_max_abs": 0.0,
+            "alpha_rmse": 0.0,
+            "alpha_max_abs": 0.0,
+            "alpha_coverage_delta_at_128": 0.0,
+            "angle_mean_deg": 0.0,
+            "angle_p95_deg": 0.0,
+            "angle_max_deg": 0.0
+          },
+          {
+            "mip": 11,
+            "width": 1,
+            "height": 1,
+            "rgb_max_abs": 0.0,
+            "alpha_rmse": 0.0,
+            "alpha_max_abs": 0.0,
+            "alpha_coverage_delta_at_128": 0.0,
+            "angle_mean_deg": 0.0,
+            "angle_p95_deg": 0.0,
+            "angle_max_deg": 0.0
+          }
+        ],
+        "timing": [
+          {
+            "file": "leather_normal-uastc.ktx2",
+            "source_bytes": 5592580,
+            "source_pack_zstd17_bytes": 3605980,
+            "ktx2_bytes": 4072803,
+            "ktx2_pack_zstd17_bytes": 4072908,
+            "width": 2048,
+            "height": 2048,
+            "mips": 12,
+            "global_init_us": 24290.1,
+            "first_parse_start_us": 11.9,
+            "source_pack_decode": {
+              "median_us": 2859.425,
+              "p95_us": 3945.3375,
+              "max_us": 3966.1625
+            }
+          },
+          {
+            "file": "leather_normal-uastc.ktx2",
+            "format": "BC7",
+            "supported": true,
+            "gpu_payload_bytes": 5592432,
+            "first_transcode_us": 35403.2,
+            "warm_transcode": {
+              "median_us": 35454.325,
+              "p95_us": 36297.35,
+              "max_us": 40070.925
+            },
+            "memory_load_prepare": {
+              "median_us": 35679.05,
+              "p95_us": 37594.7,
+              "max_us": 38550.75
+            }
+          }
+        ],
+        "input_sha256": "ac681a9d91df98ce48efdff78892637f0f222499685f3d9dd067b40ef272e364"
+      },
+      {
+        "case": "leather_orm",
+        "codec": "etc1s",
+        "format": "BC7",
+        "ktx2_sha256": "f479423c3d4c565dee5483bcf72e1979b21d0239b86383d6acb12efd81295b9f",
+        "ktx_info": {
+          "width": 2048,
+          "height": 2048,
+          "mips": 12,
+          "transfer": 1
+        },
+        "mip_quality": [
+          {
+            "mip": 0,
+            "width": 2048,
+            "height": 2048,
+            "rgb_psnr_db": 32.58987668585667,
+            "rgb_max_abs": 177.0,
+            "alpha_rmse": 0.5794073939323425,
+            "alpha_max_abs": 2.0,
+            "alpha_coverage_delta_at_128": 0.0,
+            "occlusion_rmse": 6.383723735809326,
+            "occlusion_max_abs": 119.0,
+            "roughness_rmse": 7.570034980773926,
+            "roughness_max_abs": 157.0,
+            "metallic_rmse": 3.065044403076172,
+            "metallic_max_abs": 177.0
+          },
+          {
+            "mip": 1,
+            "width": 1024,
+            "height": 1024,
+            "rgb_psnr_db": 30.930439863663395,
+            "rgb_max_abs": 152.0,
+            "alpha_rmse": 0.5738707184791565,
+            "alpha_max_abs": 2.0,
+            "alpha_coverage_delta_at_128": 0.0,
+            "occlusion_rmse": 9.283516883850098,
+            "occlusion_max_abs": 141.0,
+            "roughness_rmse": 7.842308044433594,
+            "roughness_max_abs": 144.0,
+            "metallic_rmse": 3.125690221786499,
+            "metallic_max_abs": 152.0
+          },
+          {
+            "mip": 2,
+            "width": 512,
+            "height": 512,
+            "rgb_psnr_db": 28.45160307427207,
+            "rgb_max_abs": 147.0,
+            "alpha_rmse": 0.5865069031715393,
+            "alpha_max_abs": 2.0,
+            "alpha_coverage_delta_at_128": 0.0,
+            "occlusion_rmse": 13.453475952148438,
+            "occlusion_max_abs": 147.0,
+            "roughness_rmse": 9.236953735351562,
+            "roughness_max_abs": 146.0,
+            "metallic_rmse": 3.5101704597473145,
+            "metallic_max_abs": 119.0
+          },
+          {
+            "mip": 3,
+            "width": 256,
+            "height": 256,
+            "rgb_psnr_db": 25.86750055730381,
+            "rgb_max_abs": 147.0,
+            "alpha_rmse": 0.6117117404937744,
+            "alpha_max_abs": 2.0,
+            "alpha_coverage_delta_at_128": 0.0,
+            "occlusion_rmse": 18.710798263549805,
+            "occlusion_max_abs": 146.0,
+            "roughness_rmse": 11.6388578414917,
+            "roughness_max_abs": 147.0,
+            "metallic_rmse": 4.430495262145996,
+            "metallic_max_abs": 84.0
+          },
+          {
+            "mip": 4,
+            "width": 128,
+            "height": 128,
+            "rgb_psnr_db": 22.974149075197865,
+            "rgb_max_abs": 148.0,
+            "alpha_rmse": 0.600496232509613,
+            "alpha_max_abs": 1.0,
+            "alpha_coverage_delta_at_128": 0.0,
+            "occlusion_rmse": 26.010311126708984,
+            "occlusion_max_abs": 148.0,
+            "roughness_rmse": 16.594417572021484,
+            "roughness_max_abs": 145.0,
+            "metallic_rmse": 5.622894763946533,
+            "metallic_max_abs": 60.0
+          },
+          {
+            "mip": 5,
+            "width": 64,
+            "height": 64,
+            "rgb_psnr_db": 20.612541145572546,
+            "rgb_max_abs": 131.0,
+            "alpha_rmse": 0.5681143403053284,
+            "alpha_max_abs": 2.0,
+            "alpha_coverage_delta_at_128": 0.0,
+            "occlusion_rmse": 34.70862579345703,
+            "occlusion_max_abs": 131.0,
+            "roughness_rmse": 21.083093643188477,
+            "roughness_max_abs": 115.0,
+            "metallic_rmse": 6.704290390014648,
+            "metallic_max_abs": 42.0
+          },
+          {
+            "mip": 6,
+            "width": 32,
+            "height": 32,
+            "rgb_psnr_db": 19.600794701311976,
+            "rgb_max_abs": 118.0,
+            "alpha_rmse": 0.5770682692527771,
+            "alpha_max_abs": 1.0,
+            "alpha_coverage_delta_at_128": 0.0,
+            "occlusion_rmse": 39.034427642822266,
+            "occlusion_max_abs": 118.0,
+            "roughness_rmse": 23.27472686767578,
+            "roughness_max_abs": 100.0,
+            "metallic_rmse": 8.55359935760498,
+            "metallic_max_abs": 36.0
+          },
+          {
+            "mip": 7,
+            "width": 16,
+            "height": 16,
+            "rgb_psnr_db": 19.347620805899716,
+            "rgb_max_abs": 111.0,
+            "alpha_rmse": 0.5829612016677856,
+            "alpha_max_abs": 1.0,
+            "alpha_coverage_delta_at_128": 0.0,
+            "occlusion_rmse": 38.502384185791016,
+            "occlusion_max_abs": 111.0,
+            "roughness_rmse": 26.611278533935547,
+            "roughness_max_abs": 69.0,
+            "metallic_rmse": 8.7374906539917,
+            "metallic_max_abs": 18.0
+          },
+          {
+            "mip": 8,
+            "width": 8,
+            "height": 8,
+            "rgb_psnr_db": 19.196162385289178,
+            "rgb_max_abs": 113.0,
+            "alpha_rmse": 0.279508501291275,
+            "alpha_max_abs": 1.0,
+            "alpha_coverage_delta_at_128": 0.0,
+            "occlusion_rmse": 37.99938201904297,
+            "occlusion_max_abs": 113.0,
+            "roughness_rmse": 29.71925926208496,
+            "roughness_max_abs": 63.0,
+            "metallic_rmse": 4.494788646697998,
+            "metallic_max_abs": 10.0
+          },
+          {
+            "mip": 9,
+            "width": 4,
+            "height": 4,
+            "rgb_psnr_db": 19.76729854652279,
+            "rgb_max_abs": 65.0,
+            "alpha_rmse": 0.0,
+            "alpha_max_abs": 0.0,
+            "alpha_coverage_delta_at_128": 0.0,
+            "occlusion_rmse": 31.752952575683594,
+            "occlusion_max_abs": 62.0,
+            "roughness_rmse": 32.40177536010742,
+            "roughness_max_abs": 65.0,
+            "metallic_rmse": 0.0,
+            "metallic_max_abs": 0.0
+          },
+          {
+            "mip": 10,
+            "width": 2,
+            "height": 2,
+            "rgb_psnr_db": 23.606549905707176,
+            "rgb_max_abs": 31.0,
+            "alpha_rmse": 0.0,
+            "alpha_max_abs": 0.0,
+            "alpha_coverage_delta_at_128": 0.0,
+            "occlusion_rmse": 21.14237403869629,
+            "occlusion_max_abs": 25.0,
+            "roughness_rmse": 20.081085205078125,
+            "roughness_max_abs": 31.0,
+            "metallic_rmse": 0.0,
+            "metallic_max_abs": 0.0
+          },
+          {
+            "mip": 11,
+            "width": 1,
+            "height": 1,
+            "rgb_psnr_db": 43.871116156526455,
+            "rgb_max_abs": 2.0,
+            "alpha_rmse": 0.0,
+            "alpha_max_abs": 0.0,
+            "alpha_coverage_delta_at_128": 0.0,
+            "occlusion_rmse": 2.0,
+            "occlusion_max_abs": 2.0,
+            "roughness_rmse": 2.0,
+            "roughness_max_abs": 2.0,
+            "metallic_rmse": 0.0,
+            "metallic_max_abs": 0.0
+          }
+        ],
+        "timing": [
+          {
+            "file": "leather_orm-etc1s.ktx2",
+            "source_bytes": 5592580,
+            "source_pack_zstd17_bytes": 3779831,
+            "ktx2_bytes": 840335,
+            "ktx2_pack_zstd17_bytes": 836290,
+            "width": 2048,
+            "height": 2048,
+            "mips": 12,
+            "global_init_us": 24506.8,
+            "first_parse_start_us": 1161.7,
+            "source_pack_decode": {
+              "median_us": 4863.2125,
+              "p95_us": 5789.75,
+              "max_us": 6312.4625
+            }
+          },
+          {
+            "file": "leather_orm-etc1s.ktx2",
+            "format": "BC7",
+            "supported": true,
+            "gpu_payload_bytes": 5592432,
+            "first_transcode_us": 78104.8,
+            "warm_transcode": {
+              "median_us": 78044.4,
+              "p95_us": 78506.85,
+              "max_us": 78538.025
+            },
+            "memory_load_prepare": {
+              "median_us": 79367.75,
+              "p95_us": 80093.15,
+              "max_us": 82580.6
+            }
+          }
+        ],
+        "input_sha256": "b79d466aeb7be695f3468dc48cafadd9d99826f735ce52ac0a095c273e3e59e0"
+      },
+      {
+        "case": "leather_orm",
+        "codec": "uastc",
+        "format": "BC7",
+        "ktx2_sha256": "0903ac852ec30443a0c0c8e8b644013509009162322bf103c8bef6dee8513c67",
+        "ktx_info": {
+          "width": 2048,
+          "height": 2048,
+          "mips": 12,
+          "transfer": 1
+        },
+        "mip_quality": [
+          {
+            "mip": 0,
+            "width": 2048,
+            "height": 2048,
+            "rgb_psnr_db": 54.36285348396499,
+            "rgb_max_abs": 28.0,
+            "alpha_rmse": 0.18260087072849274,
+            "alpha_max_abs": 4.0,
+            "alpha_coverage_delta_at_128": 0.0,
+            "occlusion_rmse": 0.4532170593738556,
+            "occlusion_max_abs": 15.0,
+            "roughness_rmse": 0.6921408772468567,
+            "roughness_max_abs": 28.0,
+            "metallic_rmse": 0.17289845645427704,
+            "metallic_max_abs": 10.0
+          },
+          {
+            "mip": 1,
+            "width": 1024,
+            "height": 1024,
+            "rgb_psnr_db": 53.27100836289662,
+            "rgb_max_abs": 34.0,
+            "alpha_rmse": 0.21216143667697906,
+            "alpha_max_abs": 4.0,
+            "alpha_coverage_delta_at_128": 0.0,
+            "occlusion_rmse": 0.6196795105934143,
+            "occlusion_max_abs": 34.0,
+            "roughness_rmse": 0.6996462345123291,
+            "roughness_max_abs": 22.0,
+            "metallic_rmse": 0.2122221142053604,
+            "metallic_max_abs": 7.0
+          },
+          {
+            "mip": 2,
+            "width": 512,
+            "height": 512,
+            "rgb_psnr_db": 52.23115223181697,
+            "rgb_max_abs": 37.0,
+            "alpha_rmse": 0.24021054804325104,
+            "alpha_max_abs": 3.0,
+            "alpha_coverage_delta_at_128": 0.0,
+            "occlusion_rmse": 0.7393010258674622,
+            "occlusion_max_abs": 17.0,
+            "roughness_rmse": 0.7483273148536682,
+            "roughness_max_abs": 37.0,
+            "metallic_rmse": 0.24593093991279602,
+            "metallic_max_abs": 6.0
+          },
+          {
+            "mip": 3,
+            "width": 256,
+            "height": 256,
+            "rgb_psnr_db": 51.208914322570095,
+            "rgb_max_abs": 12.0,
+            "alpha_rmse": 0.267656534910202,
+            "alpha_max_abs": 1.0,
+            "alpha_coverage_delta_at_128": 0.0,
+            "occlusion_rmse": 0.8754968643188477,
+            "occlusion_max_abs": 12.0,
+            "roughness_rmse": 0.7913699746131897,
+            "roughness_max_abs": 7.0,
+            "metallic_rmse": 0.289826899766922,
+            "metallic_max_abs": 5.0
+          },
+          {
+            "mip": 4,
+            "width": 128,
+            "height": 128,
+            "rgb_psnr_db": 50.17723720994117,
+            "rgb_max_abs": 18.0,
+            "alpha_rmse": 0.2582855522632599,
+            "alpha_max_abs": 1.0,
+            "alpha_coverage_delta_at_128": 0.0,
+            "occlusion_rmse": 1.0073884725570679,
+            "occlusion_max_abs": 17.0,
+            "roughness_rmse": 0.8859871029853821,
+            "roughness_max_abs": 18.0,
+            "metallic_rmse": 0.27006852626800537,
+            "metallic_max_abs": 2.0
+          },
+          {
+            "mip": 5,
+            "width": 64,
+            "height": 64,
+            "rgb_psnr_db": 50.16917677922716,
+            "rgb_max_abs": 13.0,
+            "alpha_rmse": 0.32097873091697693,
+            "alpha_max_abs": 1.0,
+            "alpha_coverage_delta_at_128": 0.0,
+            "occlusion_rmse": 1.020660638809204,
+            "occlusion_max_abs": 13.0,
+            "roughness_rmse": 0.8492298722267151,
+            "roughness_max_abs": 4.0,
+            "metallic_rmse": 0.3365727961063385,
+            "metallic_max_abs": 1.0
+          },
+          {
+            "mip": 6,
+            "width": 32,
+            "height": 32,
+            "rgb_psnr_db": 50.72357948954166,
+            "rgb_max_abs": 6.0,
+            "alpha_rmse": 0.2025231420993805,
+            "alpha_max_abs": 1.0,
+            "alpha_coverage_delta_at_128": 0.0,
+            "occlusion_rmse": 1.0434880256652832,
+            "occlusion_max_abs": 6.0,
+            "roughness_rmse": 0.7221387624740601,
+            "roughness_max_abs": 4.0,
+            "metallic_rmse": 0.2025231420993805,
+            "metallic_max_abs": 1.0
+          },
+          {
+            "mip": 7,
+            "width": 16,
+            "height": 16,
+            "rgb_psnr_db": 48.71072307845597,
+            "rgb_max_abs": 6.0,
+            "alpha_rmse": 0.45069390535354614,
+            "alpha_max_abs": 1.0,
+            "alpha_coverage_delta_at_128": 0.0,
+            "occlusion_rmse": 1.1301963329315186,
+            "occlusion_max_abs": 6.0,
+            "roughness_rmse": 1.0680004358291626,
+            "roughness_max_abs": 4.0,
+            "metallic_rmse": 0.455006867647171,
+            "metallic_max_abs": 1.0
+          },
+          {
+            "mip": 8,
+            "width": 8,
+            "height": 8,
+            "rgb_psnr_db": 53.11051740981169,
+            "rgb_max_abs": 3.0,
+            "alpha_rmse": 0.5,
+            "alpha_max_abs": 1.0,
+            "alpha_coverage_delta_at_128": 0.0,
+            "occlusion_rmse": 0.673145592212677,
+            "occlusion_max_abs": 3.0,
+            "roughness_rmse": 0.5,
+            "roughness_max_abs": 1.0,
+            "metallic_rmse": 0.5,
+            "metallic_max_abs": 1.0
+          },
+          {
+            "mip": 9,
+            "width": 4,
+            "height": 4,
+            "rgb_psnr_db": null,
+            "rgb_max_abs": 0.0,
+            "alpha_rmse": 0.0,
+            "alpha_max_abs": 0.0,
+            "alpha_coverage_delta_at_128": 0.0,
+            "occlusion_rmse": 0.0,
+            "occlusion_max_abs": 0.0,
+            "roughness_rmse": 0.0,
+            "roughness_max_abs": 0.0,
+            "metallic_rmse": 0.0,
+            "metallic_max_abs": 0.0
+          },
+          {
+            "mip": 10,
+            "width": 2,
+            "height": 2,
+            "rgb_psnr_db": null,
+            "rgb_max_abs": 0.0,
+            "alpha_rmse": 0.0,
+            "alpha_max_abs": 0.0,
+            "alpha_coverage_delta_at_128": 0.0,
+            "occlusion_rmse": 0.0,
+            "occlusion_max_abs": 0.0,
+            "roughness_rmse": 0.0,
+            "roughness_max_abs": 0.0,
+            "metallic_rmse": 0.0,
+            "metallic_max_abs": 0.0
+          },
+          {
+            "mip": 11,
+            "width": 1,
+            "height": 1,
+            "rgb_psnr_db": null,
+            "rgb_max_abs": 0.0,
+            "alpha_rmse": 0.0,
+            "alpha_max_abs": 0.0,
+            "alpha_coverage_delta_at_128": 0.0,
+            "occlusion_rmse": 0.0,
+            "occlusion_max_abs": 0.0,
+            "roughness_rmse": 0.0,
+            "roughness_max_abs": 0.0,
+            "metallic_rmse": 0.0,
+            "metallic_max_abs": 0.0
+          }
+        ],
+        "timing": [
+          {
+            "file": "leather_orm-uastc.ktx2",
+            "source_bytes": 5592580,
+            "source_pack_zstd17_bytes": 3779831,
+            "ktx2_bytes": 4381745,
+            "ktx2_pack_zstd17_bytes": 4381856,
+            "width": 2048,
+            "height": 2048,
+            "mips": 12,
+            "global_init_us": 24095,
+            "first_parse_start_us": 14.6,
+            "source_pack_decode": {
+              "median_us": 4792.8625,
+              "p95_us": 4892.375,
+              "max_us": 4985.025
+            }
+          },
+          {
+            "file": "leather_orm-uastc.ktx2",
+            "format": "BC7",
+            "supported": true,
+            "gpu_payload_bytes": 5592432,
+            "first_transcode_us": 38199.5,
+            "warm_transcode": {
+              "median_us": 38224.375,
+              "p95_us": 40863.325,
+              "max_us": 41493.15
+            },
+            "memory_load_prepare": {
+              "median_us": 38422.3,
+              "p95_us": 38879.65,
+              "max_us": 39379.5
+            }
+          }
+        ],
+        "input_sha256": "b79d466aeb7be695f3468dc48cafadd9d99826f735ce52ac0a095c273e3e59e0"
+      },
+      {
+        "case": "lenses_alpha",
+        "codec": "etc1s",
+        "format": "BC7",
+        "ktx2_sha256": "333a16997d52cc53714de66375addba275c25e60f96cc7af76e50a89ca587027",
+        "ktx_info": {
+          "width": 1024,
+          "height": 1024,
+          "mips": 11,
+          "transfer": 2
+        },
+        "mip_quality": [
+          {
+            "mip": 0,
+            "width": 1024,
+            "height": 1024,
+            "rgb_psnr_db": 52.45652225815151,
+            "rgb_max_abs": 17.0,
+            "alpha_rmse": 1.060908317565918,
+            "alpha_max_abs": 34.0,
+            "alpha_coverage_delta_at_128": -0.0006427764892578125
+          },
+          {
+            "mip": 1,
+            "width": 512,
+            "height": 512,
+            "rgb_psnr_db": 52.2345605461682,
+            "rgb_max_abs": 17.0,
+            "alpha_rmse": 1.01017165184021,
+            "alpha_max_abs": 34.0,
+            "alpha_coverage_delta_at_128": -0.00048065185546875
+          },
+          {
+            "mip": 2,
+            "width": 256,
+            "height": 256,
+            "rgb_psnr_db": 52.58554047676755,
+            "rgb_max_abs": 17.0,
+            "alpha_rmse": 1.0706831216812134,
+            "alpha_max_abs": 34.0,
+            "alpha_coverage_delta_at_128": -0.00115966796875
+          },
+          {
+            "mip": 3,
+            "width": 128,
+            "height": 128,
+            "rgb_psnr_db": 53.048115593153035,
+            "rgb_max_abs": 8.0,
+            "alpha_rmse": 1.5540199279785156,
+            "alpha_max_abs": 35.0,
+            "alpha_coverage_delta_at_128": -0.00164794921875
+          },
+          {
+            "mip": 4,
+            "width": 64,
+            "height": 64,
+            "rgb_psnr_db": 55.05491002971798,
+            "rgb_max_abs": 6.0,
+            "alpha_rmse": 1.7640341520309448,
+            "alpha_max_abs": 23.0,
+            "alpha_coverage_delta_at_128": -0.005126953125
+          },
+          {
+            "mip": 5,
+            "width": 32,
+            "height": 32,
+            "rgb_psnr_db": 50.94215527814952,
+            "rgb_max_abs": 8.0,
+            "alpha_rmse": 2.7772090435028076,
+            "alpha_max_abs": 34.0,
+            "alpha_coverage_delta_at_128": -0.013671875
+          },
+          {
+            "mip": 6,
+            "width": 16,
+            "height": 16,
+            "rgb_psnr_db": 55.912315983085705,
+            "rgb_max_abs": 2.0,
+            "alpha_rmse": 5.291502475738525,
+            "alpha_max_abs": 8.0,
+            "alpha_coverage_delta_at_128": -0.03515625
+          },
+          {
+            "mip": 7,
+            "width": 8,
+            "height": 8,
+            "rgb_psnr_db": 48.1308036086791,
+            "rgb_max_abs": 2.0,
+            "alpha_rmse": 6.139014720916748,
+            "alpha_max_abs": 8.0,
+            "alpha_coverage_delta_at_128": 0.0
+          },
+          {
+            "mip": 8,
+            "width": 4,
+            "height": 4,
+            "rgb_psnr_db": null,
+            "rgb_max_abs": 0.0,
+            "alpha_rmse": 0.0,
+            "alpha_max_abs": 0.0,
+            "alpha_coverage_delta_at_128": 0.0
+          },
+          {
+            "mip": 9,
+            "width": 2,
+            "height": 2,
+            "rgb_psnr_db": null,
+            "rgb_max_abs": 0.0,
+            "alpha_rmse": 0.7071067690849304,
+            "alpha_max_abs": 1.0,
+            "alpha_coverage_delta_at_128": 0.0
+          },
+          {
+            "mip": 10,
+            "width": 1,
+            "height": 1,
+            "rgb_psnr_db": null,
+            "rgb_max_abs": 0.0,
+            "alpha_rmse": 0.0,
+            "alpha_max_abs": 0.0,
+            "alpha_coverage_delta_at_128": 0.0
+          }
+        ],
+        "timing": [
+          {
+            "file": "lenses_alpha-etc1s.ktx2",
+            "source_bytes": 1398276,
+            "source_pack_zstd17_bytes": 266316,
+            "ktx2_bytes": 209691,
+            "ktx2_pack_zstd17_bytes": 207426,
+            "width": 1024,
+            "height": 1024,
+            "mips": 11,
+            "global_init_us": 23852.4,
+            "first_parse_start_us": 325.6,
+            "source_pack_decode": {
+              "median_us": 637.55,
+              "p95_us": 697.8625,
+              "max_us": 700.5125
+            }
+          },
+          {
+            "file": "lenses_alpha-etc1s.ktx2",
+            "format": "BC7",
+            "supported": true,
+            "gpu_payload_bytes": 1398128,
+            "first_transcode_us": 7070.4,
+            "warm_transcode": {
+              "median_us": 6959.75,
+              "p95_us": 7085.925,
+              "max_us": 7208.875
+            },
+            "memory_load_prepare": {
+              "median_us": 7238.75,
+              "p95_us": 7332.7,
+              "max_us": 7377.5
+            }
+          }
+        ],
+        "input_sha256": "a32b8a68465e0df2611cbcd09a4e0e69108efd87e8f53d284f9ab52d76131df2"
+      },
+      {
+        "case": "lenses_alpha",
+        "codec": "uastc",
+        "format": "BC7",
+        "ktx2_sha256": "44c7cf3b93c403c1c96aa40e4273af99c01e373cb3495e325a1298c7eb987c24",
+        "ktx_info": {
+          "width": 1024,
+          "height": 1024,
+          "mips": 11,
+          "transfer": 2
+        },
+        "mip_quality": [
+          {
+            "mip": 0,
+            "width": 1024,
+            "height": 1024,
+            "rgb_psnr_db": 52.32407781894438,
+            "rgb_max_abs": 10.0,
+            "alpha_rmse": 0.7201047539710999,
+            "alpha_max_abs": 22.0,
+            "alpha_coverage_delta_at_128": -0.000125885009765625
+          },
+          {
+            "mip": 1,
+            "width": 512,
+            "height": 512,
+            "rgb_psnr_db": 49.25924349006837,
+            "rgb_max_abs": 10.0,
+            "alpha_rmse": 1.0152850151062012,
+            "alpha_max_abs": 13.0,
+            "alpha_coverage_delta_at_128": -0.000255584716796875
+          },
+          {
+            "mip": 2,
+            "width": 256,
+            "height": 256,
+            "rgb_psnr_db": 47.735991920446345,
+            "rgb_max_abs": 8.0,
+            "alpha_rmse": 1.1888676881790161,
+            "alpha_max_abs": 13.0,
+            "alpha_coverage_delta_at_128": -0.0003662109375
+          },
+          {
+            "mip": 3,
+            "width": 128,
+            "height": 128,
+            "rgb_psnr_db": 46.49835939982144,
+            "rgb_max_abs": 8.0,
+            "alpha_rmse": 1.300071358680725,
+            "alpha_max_abs": 10.0,
+            "alpha_coverage_delta_at_128": 0.0001220703125
+          },
+          {
+            "mip": 4,
+            "width": 64,
+            "height": 64,
+            "rgb_psnr_db": 45.86486338958817,
+            "rgb_max_abs": 6.0,
+            "alpha_rmse": 1.3711771965026855,
+            "alpha_max_abs": 11.0,
+            "alpha_coverage_delta_at_128": 0.0
+          },
+          {
+            "mip": 5,
+            "width": 32,
+            "height": 32,
+            "rgb_psnr_db": 45.518484882598536,
+            "rgb_max_abs": 9.0,
+            "alpha_rmse": 1.4429244995117188,
+            "alpha_max_abs": 3.0,
+            "alpha_coverage_delta_at_128": 0.0
+          },
+          {
+            "mip": 6,
+            "width": 16,
+            "height": 16,
+            "rgb_psnr_db": 46.73955925727302,
+            "rgb_max_abs": 3.0,
+            "alpha_rmse": 1.5372967720031738,
+            "alpha_max_abs": 3.0,
+            "alpha_coverage_delta_at_128": 0.0
+          },
+          {
+            "mip": 7,
+            "width": 8,
+            "height": 8,
+            "rgb_psnr_db": 46.81408254344504,
+            "rgb_max_abs": 4.0,
+            "alpha_rmse": 1.2183493375778198,
+            "alpha_max_abs": 2.0,
+            "alpha_coverage_delta_at_128": 0.0
+          },
+          {
+            "mip": 8,
+            "width": 4,
+            "height": 4,
+            "rgb_psnr_db": null,
+            "rgb_max_abs": 0.0,
+            "alpha_rmse": 1.75,
+            "alpha_max_abs": 2.0,
+            "alpha_coverage_delta_at_128": 0.0
+          },
+          {
+            "mip": 9,
+            "width": 2,
+            "height": 2,
+            "rgb_psnr_db": 52.90201602644589,
+            "rgb_max_abs": 1.0,
+            "alpha_rmse": 0.7071067690849304,
+            "alpha_max_abs": 1.0,
+            "alpha_coverage_delta_at_128": 0.0
+          },
+          {
+            "mip": 10,
+            "width": 1,
+            "height": 1,
+            "rgb_psnr_db": null,
+            "rgb_max_abs": 0.0,
+            "alpha_rmse": 0.0,
+            "alpha_max_abs": 0.0,
+            "alpha_coverage_delta_at_128": 0.0
+          }
+        ],
+        "timing": [
+          {
+            "file": "lenses_alpha-uastc.ktx2",
+            "source_bytes": 1398276,
+            "source_pack_zstd17_bytes": 266316,
+            "ktx2_bytes": 404131,
+            "ktx2_pack_zstd17_bytes": 404152,
+            "width": 1024,
+            "height": 1024,
+            "mips": 11,
+            "global_init_us": 24660.9,
+            "first_parse_start_us": 12.3,
+            "source_pack_decode": {
+              "median_us": 633.05,
+              "p95_us": 662.15,
+              "max_us": 694.45
+            }
+          },
+          {
+            "file": "lenses_alpha-uastc.ktx2",
+            "format": "BC7",
+            "supported": true,
+            "gpu_payload_bytes": 1398128,
+            "first_transcode_us": 7554.6,
+            "warm_transcode": {
+              "median_us": 7441.575,
+              "p95_us": 7497.15,
+              "max_us": 7518.925
+            },
+            "memory_load_prepare": {
+              "median_us": 7622.25,
+              "p95_us": 7900.95,
+              "max_us": 7996.55
+            }
+          }
+        ],
+        "input_sha256": "a32b8a68465e0df2611cbcd09a4e0e69108efd87e8f53d284f9ab52d76131df2"
+      }
+    ],
+    "checks": "PASS: 8 comparisons; all existing mip dimensions and transfer functions preserved; equal GPU block bytes",
+    "scope": "Offline CPU decode and numerical texture QA; no new GPU render, device or production acceptance"
+  },
+  "logs": {
+    "finite-before-0-errors.log": {
+      "path": "build/clibx/closure/finite-before-0-errors.log",
+      "bytes": 27,
+      "sha256": "53f207bb749021a6a60ca73d4d35e93b1ae21c56b9dab7ec93bb28a4db4d5ba4",
+      "text": "Audit begin glb_fixture_0\n"
+    },
+    "finite-before-2-errors.log": {
+      "path": "build/clibx/closure/finite-before-2-errors.log",
+      "bytes": 27,
+      "sha256": "16f83b01276434f8fb92216c90d362812fe86f93bdc8dd069dd7b8c44ec5f47e",
+      "text": "Audit begin glb_fixture_2\n"
+    },
+    "fixed-glb1-warm-errors.log": {
+      "path": "build/clibx/closure/fixed-glb1-warm-errors.log",
+      "bytes": 27,
+      "sha256": "d5b84d503428e0bf757552a1547b14c2943b13423a6b19daeb5d56d6068a518a",
+      "text": "Audit begin glb_fixture_1\n"
+    },
+    "fixed-glb240-errors.log": {
+      "path": "build/clibx/closure/fixed-glb240-errors.log",
+      "bytes": 162,
+      "sha256": "6dedf596dac95e9682e56fe09f9020b63f3e182a6e19b44deb18f9899d546a89",
+      "text": "Audit begin glb_fixture_0\nAudit begin glb_fixture_1\nAudit begin glb_fixture_2\nAudit begin glb_fixture_3\nAudit begin glb_fixture_4\nAudit begin glb_fixture_5\n"
+    },
+    "fixed-glb60-errors.log": {
+      "path": "build/clibx/closure/fixed-glb60-errors.log",
+      "bytes": 162,
+      "sha256": "6dedf596dac95e9682e56fe09f9020b63f3e182a6e19b44deb18f9899d546a89",
+      "text": "Audit begin glb_fixture_0\nAudit begin glb_fixture_1\nAudit begin glb_fixture_2\nAudit begin glb_fixture_3\nAudit begin glb_fixture_4\nAudit begin glb_fixture_5\n"
+    },
+    "fixed-gr2-controls-errors.log": {
+      "path": "build/clibx/closure/fixed-gr2-controls-errors.log",
+      "bytes": 96,
+      "sha256": "54da675f57f107abf09786deb2112709f20dd75d84817d1f89acc37af7bf88d8",
+      "text": "Audit begin player_attack\nAudit begin mob_run\nAudit begin boss_attack\nAudit begin mount_run\n"
+    },
+    "fixed-poison-0-errors.log": {
+      "path": "build/clibx/closure/fixed-poison-0-errors.log",
+      "bytes": 162,
+      "sha256": "6dedf596dac95e9682e56fe09f9020b63f3e182a6e19b44deb18f9899d546a89",
+      "text": "Audit begin glb_fixture_0\nAudit begin glb_fixture_1\nAudit begin glb_fixture_2\nAudit begin glb_fixture_3\nAudit begin glb_fixture_4\nAudit begin glb_fixture_5\n"
+    },
+    "fixed-poison-1-errors.log": {
+      "path": "build/clibx/closure/fixed-poison-1-errors.log",
+      "bytes": 162,
+      "sha256": "6dedf596dac95e9682e56fe09f9020b63f3e182a6e19b44deb18f9899d546a89",
+      "text": "Audit begin glb_fixture_0\nAudit begin glb_fixture_1\nAudit begin glb_fixture_2\nAudit begin glb_fixture_3\nAudit begin glb_fixture_4\nAudit begin glb_fixture_5\n"
+    },
+    "fixed-poison-2-errors.log": {
+      "path": "build/clibx/closure/fixed-poison-2-errors.log",
+      "bytes": 162,
+      "sha256": "6dedf596dac95e9682e56fe09f9020b63f3e182a6e19b44deb18f9899d546a89",
+      "text": "Audit begin glb_fixture_0\nAudit begin glb_fixture_1\nAudit begin glb_fixture_2\nAudit begin glb_fixture_3\nAudit begin glb_fixture_4\nAudit begin glb_fixture_5\n"
+    },
+    "historical-0-1-errors.log": {
+      "path": "build/clibx/closure/historical-0-1-errors.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "text": ""
+    },
+    "historical-0-2-errors.log": {
+      "path": "build/clibx/closure/historical-0-2-errors.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "text": ""
+    },
+    "historical-0-3-errors.log": {
+      "path": "build/clibx/closure/historical-0-3-errors.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "text": ""
+    },
+    "historical-0-4-errors.log": {
+      "path": "build/clibx/closure/historical-0-4-errors.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "text": ""
+    },
+    "historical-0-5-errors.log": {
+      "path": "build/clibx/closure/historical-0-5-errors.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "text": ""
+    },
+    "historical-2-1-errors.log": {
+      "path": "build/clibx/closure/historical-2-1-errors.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "text": ""
+    },
+    "historical-2-2-errors.log": {
+      "path": "build/clibx/closure/historical-2-2-errors.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "text": ""
+    },
+    "historical-2-3-errors.log": {
+      "path": "build/clibx/closure/historical-2-3-errors.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "text": ""
+    },
+    "historical-2-4-errors.log": {
+      "path": "build/clibx/closure/historical-2-4-errors.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "text": ""
+    },
+    "historical-2-5-errors.log": {
+      "path": "build/clibx/closure/historical-2-5-errors.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "text": ""
+    },
+    "order-before-0-errors.log": {
+      "path": "build/clibx/closure/order-before-0-errors.log",
+      "bytes": 85,
+      "sha256": "6b43223b8e2bdf019baa1de7e7b660262d0d7a9adc4512b444408732e01f6194",
+      "text": "Audit begin glb_fixture_0\nFAIL ACL metric reads unwritten parent: bone=0 parent=20\n"
+    },
+    "order-before-2-errors.log": {
+      "path": "build/clibx/closure/order-before-2-errors.log",
+      "bytes": 85,
+      "sha256": "06b7258cba65f51ac5385994d5db4f65e5b8cc065a4975a349d2eb11656f5325",
+      "text": "Audit begin glb_fixture_2\nFAIL ACL metric reads unwritten parent: bone=0 parent=20\n"
+    },
+    "order-fixed-0-errors.log": {
+      "path": "build/clibx/closure/order-fixed-0-errors.log",
+      "bytes": 27,
+      "sha256": "53f207bb749021a6a60ca73d4d35e93b1ae21c56b9dab7ec93bb28a4db4d5ba4",
+      "text": "Audit begin glb_fixture_0\n"
+    },
+    "order-fixed-2-errors.log": {
+      "path": "build/clibx/closure/order-fixed-2-errors.log",
+      "bytes": 27,
+      "sha256": "16f83b01276434f8fb92216c90d362812fe86f93bdc8dd069dd7b8c44ec5f47e",
+      "text": "Audit begin glb_fixture_2\n"
+    },
+    "poison-before-0-errors.log": {
+      "path": "build/clibx/closure/poison-before-0-errors.log",
+      "bytes": 27,
+      "sha256": "53f207bb749021a6a60ca73d4d35e93b1ae21c56b9dab7ec93bb28a4db4d5ba4",
+      "text": "Audit begin glb_fixture_0\n"
+    },
+    "poison-before-2-errors.log": {
+      "path": "build/clibx/closure/poison-before-2-errors.log",
+      "bytes": 27,
+      "sha256": "16f83b01276434f8fb92216c90d362812fe86f93bdc8dd069dd7b8c44ec5f47e",
+      "text": "Audit begin glb_fixture_2\n"
+    },
+    "repro-full-errors.log": {
+      "path": "build/clibx/closure/repro-full-errors.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "text": ""
+    },
+    "repro-quality-errors.log": {
+      "path": "build/clibx/closure/repro-quality-errors.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "text": ""
+    },
+    "transition-1-errors.log": {
+      "path": "build/clibx/closure/transition-1-errors.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "text": ""
+    },
+    "transition-2-errors.log": {
+      "path": "build/clibx/closure/transition-2-errors.log",
+      "bytes": 1061,
+      "sha256": "78c0ddd9407609b4154c36685e06cb1baa907ba394e9f8178203055ee37d3477",
+      "text": "Native audit exception 0xc0000005\n0x7ff691b2456e acl::acl_impl::find_contributing_error+3342 C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\deps\\acl-2.1.0\\includes\\acl\\compression\\impl\\quantize.transform.h:1797\n0x7ff691b2456e acl::acl_impl::find_contributing_error+3342 C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\deps\\acl-2.1.0\\includes\\acl\\compression\\impl\\quantize.transform.h:1797\n0x7ff691b1d03c acl::acl_impl::compress_transform_track_list+2540 C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\deps\\acl-2.1.0\\includes\\acl\\compression\\impl\\compress.transform.impl.h:259\n0x7ff691b0afaa Audit+2858 C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\tools\\CoreLibraryAudit\\AnimationAudit.cpp:184\n0x7ff691b3953b main+3499 C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\tools\\CoreLibraryAudit\\AnimationAudit.cpp:234\n0x7ff691c1f804 __scrt_common_main_seh+268 D:\\a\\_work\\1\\s\\src\\vctools\\crt\\vcstartup\\src\\startup\\exe_common.inl:288\n0x7ffb859acd87 BaseThreadInitThunk+23\n0x7ffb8752caec RtlUserThreadStart+44\n"
+    },
+    "historical-0-runs.json": {
+      "path": "build/clibx/closure/historical-0-runs.json",
+      "bytes": 310,
+      "sha256": "be4172f00ac142c0c525762a76bf95ee221eefd064b5648bdbd9e24ac954f9af",
+      "text": "[\n  {\n    \"case\": 0,\n    \"attempt\": 1,\n    \"exit\": 0\n  },\n  {\n    \"case\": 0,\n    \"attempt\": 2,\n    \"exit\": 0\n  },\n  {\n    \"case\": 0,\n    \"attempt\": 3,\n    \"exit\": 0\n  },\n  {\n    \"case\": 0,\n    \"attempt\": 4,\n    \"exit\": 0\n  },\n  {\n    \"case\": 0,\n    \"attempt\": 5,\n    \"exit\": 0\n  }\n]\n"
+    },
+    "historical-2-runs.json": {
+      "path": "build/clibx/closure/historical-2-runs.json",
+      "bytes": 310,
+      "sha256": "424a64f31eb3a4529408d7b1387b721adef1794899e808e625b7dcb5427d19f0",
+      "text": "[\n  {\n    \"case\": 2,\n    \"attempt\": 1,\n    \"exit\": 0\n  },\n  {\n    \"case\": 2,\n    \"attempt\": 2,\n    \"exit\": 0\n  },\n  {\n    \"case\": 2,\n    \"attempt\": 3,\n    \"exit\": 0\n  },\n  {\n    \"case\": 2,\n    \"attempt\": 4,\n    \"exit\": 0\n  },\n  {\n    \"case\": 2,\n    \"attempt\": 5,\n    \"exit\": 0\n  }\n]\n"
+    },
+    "transition-runs.json": {
+      "path": "build/clibx/closure/transition-runs.json",
+      "bytes": 105,
+      "sha256": "7e5318f968e6929e9f65523c8574ff9f6cdf0911a3b86855d065c43db438d7e1",
+      "text": "[\n  {\n    \"attempt\": 1,\n    \"exit\": 0\n  },\n  {\n    \"attempt\": 2,\n    \"exit\": -1073741819\n  }\n]\n"
+    },
+    "finite-before-0-run.json": {
+      "path": "build/clibx/closure/finite-before-0-run.json",
+      "bytes": 33,
+      "sha256": "706edeb454c2223a7a705ed9ba15d15f27df426fea1866f65b4263f01f5225d0",
+      "text": "{\n  \"clip\": 0,\n  \"exit\": 0\n}\n"
+    },
+    "finite-before-2-run.json": {
+      "path": "build/clibx/closure/finite-before-2-run.json",
+      "bytes": 33,
+      "sha256": "718a8c891afcab58b74f766c11e62eeeac04483e651ce53eb55eef59aac0d890",
+      "text": "{\n  \"clip\": 2,\n  \"exit\": 0\n}\n"
+    },
+    "order-before-0-run.json": {
+      "path": "build/clibx/closure/order-before-0-run.json",
+      "bytes": 33,
+      "sha256": "cbd9f30ab206c4e851bb2286bd662d3aaf927020ce9b662c16b6328665c7e358",
+      "text": "{\n  \"clip\": 0,\n  \"exit\": 1\n}\n"
+    },
+    "order-before-2-run.json": {
+      "path": "build/clibx/closure/order-before-2-run.json",
+      "bytes": 33,
+      "sha256": "7064e2553f61bd64bef7e95432392a6f24d080ad77174f2ce6bb5683c7109f16",
+      "text": "{\n  \"clip\": 2,\n  \"exit\": 1\n}\n"
+    },
+    "order-fixed-0-run.json": {
+      "path": "build/clibx/closure/order-fixed-0-run.json",
+      "bytes": 33,
+      "sha256": "706edeb454c2223a7a705ed9ba15d15f27df426fea1866f65b4263f01f5225d0",
+      "text": "{\n  \"clip\": 0,\n  \"exit\": 0\n}\n"
+    },
+    "order-fixed-2-run.json": {
+      "path": "build/clibx/closure/order-fixed-2-run.json",
+      "bytes": 33,
+      "sha256": "718a8c891afcab58b74f766c11e62eeeac04483e651ce53eb55eef59aac0d890",
+      "text": "{\n  \"clip\": 2,\n  \"exit\": 0\n}\n"
+    },
+    "poison-before-0-run.json": {
+      "path": "build/clibx/closure/poison-before-0-run.json",
+      "bytes": 33,
+      "sha256": "706edeb454c2223a7a705ed9ba15d15f27df426fea1866f65b4263f01f5225d0",
+      "text": "{\n  \"clip\": 0,\n  \"exit\": 0\n}\n"
+    },
+    "poison-before-2-run.json": {
+      "path": "build/clibx/closure/poison-before-2-run.json",
+      "bytes": 33,
+      "sha256": "718a8c891afcab58b74f766c11e62eeeac04483e651ce53eb55eef59aac0d890",
+      "text": "{\n  \"clip\": 2,\n  \"exit\": 0\n}\n"
+    },
+    "repro-full-run.json": {
+      "path": "build/clibx/closure/repro-full-run.json",
+      "bytes": 45,
+      "sha256": "891fcfc33b13c8590a820d520427f05297363e03f6873bc17c99d5a6364b015d",
+      "text": "{\n  \"exit\": 0,\n  \"seconds\": 25.3169027\n}\n"
+    },
+    "repro-quality-run.json": {
+      "path": "build/clibx/closure/repro-quality-run.json",
+      "bytes": 45,
+      "sha256": "094287d770b090894c70b9aa5e011dcf2b68c381caab26818393d41c1d8c1254",
+      "text": "{\n  \"exit\": 0,\n  \"seconds\": 11.7717908\n}\n"
+    },
+    "final-animation-build.log": {
+      "path": "build/clibx/closure/final-animation-build.log",
+      "bytes": 1575,
+      "sha256": "74bba8ab3efa43ae97127128e9ed64aca6b9df2d7cdc5b530929e84f7337d2fa",
+      "text": "MSBuild-Version 17.14.10+8b8e13593 f\u00c3\u00bcr .NET Framework\n\n  AssetRuntime.vcxproj -> C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\animation-build\\src\\AssetRuntime\\Release\\AssetRuntime.lib\n  Quellen werden auf Modulabh\u00c3\u00a4ngigkeiten \u00c3\u00bcberpr\u00c3\u00bcft...\n  AnimationRuntime.vcxproj -> C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\animation-build\\src\\AnimationRuntime\\Release\\AnimationRuntime.lib\n  ozz_base.vcxproj -> C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\animation-build\\tools\\CoreLibraryAudit\\ozz\\src\\base\\Release\\ozz_base_r.lib\n  Quellen werden auf Modulabh\u00c3\u00a4ngigkeiten \u00c3\u00bcberpr\u00c3\u00bcft...\n  AssetRuntimeGlTF.vcxproj -> C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\animation-build\\src\\AssetRuntime\\Release\\AssetRuntimeGlTF.lib\n  AssetRuntimeGR2.vcxproj -> C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\animation-build\\src\\AssetRuntime\\Release\\AssetRuntimeGR2.lib\n  ozz_animation.vcxproj -> C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\animation-build\\tools\\CoreLibraryAudit\\ozz\\src\\animation\\runtime\\Release\\ozz_animation_r.lib\n  Quellen werden auf Modulabh\u00c3\u00a4ngigkeiten \u00c3\u00bcberpr\u00c3\u00bcft...\n  ozz_animation_offline.vcxproj -> C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\animation-build\\tools\\CoreLibraryAudit\\ozz\\src\\animation\\offline\\Release\\ozz_animation_offline_r.lib\n  AnimationAudit.cpp\n  CoreAnimationAudit.vcxproj -> C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\animation-build\\tools\\CoreLibraryAudit\\Release\\CoreAnimationAudit.exe\n"
+    },
+    "fixed-build.log": {
+      "path": "build/clibx/closure/fixed-build.log",
+      "bytes": 1575,
+      "sha256": "ecfde1661dd8e09f958f2bd2aff707397f12aa84bcb2bc0bc721ad2766f09cc3",
+      "text": "MSBuild-Version 17.14.10+8b8e13593 f\u00c3\u00bcr .NET Framework\n\n  AssetRuntime.vcxproj -> C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\animation-build\\src\\AssetRuntime\\Release\\AssetRuntime.lib\n  Quellen werden auf Modulabh\u00c3\u00a4ngigkeiten \u00c3\u00bcberpr\u00c3\u00bcft...\n  ozz_base.vcxproj -> C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\animation-build\\tools\\CoreLibraryAudit\\ozz\\src\\base\\Release\\ozz_base_r.lib\n  AnimationRuntime.vcxproj -> C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\animation-build\\src\\AnimationRuntime\\Release\\AnimationRuntime.lib\n  Quellen werden auf Modulabh\u00c3\u00a4ngigkeiten \u00c3\u00bcberpr\u00c3\u00bcft...\n  AssetRuntimeGlTF.vcxproj -> C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\animation-build\\src\\AssetRuntime\\Release\\AssetRuntimeGlTF.lib\n  AssetRuntimeGR2.vcxproj -> C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\animation-build\\src\\AssetRuntime\\Release\\AssetRuntimeGR2.lib\n  ozz_animation.vcxproj -> C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\animation-build\\tools\\CoreLibraryAudit\\ozz\\src\\animation\\runtime\\Release\\ozz_animation_r.lib\n  Quellen werden auf Modulabh\u00c3\u00a4ngigkeiten \u00c3\u00bcberpr\u00c3\u00bcft...\n  ozz_animation_offline.vcxproj -> C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\animation-build\\tools\\CoreLibraryAudit\\ozz\\src\\animation\\offline\\Release\\ozz_animation_offline_r.lib\n  AnimationAudit.cpp\n  CoreAnimationAudit.vcxproj -> C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\animation-build\\tools\\CoreLibraryAudit\\Release\\CoreAnimationAudit.exe\n"
+    },
+    "metric-check-build.log": {
+      "path": "build/clibx/closure/metric-check-build.log",
+      "bytes": 1575,
+      "sha256": "ecfde1661dd8e09f958f2bd2aff707397f12aa84bcb2bc0bc721ad2766f09cc3",
+      "text": "MSBuild-Version 17.14.10+8b8e13593 f\u00c3\u00bcr .NET Framework\n\n  AssetRuntime.vcxproj -> C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\animation-build\\src\\AssetRuntime\\Release\\AssetRuntime.lib\n  Quellen werden auf Modulabh\u00c3\u00a4ngigkeiten \u00c3\u00bcberpr\u00c3\u00bcft...\n  ozz_base.vcxproj -> C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\animation-build\\tools\\CoreLibraryAudit\\ozz\\src\\base\\Release\\ozz_base_r.lib\n  AnimationRuntime.vcxproj -> C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\animation-build\\src\\AnimationRuntime\\Release\\AnimationRuntime.lib\n  Quellen werden auf Modulabh\u00c3\u00a4ngigkeiten \u00c3\u00bcberpr\u00c3\u00bcft...\n  AssetRuntimeGlTF.vcxproj -> C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\animation-build\\src\\AssetRuntime\\Release\\AssetRuntimeGlTF.lib\n  AssetRuntimeGR2.vcxproj -> C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\animation-build\\src\\AssetRuntime\\Release\\AssetRuntimeGR2.lib\n  ozz_animation.vcxproj -> C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\animation-build\\tools\\CoreLibraryAudit\\ozz\\src\\animation\\runtime\\Release\\ozz_animation_r.lib\n  Quellen werden auf Modulabh\u00c3\u00a4ngigkeiten \u00c3\u00bcberpr\u00c3\u00bcft...\n  ozz_animation_offline.vcxproj -> C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\animation-build\\tools\\CoreLibraryAudit\\ozz\\src\\animation\\offline\\Release\\ozz_animation_offline_r.lib\n  AnimationAudit.cpp\n  CoreAnimationAudit.vcxproj -> C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\animation-build\\tools\\CoreLibraryAudit\\Release\\CoreAnimationAudit.exe\n"
+    },
+    "poison-build.log": {
+      "path": "build/clibx/closure/poison-build.log",
+      "bytes": 1575,
+      "sha256": "cce53dae05242ad608a086b5843d0d7c4a82a3e686a0c7ceb52887359954fbab",
+      "text": "MSBuild-Version 17.14.10+8b8e13593 f\u00c3\u00bcr .NET Framework\n\n  AnimationRuntime.vcxproj -> C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\animation-build\\src\\AnimationRuntime\\Release\\AnimationRuntime.lib\n  Quellen werden auf Modulabh\u00c3\u00a4ngigkeiten \u00c3\u00bcberpr\u00c3\u00bcft...\n  ozz_base.vcxproj -> C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\animation-build\\tools\\CoreLibraryAudit\\ozz\\src\\base\\Release\\ozz_base_r.lib\n  AssetRuntime.vcxproj -> C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\animation-build\\src\\AssetRuntime\\Release\\AssetRuntime.lib\n  Quellen werden auf Modulabh\u00c3\u00a4ngigkeiten \u00c3\u00bcberpr\u00c3\u00bcft...\n  ozz_animation.vcxproj -> C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\animation-build\\tools\\CoreLibraryAudit\\ozz\\src\\animation\\runtime\\Release\\ozz_animation_r.lib\n  AssetRuntimeGlTF.vcxproj -> C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\animation-build\\src\\AssetRuntime\\Release\\AssetRuntimeGlTF.lib\n  AssetRuntimeGR2.vcxproj -> C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\animation-build\\src\\AssetRuntime\\Release\\AssetRuntimeGR2.lib\n  Quellen werden auf Modulabh\u00c3\u00a4ngigkeiten \u00c3\u00bcberpr\u00c3\u00bcft...\n  ozz_animation_offline.vcxproj -> C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\animation-build\\tools\\CoreLibraryAudit\\ozz\\src\\animation\\offline\\Release\\ozz_animation_offline_r.lib\n  AnimationAudit.cpp\n  CoreAnimationAudit.vcxproj -> C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\animation-build\\tools\\CoreLibraryAudit\\Release\\CoreAnimationAudit.exe\n"
+    },
+    "poison-finite-build.log": {
+      "path": "build/clibx/closure/poison-finite-build.log",
+      "bytes": 1575,
+      "sha256": "fd3df58dd6de8bdcabc2eab6292511cceabb11020ff1eec033490d20da795654",
+      "text": "MSBuild-Version 17.14.10+8b8e13593 f\u00c3\u00bcr .NET Framework\n\n  AssetRuntime.vcxproj -> C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\animation-build\\src\\AssetRuntime\\Release\\AssetRuntime.lib\n  Quellen werden auf Modulabh\u00c3\u00a4ngigkeiten \u00c3\u00bcberpr\u00c3\u00bcft...\n  AnimationRuntime.vcxproj -> C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\animation-build\\src\\AnimationRuntime\\Release\\AnimationRuntime.lib\n  AssetRuntimeGR2.vcxproj -> C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\animation-build\\src\\AssetRuntime\\Release\\AssetRuntimeGR2.lib\n  ozz_base.vcxproj -> C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\animation-build\\tools\\CoreLibraryAudit\\ozz\\src\\base\\Release\\ozz_base_r.lib\n  AssetRuntimeGlTF.vcxproj -> C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\animation-build\\src\\AssetRuntime\\Release\\AssetRuntimeGlTF.lib\n  Quellen werden auf Modulabh\u00c3\u00a4ngigkeiten \u00c3\u00bcberpr\u00c3\u00bcft...\n  ozz_animation.vcxproj -> C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\animation-build\\tools\\CoreLibraryAudit\\ozz\\src\\animation\\runtime\\Release\\ozz_animation_r.lib\n  Quellen werden auf Modulabh\u00c3\u00a4ngigkeiten \u00c3\u00bcberpr\u00c3\u00bcft...\n  ozz_animation_offline.vcxproj -> C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\animation-build\\tools\\CoreLibraryAudit\\ozz\\src\\animation\\offline\\Release\\ozz_animation_offline_r.lib\n  AnimationAudit.cpp\n  CoreAnimationAudit.vcxproj -> C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\animation-build\\tools\\CoreLibraryAudit\\Release\\CoreAnimationAudit.exe\n"
+    },
+    "texture-build.log": {
+      "path": "build/clibx/closure/texture-build.log",
+      "bytes": 239,
+      "sha256": "17b76c4095e0669a32a4ef64c84a89ca0af1604bb32a063415410b3e41c70d1e",
+      "text": "MSBuild-Version 17.14.10+8b8e13593 f\u00c3\u00bcr .NET Framework\n\n  TextureAudit.cpp\n  CoreTextureAudit.vcxproj -> C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\animation-build\\tools\\CoreLibraryAudit\\Release\\CoreTextureAudit.exe\n"
+    },
+    "texture-final-build.log": {
+      "path": "build/clibx/closure/texture-final-build.log",
+      "bytes": 239,
+      "sha256": "17b76c4095e0669a32a4ef64c84a89ca0af1604bb32a063415410b3e41c70d1e",
+      "text": "MSBuild-Version 17.14.10+8b8e13593 f\u00c3\u00bcr .NET Framework\n\n  TextureAudit.cpp\n  CoreTextureAudit.vcxproj -> C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build\\clibx\\animation-build\\tools\\CoreLibraryAudit\\Release\\CoreTextureAudit.exe\n"
+    },
+    "animation-regression.log": {
+      "path": "build/clibx/closure/animation-regression.log",
+      "bytes": 107,
+      "sha256": "e8f92359697ae6aaf6c01ef6f3846724cf2dcdf6962b1b8016a0640dc85e2264",
+      "text": "PASS: 7 targeted runs; 35 clip checks, 3 warm actor-count cases; deterministic under allocator poisoning.\n"
+    },
+    "texture-regression.log": {
+      "path": "build/clibx/closure/texture-regression.log",
+      "bytes": 713,
+      "sha256": "dc74f088d7bff8eeaa91c574fd6cc7d9e5d1d17405b0a8ba0de7cd1088b6c936",
+      "text": "prepared leather_basecolor {'width': 2048, 'height': 2048, 'mips': 12, 'transfer': 2}\nprepared leather_normal {'width': 2048, 'height': 2048, 'mips': 12, 'transfer': 1}\nprepared leather_orm {'width': 2048, 'height': 2048, 'mips': 12, 'transfer': 1}\nprepared lenses_alpha {'width': 1024, 'height': 1024, 'mips': 11, 'transfer': 2}\nmeasured leather_basecolor etc1s BC7\nmeasured leather_basecolor uastc BC7\nmeasured leather_normal etc1s BC7\nmeasured leather_normal uastc BC7\nmeasured leather_orm etc1s BC7\nmeasured leather_orm uastc BC7\nmeasured lenses_alpha etc1s BC7\nmeasured lenses_alpha uastc BC7\nPASS: 8 comparisons; all stored mips preserved; matching linear/sRGB metadata; equal target GPU bytes\n"
+    },
+    "textures/leather_basecolor-etc1s.timing.jsonl": {
+      "path": "build/clibx/closure/textures/leather_basecolor-etc1s.timing.jsonl",
+      "bytes": 603,
+      "sha256": "c748c3d8b63a7170599970972ae4283f6775dd4970cc78f3cda74ccaad0eeffa",
+      "text": "{\"file\":\"leather_basecolor-etc1s.ktx2\",\"source_bytes\":5592580,\"source_pack_zstd17_bytes\":814210,\"ktx2_bytes\":511543,\"ktx2_pack_zstd17_bytes\":511564,\"width\":2048,\"height\":2048,\"mips\":12,\"global_init_us\":24240.3,\"first_parse_start_us\":349,\"source_pack_decode\":{\"median_us\":2325.25,\"p95_us\":2395.65,\"max_us\":2413.2}}\n{\"file\":\"leather_basecolor-etc1s.ktx2\",\"format\":\"BC7\",\"supported\":true,\"gpu_payload_bytes\":5592432,\"first_transcode_us\":21401.9,\"warm_transcode\":{\"median_us\":21209.375,\"p95_us\":21435.425,\"max_us\":21510.025},\"memory_load_prepare\":{\"median_us\":21505.95,\"p95_us\":21701.1,\"max_us\":21811.8}}\n"
+    },
+    "textures/leather_basecolor-uastc.timing.jsonl": {
+      "path": "build/clibx/closure/textures/leather_basecolor-uastc.timing.jsonl",
+      "bytes": 612,
+      "sha256": "7d123c57925ddf34849f5717c51c0eac8684ac062d5a3e5d3feacfbc1d6587de",
+      "text": "{\"file\":\"leather_basecolor-uastc.ktx2\",\"source_bytes\":5592580,\"source_pack_zstd17_bytes\":814210,\"ktx2_bytes\":1246333,\"ktx2_pack_zstd17_bytes\":1246372,\"width\":2048,\"height\":2048,\"mips\":12,\"global_init_us\":23844.9,\"first_parse_start_us\":10.3,\"source_pack_decode\":{\"median_us\":2333.525,\"p95_us\":3005.725,\"max_us\":3451.4625}}\n{\"file\":\"leather_basecolor-uastc.ktx2\",\"format\":\"BC7\",\"supported\":true,\"gpu_payload_bytes\":5592432,\"first_transcode_us\":33049.3,\"warm_transcode\":{\"median_us\":32543.575,\"p95_us\":33759.425,\"max_us\":35369.775},\"memory_load_prepare\":{\"median_us\":32996.25,\"p95_us\":35460.7,\"max_us\":35566.45}}\n"
+    },
+    "textures/leather_normal-etc1s.timing.jsonl": {
+      "path": "build/clibx/closure/textures/leather_normal-etc1s.timing.jsonl",
+      "bytes": 606,
+      "sha256": "fc904034765ff5e03ded36e7c0f3c9e96867210a44956720455420d0c8183dfb",
+      "text": "{\"file\":\"leather_normal-etc1s.ktx2\",\"source_bytes\":5592580,\"source_pack_zstd17_bytes\":3605980,\"ktx2_bytes\":742050,\"ktx2_pack_zstd17_bytes\":740541,\"width\":2048,\"height\":2048,\"mips\":12,\"global_init_us\":23912.3,\"first_parse_start_us\":1186.4,\"source_pack_decode\":{\"median_us\":2827.5125,\"p95_us\":2882.5875,\"max_us\":2883.1375}}\n{\"file\":\"leather_normal-etc1s.ktx2\",\"format\":\"BC7\",\"supported\":true,\"gpu_payload_bytes\":5592432,\"first_transcode_us\":78101.1,\"warm_transcode\":{\"median_us\":77843.2,\"p95_us\":78475.35,\"max_us\":78649.85},\"memory_load_prepare\":{\"median_us\":79007.65,\"p95_us\":83189.75,\"max_us\":88080.45}}\n"
+    },
+    "textures/leather_normal-uastc.timing.jsonl": {
+      "path": "build/clibx/closure/textures/leather_normal-uastc.timing.jsonl",
+      "bytes": 607,
+      "sha256": "13e3508ac0c12bb3167f6b0ea40f376dde548be89c57005e27c4b1aaab5bbc01",
+      "text": "{\"file\":\"leather_normal-uastc.ktx2\",\"source_bytes\":5592580,\"source_pack_zstd17_bytes\":3605980,\"ktx2_bytes\":4072803,\"ktx2_pack_zstd17_bytes\":4072908,\"width\":2048,\"height\":2048,\"mips\":12,\"global_init_us\":24290.1,\"first_parse_start_us\":11.9,\"source_pack_decode\":{\"median_us\":2859.425,\"p95_us\":3945.3375,\"max_us\":3966.1625}}\n{\"file\":\"leather_normal-uastc.ktx2\",\"format\":\"BC7\",\"supported\":true,\"gpu_payload_bytes\":5592432,\"first_transcode_us\":35403.2,\"warm_transcode\":{\"median_us\":35454.325,\"p95_us\":36297.35,\"max_us\":40070.925},\"memory_load_prepare\":{\"median_us\":35679.05,\"p95_us\":37594.7,\"max_us\":38550.75}}\n"
+    },
+    "textures/leather_orm-etc1s.timing.jsonl": {
+      "path": "build/clibx/closure/textures/leather_orm-etc1s.timing.jsonl",
+      "bytes": 598,
+      "sha256": "084c6ccc9d384736034d9a3e486adec027a0bb59dda45e90551b275471688d7c",
+      "text": "{\"file\":\"leather_orm-etc1s.ktx2\",\"source_bytes\":5592580,\"source_pack_zstd17_bytes\":3779831,\"ktx2_bytes\":840335,\"ktx2_pack_zstd17_bytes\":836290,\"width\":2048,\"height\":2048,\"mips\":12,\"global_init_us\":24506.8,\"first_parse_start_us\":1161.7,\"source_pack_decode\":{\"median_us\":4863.2125,\"p95_us\":5789.75,\"max_us\":6312.4625}}\n{\"file\":\"leather_orm-etc1s.ktx2\",\"format\":\"BC7\",\"supported\":true,\"gpu_payload_bytes\":5592432,\"first_transcode_us\":78104.8,\"warm_transcode\":{\"median_us\":78044.4,\"p95_us\":78506.85,\"max_us\":78538.025},\"memory_load_prepare\":{\"median_us\":79367.75,\"p95_us\":80093.15,\"max_us\":82580.6}}\n"
+    },
+    "textures/leather_orm-uastc.timing.jsonl": {
+      "path": "build/clibx/closure/textures/leather_orm-uastc.timing.jsonl",
+      "bytes": 597,
+      "sha256": "be636f0646cc02b6db352a58313717fbee2873bf5bce4a7615b376fcd59fbeed",
+      "text": "{\"file\":\"leather_orm-uastc.ktx2\",\"source_bytes\":5592580,\"source_pack_zstd17_bytes\":3779831,\"ktx2_bytes\":4381745,\"ktx2_pack_zstd17_bytes\":4381856,\"width\":2048,\"height\":2048,\"mips\":12,\"global_init_us\":24095,\"first_parse_start_us\":14.6,\"source_pack_decode\":{\"median_us\":4792.8625,\"p95_us\":4892.375,\"max_us\":4985.025}}\n{\"file\":\"leather_orm-uastc.ktx2\",\"format\":\"BC7\",\"supported\":true,\"gpu_payload_bytes\":5592432,\"first_transcode_us\":38199.5,\"warm_transcode\":{\"median_us\":38224.375,\"p95_us\":40863.325,\"max_us\":41493.15},\"memory_load_prepare\":{\"median_us\":38422.3,\"p95_us\":38879.65,\"max_us\":39379.5}}\n"
+    },
+    "textures/lenses_alpha-etc1s.timing.jsonl": {
+      "path": "build/clibx/closure/textures/lenses_alpha-etc1s.timing.jsonl",
+      "bytes": 589,
+      "sha256": "048557474b0be3097f0a7ee5d438db67ddae95960204fd35cec2d10af7544628",
+      "text": "{\"file\":\"lenses_alpha-etc1s.ktx2\",\"source_bytes\":1398276,\"source_pack_zstd17_bytes\":266316,\"ktx2_bytes\":209691,\"ktx2_pack_zstd17_bytes\":207426,\"width\":1024,\"height\":1024,\"mips\":11,\"global_init_us\":23852.4,\"first_parse_start_us\":325.6,\"source_pack_decode\":{\"median_us\":637.55,\"p95_us\":697.8625,\"max_us\":700.5125}}\n{\"file\":\"lenses_alpha-etc1s.ktx2\",\"format\":\"BC7\",\"supported\":true,\"gpu_payload_bytes\":1398128,\"first_transcode_us\":7070.4,\"warm_transcode\":{\"median_us\":6959.75,\"p95_us\":7085.925,\"max_us\":7208.875},\"memory_load_prepare\":{\"median_us\":7238.75,\"p95_us\":7332.7,\"max_us\":7377.5}}\n"
+    },
+    "textures/lenses_alpha-uastc.timing.jsonl": {
+      "path": "build/clibx/closure/textures/lenses_alpha-uastc.timing.jsonl",
+      "bytes": 586,
+      "sha256": "2da488fd9fd57a01f51fa4c421859fb06cc709b029be7f54e34b46b9abf224f9",
+      "text": "{\"file\":\"lenses_alpha-uastc.ktx2\",\"source_bytes\":1398276,\"source_pack_zstd17_bytes\":266316,\"ktx2_bytes\":404131,\"ktx2_pack_zstd17_bytes\":404152,\"width\":1024,\"height\":1024,\"mips\":11,\"global_init_us\":24660.9,\"first_parse_start_us\":12.3,\"source_pack_decode\":{\"median_us\":633.05,\"p95_us\":662.15,\"max_us\":694.45}}\n{\"file\":\"lenses_alpha-uastc.ktx2\",\"format\":\"BC7\",\"supported\":true,\"gpu_payload_bytes\":1398128,\"first_transcode_us\":7554.6,\"warm_transcode\":{\"median_us\":7441.575,\"p95_us\":7497.15,\"max_us\":7518.925},\"memory_load_prepare\":{\"median_us\":7622.25,\"p95_us\":7900.95,\"max_us\":7996.55}}\n"
+    }
+  },
+  "tool_hashes": [
+    {
+      "path": "tools/CoreLibraryAudit/animation-corpus.tsv",
+      "bytes": 1437,
+      "sha256": "5a593abc14d8f1a4421dfeb4dba6fa62ee5bf23f669685d6cc794ef79bcd4ca9"
+    },
+    {
+      "path": "tools/CoreLibraryAudit/AnimationAudit.cpp",
+      "bytes": 24009,
+      "sha256": "b84001e384d5a246b669a95c79a0d072dec8b9a38663997d11148621f7d3849c"
+    },
+    {
+      "path": "tools/CoreLibraryAudit/AuditCommon.h",
+      "bytes": 2372,
+      "sha256": "fa5751bc7d987f5b3c93c65edd043d5615715448dcb65dcac79ea90421f6f39c"
+    },
+    {
+      "path": "tools/CoreLibraryAudit/closure_animation.py",
+      "bytes": 3058,
+      "sha256": "86f974abc3ab005abcb396966faa913b051c797e034cde7a9103bc800c3599b4"
+    },
+    {
+      "path": "tools/CoreLibraryAudit/closure_textures.py",
+      "bytes": 14736,
+      "sha256": "c45bd1df2d2e723ce246e59fa66f93b9ffc12395affe7b3d651884d09d9affc2"
+    },
+    {
+      "path": "tools/CoreLibraryAudit/CMakeLists.txt",
+      "bytes": 2937,
+      "sha256": "0c509b3692e656b063d722562a46a326447357c0d026c9948a7a296e839671f9"
+    },
+    {
+      "path": "tools/CoreLibraryAudit/mesh-corpus.tsv",
+      "bytes": 415,
+      "sha256": "ab7e4f12ee689e1248e922968afec7057b18370dba08746dd740d9e0e7d86b01"
+    },
+    {
+      "path": "tools/CoreLibraryAudit/MeshAudit.cpp",
+      "bytes": 5497,
+      "sha256": "d96c5dc19414767ef6fd4171b231e58603af613fba3b20e46df84305ebf6415b"
+    },
+    {
+      "path": "tools/CoreLibraryAudit/prepare_dependencies.py",
+      "bytes": 1466,
+      "sha256": "ffa09d33801d40d0a7068a94b34f27ce4ca56bbe203fd916708e4b95b2f7964f"
+    },
+    {
+      "path": "tools/CoreLibraryAudit/README.md",
+      "bytes": 9758,
+      "sha256": "8471dd6c4fb76f98b12766bb103d8ba02a36c9c9ef0e2d44c16ae42a52368b4b"
+    },
+    {
+      "path": "tools/CoreLibraryAudit/TextureAudit.cpp",
+      "bytes": 8130,
+      "sha256": "7e74b597d67c3062d139d18fe3ecfa5de3c059ca1bb450dd55f767d81aae0c8a"
+    },
+    {
+      "path": "tools/CoreLibraryAudit/texture_audit.py",
+      "bytes": 11288,
+      "sha256": "2bbd909df4a5f5b69e79599bcfd20cce3154f9660d698940e8f9b01e08f37704"
+    },
+    {
+      "path": "CMakeLists.txt",
+      "bytes": 5590,
+      "sha256": "4ae043a99118631d11292ef3ad0740b8aaecd2f468c27dd6db313f3fd91b4f76"
+    },
+    {
+      "path": "build/clibx/animation-build/tools/CoreLibraryAudit/Release/CoreAnimationAudit.exe",
+      "bytes": 2300928,
+      "sha256": "13aa81a8f83f79d340320c00ced01c6714e197a8b4664795fdf09891c09f1fa1"
+    },
+    {
+      "path": "build/clibx/animation-build/tools/CoreLibraryAudit/Release/CoreTextureAudit.exe",
+      "bytes": 2295808,
+      "sha256": "4140f0b2d0dbb9ca0465515ea312d63adb8b8c95db704abb867db481584e83cb"
+    }
+  ],
+  "animation_input_hashes": {
+    "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\tests\\AssetRuntime\\fixtures\\f5x\\character.glb": {
+      "bytes": 39796,
+      "sha256": "447ba15c7a7bb22270b51a8743f9c883c81ecfd4302df6208ff03a4f86685759"
+    },
+    "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client\\assets\\PC\\ymir work\\pc\\warrior\\warrior_novice.gr2": {
+      "bytes": 73139,
+      "sha256": "7ac881b0c60ced40c9388d6186bdf02a353a58382d12804345cb65fc3dc1fa74"
+    },
+    "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client\\assets\\PC\\ymir work\\pc\\warrior\\general\\attack.gr2": {
+      "bytes": 36050,
+      "sha256": "388c15e6298812da3d0ab54ad37a4a2573f76cd51f32bf09afbcbb74d4235e80"
+    },
+    "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client\\assets\\Monster\\ymir work\\monster\\wolf\\wolf.gr2": {
+      "bytes": 35044,
+      "sha256": "b5bf4a2938771cef690265f28bf5e082ef190a67e8399ec0e4d2afa148ebd612"
+    },
+    "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client\\assets\\Monster\\ymir work\\monster\\wolf\\03.gr2": {
+      "bytes": 17399,
+      "sha256": "2bca9cc900b5cb52953067dca251d28de97abef5d519deb5b1579c884e0d6046"
+    },
+    "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client\\assets\\Monster\\ymir work\\monster\\misterious_diseased_bosshost\\misterious_diseased_bosshost.gr2": {
+      "bytes": 120175,
+      "sha256": "b99319c2cabf6b941cc07c69687ddeff4b90d6b145521b6e436957d30636a34f"
+    },
+    "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client\\assets\\Monster\\ymir work\\monster\\misterious_diseased_bosshost\\20.gr2": {
+      "bytes": 247370,
+      "sha256": "f720e52d8d3e72749626fcd90a58c27a7dd518508f20bc3b3ed39c8ef8e231f3"
+    },
+    "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client\\assets\\NPC\\ymir work\\npc\\horse\\horse_normal.gr2": {
+      "bytes": 64077,
+      "sha256": "917d23b8f7e8fa5eefd0ecb90a9674ad5a887ba3ca65f5ef2f064a294fb0f95c"
+    },
+    "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client\\assets\\NPC\\ymir work\\npc\\horse\\03.gr2": {
+      "bytes": 19594,
+      "sha256": "feba82e6535ba2e6c9a7ddbd876107be566681d1162a92105d6061f021d76bf7"
+    }
+  },
+  "production_binaries_unchanged": [
+    {
+      "path": "build-hx-clean/bin/Release/Metin2_Release.exe",
+      "bytes": 30716928,
+      "sha256": "f7fcb1fcd8522465660b7d48c88c347c83e6193bc92f1b7363fcbb2cdf153563"
+    },
+    {
+      "path": "build-hx-clean/bin/Debug/Metin2_Debug.exe",
+      "bytes": 42526208,
+      "sha256": "2e137a2781cabd5019ad5f3b3519d696b16fa868055aff9f5c61e5827dbfa7f1"
+    }
+  ],
+  "redthief_sha256": "2e0f34887edff2f4cfddbb97ae7d9f1a15236752f1330ddaf4f998f4479c51b4",
+  "source": {
+    "head": "d92dc48ca945b9d015924b64e0026563e55b8812",
+    "status": "## feature/gdx-diligentfx...origin/feature/gdx-diligentfx\n M CMakeLists.txt\n?? docs/core/\n?? tools/CoreLibraryAudit/",
+    "changed_files": "M CMakeLists.txt\n?? docs/core/clibx-benchmark-evidence.json\n?? docs/core/clibx-validation-evidence.json\n?? docs/core/phase-clibx-library-reuse-audit.md\n?? tools/CoreLibraryAudit/AnimationAudit.cpp\n?? tools/CoreLibraryAudit/AuditCommon.h\n?? tools/CoreLibraryAudit/CMakeLists.txt\n?? tools/CoreLibraryAudit/MeshAudit.cpp\n?? tools/CoreLibraryAudit/README.md\n?? tools/CoreLibraryAudit/TextureAudit.cpp\n?? tools/CoreLibraryAudit/animation-corpus.tsv\n?? tools/CoreLibraryAudit/closure_animation.py\n?? tools/CoreLibraryAudit/closure_textures.py\n?? tools/CoreLibraryAudit/mesh-corpus.tsv\n?? tools/CoreLibraryAudit/prepare_dependencies.py\n?? tools/CoreLibraryAudit/texture_audit.py",
+    "staged_files": [],
+    "production_changes": [],
+    "whitespace_check": "PASS"
+  },
+  "client": {
+    "head": "72d925937bc5d93982190ce00660ffefe839e824",
+    "status": "## main...origin/main",
+    "clean": true
+  },
+  "ignored_outputs": [
+    "build/clibx/closure/textures/FlightHelmet.closure.glb",
+    "build/clibx/closure/textures/quality-contact-sheet.png",
+    "build/clibx/closure/texture-regression.log"
+  ],
+  "report": {
+    "path": "docs/core/phase-clibx-library-reuse-audit.md",
+    "bytes": 59551,
+    "sha256": "e3addc9d8c41db2b4f933e5565f3d92a1215754beb45c9dc0bbecd0185d9a17f"
+  },
+  "gates_not_repeated": [
+    "Release 62/62",
+    "Debug 62/62",
+    "GCC/LP64 33/33",
+    "Classic 12/12",
+    "GR2/GLB production smokes"
+  ],
+  "visual_review": {
+    "contact_sheet": "build/clibx/closure/textures/quality-contact-sheet.png",
+    "inspected": true,
+    "observation": "Layout/orientation preserved; ETC1S fine normal/ORM detail loss. Numeric outliers retained.",
+    "candidate_gpu_or_device_acceptance": "NOT RUN"
+  },
+  "scope": {
+    "production_changes": false,
+    "new_production_library": false,
+    "commit": false,
+    "push": false,
+    "next_milestone_started": false
+  }
+}

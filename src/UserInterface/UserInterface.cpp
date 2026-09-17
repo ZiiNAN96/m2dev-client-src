@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "Renderer/FirstUseAudit.h"
 #include "Renderer/ResourceData.h"
 #include "AssetRuntime/GR2/GR2AssetProvider.h"
 #include "EterLib/SourceResourceAudit.h"
@@ -335,6 +336,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         AssetRuntime::AnimationStallAudit::Enable(rendererOptions.loadWarmupAudit);
     AssetRuntime::animationRuntimeErrorSink=[](const char* message) { TraceError("%s", message); };
     Renderer::verboseDiagnostics=rendererOptions.diagnostics && !rendererOptions.loadWarmupAudit;
+    Renderer::auditDiligentDiagnostics=true;
     rendererLog << "VerboseDiagnostics=" << Renderer::verboseDiagnostics << std::endl;
     rendererLog << "Skinning=" << (rendererOptions.skinning==Renderer::PrototypeSkinningMode::CPU ? "cpu" : "gpu") << std::endl;
     rendererLog << "SkinningSelection=" << (rendererOptions.skinningSelected ? "explicit" : "default") << std::endl;
@@ -349,7 +351,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
                 << " API=d3d11" << std::endl;
     if (rendererOptions.smokeTest)
     {
-        const int result = Renderer::RunRendererBootstrap(hInstance, rendererOptions);
+        int result = Renderer::RunRendererBootstrap(hInstance, rendererOptions);
+        rendererLog << "DiligentErrors=" << Renderer::diligentErrorCount << " DiligentFatals=" << Renderer::diligentFatalCount << std::endl;
+        if(Renderer::diligentErrorCount||Renderer::diligentFatalCount)result=5;
         rendererLog << "ExitCode=" << result << std::endl;
         return result;
     }
@@ -360,9 +364,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	auto szArgv = CommandLineToArgv (lpCmdLine, &nArgc);
 
     // ZiiNAN: Backend-neutral graphics resource ownership
+    Renderer::LogClientLifecycle("Start");
     const int mainResult = Main(hInstance, lpCmdLine, rendererOptions.backend);
     ClearNativeVegetation();
-    const int result = mainResult ? mainResult : (Vegetation::statistics.failures?6:0);
+    const int result = mainResult ? mainResult : (Vegetation::statistics.failures?6:(Renderer::diligentErrorCount||Renderer::diligentFatalCount?5:0));
     AssetRuntime::AnimationStallAudit::Write();
     AssetRuntime::ClearAnimationRuntimeCaches();
     std::ofstream resourceLog;
@@ -371,13 +376,18 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     resourceLog << "CollisionResources=" << GetCollisionInstanceCapacity() << '\n';
     resourceLog << "VegetationAssets=" << Vegetation::liveAssets << " VegetationInstances=" << Vegetation::liveInstances
         << " VegetationRenderAssets=" << Vegetation::liveRenderAssets << " VegetationGeometry=" << Vegetation::liveGeometry
-        << " VegetationInstanceBuffers=0 VegetationFailures=" << Vegetation::statistics.failures
+        << " VegetationInstanceBuffers=" << Renderer::liveVegetationInstanceBuffers << " VegetationFailures=" << Vegetation::statistics.failures
         << " VegetationCreated=" << Vegetation::statistics.created << " VegetationDraws=" << Vegetation::statistics.submitted
         << " VegetationLODChanges=" << Vegetation::statistics.lodChanges << '\n';
+    resourceLog << "VegetationVisible=" << Vegetation::statistics.visible << " VegetationCulled=" << Vegetation::statistics.culled
+        << " VegetationBatches=" << Vegetation::statistics.batches << " VegetationTriangles=" << Vegetation::statistics.triangles
+        << " VegetationInstanceUploads=" << Renderer::vegetationInstanceUploads << " VegetationInstanceBytes=" << Renderer::vegetationInstanceBytes
+        << " VegetationCPUms=" << Vegetation::statistics.cpuMilliseconds << '\n';
     resourceLog << "VegetationBranches=" << Vegetation::statistics.parts[0] << " VegetationFronds=" << Vegetation::statistics.parts[1]
         << " VegetationLeaves=" << Vegetation::statistics.parts[2] << " VegetationBillboards=" << Vegetation::statistics.parts[3] << '\n';
     // ZiiNAN: GPU skinning production path — summary only; per-frame CSV is opt-in.
     Renderer::WriteSkinningBenchmark();
+    Renderer::LogClientLifecycle(result==0?"ShutdownClean":"ShutdownFailed");
     resourceLog << "AllCPUDeformationCalls=" << Renderer::skinningCpuCalls << " AllCPUDeformationVertices=" << Renderer::skinningCpuVertices
         << " GPUFallbacks=" << Renderer::skinningFallbacks << '\n';
     resourceLog << "AssetDocuments=" << AssetRuntime::liveDocuments
@@ -418,6 +428,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	SAFE_FREE_GLOBAL (szArgv);
     if(result == 4) rendererLog << "ERROR: Renderer initialization failed; no fallback." << std::endl;
     if(result == 5) rendererLog << "ERROR: Renderer frame/resize failed; no fallback." << std::endl;
+    resourceLog << "DiligentErrors=" << Renderer::diligentErrorCount << " DiligentFatals=" << Renderer::diligentFatalCount << std::endl;
     rendererLog << "ExitCode=" << result << std::endl;
 	return result;
 }

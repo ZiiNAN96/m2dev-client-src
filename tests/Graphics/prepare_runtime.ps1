@@ -1,19 +1,21 @@
 param(
     [Parameter(Mandatory=$true)][ValidatePattern('^[a-zA-Z0-9_-]+$')][string]$Name,
-    [string]$BuildDirectory='build-hx-clean',
-    [switch]$Manual
+    [string]$BuildDirectory='build',
+    [switch]$Manual,
+    [string]$OutputDirectory
 )
 $ErrorActionPreference='Stop'
 $source=(Resolve-Path -LiteralPath "$PSScriptRoot/../..").Path
 $original=(Resolve-Path -LiteralPath "$source/../m2dev-client").Path
 $build=(Resolve-Path -LiteralPath $BuildDirectory).Path
 $target=Join-Path $source "build/g0x/runtime/$Name"
+if($OutputDirectory) { $target=[IO.Path]::GetFullPath($OutputDirectory) }
 if(Test-Path -LiteralPath $target) {throw 'Fresh G0-X evidence directory required.'}
 New-Item -ItemType Directory -Path "$target/test-root","$target/pack","$target/log","$target/mark","$target/upload" | Out-Null
 Copy-Item -LiteralPath "$build/bin/Release/Metin2_Release.exe" -Destination "$target/Metin2_Release.exe"
 Copy-Item -LiteralPath "$original/config" -Destination "$target/config" -Recurse
 Copy-Item -LiteralPath "$original/assets/root" -Destination "$target/test-root/root" -Recurse
-Copy-Item -LiteralPath "$source/build/hx/compiled/vegetation" -Destination "$target/vegetation" -Recurse
+Copy-Item -LiteralPath "$source/test-data/vegetation/vegetation" -Destination "$target/vegetation" -Recurse
 if(-not $Manual) {
     $entry=[IO.File]::ReadAllText("$PSScriptRoot/runtime_entry.py")
     $indented=($entry -split "`n" | ForEach-Object {"    $_"}) -join "`n"

@@ -1,11 +1,11 @@
 #include "StdAfx.h"
+#include "EterBase/MapLoadTrace.h"
 #include "Material.h"
 #include "Mesh.h"
 #include "Eterbase/Filename.h"
 #include "Eterlib/ResourceManager.h"
 #include "Eterlib/DrawState.h"
 #include "Eterlib/GrpScreen.h"
-#include "Eterlib/StaticObjectTextureLoader.h"
 #include <cmath>
 
 CGraphicImageInstance CGrannyMaterial::ms_akSphereMapInstance[SPHEREMAP_NUM];
@@ -58,8 +58,9 @@ void CGrannyMaterial::Copy(CGrannyMaterial& rkMtrl)
 	m_roImage[1] =  rkMtrl.m_roImage[1];
     m_eType = rkMtrl.m_eType;
     m_asset = rkMtrl.m_asset;
-    m_resolvedMaterial=rkMtrl.m_resolvedMaterial;
-    m_runtimeMaterials.clear();
+    m_modernMaterial = rkMtrl.m_modernMaterial;
+    m_modernUploader = rkMtrl.m_modernUploader;
+    m_modernImages = rkMtrl.m_modernImages;
     if (m_asset.explicitRenderState) {
         m_bTwoSideRender = rkMtrl.m_bTwoSideRender;
         SetSpecularInfo(rkMtrl.m_bSpecularEnable, rkMtrl.m_fSpecularPower, rkMtrl.m_bSphereMapIndex);
@@ -93,11 +94,8 @@ void CGrannyMaterial::SetImagePointer(int iStage, CGraphicImage* pImage)
 {	
 	assert(iStage<2 && "CGrannyMaterial::SetImagePointer");
 	m_roImage[iStage]=pImage;
-    m_runtimeMaterials.clear();
     m_asset.textures[iStage] = pImage ? pImage->GetFileName() : "";
     m_asset.embeddedImages[iStage].reset();
-    if(iStage==0 && m_asset.model==AssetRuntime::MaterialModel::Legacy)
-        m_resolvedMaterial=AssetRuntime::ResolveMaterial(m_asset);
 }
 
 bool CGrannyMaterial::IsIn(const char* c_szImageName, int* piStage)
@@ -120,8 +118,6 @@ bool CGrannyMaterial::IsIn(const char* c_szImageName, int* piStage)
 
 void CGrannyMaterial::SetSpecularInfo(BOOL bFlag, float fPower, BYTE uSphereMapIndex)
 {
-    if(m_bSpecularEnable!=bFlag || m_fSpecularPower!=fPower || m_bSphereMapIndex!=uSphereMapIndex)
-        m_runtimeMaterials.clear();
 	m_fSpecularPower = fPower;
 	m_bSphereMapIndex = uSphereMapIndex;
 	m_bSpecularEnable = bFlag;
@@ -225,6 +221,10 @@ CGraphicImage* CGrannyMaterial::__GetImagePointer(const char* fileName)
 
 bool CGrannyMaterial::CreateFromAsset(const AssetRuntime::MaterialAsset& material)
 {
+    MapLoadTrace::Scope p0lScope("Materials","material creation","cpu");
+
+    m_modernMaterial.reset();m_modernUploader.reset();
+    for(auto& image:m_modernImages) image=nullptr;
     if (material.explicitRenderState) {
         if (!std::isfinite(material.alphaCutoff) || material.alphaCutoff < 0.0f) return false;
         for (const auto factor : material.baseColorFactor)
@@ -272,54 +272,50 @@ bool CGrannyMaterial::CreateFromAsset(const AssetRuntime::MaterialAsset& materia
         m_asset.blending = m_eType == TYPE_BLEND_PNT;
     }
     SetSpecularInfo(material.specular ? TRUE : FALSE, material.specularPower, material.sphereMapIndex);
-    m_resolvedMaterial=AssetRuntime::ResolveMaterial(m_asset);
     return true;
-}
-
-Renderer::MaterialRuntimePtr CGrannyMaterial::GetRenderMaterial(Renderer::ITextureUploader& uploader)
-{
-    std::erase_if(m_runtimeMaterials,[](const auto& entry){return entry.lifetime.expired();});
-    for(const auto& entry:m_runtimeMaterials)if(entry.uploader==&uploader)return entry.material;
-    auto runtime=std::make_shared<Renderer::MaterialRuntime>();
-    std::array<CGraphicImage::TRef,AssetRuntime::MaterialMapCount> images;
-    runtime->parameters=m_resolvedMaterial;
-    runtime->authored=m_asset.model==AssetRuntime::MaterialModel::PBRMetallicRoughness;
-    runtime->explicitRenderState=m_asset.explicitRenderState;
-    auto* diffuse=GetImagePointer(0);
-    if(diffuse) runtime->classicDiffuse=m_asset.explicitRenderState?diffuse->GetAssetTexture(uploader):
-        LoadStaticObjectTextureFile(diffuse->GetFileName(),uploader);
-    if(auto* sphere=IsSpecularEnabled()?GetSphereMapImage():nullptr)
-        runtime->classicSphere=LoadStaticObjectTextureFile(sphere->GetFileName(),uploader);
-    for(unsigned slot=0;slot<AssetRuntime::MaterialMapCount;++slot) {
-        const auto& map=m_resolvedMaterial.maps[slot];
-        if(slot==0 && (map.path==m_asset.textures[0] || !map.Present())) {runtime->maps[0]=runtime->classicDiffuse;continue;}
-        if(!map.Present())continue;
-        // New map paths are canonical pack paths, independent of the legacy model-local global.
-        CGraphicImage* image=nullptr;
-        if(map.image)image=CResourceManager::Instance().GetEncodedImagePointer(map.image);
-        else if(auto* resource=CResourceManager::Instance().GetResourcePointer(map.path.c_str());
-            resource&&resource->IsType(CGraphicImage::Type())) image=static_cast<CGraphicImage*>(resource);
-        // Missing optional maps retain the scalar/geometric default; never poison the renderer.
-        images[slot]=image; // First reference loads disk/pack resources and retains their upload cache.
-        if(image&&!image->IsEmpty())runtime->maps[slot]=image->GetAssetTexture(uploader);
-        if(!runtime->maps[slot])TraceError("Optional material map unavailable, using neutral input: %s",map.path.c_str());
-    }
-    if(!runtime->maps[0])runtime->maps[0]=runtime->classicDiffuse;
-    // Paths and encoded payloads have no place in the render hotpath.
-    for(auto& map:runtime->parameters.maps){map.path.clear();map.image.reset();}
-    m_runtimeMaterials.push_back({&uploader,uploader.TextureCacheLifetime(),runtime,std::move(images)});
-    return runtime;
 }
 
 void CGrannyMaterial::Initialize()
 {
-    m_runtimeMaterials.clear();
+    m_modernMaterial.reset();m_modernUploader.reset();
+    for(auto& image:m_modernImages) image=nullptr;
 	m_sourceAsset = nullptr;
 	m_eType = TYPE_DIFFUSE_PNT;
 	m_roImage[0] = NULL;
 	m_roImage[1] = NULL;
 
 	SetSpecularInfo(FALSE, 0.0f, 0);
+}
+
+std::shared_ptr<const Renderer::MaterialRuntimeData> CGrannyMaterial::GetModernMaterial(Renderer::ITextureUploader& uploader) const
+{
+    MapLoadTrace::Scope p0lScope("Materials","modern material lookup","cpu");
+
+    if(m_modernMaterial && m_modernUploader.lock()==uploader.TextureCacheLifetime().lock()) return m_modernMaterial;
+    auto result=std::make_shared<Renderer::MaterialRuntimeData>();
+    result->baseColor=m_asset.baseColorFactor;result->emissive=m_asset.emissiveColor;
+    result->roughness=m_asset.roughness;result->metallic=m_asset.metallic;
+    result->normalScale=m_asset.normalScale;result->occlusionStrength=m_asset.occlusionStrength;
+    result->model=m_asset.model;
+    result->roughnessChannel=m_asset.materialTextures[2].channel;
+    result->metallicChannel=m_asset.materialTextures[3].channel;
+    result->occlusionChannel=m_asset.materialTextures[4].channel;
+    for(std::size_t i=1;i<AssetRuntime::MaterialTextureCount;++i) {
+        const auto& source=m_asset.materialTextures[i];
+        CGraphicImage* image=nullptr;
+        if(source.image) image=CResourceManager::Instance().GetEncodedImagePointer(source.image);
+        else if(!source.id.empty()) {
+            auto* resource=CResourceManager::Instance().GetResourcePointer(source.id.c_str());
+            if(resource&&resource->IsType(CGraphicImage::Type()))image=static_cast<CGraphicImage*>(resource);
+        }
+        if(image && !image->IsEmpty()) {
+            m_modernImages[i]=image;result->textures[i]=image->GetAssetTexture(uploader);
+        }
+        if(!source.id.empty() && !result->textures[i])
+            TraceError("G-DX: invalid optional material map uses neutral fallback: %s",source.id.c_str());
+    }
+    m_modernUploader=uploader.TextureCacheLifetime();m_modernMaterial=std::move(result);
+    return m_modernMaterial;
 }
 
 void CGrannyMaterial::__ApplyDiffuseRenderState()
@@ -546,3 +542,4 @@ DWORD CGrannyMaterialPalette::RegisterMaterial(const AssetRuntime::MaterialAsset
     m_mtrlVector.push_back(translated);
     return static_cast<DWORD>(m_mtrlVector.size() - 1);
 }
+

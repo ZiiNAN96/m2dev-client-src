@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "EterBase/MapLoadTrace.h"
 #include "Resource.h"
 #include "PythonApplication.h"
 #include "EterLib/Camera.h"
@@ -341,6 +342,20 @@ PyObject* appUpdateGame(PyObject* poSelf, PyObject* poArgs)
 {
 	CPythonApplication::Instance().UpdateGame();
 	return Py_BuildNone();
+}
+
+PyObject* appMapLoadTrace(PyObject*, PyObject* args)
+{
+    static std::vector<std::unique_ptr<MapLoadTrace::Scope>> scopes;
+    const char* command; const char* label="";
+    if(!PyArg_ParseTuple(args,"s|s",&command,&label))return nullptr;
+    if(std::string_view(command)=="enable"){MapLoadTrace::explicitlyEnabled=true;Py_RETURN_NONE;}
+    if(std::string_view(command)=="push"){scopes.push_back(std::make_unique<MapLoadTrace::Scope>(label,label));Py_RETURN_NONE;}
+    if(std::string_view(command)=="pop"){if(!scopes.empty())scopes.pop_back();Py_RETURN_NONE;}
+    if(std::string_view(command)=="begin")return PyBool_FromLong(MapLoadTrace::Begin(label));
+    if(std::string_view(command)=="end")return PyBool_FromLong(MapLoadTrace::End(label));
+    if(std::string_view(command)=="active")return PyBool_FromLong(MapLoadTrace::state.active);
+    return PyErr_Format(PyExc_ValueError,"unknown trace command");
 }
 
 PyObject* appRenderGame(PyObject* poSelf, PyObject* poArgs)
@@ -1202,6 +1217,7 @@ void initapp()
 {
 	static PyMethodDef s_methods[] =
 	{
+        { "MapLoadTrace", appMapLoadTrace, METH_VARARGS },
 		// TEXTTAIL_LIVINGTIME_CONTROL
 		{ "SetTextTailLivingTime",		appSetTextTailLivingTime,		METH_VARARGS },
 		// END_OF_TEXTTAIL_LIVINGTIME_CONTROL

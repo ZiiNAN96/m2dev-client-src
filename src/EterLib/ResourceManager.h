@@ -41,6 +41,7 @@ class CResourceManager : public CSingleton<CResourceManager>
 		
 		void		DumpFileListToTextFile(const char* c_szFileName);
 		bool		IsFileExist(const char * c_szFileName);
+        bool IsResourceLoaded(const char* fileName);
 
 		void		Update();
 		void		ReserveDeletingResource(CResource * pResource);

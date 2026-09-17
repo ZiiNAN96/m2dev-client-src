@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "Renderer/ModernFrame.h"
 #include "pythoncharactermanager.h"
 #include "Platform/PlatformTime.h"
 #include "PythonBackground.h"
@@ -8,6 +9,7 @@
 
 #include "EterLib/Camera.h"
 #include "AssetRuntime/GR2/GR2AssetProvider.h"
+#include "AssetRuntime/GR2/GR2RuntimeTrace.h"
 #include "AssetRuntime/GR2ReaderMode.h"
 #include "AssetRuntime/AnimationStallAudit.h"
 #include <set>
@@ -17,6 +19,7 @@ bool CPythonCharacterManager::PrewarmVisibleActors(bool prepareLocalPlayer)
 {
     using namespace AssetRuntime;
     if(startupGR2Reader!=GR2ReaderMode::ZiiNAN || !nativeGR2Prewarm) return true;
+    GR2::RuntimeTrace::PrewarmScope preparationTrace;
     if(AnimationStallAudit::fullCapture && !AnimationStallAudit::explicitPhase) AnimationStallAudit::capturePhase=0;
     AnimationStallAudit::WorkScope audit(AnimationStallAudit::Work::Prewarm);
     const auto decodeStart=GR2::nativeAnimationDecodes.load();
@@ -522,7 +525,8 @@ void CPythonCharacterManager::__RenderSortedAliveActorList()
 
 	std::sort(s_kVct_pkInstAliveSort.begin(), s_kVct_pkInstAliveSort.end(), fSortFunc);
 	std::for_each(s_kVct_pkInstAliveSort.begin(), s_kVct_pkInstAliveSort.end(), FCharacterInstanceRender());
-	std::for_each(s_kVct_pkInstAliveSort.begin(), s_kVct_pkInstAliveSort.end(), FCharacterInstanceRenderTrace());
+    if(!Renderer::modernFrame)
+        std::for_each(s_kVct_pkInstAliveSort.begin(), s_kVct_pkInstAliveSort.end(), FCharacterInstanceRenderTrace());
 }
 
 void CPythonCharacterManager::__RenderSortedDeadActorList()
@@ -570,6 +574,18 @@ void CPythonCharacterManager::Render()
 		const Math::Vector3 & c_rv3Position = pkPickedInst->GetGraphicThingInstanceRef().GetPosition();
 		CPythonGraphic::Instance().ProjectPosition(c_rv3Position.x, c_rv3Position.y, c_rv3Position.z, &m_v2PickedInstProjPos.x, &m_v2PickedInstProjPos.y);
 	}
+}
+
+void CPythonCharacterManager::RenderWorldTraces()
+{
+    auto* camera=CCameraManager::instance().GetCurrentCamera();
+    if(!camera)return;
+    static std::vector<CInstanceBase*> sorted;
+    sorted.clear();
+    for(const auto& pair:m_kAliveInstMap)sorted.push_back(pair.second);
+    LessCharacterInstancePtrRenderOrder order;order.v3CameraPosition=camera->GetEye();
+    std::sort(sorted.begin(),sorted.end(),order);
+    std::for_each(sorted.begin(),sorted.end(),FCharacterInstanceRenderTrace());
 }
 
 void CPythonCharacterManager::RenderShadowMainInstance()

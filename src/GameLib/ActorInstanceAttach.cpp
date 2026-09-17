@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "EterBase/MapLoadTrace.h"
 #include "EffectLib/EffectManager.h"
 
 #include "ActorInstance.h"
@@ -533,6 +534,7 @@ void CActorInstance::UseAlphaWeaponTrace()
 
 void CActorInstance::UpdateAttachingInstances()
 {
+    MapLoadTrace::FirstUseScope trace("attachment update");
 	CEffectManager& rkEftMgr=CEffectManager::Instance();
 
 	std::list<TAttachingEffect>::iterator it;

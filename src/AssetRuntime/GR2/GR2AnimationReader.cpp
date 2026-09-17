@@ -1,5 +1,7 @@
 #include "GR2Reader.h"
+#include "EterBase/MapLoadTrace.h"
 #include "GR2AssetProvider.h"
+#include "GR2RuntimeTrace.h"
 #include "AssetRuntime/AnimationStallAudit.h"
 #include <algorithm>
 #include <cmath>
@@ -35,6 +37,8 @@ Curve ReadCurve(Types& t,Object object,unsigned dimension,Contents& contents)
 }
 template<std::size_t N> std::array<float,N> SampleCurve(const Curve& curve,float time,double duration,unsigned boundary)
 {
+    RuntimeTrace::Timer diagnostic(RuntimeTrace::Sampling);
+    if(RuntimeTrace::current) ++RuntimeTrace::current->sampleCalls;
     std::array<float,N> result{};
     if(curve.knots.empty()) { if constexpr(N==4) result[3]=1; if constexpr(N==9) result[0]=result[4]=result[8]=1; return result; }
     const auto last=static_cast<std::ptrdiff_t>(curve.knots.size()-1);
@@ -60,15 +64,58 @@ template<std::size_t N> std::array<float,N> SampleCurve(const Curve& curve,float
 template<std::size_t N> AnimationRuntime::Track<std::array<float,N>> ConvertCurve(const Curve& curve,double duration,std::size_t& total,unsigned boundary)
 {
     AnimationRuntime::Track<std::array<float,N>> result;
-    auto append=[&](double time,const auto& value) { Require(++total<=2000000,"decoded animation key budget"); result.keys.push_back({time,value}); };
+    const bool firstUse=MapLoadTrace::FirstUseActive();
+    auto* stats=RuntimeTrace::current;
+    constexpr unsigned channel=N==3?0:N==4?1:2;
+    if(stats) {
+        stats->sourceKeys+=curve.knots.size(); stats->sourceByChannel[channel]+=curve.knots.size(); stats->temporaryLive=0;
+        stats->identityChannels+=curve.knots.empty(); stats->constantChannels+=curve.knots.size()==1;
+        stats->constantByChannel[channel]+=curve.knots.size()<=1;
+        bool constant=true;
+        for(std::size_t i=N;i<curve.controls.size();++i) constant &= curve.controls[i]==curve.controls[i%N];
+        stats->constantControlChannels+=constant;
+    }
+    auto append=[&](double time,const auto& value) {
+        const auto oldCapacity=result.keys.capacity();
+        const bool growth=result.keys.size()==oldCapacity;
+        RuntimeTrace::Timer diagnostic(growth?RuntimeTrace::Allocation:RuntimeTrace::Store);
+        Require(++total<=2000000,"decoded animation key budget");
+        if(firstUse && result.keys.size()==result.keys.capacity()) {
+            MapLoadTrace::FirstUseScope allocation("keyframe allocations and relocation");
+            result.keys.push_back({time,value});
+            MapLoadTrace::Count("first-use-key-allocation",{},result.keys.capacity()*sizeof(result.keys.front()));
+        } else result.keys.push_back({time,value});
+        if(stats) {
+            ++stats->runtimeKeys; ++stats->runtimeByChannel[channel];
+            if(growth) {
+                ++stats->allocations; stats->reallocations+=oldCapacity!=0;
+                stats->allocatedBytes+=result.keys.capacity()*sizeof(result.keys.front());
+                stats->relocatedBytes+=oldCapacity*sizeof(result.keys.front());
+                stats->temporaryPeak=std::max(stats->temporaryPeak,stats->temporaryLive+oldCapacity*sizeof(result.keys.front()));
+            }
+        }
+    };
     if(curve.knots.size()<=1) { append(0,SampleCurve<N>(curve,0,duration,boundary)); return result; }
     // Decode source splines once into the existing runtime's linear channels.
     // Every knot is a subdivision boundary; adaptive midpoint and quarter-point
     // checks bound the approximation without adding a second frame sampler.
-    std::vector<double> times{0};
-    for(auto t:curve.knots) if(t>times.back() && t<duration) times.push_back(t);
-    times.push_back(duration);
+    std::vector<double> times;
+    {
+        RuntimeTrace::Timer timeline(RuntimeTrace::Timeline);
+        const auto push=[&](double value) {
+            const auto old=times.capacity(); times.push_back(value);
+            if(stats && times.capacity()!=old) {
+                ++stats->allocations; stats->reallocations+=old!=0;
+                stats->allocatedBytes+=times.capacity()*sizeof(double); stats->temporaryAllocated+=times.capacity()*sizeof(double);
+                stats->relocatedBytes+=old*sizeof(double);
+                stats->temporaryPeak=std::max(stats->temporaryPeak,(old+times.capacity())*sizeof(double));
+            }
+        };
+        push(0); for(auto t:curve.knots) if(t>times.back() && t<duration) push(t); push(duration);
+        if(stats) stats->temporaryLive=times.capacity()*sizeof(double);
+    }
     auto deviation=[](auto first,auto second,auto sample,float weight) {
+        RuntimeTrace::Timer diagnostic(RuntimeTrace::Refinement);
         std::array<float,N> interpolated{};
         if constexpr(N==4) { double dot=0; for(unsigned c=0;c<N;++c) dot+=double(first[c])*second[c]; if(dot<0) for(auto& v:second) v=-v; }
         for(unsigned c=0;c<N;++c) interpolated[c]=first[c]+(second[c]-first[c])*weight;
@@ -86,17 +133,31 @@ template<std::size_t N> AnimationRuntime::Track<std::array<float,N>> ConvertCurv
         return error;
     };
     constexpr double tolerance=N==3?1e-5:N==4?5e-7:5e-7;
-    auto subdivide=[&](auto&& self,double a,double b,const auto& va,const auto& vb,unsigned depth)->void {
+    struct Probe { float time; std::array<float,N> value; };
+    // A split already evaluated its midpoint and both child midpoints. Reuse
+    // only at exactly identical float times: dyadic arithmetic may round
+    // differently near a source knot. All three error checks remain unchanged.
+    auto subdivide=[&](auto&& self,double a,double b,const auto& va,const auto& vb,unsigned depth,const Probe* knownMiddle)->void {
         bool split=false;
-        for(float q:{.25f,.5f,.75f}) {
+        std::array<Probe,3> probes;
+        for(unsigned i=0;i<3;++i) {
+            const float q=(i+1)*.25f;
             const float sampleTime=static_cast<float>(a+(b-a)*q);
             const float weight=static_cast<float>((double(sampleTime)-a)/(b-a));
-            if(deviation(va,vb,SampleCurve<N>(curve,sampleTime,duration,boundary),weight)>tolerance) split=true;
+            auto& probe=probes[i]; probe.time=sampleTime;
+            if(i==1 && knownMiddle && knownMiddle->time==sampleTime) {
+                probe.value=knownMiddle->value; if(stats) ++stats->reusedSamples;
+            } else probe.value=SampleCurve<N>(curve,sampleTime,duration,boundary);
+            if(deviation(va,vb,probe.value,weight)>tolerance) split=true;
         }
         const double middle=static_cast<float>((a+b)*.5);
         if(split && depth<16 && static_cast<float>(a)!=static_cast<float>(middle) && static_cast<float>(b)!=static_cast<float>(middle)) {
-            auto vm=SampleCurve<N>(curve,static_cast<float>(middle),duration,boundary); self(self,a,middle,va,vm,depth+1); self(self,middle,b,vm,vb,depth+1);
+            if(stats) { ++stats->splitNodes; ++stats->potentialMidpointReuse; stats->maxDepth=std::max<std::uint64_t>(stats->maxDepth,depth+1); }
+            auto vm=probes[1].time==static_cast<float>(middle)?probes[1].value:SampleCurve<N>(curve,static_cast<float>(middle),duration,boundary);
+            if(stats && probes[1].time==static_cast<float>(middle)) ++stats->reusedSamples;
+            self(self,a,middle,va,vm,depth+1,&probes[0]); self(self,middle,b,vm,vb,depth+1,&probes[2]);
         } else {
+            if(stats) ++stats->leafNodes;
             if(split && b-a>=1e-6) Bad("native spline refinement limit dimension="+std::to_string(N)+" a="+std::to_string(a)+" b="+std::to_string(b));
             append(b,vb);
         }
@@ -104,13 +165,16 @@ template<std::size_t N> AnimationRuntime::Track<std::array<float,N>> ConvertCurv
     append(0,SampleCurve<N>(curve,0,duration,boundary));
     for(std::size_t i=1;i<times.size();++i) if(times[i]>times[i-1]) {
         const auto a=SampleCurve<N>(curve,static_cast<float>(times[i-1]),duration,boundary),b=SampleCurve<N>(curve,static_cast<float>(times[i]),duration,boundary);
-        subdivide(subdivide,times[i-1],times[i],a,b,0);
+        subdivide(subdivide,times[i-1],times[i],a,b,0,nullptr);
     }
+    if(stats) stats->temporaryLive=0;
     return result;
 }
 }
 AnimationData ReadAnimation(Types& t,Object source,AnimationAsset& metadata,Contents& contents)
 {
+    MapLoadTrace::Scope p0lScope("Actors","GR2 animation curves","cpu");
+
     metadata.name=t.Text(source,"Name"); metadata.duration=t.Real(source,"Duration"); metadata.timeStep=t.Real(source,"TimeStep");
     Require(metadata.duration>=0 && metadata.duration<=600 && metadata.timeStep>0,"invalid animation time range");
     AnimationData result;
@@ -210,6 +274,12 @@ std::shared_ptr<const AnimationRuntime::RuntimeAnimationClip> BindAnimation(cons
     const AnimationRuntime::RuntimeSkeleton& skeleton,std::string& error,unsigned boundary,std::string_view modelName)
 {
     try {
+        RuntimeTrace::ClipScope diagnostic(metadata.name,skeleton.BindingId(),boundary);
+        auto* stats=RuntimeTrace::current;
+        if(stats) {
+            MapLoadTrace::Count("runtime-duration-ns",stats->id,static_cast<std::uint64_t>(metadata.duration*1e9));
+            MapLoadTrace::Count("runtime-source-step-ns",stats->id,static_cast<std::uint64_t>(metadata.timeStep*1e9));
+        }
         AnimationStallAudit::WorkScope audit(AnimationStallAudit::Work::Import);
         AnimationStallAudit::ImportStarted(); ++nativeAnimationDecodes;
         const TrackGroup* selected=nullptr;
@@ -218,22 +288,52 @@ std::shared_ptr<const AnimationRuntime::RuntimeAnimationClip> BindAnimation(cons
         }
         Require(selected!=nullptr,"no matching animation track group");
         const auto& group=*selected;
+        if(stats) {
+            stats->sourceTracks=group.tracks.size();
+            for(const auto& track:group.tracks) stats->sourceAllKeys+=track.translation.knots.size()+track.rotation.knots.size()+track.scale.knots.size();
+        }
         std::vector<AnimationRuntime::AnimationTrack> tracks; std::size_t keys=0;
         for(std::size_t bone=0;bone<skeleton.Bones().size();++bone) {
-            const auto* selectedTrack=[&]{ AnimationStallAudit::WorkScope mapping(AnimationStallAudit::Work::ClipBind); return FindTransformTrack(group,skeleton.Bones()[bone].name); }();
+            const auto* selectedTrack=[&]{ RuntimeTrace::Timer diagnostic(RuntimeTrace::Mapping); MapLoadTrace::FirstUseScope trace("track to bone mapping"); AnimationStallAudit::WorkScope mapping(AnimationStallAudit::Work::ClipBind); return FindTransformTrack(group,skeleton.Bones()[bone].name); }();
             if(!selectedTrack) continue;
             const auto& source=*selectedTrack;
+            if(stats) {
+                ++stats->tracks;
+                stats->staticTracks+=source.translation.knots.size()<=1 && source.rotation.knots.size()<=1 && source.scale.knots.size()<=1;
+            }
             AnimationStallAudit::WorkScope decode(AnimationStallAudit::Work::AnimationDecode);
+            MapLoadTrace::FirstUseScope keyframes("spline to runtime keyframes");
             AnimationRuntime::AnimationTrack track; track.targetBone=static_cast<std::uint32_t>(bone);
             track.translation=ConvertCurve<3>(source.translation,metadata.duration,keys,boundary);
             track.rotation=ConvertCurve<4>(source.rotation,metadata.duration,keys,boundary);
             track.scaleShear=ConvertCurve<9>(source.scale,metadata.duration,keys,boundary);
-            tracks.push_back(std::move(track));
+            keyframes.Stop();
+            {
+                RuntimeTrace::Timer storage(RuntimeTrace::TrackStorage);
+                const auto old=tracks.capacity(); tracks.push_back(std::move(track));
+                if(stats && tracks.capacity()!=old) {
+                    ++stats->allocations; stats->reallocations+=old!=0;
+                    stats->allocatedBytes+=tracks.capacity()*sizeof(track); stats->relocatedBytes+=old*sizeof(track);
+                    stats->temporaryPeak=std::max(stats->temporaryPeak,old*sizeof(track));
+                }
+            }
         }
         Require(!tracks.empty(),"no matching animation tracks");
         auto clip=std::make_shared<AnimationRuntime::RuntimeAnimationClip>();
+        RuntimeTrace::Timer validation(RuntimeTrace::Validation);
+        MapLoadTrace::FirstUseScope initialization("clip binding and sampler initialization");
         AnimationStallAudit::WorkScope binding(AnimationStallAudit::Work::ClipBind);
         if(!clip->Initialize(metadata.name,metadata.duration,true,std::move(tracks),skeleton,error)) return {};
+        if(stats) {
+            ++stats->allocations; stats->allocatedBytes+=sizeof(*clip);
+            stats->runtimeBytes=sizeof(*clip)+clip->Tracks().capacity()*sizeof(AnimationRuntime::AnimationTrack);
+            for(const auto& track:clip->Tracks()) {
+                stats->runtimeBytes+=track.translation.keys.capacity()*sizeof(track.translation.keys.front());
+                stats->runtimeBytes+=track.rotation.keys.capacity()*sizeof(track.rotation.keys.front());
+                stats->runtimeBytes+=track.scaleShear.keys.capacity()*sizeof(track.scaleShear.keys.front());
+            }
+        }
+        if(MapLoadTrace::FirstUseActive()) MapLoadTrace::Count("first-use-runtime-keys",metadata.name,keys);
         return clip;
     } catch(const std::exception& failure) { error=failure.what(); return {}; }
 }

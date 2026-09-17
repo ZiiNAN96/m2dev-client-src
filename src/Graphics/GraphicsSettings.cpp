@@ -60,15 +60,21 @@ GraphicsSettings PresetSettings(GraphicsPreset preset, GraphicsStyle style)
         break;
     case GraphicsPreset::High:
         s.shadows = ShadowQuality::High; s.ambientOcclusion = AmbientOcclusionQuality::GTAO;
-        s.hdr = s.bloom = s.modernSky = s.highQualityFog = true;
+        s.hdr = s.bloom = s.modernSky = true;
         break;
     case GraphicsPreset::Ultra:
+        s.water = WaterQuality::Ultra;
         s.shadows = ShadowQuality::Ultra; s.ambientOcclusion = AmbientOcclusionQuality::GTAO;
         s.vegetation = VegetationQuality::Ultra; s.textures = TextureQuality::Ultra;
-        s.hdr = s.bloom = s.modernSky = s.highQualityFog = true;
+        s.hdr = s.bloom = s.modernSky = true;
         s.viewDistance = MaxViewDistance;
         break;
     case GraphicsPreset::Custom: break;
+    }
+    if(s.style==GraphicsStyle::Modern) {
+        s.hdr=true;
+        if(s.preset==GraphicsPreset::Low)s.shadows=ShadowQuality::Low;
+        if(s.preset==GraphicsPreset::Medium)s.modernSky=true;
     }
     return s;
 }
@@ -80,7 +86,7 @@ GraphicsSettings Validate(GraphicsSettings s)
     s.style = Enum(s.style, d.style, 1);
     s.shadows = Enum(s.shadows, d.shadows, 5);
     s.ambientOcclusion = Enum(s.ambientOcclusion, d.ambientOcclusion, 2);
-    s.water = Enum(s.water, d.water, 2);
+    s.water = Enum(s.water, d.water, 3);
     s.vegetation = Enum(s.vegetation, d.vegetation, 3);
     s.textures = Enum(s.textures, d.textures, 2);
     s.fogLevel = std::clamp(s.fogLevel, 0, 2);
@@ -102,7 +108,6 @@ GraphicsRuntimeConfig Resolve(const GraphicsSettings& requested, std::uint64_t r
 {
     const auto s = Validate(requested);
     GraphicsRuntimeConfig r;
-    r.usePBR=s.style==GraphicsStyle::Modern;
     r.revision = revision; r.style = s.style; r.legacyShadowLevel = int(s.shadows);
     r.vegetation = s.vegetation; r.viewDistance = s.viewDistance;
     constexpr float vegetationScale[]{.65f, .85f, 1.f, 1.25f};
@@ -111,14 +116,15 @@ GraphicsRuntimeConfig Resolve(const GraphicsSettings& requested, std::uint64_t r
     constexpr float fogDensity[]{.000006f, .000004f, .000002f};
     r.fogDistanceScale = fogScale[s.fogLevel]; r.fogDensity = fogDensity[s.fogLevel];
     r.shadowTextureSize = s.shadows == ShadowQuality::Ultra ? 2048 : s.shadows == ShadowQuality::High ? 1024 : 512;
-    if(r.usePBR) {
+    if(s.style==GraphicsStyle::Modern) {
+        r.water=s.water;
+        r.hdr=true;r.bloom=s.bloom;r.modernSky=s.modernSky;
         r.shadows=s.shadows;r.ambientOcclusion=s.ambientOcclusion;
-        r.shadowConfig=ResolveShadowQuality(unsigned(s.shadows),s.viewDistance);
-        r.ambientConfig=AmbientQuality(unsigned(s.ambientOcclusion));
+        r.shadowTextureSize=s.shadows==ShadowQuality::Ultra?2048:s.shadows==ShadowQuality::High?1536:
+            (s.shadows==ShadowQuality::Medium||s.shadows==ShadowQuality::LegacySolo)?1024:512;
     }
-    // HDR/bloom/sky/HQ fog remain unavailable.
-    // Water/texture quality use the accepted current path at every requested level.
-    // Add capability + style gates here when an actual G1-G8 renderer exists.
+    // HDR is intrinsic to Modern. The stored legacy HDR bit is retained for
+    // config compatibility; water and texture selection remain unchanged.
     return r;
 }
 
@@ -157,8 +163,8 @@ LoadResult LoadGraphicsSettings(std::string_view text, const GraphicsSettings& d
         }
         int parsed{};
         if (!Integer(value, parsed)) { ++result.invalidValues; continue; }
-        const int max = key == "PRESET" ? 4 : key == "SHADOWS" ? 5 : key == "VEGETATION" ? 3 :
-            key == "AO" || key == "WATER" || key == "TEXTURES" || key == "FOG_LEVEL" ? 2 : 1;
+        const int max = key == "PRESET" ? 4 : key == "SHADOWS" ? 5 : key == "VEGETATION" || key == "WATER" ? 3 :
+            key == "AO" || key == "TEXTURES" || key == "FOG_LEVEL" ? 2 : 1;
         if (parsed < 0 || parsed > max) { ++result.invalidValues; continue; }
         if (key == "PRESET") s.preset = static_cast<GraphicsPreset>(parsed);
         else if (key == "STYLE") s.style = static_cast<GraphicsStyle>(parsed);
@@ -170,7 +176,7 @@ LoadResult LoadGraphicsSettings(std::string_view text, const GraphicsSettings& d
         else if (key == "HDR") s.hdr = parsed != 0;
         else if (key == "BLOOM") s.bloom = parsed != 0;
         else if (key == "MODERN_SKY") s.modernSky = parsed != 0;
-        else if (key == "HIGH_QUALITY_FOG") s.highQualityFog = parsed != 0;
+        // HIGH_QUALITY_FOG is a retired key: validate old files, then discard it.
         else if (key == "FOG_LEVEL") s.fogLevel = parsed;
     }
     result.settings = Validate(s);
@@ -189,7 +195,7 @@ std::string SaveGraphicsSettings(const GraphicsSettings& requested, std::string_
         << "\nSHADOWS " << int(s.shadows) << "\nAO " << int(s.ambientOcclusion) << "\nWATER " << int(s.water)
         << "\nVEGETATION " << int(s.vegetation) << "\nTEXTURES " << int(s.textures)
         << "\nHDR " << s.hdr << "\nBLOOM " << s.bloom << "\nMODERN_SKY " << s.modernSky
-        << "\nHIGH_QUALITY_FOG " << s.highQualityFog << "\nVIEW_DISTANCE " << s.viewDistance
+        << "\nVIEW_DISTANCE " << s.viewDistance
         << "\nFOG_LEVEL " << s.fogLevel << '\n';
     std::istringstream previous{std::string(previousText)};
     std::string line, key;
@@ -235,7 +241,7 @@ bool Store::Commit(GraphicsSettings s)
     if (s.water != settings_.water) pending_ |= WaterChanged;
     if (s.style != settings_.style || s.ambientOcclusion != settings_.ambientOcclusion ||
         s.textures != settings_.textures || s.hdr != settings_.hdr || s.bloom != settings_.bloom ||
-        s.modernSky != settings_.modernSky || s.highQualityFog != settings_.highQualityFog) pending_ |= ReservedChanged;
+        s.modernSky != settings_.modernSky) pending_ |= ReservedChanged;
     settings_ = s; runtime_ = Resolve(s, runtime_.revision + 1);
     return true;
 }

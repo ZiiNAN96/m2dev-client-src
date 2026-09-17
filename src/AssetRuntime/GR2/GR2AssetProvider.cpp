@@ -1,5 +1,8 @@
 #include "GR2AssetProvider.h"
+#include "EterBase/MapLoadTrace.h"
 #include "GR2Reader.h"
+#include "GR2Preparation.h"
+#include "GR2RuntimeTrace.h"
 #include "AssetRuntime/RuntimeAnimationInstance.h"
 #include "AssetRuntime/AnimationRuntimeMode.h"
 #include "AssetRuntime/AnimationStallAudit.h"
@@ -86,15 +89,24 @@ public:
     std::shared_ptr<const AR::RuntimeAnimationClip> BoundClip(std::size_t index,const AR::RuntimeSkeleton& skeleton,
         std::string_view modelName,unsigned boundary,std::string& error) const
     {
+        MapLoadTrace::GR2Context gr2Context(Id());
+        MapLoadTrace::Scope preparationTrace("Assets","GR2 animation preparation");
         if(index>=clips_.size() || boundary>3) { error="invalid animation binding"; return {}; }
         const auto& groups=clips_[index].groups;
+        MapLoadTrace::FirstUseScope lookup("clip and skeleton cache lookup");
+        MapLoadTrace::Scope runtimeLookup("Animation prewarm","clip cache lookup","cpu",GR2::RuntimeTrace::Enabled());
         const auto group=std::find_if(groups.begin(),groups.end(),[&](const auto& item){return item.name==modelName;});
         if(group==groups.end()) { error="animation track group not found"; return {}; }
         const std::array<std::uint64_t,3> key{index,skeleton.BindingId(),static_cast<std::uint64_t>(group-groups.begin())};
         const auto found=boundClips_.find(key);
+        runtimeLookup.Stop();
+        lookup.Stop();
+        if(GR2::RuntimeTrace::Enabled()) MapLoadTrace::Count(found!=boundClips_.end() && found->second[boundary]?"runtime-cache-hit":"runtime-cache-miss",Id());
+        if(MapLoadTrace::FirstUseActive()) MapLoadTrace::Count(found!=boundClips_.end() && found->second[boundary]?"first-use-clip-hit":"first-use-clip-miss",Id());
         if(found!=boundClips_.end() && found->second[boundary]) { ++GR2::boundClipHits; AnimationStallAudit::InstanceHit(); return found->second[boundary]; }
         auto clip=GR2::BindAnimation(animations_[index],clips_[index],skeleton,error,boundary,modelName);
         if(!clip) return {};
+        MapLoadTrace::Scope cacheInsert("Animation prewarm","cache memory count and insertion","cpu",GR2::RuntimeTrace::Enabled());
         std::size_t bytes=sizeof(*clip)+clip->Tracks().size()*sizeof(AR::AnimationTrack);
         for(const auto& track:clip->Tracks()) {
             bytes+=track.translation.keys.capacity()*sizeof(track.translation.keys.front());
@@ -111,6 +123,8 @@ public:
     }
     AssetError CopyVertices(std::size_t model,std::size_t mesh,VertexLayout layout,std::span<std::byte> destination) const override
     {
+        MapLoadTrace::Scope copyTrace("Assets","GR2 CopyVertices");
+        MapLoadTrace::Count("gr2-CopyVertices",Id(),destination.size());
         if(model>=data_.size() || mesh>=data_[model].meshes.size()) return AssetError::InvalidHandle;
         if(released_) return AssetError::UploadDataReleased;
         const auto stride=VertexStride(layout); if(!stride) return AssetError::UnsupportedLayout;
@@ -127,6 +141,8 @@ public:
     }
     AssetError CopyIndices(std::size_t model,std::size_t mesh,IndexWidth width,std::span<std::byte> destination) const override
     {
+        MapLoadTrace::Scope copyTrace("Assets","GR2 CopyIndices");
+        MapLoadTrace::Count("gr2-CopyIndices",Id(),destination.size());
         if(model>=data_.size() || mesh>=data_[model].meshes.size()) return AssetError::InvalidHandle;
         if(released_) return AssetError::UploadDataReleased;
         if(width!=IndexWidth::UInt16 && width!=IndexWidth::UInt32) return AssetError::InvalidIndexWidth;
@@ -156,6 +172,8 @@ private:
 };
 AssetError Instance::SetMotion(const AnimationHandle& handle,float time,float blend,int loops,float speed)
 {
+    MapLoadTrace::FirstUseScope setMotion("runtime motion state");
+    MapLoadTrace::FirstUseScope lookup("AnimationRuntime lookup");
     // SetMotionAtEnd may pass our own clipOwner_; retain it through error logging.
     const auto keepAlive=handle.GetDocument();
     const auto* document=dynamic_cast<const Document*>(keepAlive.get());
@@ -163,6 +181,8 @@ AssetError Instance::SetMotion(const AnimationHandle& handle,float time,float bl
     if(!handle || !document) return fail(AssetError::ProviderMismatch);
     if(!std::isfinite(time)||!std::isfinite(blend)||blend<0||loops<0||!std::isfinite(speed)||speed<=0) return fail(AssetError::InvalidInput);
     const auto* data=document->Clip(handle.Index()); if(!data) return fail(AssetError::InvalidHandle);
+    lookup.Stop();
+    MapLoadTrace::FirstUseScope skeletonLookup("skeleton and track group lookup");
     const GR2::TrackGroup* group=nullptr;
     for(const auto& item:data->groups) if(item.name==owner_.Get()->name) {
         if(group) return fail(AssetError::InvalidAsset); group=&item;
@@ -172,10 +192,13 @@ AssetError Instance::SetMotion(const AnimationHandle& handle,float time,float bl
         fail(AssetError::NoMatchingTracks); failed_=false; ready_=previousReady; return AssetError::NoMatchingTracks;
     }
     std::string error;
+    skeletonLookup.Stop();
+    MapLoadTrace::FirstUseScope variantLookup("instance animation cache lookup");
     std::array<std::shared_ptr<const AR::RuntimeAnimationClip>,4> variants;
     if(clipOwner_.GetDocument()==handle.GetDocument() && clipOwner_.Index()==handle.Index()) variants=variants_;
     const unsigned boundary=loops==1?0u:loops>1?2u:3u;
     auto clip=variants[boundary];
+    variantLookup.Stop();
     if(!clip) clip=document->BoundClip(handle.Index(),*skeleton_,owner_.Get()->name,boundary,error); variants[boundary]=clip;
     if(clip && loops>1) for(unsigned b:{1u,3u}) {
         if(!variants[b]) variants[b]=document->BoundClip(handle.Index(),*skeleton_,owner_.Get()->name,b,error);
@@ -192,6 +215,7 @@ AssetError Instance::SetMotion(const AnimationHandle& handle,float time,float bl
     blendStart_=time; blendDuration_=blend; start_=time; speed_=speed; loops_=loops;
     // Collision/attachment queries can occur before the next pose evaluation.
     // A successful control change preserves the last valid pose.
+    MapLoadTrace::Count(MapLoadTrace::state.frames==0?"animation-use-before-present":"animation-use-after-present",document->Id());
     clip_=std::move(clip); variants_=std::move(variants); clipOwner_=handle; failed_=false; return AssetError::None;
 }
 class Provider final : public AssetProvider
@@ -199,13 +223,25 @@ class Provider final : public AssetProvider
 public:
     LoadResult Load(AssetId id,std::span<const std::byte> bytes) override
     {
+        if(auto prepared=GR2::Preparation::Take(id)) {
+            try {
+                if(prepared->error) std::rethrow_exception(prepared->error);
+                MapLoadTrace::Scope convertTrace("Assets","GR2 document conversion");
+                return {AssetHandle(std::make_shared<Document>(std::move(id),std::move(prepared->contents))),AssetError::None};
+            } catch(const std::exception& error) { return {{},AssetError::InvalidAsset,"GR2 reader: "+std::string(error.what())}; }
+        }
+    MapLoadTrace::Scope p0lScope("Assets","GR2 parse","cpu");
+    MapLoadTrace::Count("gr2-parse",id,bytes.size(),true);
+
         try {
             AnimationStallAudit::WorkScope audit(AnimationStallAudit::Work::Import);
             ++GR2::nativeFileReads;
             AnimationStallAudit::WorkScope containerAudit(AnimationStallAudit::Work::Container);
-            GR2::File file(bytes); containerAudit.Stop();
+            MapLoadTrace::Scope containerTrace("Assets","GR2 container");
+            GR2::File file(bytes); containerTrace.Stop(); containerAudit.Stop();
             AnimationStallAudit::WorkScope parseAudit(AnimationStallAudit::Work::Parse);
             auto content=GR2::Read(file); parseAudit.Stop();
+            MapLoadTrace::Scope convertTrace("Assets","GR2 document conversion");
             return {AssetHandle(std::make_shared<Document>(std::move(id),std::move(content))),AssetError::None};
         } catch(const std::exception& error) { return {{},AssetError::InvalidAsset,"GR2 reader: "+std::string(error.what())}; }
     }
@@ -214,6 +250,7 @@ public:
 AssetProvider& GetGR2AssetProvider() { static Provider provider; return provider; }
 AssetError PrepareGR2Animation(const ModelHandle& model,const AnimationHandle& animation,unsigned boundaryMask)
 {
+    MapLoadTrace::Scope lookup("Animation prewarm","model skeleton and track group lookup","cpu",GR2::RuntimeTrace::Enabled());
     if(!model || !animation || !boundaryMask || boundaryMask>15) return AssetError::InvalidInput;
     const auto* modelDocument=dynamic_cast<const Document*>(model.GetDocument().get());
     const auto* animationDocument=dynamic_cast<const Document*>(animation.GetDocument().get());
@@ -225,6 +262,8 @@ AssetError PrepareGR2Animation(const ModelHandle& model,const AnimationHandle& a
     if(group==source->groups.end() || std::none_of(group->tracks.begin(),group->tracks.end(),[&](const auto& t){return skeleton->FindBone(t.name)>=0;}))
         return AssetError::NoMatchingTracks;
     ++GR2::prewarmRequests;
+    if(GR2::RuntimeTrace::Enabled()) MapLoadTrace::Count("runtime-prewarm-request",animationDocument->Id());
+    lookup.Stop();
     for(unsigned boundary=0;boundary<4;++boundary) if(boundaryMask&(1u<<boundary)) {
         std::string error;
         if(!animationDocument->BoundClip(animation.Index(),*skeleton,model.Get()->name,boundary,error)) {

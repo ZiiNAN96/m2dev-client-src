@@ -1,9 +1,9 @@
+#include "ShaderLoadAudit.h"
 #include "DiligentTerrainRenderer.h"
+#include "EterBase/MapLoadTrace.h"
 #include "DiligentD3D11BackendInternal.h"
 #include "Diagnostics.h"
-#include "SceneLightingShader.h"
-#include "ShadowAmbientShader.h"
-#include <unordered_set>
+#include "Common/interface/BasicMath.hpp"
 #include "Graphics/GraphicsEngine/interface/Buffer.h"
 #include "Graphics/GraphicsEngine/interface/PipelineState.h"
 #include "Graphics/GraphicsEngine/interface/Shader.h"
@@ -29,7 +29,6 @@ struct TextureCounters { uint32_t live = 0, uploads = 0, alpha = 0, materials = 
 struct TextureResource final : TerrainTexture
 {
     RefCntAutoPtr<ITexture> texture;
-    RefCntAutoPtr<ITextureView> linearView, srgbView;
     RefCntAutoPtr<IShaderResourceBinding> bindings[2];
     std::shared_ptr<TextureCounters> counters;
     bool isAlpha = false;
@@ -38,7 +37,7 @@ struct TextureResource final : TerrainTexture
 struct SplatMaterial final : TerrainSplatMaterial
 {
     std::shared_ptr<TextureResource> color, alpha;
-    RefCntAutoPtr<IShaderResourceBinding> bindings[12];
+    RefCntAutoPtr<IShaderResourceBinding> bindings[4];
     RefCntAutoPtr<ISampler> colorSampler, alphaSampler;
     TerrainSampling colorSampling{}, alphaSampling{};
     std::shared_ptr<TextureCounters> counters;
@@ -98,17 +97,9 @@ SamplerState ColorSampler; SamplerState AlphaSampler;
 struct Output {
     float4 position : SV_POSITION; float2 colorUV : TEXCOORD0; float2 alphaUV : TEXCOORD1;
     float4 diffuse : COLOR0; noperspective float fog : TEXCOORD2;
-#ifdef MODERN_TERRAIN
-    float3 worldNormal:TEXCOORD3;
-    float3 worldPosition:TEXCOORD4;
-#endif
 };
 Output vs_main(float3 position : ATTRIB0, float4 diffuse : ATTRIB1, float fog : ATTRIB2,
-               float2 colorUV : ATTRIB3, float2 alphaUV : ATTRIB4
-#ifdef MODERN_TERRAIN
-               ,float3 normal:ATTRIB5
-#endif
-               )
+               float2 colorUV : ATTRIB3, float2 alphaUV : ATTRIB4)
 {
     Output result;
     float4 camera = mul(mul(float4(position,1),World),View);
@@ -116,10 +107,6 @@ Output vs_main(float3 position : ATTRIB0, float4 diffuse : ATTRIB1, float fog : 
     result.colorUV = (Modes.x & 8) ? colorUV : mul(camera,ColorTransform).xy;
     result.alphaUV = (Modes.x & 8) ? alphaUV : mul(camera,AlphaTransform).xy;
     result.diffuse = diffuse;
-#ifdef MODERN_TERRAIN
-    result.worldNormal=LightingTransformNormal(normal,(float3x3)World);
-    result.worldPosition=mul(float4(position,1),World).xyz;
-#endif
     float d = FogParameters.w != 0 ? length(camera.xyz) : abs(camera.z);
     result.fog = 1;
     if (Modes.z == 1) result.fog = saturate(exp(-d*FogParameters.z));
@@ -128,11 +115,7 @@ Output vs_main(float3 position : ATTRIB0, float4 diffuse : ATTRIB1, float fog : 
     if (Modes.z == 4) result.fog = fog;
     return result;
 }
-float4 ps_main(Output input
-#ifdef AMBIENT_MRT
- ,out float4 ambientDelta:SV_TARGET1
-#endif
-) : SV_TARGET0
+float4 ps_main(Output input) : SV_TARGET
 {
     float4 color = ColorTexture.Sample(ColorSampler,input.colorUV);
     float alpha = color.a;
@@ -140,28 +123,9 @@ float4 ps_main(Output input
     if (Modes.y == 2) alpha = input.diffuse.a;
     if (Modes.y == 3) alpha *= input.diffuse.a;
     if (Modes.w != 0 && alpha <= float(Modes.w-1)/255.0) discard;
-#ifdef MODERN_TERRAIN
-    float3 base=(Modes.x&16)?color.rgb:LightingToLinear(color.rgb);
-    float3 n=LightingNormal(input.worldNormal,float3(0,0,1));
-    float3 direct=base*SceneSunColor.rgb*saturate(dot(n,SceneSunDirection.xyz))/3.14159265*SunVisibility(input.worldPosition,n);
-    float3 indirect=base*SceneAmbient(n);
-    color.rgb=LightingToSRGB(direct+indirect);
-#ifdef AMBIENT_MRT
-    float3 withoutAmbient=LightingToSRGB(direct);
-    if((Modes.x&7)==2)withoutAmbient=lerp(TextureFactor.rgb,withoutAmbient,input.diffuse.a);
-    withoutAmbient=lerp(FogColor.rgb,withoutAmbient,input.fog);
-#endif
-#else
     if ((Modes.x & 7) == 1) color.rgb *= input.diffuse.rgb;
-#endif
     if ((Modes.x & 7) == 2) color.rgb = lerp(TextureFactor.rgb,color.rgb,input.diffuse.a);
     color.rgb = lerp(FogColor.rgb,color.rgb,input.fog);
-#ifdef AMBIENT_MRT
-    ambientDelta=float4(max(0,LightingToLinear(color.rgb)-LightingToLinear(withoutAmbient)),alpha);
-#endif
-#ifdef MODERN_TERRAIN
-    if(ShadowSettings.w!=0)color.rgb=lerp(color.rgb,CascadeColor(input.worldPosition),.5);
-#endif
     return float4(color.rgb,alpha);
 }
 )";
@@ -173,12 +137,12 @@ struct DiligentTerrainRenderer::Impl
     RefCntAutoPtr<IPipelineState> pipelines[2];
     RefCntAutoPtr<IPipelineState> texturedPipelines[2];
     RefCntAutoPtr<IShaderResourceBinding> bindings[2];
-    RefCntAutoPtr<IPipelineState> splatPipelines[12]; // classic/modern/MRT * 4 + blend*2 + strip
-    RefCntAutoPtr<IPipelineState> shadowPipelines[2];
-    RefCntAutoPtr<IShaderResourceBinding> shadowBindings[2];
-    std::array<std::unordered_set<const TerrainBuffer*>,3> shadowPatches;
+    RefCntAutoPtr<IPipelineState> splatPipelines[4]; // blend*2 + strip
     RefCntAutoPtr<IBuffer> splatConstants, whiteVertices, dynamicVertices;
     TerrainMatrices matrices{};
+    std::array<float,16> textureTransform{};
+    std::array<float,4> solidColor{.72f,.82f,.38f,1};
+    RefCntAutoPtr<ISampler> modernSampler;
     bool vertexAttributes = false;
     std::atomic<bool> failed{false};
     bool hasTerrain = false;
@@ -193,7 +157,6 @@ struct DiligentTerrainRenderer::Impl
         if (first) LogRendererFailure("DiligentTerrainRenderer.cpp", this, reason, line);
     }
     explicit Impl(DiligentD3D11Backend& value) : backend(value) {}
-    ~Impl(){for(unsigned i=4;i<12;++i)if(splatPipelines[i])--liveLightingPipelines;for(auto& p:shadowPipelines)if(p)--liveShadowPipelines;}
 };
 DiligentTerrainRenderer::DiligentTerrainRenderer(DiligentD3D11Backend& backend) : m_impl(std::make_unique<Impl>(backend)) {}
 DiligentTerrainRenderer::~DiligentTerrainRenderer() = default;
@@ -211,7 +174,7 @@ bool DiligentTerrainRenderer::Initialize()
         camera.Usage = USAGE_DYNAMIC;
         camera.BindFlags = BIND_UNIFORM_BUFFER;
         camera.CPUAccessFlags = CPU_ACCESS_WRITE;
-        device->CreateBuffer(camera, nullptr, &s.camera);
+        { MapLoadTrace::Scope p0lCreate("GPU resources","CreateBuffer","gpu-api"); MapLoadTrace::Count("CreateBuffer","",0,true); device->CreateBuffer(camera, nullptr, &s.camera); }
         if (!s.camera) return false;
         ShaderCreateInfo shader;
         shader.SourceLanguage = SHADER_SOURCE_LANGUAGE_HLSL;
@@ -220,14 +183,14 @@ bool DiligentTerrainRenderer::Initialize()
         shader.Desc.ShaderType = SHADER_TYPE_VERTEX;
         shader.Source = vertexShader;
         RefCntAutoPtr<IShader> vs, ps, texturedPS;
-        device->CreateShader(shader, &vs);
+        { MapLoadTrace::Scope p0lCreate("Shaders / PSOs","CreateShader","cpu"); MapLoadTrace::Count("CreateShader","",0,true); device->CreateShader(shader, &vs); }
         shader.Desc.Name = "Metin2 terrain constant PS";
         shader.Desc.ShaderType = SHADER_TYPE_PIXEL;
         shader.Source = pixelShader;
-        device->CreateShader(shader, &ps);
+        { MapLoadTrace::Scope p0lCreate("Shaders / PSOs","CreateShader","cpu"); MapLoadTrace::Count("CreateShader","",0,true); device->CreateShader(shader, &ps); }
         shader.Desc.Name = "Metin2 single terrain texture PS";
         shader.Source = texturePixelShader;
-        device->CreateShader(shader, &texturedPS);
+        { MapLoadTrace::Scope p0lCreate("Shaders / PSOs","CreateShader","cpu"); MapLoadTrace::Count("CreateShader","",0,true); device->CreateShader(shader, &texturedPS); }
         if (!vs || !ps || !texturedPS) return false;
         // Consume the unchanged 24-byte source; normals stay in the buffer but are unused.
         LayoutElement layout{0, 0, 3, VT_FLOAT32, False, 0, 24};
@@ -267,7 +230,7 @@ bool DiligentTerrainRenderer::Initialize()
                 info.PSODesc.ResourceLayout.NumImmutableSamplers = 1;
             }
             auto& pipeline = textured ? s.texturedPipelines[strip] : s.pipelines[strip];
-            device->CreateGraphicsPipelineState(info, &pipeline);
+            { MapLoadTrace::Scope p0lCreate("Shaders / PSOs","CreateGraphicsPipelineState","gpu-api"); MapLoadTrace::Count("CreateGraphicsPipelineState","",0,true); device->CreateGraphicsPipelineState(info, &pipeline); }
             if (!pipeline) return false;
             auto* variable = pipeline->GetStaticVariableByName(SHADER_TYPE_VERTEX, "TerrainCamera");
             if (!variable) return false;
@@ -276,7 +239,7 @@ bool DiligentTerrainRenderer::Initialize()
                 pixelCamera->Set(s.camera);
             if (!textured)
             {
-                pipeline->CreateShaderResourceBinding(&s.bindings[strip], true);
+                ShaderLoadAudit::CreateSRB(pipeline,&s.bindings[strip], true);
                 if (!s.bindings[strip]) return false;
             }
         }
@@ -284,50 +247,39 @@ bool DiligentTerrainRenderer::Initialize()
         constants.Name="Metin2 original splat constants";
         constants.Size=sizeof(SplatConstants); constants.Usage=USAGE_DYNAMIC;
         constants.BindFlags=BIND_UNIFORM_BUFFER; constants.CPUAccessFlags=CPU_ACCESS_WRITE;
-        device->CreateBuffer(constants,nullptr,&s.splatConstants);
+        { MapLoadTrace::Scope p0lCreate("GPU resources","CreateBuffer","gpu-api"); MapLoadTrace::Count("CreateBuffer","",0,true); device->CreateBuffer(constants,nullptr,&s.splatConstants); }
         BufferDesc attributes;
         attributes.Name="Metin2 existing STP attributes"; attributes.Size=289*sizeof(TerrainSplatVertex);
         attributes.Usage=USAGE_DYNAMIC; attributes.BindFlags=BIND_VERTEX_BUFFER; attributes.CPUAccessFlags=CPU_ACCESS_WRITE;
-        device->CreateBuffer(attributes,nullptr,&s.dynamicVertices);
+        { MapLoadTrace::Scope p0lCreate("GPU resources","CreateBuffer","gpu-api"); MapLoadTrace::Count("CreateBuffer","",0,true); device->CreateBuffer(attributes,nullptr,&s.dynamicVertices); }
         std::array<TerrainSplatVertex,289> white{};
         attributes.Name="Metin2 HTP default diffuse"; attributes.Usage=USAGE_IMMUTABLE; attributes.CPUAccessFlags=CPU_ACCESS_NONE;
         BufferData whiteData{white.data(),sizeof(white)};
-        device->CreateBuffer(attributes,&whiteData,&s.whiteVertices);
+        { MapLoadTrace::Scope p0lCreate("GPU resources","CreateBuffer","gpu-api"); MapLoadTrace::Count("CreateBuffer","",0,true); device->CreateBuffer(attributes,&whiteData,&s.whiteVertices); }
         if(!s.splatConstants || !s.dynamicVertices || !s.whiteVertices) return false;
         shader.Source=splatShader; shader.EntryPoint="vs_main"; shader.Desc.ShaderType=SHADER_TYPE_VERTEX;
         shader.Desc.Name="Metin2 original splat VS";
         RefCntAutoPtr<IShader> splatVS,splatPS;
-        device->CreateShader(shader,&splatVS);
+        { MapLoadTrace::Scope p0lCreate("Shaders / PSOs","CreateShader","cpu"); MapLoadTrace::Count("CreateShader","",0,true); device->CreateShader(shader,&splatVS); }
         shader.EntryPoint="ps_main"; shader.Desc.ShaderType=SHADER_TYPE_PIXEL; shader.Desc.Name="Metin2 original splat PS";
-        device->CreateShader(shader,&splatPS);
+        { MapLoadTrace::Scope p0lCreate("Shaders / PSOs","CreateShader","cpu"); MapLoadTrace::Count("CreateShader","",0,true); device->CreateShader(shader,&splatPS); }
         if(!splatVS || !splatPS) return false;
-        const std::string modernSource=std::string("#define MODERN_TERRAIN\n")+sceneLightingShader+shadowReceiverShader+splatShader;
-        RefCntAutoPtr<IShader> modernVS,modernPS;
-        shader.Source=modernSource.c_str();shader.Desc.Name="G2 terrain normals";shader.Desc.ShaderType=SHADER_TYPE_VERTEX;shader.EntryPoint="vs_main";
-        device->CreateShader(shader,&modernVS);
-        shader.Desc.Name="G2 terrain scene lighting";shader.Desc.ShaderType=SHADER_TYPE_PIXEL;shader.EntryPoint="ps_main";
-        device->CreateShader(shader,&modernPS);if(!modernVS||!modernPS)return false;
-        const std::string ambientSource=std::string("#define AMBIENT_MRT\n")+modernSource;
-        RefCntAutoPtr<IShader> ambientPS;shader.Source=ambientSource.c_str();device->CreateShader(shader,&ambientPS);if(!ambientPS)return false;
         const LayoutElement splatLayout[]{
             {0,0,3,VT_FLOAT32,False,0,24}, {1,1,4,VT_FLOAT32,False,0,36},
-            {2,1,1,VT_FLOAT32,False,16,36}, {3,1,2,VT_FLOAT32,False,20,36}, {4,1,2,VT_FLOAT32,False,28,36},
-            {5,0,3,VT_FLOAT32,False,12,24}};
+            {2,1,1,VT_FLOAT32,False,16,36}, {3,1,2,VT_FLOAT32,False,20,36}, {4,1,2,VT_FLOAT32,False,28,36}};
         const ShaderResourceVariableDesc resources[]{
             {SHADER_TYPE_PIXEL,"ColorTexture",SHADER_RESOURCE_VARIABLE_TYPE_MUTABLE},
             {SHADER_TYPE_PIXEL,"AlphaTexture",SHADER_RESOURCE_VARIABLE_TYPE_MUTABLE},
             {SHADER_TYPE_PIXEL,"ColorSampler",SHADER_RESOURCE_VARIABLE_TYPE_MUTABLE},
-            {SHADER_TYPE_PIXEL,"AlphaSampler",SHADER_RESOURCE_VARIABLE_TYPE_MUTABLE},
-            {SHADER_TYPE_PIXEL,"SunShadowDepth",SHADER_RESOURCE_VARIABLE_TYPE_DYNAMIC}};
-        for(int modern=0;modern<3;++modern) for(int blend=0;blend<2;++blend) for(int strip=0;strip<2;++strip)
+            {SHADER_TYPE_PIXEL,"AlphaSampler",SHADER_RESOURCE_VARIABLE_TYPE_MUTABLE}};
+        for(int blend=0;blend<2;++blend) for(int strip=0;strip<2;++strip)
         {
             GraphicsPipelineStateCreateInfo info;
             info.PSODesc.Name="Metin2 original splat pass"; info.PSODesc.PipelineType=PIPELINE_TYPE_GRAPHICS;
-            info.PSODesc.ResourceLayout.Variables=resources; info.PSODesc.ResourceLayout.NumVariables=modern?5:4;
+            info.PSODesc.ResourceLayout.Variables=resources; info.PSODesc.ResourceLayout.NumVariables=4;
             auto& g=info.GraphicsPipeline;
             const auto& swap=s.backend.m_impl->swapChain->GetDesc();
             g.NumRenderTargets=1; g.RTVFormats[0]=swap.ColorBufferFormat; g.DSVFormat=swap.DepthBufferFormat;
-            if(modern==2){g.NumRenderTargets=2;g.RTVFormats[1]=TEX_FORMAT_RGBA8_UNORM;}
             g.PrimitiveTopology=strip ? PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP : PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
             g.RasterizerDesc.CullMode=CULL_MODE_BACK; g.RasterizerDesc.FrontCounterClockwise=True;
             g.DepthStencilDesc.DepthEnable=True; g.DepthStencilDesc.DepthWriteEnable=True;
@@ -336,38 +288,23 @@ bool DiligentTerrainRenderer::Initialize()
             target.SrcBlend=target.SrcBlendAlpha=BLEND_FACTOR_SRC_ALPHA;
             target.DestBlend=target.DestBlendAlpha=BLEND_FACTOR_INV_SRC_ALPHA;
             target.BlendOp=target.BlendOpAlpha=BLEND_OPERATION_ADD;
-            g.InputLayout.LayoutElements=splatLayout; g.InputLayout.NumElements=modern?6:5;
-            info.pVS=modern?modernVS:splatVS; info.pPS=modern==2?ambientPS:modern?modernPS:splatPS;
-            auto& pipeline=s.splatPipelines[modern*4+blend*2+strip];
-            device->CreateGraphicsPipelineState(info,&pipeline);
+            g.InputLayout.LayoutElements=splatLayout; g.InputLayout.NumElements=5;
+            info.pVS=splatVS; info.pPS=splatPS;
+            auto& pipeline=s.splatPipelines[blend*2+strip];
+            { MapLoadTrace::Scope p0lCreate("Shaders / PSOs","CreateGraphicsPipelineState","gpu-api"); MapLoadTrace::Count("CreateGraphicsPipelineState","",0,true); device->CreateGraphicsPipelineState(info,&pipeline); }
             if(!pipeline) return false;
-            if(modern)++liveLightingPipelines;
             for(auto stage:{SHADER_TYPE_VERTEX,SHADER_TYPE_PIXEL})
             {
                 auto* variable=pipeline->GetStaticVariableByName(stage,"TerrainSplat");
                 if(!variable) return false;
                 variable->Set(s.splatConstants);
             }
-            if(modern)pipeline->GetStaticVariableByName(SHADER_TYPE_PIXEL,"SceneLightingConstants")->Set(s.backend.m_impl->lightBuffer);
-            if(modern)s.backend.m_impl->depthEffects.BindReceiver(pipeline);
-        }
-        for(unsigned strip=0;strip<2;++strip){
-            GraphicsPipelineStateCreateInfo info;info.PSODesc.Name="G34 shared terrain caster";info.PSODesc.PipelineType=PIPELINE_TYPE_GRAPHICS;
-            auto& g=info.GraphicsPipeline;g.NumRenderTargets=0;g.DSVFormat=TEX_FORMAT_D32_FLOAT;
-            g.PrimitiveTopology=strip?PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP:PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-            g.RasterizerDesc.CullMode=CULL_MODE_BACK;g.RasterizerDesc.FrontCounterClockwise=True;
-            g.RasterizerDesc.DepthBias=Graphics::ShadowQualityConfig::RasterDepthBias;g.RasterizerDesc.SlopeScaledDepthBias=Graphics::ShadowQualityConfig{}.slopeBias;
-            g.DepthStencilDesc.DepthEnable=g.DepthStencilDesc.DepthWriteEnable=True;g.DepthStencilDesc.DepthFunc=COMPARISON_FUNC_LESS_EQUAL;
-            LayoutElement layout{0,0,3,VT_FLOAT32,False,0,24};g.InputLayout.LayoutElements=&layout;g.InputLayout.NumElements=1;
-            info.pVS=vs;device->CreateGraphicsPipelineState(info,&s.shadowPipelines[strip]);if(!s.shadowPipelines[strip])return false;++liveShadowPipelines;
-            s.shadowPipelines[strip]->GetStaticVariableByName(SHADER_TYPE_VERTEX,"TerrainCamera")->Set(s.camera);
-            s.shadowPipelines[strip]->CreateShaderResourceBinding(&s.shadowBindings[strip],true);if(!s.shadowBindings[strip])return false;
         }
         return true;
     }
     catch (...) { s.Fail("initialization exception", __LINE__); return false; }
 }
-void DiligentTerrainRenderer::ResetFrame() { m_impl->hasTerrain = false; m_impl->draws = m_impl->texturedDraws = m_impl->splatDraws = 0;for(auto& p:m_impl->shadowPatches)p.clear(); }
+void DiligentTerrainRenderer::ResetFrame() { m_impl->hasTerrain = false; m_impl->draws = m_impl->texturedDraws = m_impl->splatDraws = 0; }
 bool DiligentTerrainRenderer::HasTerrain() const { return m_impl->hasTerrain; }
 bool DiligentTerrainRenderer::Failed() const { return m_impl->failed; }
 uint32_t DiligentTerrainRenderer::DrawCount() const { return m_impl->draws; }
@@ -394,7 +331,7 @@ TerrainBufferPtr DiligentTerrainRenderer::UploadVertices(const void* data, uint3
         desc.Usage = USAGE_IMMUTABLE;
         desc.BindFlags = result->bind;
         BufferData initial{data, desc.Size};
-        s.backend.m_impl->device->CreateBuffer(desc, &initial, &result->buffer);
+        { MapLoadTrace::Scope p0lCreate("GPU resources","CreateBuffer","gpu-api"); MapLoadTrace::Count("CreateBuffer","",0,true); s.backend.m_impl->device->CreateBuffer(desc, &initial, &result->buffer); }
         if (result->buffer) return result;
     }
     catch (...) {}
@@ -418,7 +355,7 @@ TerrainBufferPtr DiligentTerrainRenderer::UploadIndices(const uint16_t* data, ui
         desc.Usage = USAGE_IMMUTABLE;
         desc.BindFlags = result->bind;
         BufferData initial{data, desc.Size};
-        s.backend.m_impl->device->CreateBuffer(desc, &initial, &result->buffer);
+        { MapLoadTrace::Scope p0lCreate("GPU resources","CreateBuffer","gpu-api"); MapLoadTrace::Count("CreateBuffer","",0,true); s.backend.m_impl->device->CreateBuffer(desc, &initial, &result->buffer); }
         if (result->buffer) return result;
     }
     catch (...) {}
@@ -468,34 +405,21 @@ TerrainTexturePtr DiligentTerrainRenderer::UploadTexture(const TerrainTextureDat
         TextureDesc desc;
         desc.Name="Metin2 terrain texture";
         desc.Type=RESOURCE_DIM_TEX_2D; desc.Width=data.width; desc.Height=data.height;
-        desc.MipLevels=static_cast<uint32_t>(mips.size());
-        TEXTURE_FORMAT storage=format,srgb=TEX_FORMAT_UNKNOWN;
-        switch(format) {
-        case TEX_FORMAT_RGBA8_UNORM:storage=TEX_FORMAT_RGBA8_TYPELESS;srgb=TEX_FORMAT_RGBA8_UNORM_SRGB;break;
-        case TEX_FORMAT_BGRA8_UNORM:storage=TEX_FORMAT_BGRA8_TYPELESS;srgb=TEX_FORMAT_BGRA8_UNORM_SRGB;break;
-        case TEX_FORMAT_BGRX8_UNORM:storage=TEX_FORMAT_BGRX8_TYPELESS;srgb=TEX_FORMAT_BGRX8_UNORM_SRGB;break;
-        case TEX_FORMAT_BC1_UNORM:storage=TEX_FORMAT_BC1_TYPELESS;srgb=TEX_FORMAT_BC1_UNORM_SRGB;break;
-        case TEX_FORMAT_BC2_UNORM:storage=TEX_FORMAT_BC2_TYPELESS;srgb=TEX_FORMAT_BC2_UNORM_SRGB;break;
-        case TEX_FORMAT_BC3_UNORM:storage=TEX_FORMAT_BC3_TYPELESS;srgb=TEX_FORMAT_BC3_UNORM_SRGB;break;
-        default:break;
-        }
-        desc.Format=storage;
+        desc.MipLevels=static_cast<uint32_t>(mips.size()); desc.Format=format;
         desc.Usage=USAGE_IMMUTABLE; desc.BindFlags=BIND_SHADER_RESOURCE;
         TextureData initial{mips.data(),static_cast<uint32_t>(mips.size())};
-        s.backend.m_impl->device->CreateTexture(desc,&initial,&resource->texture);
+        { MapLoadTrace::Scope p0lCreate("GPU resources","CreateTexture","gpu-api"); MapLoadTrace::Count("CreateTexture","",0,true); s.backend.m_impl->device->CreateTexture(desc,&initial,&resource->texture); }
         if (!resource->texture) return fail(__LINE__);
-        TextureViewDesc view;view.ViewType=TEXTURE_VIEW_SHADER_RESOURCE;view.Format=format;
-        resource->texture->CreateView(view,&resource->linearView);
-        if(!resource->linearView)return fail(__LINE__);
-        if(srgb!=TEX_FORMAT_UNKNOWN){view.Format=srgb;resource->texture->CreateView(view,&resource->srgbView);if(!resource->srgbView)return fail(__LINE__);}
+        auto* view=resource->texture->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE);
+        if (!view) return fail(__LINE__);
         resource->isAlpha=data.format==TerrainTextureFormat::Alpha8;
         for (int strip=0;!resource->isAlpha && strip<2;++strip)
         {
-            s.texturedPipelines[strip]->CreateShaderResourceBinding(&resource->bindings[strip],true);
+            ShaderLoadAudit::CreateSRB(s.texturedPipelines[strip],&resource->bindings[strip],true);
             if (!resource->bindings[strip]) return fail(__LINE__);
             auto* variable=resource->bindings[strip]->GetVariableByName(SHADER_TYPE_PIXEL,"TerrainTexture");
             if (!variable) return fail(__LINE__);
-            variable->Set(resource->linearView);
+            variable->Set(view);
         }
         resource->counters=s.textureCounters;
         ++s.textureCounters->live; ++s.textureCounters->uploads;
@@ -517,8 +441,7 @@ void DiligentTerrainRenderer::ReleaseTexture(TerrainTexturePtr& texture)
         backend.context->InvalidateState();
         if (backend.inFrame)
         {
-            auto* target=backend.swapChain->GetCurrentBackBufferRTV();
-            backend.context->SetRenderTargets(1,&target,backend.swapChain->GetDepthBufferDSV(),RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
+            backend.BindTargets();
         }
     }
     texture.reset();
@@ -547,6 +470,7 @@ void DiligentTerrainRenderer::BeginTerrain(const TerrainMatrices& matrices, bool
         mapped->textureTransform = textureTransform ? *textureTransform : std::array<float,16>{};
         mapped->solidColor = {0.72f,0.82f,0.38f,1};
         s.hasTerrain = true;
+        s.textureTransform=mapped->textureTransform;s.solidColor=mapped->solidColor;
     }
     catch (...) { s.Fail("terrain camera update exception", __LINE__); }
 }
@@ -563,21 +487,24 @@ void DiligentTerrainRenderer::DrawTerrain(const TerrainBufferPtr& vertices, cons
     { s.Fail("terrain geometry, texture or index count validation failed", __LINE__); return; }
     try
     {
+        if(auto* modern=s.backend.m_impl->modern.get();modern&&modern->Active()) {
+            ModernTerrainSubmission submission;submission.vertices=vb->buffer;submission.indices=ib->buffer;
+            submission.attributes=s.whiteVertices;submission.matrices=s.matrices;submission.count=count;submission.strip=strip;
+            submission.solid=!material;submission.parameters.blend=false;submission.parameters.alphaReference=-1;
+            submission.parameters.alphaOp=TerrainAlphaOp::Texture;submission.parameters.textureFactor=s.solidColor;
+            if(material) {
+                submission.color=submission.alpha=material->texture->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE);
+                if(!s.modernSampler){SamplerDesc desc;desc.AddressU=desc.AddressV=TEXTURE_ADDRESS_WRAP;s.backend.m_impl->device->CreateSampler(desc,&s.modernSampler);}
+                submission.colorSampler=s.modernSampler;
+                submission.alphaSampler=submission.colorSampler;
+                float4x4 view,textureTransform;memcpy(&view,s.matrices.view.data(),64);memcpy(&textureTransform,s.textureTransform.data(),64);
+                auto transform=view.Inverse()*textureTransform;memcpy(submission.parameters.colorTransform.data(),&transform,64);
+            }
+            modern->DrawTerrain(submission);++s.draws;if(material)++s.texturedDraws;return;
+        }
         auto* context = s.backend.m_impl->context.RawPtr();
         IBuffer* buffer = vb->buffer;
         Uint64 offset = 0;
-        if(shadowPassIndex>=0){
-            if(!s.shadowPatches[shadowPassIndex].insert(vertices.get()).second)return;
-            {MapHelper<TerrainConstants> mapped(context,s.camera,MAP_WRITE,MAP_FLAG_DISCARD);if(!mapped)return;
-                *mapped={};mapped->matrices={s.matrices.world,activeShadowCascade.view,activeShadowCascade.projection};}
-            s.backend.m_impl->depthEffects.BindTargets(s.backend.m_impl->swapChain,false);
-            context->SetPipelineState(s.shadowPipelines[strip]);
-            context->SetVertexBuffers(0,1,&buffer,&offset,RESOURCE_STATE_TRANSITION_MODE_TRANSITION,SET_VERTEX_BUFFERS_FLAG_RESET);
-            context->SetIndexBuffer(ib->buffer,0,RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
-            context->CommitShaderResources(s.shadowBindings[strip],RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
-            context->DrawIndexed(DrawIndexedAttribs{count,VT_UINT16,DRAW_FLAG_VERIFY_ALL});RecordShadowCaster(vertices.get(),s.matrices.world);return;
-        }
-        s.backend.m_impl->depthEffects.BindTargets(s.backend.m_impl->swapChain,false);
         context->SetPipelineState(material ? s.texturedPipelines[strip] : s.pipelines[strip]);
         context->SetVertexBuffers(0, 1, &buffer, &offset, RESOURCE_STATE_TRANSITION_MODE_TRANSITION, SET_VERTEX_BUFFERS_FLAG_RESET);
         context->SetIndexBuffer(ib->buffer, 0, RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
@@ -601,17 +528,17 @@ TerrainSplatMaterialPtr DiligentTerrainRenderer::CreateSplatMaterial(const Terra
     { s.Fail("splat color/alpha texture type or ownership mismatch", __LINE__); return {}; }
     try
     {
-        for(int index=0;index<12;++index)
+        for(int index=0;index<4;++index)
         {
             if(!s.splatPipelines[index]) { s.Fail("missing splat pipeline", __LINE__); return {}; }
             auto& binding=material->bindings[index];
-            s.splatPipelines[index]->CreateShaderResourceBinding(&binding,true);
+            ShaderLoadAudit::CreateSRB(s.splatPipelines[index],&binding,true);
             if(!binding) { s.Fail("splat shader resource binding creation failed", __LINE__); return {}; }
             auto* colorVariable=binding->GetVariableByName(SHADER_TYPE_PIXEL,"ColorTexture");
             auto* alphaVariable=binding->GetVariableByName(SHADER_TYPE_PIXEL,"AlphaTexture");
             if(!colorVariable || !alphaVariable) { s.Fail("missing splat texture shader variable", __LINE__); return {}; }
-            colorVariable->Set(index>=4&&material->color->srgbView?material->color->srgbView:material->color->linearView);
-            alphaVariable->Set(material->alpha->linearView);
+            colorVariable->Set(material->color->texture->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE));
+            alphaVariable->Set(material->alpha->texture->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE));
         }
         material->counters=s.textureCounters;
         ++s.textureCounters->materials;
@@ -629,8 +556,7 @@ void DiligentTerrainRenderer::ReleaseSplatMaterial(TerrainSplatMaterialPtr& mate
         backend.context->InvalidateState();
         if(backend.inFrame)
         {
-            auto* target=backend.swapChain->GetCurrentBackBufferRTV();
-            backend.context->SetRenderTargets(1,&target,backend.swapChain->GetDepthBufferDSV(),RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
+            backend.BindTargets();
         }
     }
     material.reset();
@@ -656,7 +582,6 @@ void DiligentTerrainRenderer::DrawSplat(const TerrainBufferPtr& vertices, const 
 {
     auto& s=*m_impl;
     if(s.failed) return;
-    if(shadowPassIndex>=0){DrawTerrain(vertices,indices,count,strip);return;}
     auto material=std::dynamic_pointer_cast<SplatMaterial>(handle);
     auto vb=std::dynamic_pointer_cast<GeometryBuffer>(vertices), ib=std::dynamic_pointer_cast<GeometryBuffer>(indices);
     if(!s.hasTerrain || !s.backend.m_impl || !s.backend.m_impl->inFrame || !material ||
@@ -702,8 +627,17 @@ void DiligentTerrainRenderer::DrawSplat(const TerrainBufferPtr& vertices, const 
         if(!setSampler(params.colorSampling,material->colorSampling,material->colorSampler,"ColorSampler") ||
            !setSampler(params.alphaSampling,material->alphaSampling,material->alphaSampler,"AlphaSampler"))
         { s.Fail("splat sampler creation or shader variable lookup failed", __LINE__); return; }
+        if(auto* modern=s.backend.m_impl->modern.get();modern&&modern->Active()) {
+            ModernTerrainSubmission submission;
+            submission.vertices=vb->buffer;submission.indices=ib->buffer;
+            submission.attributes=s.vertexAttributes?s.dynamicVertices:s.whiteVertices;
+            submission.color=material->color->texture->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE);
+            submission.alpha=material->alpha->texture->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE);
+            submission.colorSampler=material->colorSampler;submission.alphaSampler=material->alphaSampler;
+            submission.matrices=s.matrices;submission.parameters=params;submission.count=count;submission.strip=strip;
+            modern->DrawTerrain(submission);++s.draws;++s.texturedDraws;++s.splatDraws;return;
+        }
         auto* context=s.backend.m_impl->context.RawPtr();
-        const bool modern=Graphics::GraphicsFeatures{GetGraphicsRuntimeConfig()}.UsePBR();
         {
             MapHelper<SplatConstants> constants(context,s.splatConstants,MAP_WRITE,MAP_FLAG_DISCARD);
             if(!constants) { s.Fail("splat constants buffer map failed", __LINE__); return; }
@@ -711,13 +645,10 @@ void DiligentTerrainRenderer::DrawSplat(const TerrainBufferPtr& vertices, const 
             constants->colorTransform=params.colorTransform; constants->alphaTransform=params.alphaTransform;
             constants->textureFactor=params.textureFactor; constants->fogColor=params.fogColor;
             constants->fogParameters={params.fogStart,params.fogEnd,params.fogDensity,params.rangeFog ? 1.0f : 0.0f};
-            constants->modes={uint32_t(params.colorOp)|(params.vertexUV ? 8u : 0u)|(modern&&material->color->srgbView?16u:0u),uint32_t(params.alphaOp),
+            constants->modes={uint32_t(params.colorOp)|(params.vertexUV ? 8u : 0u),uint32_t(params.alphaOp),
                                uint32_t(params.fog),uint32_t(params.alphaReference+1)};
         }
-        if(modern&&!s.backend.m_impl->SyncSceneLighting()){s.Fail("terrain scene lighting upload",__LINE__);return;}
-        const int pipeline=(modern?(s.backend.m_impl->depthEffects.ambientActive?8:4):0)+(params.blend ? 2 : 0)+(strip ? 1 : 0);
-        s.backend.m_impl->depthEffects.BindTargets(s.backend.m_impl->swapChain,modern);
-        if(modern)s.backend.m_impl->depthEffects.SetReceiver(material->bindings[pipeline]);
+        const int pipeline=(params.blend ? 2 : 0)+(strip ? 1 : 0);
         context->SetPipelineState(s.splatPipelines[pipeline]);
         IBuffer* buffers[]{vb->buffer,s.vertexAttributes ? s.dynamicVertices.RawPtr() : s.whiteVertices.RawPtr()};
         Uint64 offsets[]{0,0};
@@ -725,9 +656,7 @@ void DiligentTerrainRenderer::DrawSplat(const TerrainBufferPtr& vertices, const 
         context->SetIndexBuffer(ib->buffer,0,RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
         context->CommitShaderResources(material->bindings[pipeline],RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
         context->DrawIndexed(DrawIndexedAttribs{count,VT_UINT16,DRAW_FLAG_VERIFY_ALL});
-        if(modern)s.backend.m_impl->depthEffects.SetReceiver(material->bindings[pipeline],true);
         ++s.draws; ++s.texturedDraws; ++s.splatDraws;
-        if(modern)++modernTerrainDraws;
     }
     catch(...) { s.Fail("splat draw exception", __LINE__); }
 }
@@ -743,6 +672,7 @@ void DiligentTerrainRenderer::DrawTerrainSolid(const TerrainBufferPtr& vertices,
             MapHelper<TerrainConstants> constants(s.backend.m_impl->context,s.camera,MAP_WRITE,MAP_FLAG_DISCARD);
             if(!constants) { s.Fail("solid terrain constants buffer map failed", __LINE__); return; }
             constants->matrices=s.matrices; constants->textureTransform={}; constants->solidColor=color;
+            s.solidColor=color;
         }
         DrawTerrain(vertices,indices,count,strip);
     }

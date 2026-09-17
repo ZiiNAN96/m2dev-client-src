@@ -12,7 +12,7 @@ New-Item -ItemType Directory -Path $target | Out-Null
 $pack="$original/pack"
 if(-not $Normal) {
     New-Item -ItemType Directory -Path "$target/test-root","$target/pack" | Out-Null
-    Copy-Item -LiteralPath "$source/build/milestone5a/gate-after/test-root/root" -Destination "$target/test-root/root" -Recurse
+    Copy-Item -LiteralPath "$source/test-data/legacy-renderer/actor-root" -Destination "$target/test-root/root" -Recurse
     Copy-Item -LiteralPath "$PSScriptRoot/effects_entry.py" -Destination "$target/test-root/root/prototype.py"
     Copy-Item -LiteralPath "$PSScriptRoot/effects_smoke.py" -Destination "$target/test-root/root/effects_smoke.py"
     if($AnimationOnly) { Copy-Item -LiteralPath "$PSScriptRoot/effects_animation_entry.py" -Destination "$target/test-root/root/prototype.py" }
@@ -26,7 +26,7 @@ if(-not $Normal) {
 }
 foreach($backend in @('legacy','diligent')) {
     New-Item -ItemType Directory -Path "$target/$backend-bin","$target/$backend-runtime" | Out-Null
-    Copy-Item -LiteralPath "$source/build/milestone5a/normal-gate/$backend-runtime/config" -Destination "$target/$backend-runtime/config" -Recurse
+    Copy-Item -LiteralPath "$source/test-data/legacy-renderer/$backend-config" -Destination "$target/$backend-runtime/config" -Recurse
     New-Item -ItemType Junction -Path "$target/$backend-runtime/pack" -Target $pack | Out-Null
     New-Item -ItemType Junction -Path "$target/$backend-runtime/bgm" -Target "$original/bgm" | Out-Null
     Copy-Item -LiteralPath $ClientBinary -Destination "$target/$backend-bin/Metin2_Release.exe"

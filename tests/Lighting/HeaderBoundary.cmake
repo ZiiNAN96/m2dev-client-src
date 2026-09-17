@@ -1,5 +1,0 @@
-file(READ "${ROOT}/src/Graphics/SceneLighting.h" core)
-file(READ "${ROOT}/src/Renderer/SceneLightingRuntime.h" runtime)
-if("${core}${runtime}" MATCHES "(D3D11|Diligent|Windows\\.h|Python\\.h|Granny|cgltf|GR2Asset)")
-    message(FATAL_ERROR "SceneLighting public header leaked a platform/provider dependency")
-endif()

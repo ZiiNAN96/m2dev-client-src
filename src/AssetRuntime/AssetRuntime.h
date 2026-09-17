@@ -1,5 +1,4 @@
 #pragma once
-#include "MaterialData.h"
 
 #include <array>
 #include <atomic>
@@ -71,11 +70,19 @@ struct EncodedImage
     std::string mimeType;
     std::vector<std::byte> bytes;
 };
+enum class MaterialModel : std::uint8_t { Legacy, PBRMetallicRoughness };
+enum class AlphaMode : std::uint8_t { Opaque, Mask, Blend };
+enum class MaterialTexture : std::uint8_t { BaseColor, Normal, Roughness, Metallic, Occlusion, Emissive, Count };
+inline constexpr std::size_t MaterialTextureCount = static_cast<std::size_t>(MaterialTexture::Count);
+struct MaterialTextureAsset
+{
+    AssetId id;
+    std::shared_ptr<const EncodedImage> image;
+    std::uint8_t channel{}; // R=0, G=1, B=2, A=3; ignored for color/normal maps.
+    std::uint8_t texcoord{};
+};
 struct MaterialAsset
 {
-    MaterialModel model{MaterialModel::Legacy};
-    PBRMaterialData pbr;
-    // Existing fields below are the preserved LegacyMaterialData contract.
     std::string name;
     std::array<AssetId, 2> textures;
     std::array<AssetId, 2> matchingTextures;
@@ -91,6 +98,12 @@ struct MaterialAsset
     float alphaCutoff{0.5f};
     bool explicitRenderState{};
     // Per-draw actor/world passes may override these legacy defaults.
+    MaterialModel model{MaterialModel::Legacy};
+    std::array<MaterialTextureAsset, MaterialTextureCount> materialTextures;
+    float roughness{0.85f}, metallic{}, normalScale{1.f}, occlusionStrength{1.f};
+    std::array<float, 3> emissiveColor{};
+    AlphaMode alphaMode{AlphaMode::Mask};
+    bool doubleSided{};
 };
 struct MaterialGroup
 {
@@ -129,7 +142,6 @@ struct MeshAsset
     SkinningAsset skin;
     bool twoSided{};
     std::vector<std::array<float, 4>> tangents; // Optional transformed tangent + bitangent handedness metadata.
-    std::vector<MaterialVertex> materialVertices;
     // Optional immutable vertex channels; consumed only by renderers that request them.
     struct VertexExtras {
         std::array<float,4> color{1,1,1,1};
@@ -276,8 +288,6 @@ PoseResult EvaluatePose(PoseEvaluator& evaluator, const PoseRequest& request = {
 class AssetDocument
 {
 public:
-    // Load-time only, before model handles are handed to render/animation consumers.
-    bool ApplyMaterialOverrides(std::string_view text);
     explicit AssetDocument(AssetId id) : id_(std::move(id)) { ++liveDocuments; }
     virtual ~AssetDocument() { --liveDocuments; }
     AssetDocument(const AssetDocument&) = delete;

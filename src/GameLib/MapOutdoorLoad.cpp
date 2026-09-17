@@ -1,15 +1,21 @@
 #include "StdAfx.h"
+#include "EterBase/MapLoadTrace.h"
 #include "MapOutdoor.h"
 #include "AreaTerrain.h"
 #include "AreaLoaderThread.h"
 #include "EterLib/ResourceManager.h"
 #include "EterLib/TerrainTextureLoader.h"
 #include "PackLib/PackManager.h"
+#include "Renderer/WorldResidencyDiagnostics.h"
+#include "Renderer/GraphicsConfig.h"
+#include "WorldResidencyPolicy.h"
 
 //CAreaLoaderThread CMapOutdoor::ms_AreaLoaderThread;
 
 bool CMapOutdoor::Load(float x, float y, float z)
 {
+    MapLoadTrace::Scope p0lScope("Metadata","outdoor orchestration","cpu");
+
 	Destroy();
 
 	{
@@ -26,6 +32,9 @@ bool CMapOutdoor::Load(float x, float y, float z)
 	if (!LoadSetting(strFileName.c_str()))
 		TraceError("CMapOutdoor::Load : LoadSetting(%s) Failed", strFileName.c_str());
 
+    m_stableWorld=Renderer::GetGraphicsRuntimeConfig().style==Graphics::GraphicsStyle::Modern;
+    m_residentWholeMap=m_stableWorld&&WorldResidency::WholeMap(m_sTerrainCountX,m_sTerrainCountY);
+    m_renderSectorX=m_renderSectorY=-1;
 	CreateTerrainPatchProxyList();
 	BuildQuadTree();
 	LoadWaterTexture();
@@ -35,9 +44,14 @@ bool CMapOutdoor::Load(float x, float y, float z)
 
 	// TODO: SetRenderingDevice에서 Environment로 부터 라이트 속성을 넘겨줘야 스태틱 라이트가 제대로 작동한다.
 
+    if(m_residentWholeMap)for(WORD ty=0;ty<m_sTerrainCountY;++ty)for(WORD tx=0;tx<m_sTerrainCountX;++tx) {
+        LoadTerrain(tx,ty,0,0);LoadArea(tx,ty,0,0);
+    }
 	Update(x, y, z);
 
 	__HeightCache_Init();
+
+    // Grass coverage is terrain material. Do not prepare whole-map blade geometry.
 
 	// LOCAL_ENVIRONMENT_DATA
 	std::string local_envDataName = GetMapDataDirectory() + "\\" + m_settings_envDataName;
@@ -153,6 +167,8 @@ void CMapOutdoor::AssignTerrainPtr()
 
 bool CMapOutdoor::LoadArea(WORD wAreaCoordX, WORD wAreaCoordY, WORD wCellCoordX, WORD wCellCoordY)
 {
+    MapLoadTrace::Scope p0lScope("Static objects","area load","cpu");
+
 	if (isAreaLoaded(wAreaCoordX, wAreaCoordY))
 		return true;
 #ifdef _DEBUG
@@ -178,6 +194,7 @@ bool CMapOutdoor::LoadArea(WORD wAreaCoordX, WORD wAreaCoordY, WORD wCellCoordX,
 #endif
 
 	m_AreaVector.push_back(pArea);
+    if(Renderer::verboseDiagnostics) {++Renderer::worldResidency.areasLoaded; ++Renderer::worldResidency.areasResident;}
 
 	pArea->EnablePortal(m_bEnablePortal);
 #ifdef _DEBUG
@@ -189,6 +206,8 @@ bool CMapOutdoor::LoadArea(WORD wAreaCoordX, WORD wAreaCoordY, WORD wCellCoordX,
 
 bool CMapOutdoor::LoadTerrain(WORD wTerrainCoordX, WORD wTerrainCoordY, WORD wCellCoordX, WORD wCellCoordY)
 {
+    MapLoadTrace::Scope p0lScope("Terrain","sector load","cpu");
+
 	if (isTerrainLoaded(wTerrainCoordX, wTerrainCoordY))
 		return true;
 
@@ -279,12 +298,15 @@ bool CMapOutdoor::LoadTerrain(WORD wTerrainCoordX, WORD wTerrainCoordY, WORD wCe
 	Tracef("CMapOutdoor::LoadTerrain %d\n", ELTimer_GetMSec() - dwStartTime);
 
 	m_TerrainVector.push_back(pTerrain);
+    if(Renderer::verboseDiagnostics) {++Renderer::worldResidency.terrainLoaded; ++Renderer::worldResidency.terrainResident;}
 
 	return true;
 }
 
 bool CMapOutdoor::LoadSetting(const char * c_szFileName)
 {
+    MapLoadTrace::Scope p0lScope("Metadata","settings and material setup","cpu");
+
 	NANOBEGIN
 	CTokenVectorMap stTokenVectorMap;
 
@@ -404,6 +426,16 @@ bool CMapOutdoor::LoadSetting(const char * c_szFileName)
 		}
 		// Existing layer selection triggers one load per actually used map color.
 		m_terrainTextures.resize(m_TextureSet.GetTextureCount());
+		for(auto& color:m_modernTerrainColors) Renderer::terrainRenderer->ReleaseTexture(color.texture);
+		m_modernTerrainColors.clear();
+		m_modernTerrainColors.resize(m_TextureSet.GetTextureCount());
+		// Opt-in content only: no payload means original colors in both styles.
+		// Key includes the map and slot; shared texture names on other maps cannot match.
+		for(unsigned layer=1;layer<m_modernTerrainColors.size();++layer) {
+			char slot[32];snprintf(slot,sizeof(slot),"/slot-%03u.dds",layer);
+			const auto filename="terrain/modern/"+GetName()+slot;
+			if(CPackManager::Instance().IsExist(filename.c_str())) m_modernTerrainColors[layer].filename=filename;
+		}
 	}
 	
 	if (stTokenVectorMap.end() != stTokenVectorMap.find("environment"))

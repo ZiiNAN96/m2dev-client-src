@@ -21,18 +21,22 @@ void Presets()
         Check(s == PresetSettings(p) && s == Validate(s), "deterministic complete preset");
         Check(s.preset == p && s.shadows == shadow[i] && s.ambientOcclusion == ao[i], "preset shadow/AO");
         Check(s.viewDistance == distance[i] && int(s.vegetation) == i, "preset view/vegetation");
-        Check(s.water == (i == 0 ? WaterQuality::Low : i == 1 ? WaterQuality::Medium : WaterQuality::High), "preset water");
+        Check(int(s.water) == i, "preset water");
         Check(s.textures == (i == 0 ? TextureQuality::Medium : i == 3 ? TextureQuality::Ultra : TextureQuality::High), "preset texture");
-        Check(s.hdr == (i >= 2) && s.bloom == (i >= 2) && s.modernSky == (i >= 2) && s.highQualityFog == (i >= 2), "preset reserved flags");
+        Check(s.hdr == (i >= 2) && s.bloom == (i >= 2) && s.modernSky == (i >= 2), "preset HDR/bloom/sky flags");
         Check(s.style == GraphicsStyle::Classic && s.fogLevel == 0, "presets retain classic by default");
         for (auto style : {GraphicsStyle::Classic, GraphicsStyle::Modern})
         {
             const auto r = Resolve(PresetSettings(p, style));
             const GraphicsFeatures features{r};
-            Check(!features.UseHDR() && !features.UseBloom() && !features.UseModernSky(), "future feature gates");
-            Check(features.ShadowsEnabled()==(style==GraphicsStyle::Modern&&i!=0)&&
-                features.AOQuality()==(style==GraphicsStyle::Modern?ao[i]:AmbientOcclusionQuality::Off),"G34 modern shadow and AO gates");
-            Check(r.water == WaterQuality::High && r.waterFrameMilliseconds == 70 && r.textures == TextureQuality::High, "existing water/texture path");
+            Check(features.ShadowsEnabled()==(style==GraphicsStyle::Modern)&&
+                features.AOQuality()==(style==GraphicsStyle::Modern?ao[i]:AmbientOcclusionQuality::Off), "style-gated FX shadows/AO");
+            Check(features.UseHDR()==(style==GraphicsStyle::Modern)&&
+                features.UseBloom()==(style==GraphicsStyle::Modern&&i>=2)&&
+                features.UseModernSky()==(style==GraphicsStyle::Modern), "Modern HDR/sky and highlight bloom presets");
+            Check(r.water == (style==GraphicsStyle::Modern?static_cast<WaterQuality>(i):WaterQuality::High) && r.waterFrameMilliseconds == 70 && r.textures == TextureQuality::High, "style-gated water quality / unchanged Classic animation");
+            if(style==GraphicsStyle::Modern&&i==0)
+                Check(r.shadows==ShadowQuality::Low&&r.shadowTextureSize==512,"Modern Low uses the cheapest real shadow tier");
         }
     }
     for (int shadowLevel = 0; shadowLevel <= 5; ++shadowLevel)
@@ -68,7 +72,7 @@ void Custom()
 void Invalid()
 {
     const auto legacy = MigrateLegacy(2, 1);
-    auto loaded = LoadGraphicsSettings("VERSION 1\nPRESET 99\nSTYLE -1\nSHADOWS 99\nAO 3\nWATER 3\nVEGETATION -8\nTEXTURES 999\nHDR 8\nBLOOM nope\nMODERN_SKY -1\nHIGH_QUALITY_FOG 42\nFOG_LEVEL 8\nVIEW_DISTANCE nan\n", legacy);
+    auto loaded = LoadGraphicsSettings("VERSION 1\nPRESET 99\nSTYLE -1\nSHADOWS 99\nAO 3\nWATER 4\nVEGETATION -8\nTEXTURES 999\nHDR 8\nBLOOM nope\nMODERN_SKY -1\nHIGH_QUALITY_FOG 42\nFOG_LEVEL 8\nVIEW_DISTANCE nan\n", legacy);
     Check(loaded.settings == legacy && loaded.invalidValues == 13, "all invalid values use migration defaults");
     for (auto text : {"VIEW_DISTANCE inf", "VIEW_DISTANCE 1e1000", "VIEW_DISTANCE 100oops", "SHADOWS 99999999999999999999999", "HDR", "SHADOWS 2 garbage"})
         Check(LoadGraphicsSettings(text, legacy).settings == legacy, "malformed token fallback");
@@ -85,6 +89,9 @@ void Invalid()
     }
     Check(!LoadGraphicsSettings(std::string(65537, 'x')).writable, "bounded config parser");
     Check(LoadGraphicsSettings("# comment\nUNKNOWN 9\nSHADOWS 4\n", legacy).settings.shadows == ShadowQuality::High, "v0 migration/unknown values");
+    const auto retired=LoadGraphicsSettings("VERSION 1\nHIGH_QUALITY_FOG 1\n", legacy);
+    Check(retired.settings==legacy && retired.invalidValues==0,"retired fog quality loads without changing settings");
+    Check(SaveGraphicsSettings(legacy,"VERSION 1\nHIGH_QUALITY_FOG 1\n").find("HIGH_QUALITY_FOG")==std::string::npos,"retired fog quality is removed on save");
     const auto output = SaveGraphicsSettings(legacy, "VERSION 1\n# keep me\nFUTURE_VALUE custom text\nSHADOWS 5\n");
     Check(output.find("# keep me") != output.npos && output.find("FUTURE_VALUE custom text") != output.npos &&
         LoadGraphicsSettings(output).settings == legacy, "unknown fields preserved and known fields canonicalized");

@@ -1,4 +1,5 @@
 #include "VegetationRuntime.h"
+#include "EterBase/MapLoadTrace.h"
 #include "AssetRuntime/GlTF/GlTFAssetProvider.h"
 #include <algorithm>
 #include <bit>
@@ -59,10 +60,25 @@ bool Instance::Update(const Vec3& camera,std::span<const std::array<float,4>> pl
     if(!std::isfinite(distance)||distance>asset->metadata.cullDistance||!Visible(TransformBounds(asset->metadata.renderBounds,transform),planes)){lod={};return false;}
     lod=SelectLOD(asset->metadata,distance);return true;
 }
-LoadResult Runtime::Load(std::string_view legacy,const ReadFile& read){
+LoadResult Runtime::Load(std::string_view legacy,const ReadFile& read,bool modern){
+    MapLoadTrace::Scope p0lScope("Vegetation","registry and override lookup","cpu");
+
     const auto key=NormalizeKey(legacy);const auto* path=registry.Resolve(key);if(!path)return {{},"registry lookup missing: "+key};
+    if(modern)if(const auto* overridePath=registry.ResolveOverride(key)) {
+        auto result=LoadCompiled(*overridePath,read);if(result)return result;
+        // Optional content must never hide a working legacy tree.
+    }
+    return LoadCompiled(*path,read);
+}
+LoadResult Runtime::LoadCompiled(std::string_view compiled,const ReadFile& read){
+    MapLoadTrace::Scope p0lScope("Vegetation","compiled asset lookup and load","cpu");
+    MapLoadTrace::Count("vegetation-request",compiled);
+
+    const std::string normalized=NormalizeKey(compiled);const auto* path=&normalized;
+    if(!ValidCompiledPath(*path,".zveg"))return {{},"invalid compiled vegetation path"};
     if(const auto found=assets_.find(*path);found!=assets_.end())return {found->second,{}};
     if(const auto found=failures_.find(*path);found!=failures_.end())return {{},found->second};
+    MapLoadTrace::Count("vegetation-load",compiled,0,true);
     auto fail=[&](std::string error)->LoadResult{failures_[*path]=error;return {{},std::move(error)};};
     try{
         std::vector<std::byte> bytes;if(!read(*path,bytes))return fail("compiled metadata missing: "+*path);
@@ -74,7 +90,7 @@ LoadResult Runtime::Load(std::string_view legacy,const ReadFile& read){
         std::set<std::uint32_t> used;
         for(const auto& p:metadata.parts){if(p.mesh>=model.meshes.size()||!used.insert(p.mesh).second)return fail("invalid part mesh");const auto& mesh=model.meshes[p.mesh];if(!ValidBounds(mesh.bounds)||!mesh.vertexCount||!mesh.indexCount)return fail("invalid part bounds or geometry");if(mesh.vertexExtrasChannels!=63||mesh.vertexExtras.size()!=mesh.vertexCount)return fail("missing compiled auxiliary channels");for(unsigned k=0;k<3;++k)if(mesh.bounds.min[k]<metadata.renderBounds.min[k]-.1f||mesh.bounds.max[k]>metadata.renderBounds.max[k]+.1f)return fail("render bounds do not enclose geometry");}
         for(const auto& lod:metadata.lods)for(auto index:lod.meshes)if(index>=0&&!used.contains(static_cast<std::uint32_t>(index)))return fail("LOD references nonexistent mesh");
-        auto asset=std::make_shared<Asset>();asset->metadata=std::move(metadata);asset->geometry=std::move(loaded.asset);assets_[*path]=asset;return {asset,{}};
+        auto asset=std::make_shared<Asset>();asset->metadata=std::move(metadata);asset->stableLods=BuildStableLods(asset->metadata);asset->geometry=std::move(loaded.asset);assets_[*path]=asset;return {asset,{}};
     }catch(const std::exception&e){return fail(e.what());}
 }
 }

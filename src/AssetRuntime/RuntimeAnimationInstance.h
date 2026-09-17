@@ -3,6 +3,7 @@
 #include "AnimationRuntimeMode.h"
 #include "AnimationStallAudit.h"
 #include "AnimationRuntime/AnimationRuntime.h"
+#include "EterBase/MapLoadTrace.h"
 #include <algorithm>
 #include <cmath>
 
@@ -30,6 +31,7 @@ public:
     ~RuntimeAnimationInstance() override { --liveIndependentAnimationInstances; }
     bool PreparePose() override
     {
+        MapLoadTrace::FirstUseScope trace("pose buffer initialization");
         if(!skeleton_) return false;
         const auto count=skeleton_->Bones().size(); pose_.Prepare(count); scratch_.Prepare(count);
         model_.resize(count); palette_.resize(count);
@@ -82,6 +84,7 @@ public:
     }
     PoseResult Evaluate(const PoseRequest& request) override
     {
+        MapLoadTrace::FirstUseScope trace("pose evaluation");
         AnimationStallAudit::WorkScope audit(AnimationStallAudit::Work::Pose);
         ready_=false;
         if(!skeleton_ || failed_ || !std::isfinite(clock_) || (!request.attachmentMatrix.empty() && request.attachmentMatrix.size()!=16)) return {{},AssetError::EvaluationFailed};
@@ -101,6 +104,7 @@ public:
             }
         } else for(std::size_t i=0;i<pose_.localTransforms.size();++i) pose_.localTransforms[i]=skeleton_->Bones()[i].localBind;
         AR::Matrix parent;
+        MapLoadTrace::FirstUseScope matrices("bone matrix generation");
         if(!request.attachmentMatrix.empty()) std::copy(request.attachmentMatrix.begin(),request.attachmentMatrix.end(),parent.begin());
         if(!AR::Evaluate(*skeleton_,pose_,model_,request.attachmentMatrix.empty()?nullptr:&parent)) return {{},AssetError::EvaluationFailed};
         {

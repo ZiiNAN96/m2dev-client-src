@@ -1,5 +1,4 @@
 #include "TerrainPresentation.h"
-#include "ShadowAmbientRuntime.h"
 #include "DiligentTerrainRenderer.h"
 #include "DiligentStaticObjectRenderer.h"
 #include "DiligentActorRenderer.h" // ZiiNAN: Same world surface and depth target.
@@ -32,15 +31,6 @@ class TerrainPresentation final : public ITerrainPresentation
     uint32_t m_frame = 0;
     ScreenshotSink m_screenshot;
 public:
-    void BeginModernScene(const Graphics::Matrix4& view,const Graphics::Matrix4& projection,const std::function<void()>& prepare,const std::function<void()>& casters) override {
-        const unsigned count=m_backend.BeginModernScene(view,projection);
-        preparingShadowCasters=count!=0;prepare();preparingShadowCasters=false;
-        const auto start=PrototypeClock::now();
-        for(unsigned i=0;i<count;++i)if(m_backend.BeginSunCascade(i))casters();
-        m_backend.EndSunCascades();shadowCpuUs=PrototypeMicroseconds(start);
-    }
-    void EndModernScene() override {m_backend.EndModernScene();}
-    void ResetModernScene() override {m_backend.ResetModernScene();}
     bool RequestScreenshot(ScreenshotSink sink) override
     {
         if(!sink || m_screenshot) return false;
@@ -126,9 +116,6 @@ public:
         // ZiiNAN: Native map/instance owners must release their tree resources first.
         vegetationWorldFrame=false;
         // ZiiNAN: Actors must already be destroyed by the existing application teardown.
-        // Retire the last frame's weak material bindings after native resource owners are gone.
-        if(m_actors) { m_actors->ReleaseBindings(); m_actors->ResetFrame(); }
-        if(m_objects) { m_objects->ReleaseBindings(); m_objects->ResetFrame(); }
         if(m_diagnostics && m_actors)
         {
             m_diagnostics << "shutdown actor_geometry=" << m_actors->LiveGeometryCount()
@@ -192,7 +179,6 @@ public:
         if(skinningBenchmarkEnabled) {
             auto& s=skinningBenchmarkCurrent;s.vertexBytes=m_actors->BytesUploaded();s.uploads=m_actors->Uploads();
             s.draws=m_actors->DrawCount();s.visible=m_actors->VisibleActors();
-            s.shadowDraws=shadowDraws;s.shadowCasters=shadowCasters;s.shadowBytes=shadowMemory;s.aoBytes=aoMemory;s.shadowCpuUs=shadowCpuUs;s.aoCpuUs=aoCpuUs;
         }
         m_backend.EndFrame();
         uiFrame=uiMode=false;

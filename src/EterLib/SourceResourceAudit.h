@@ -2,9 +2,6 @@
 #include "Renderer/ResourceData.h"
 #include "Renderer/SkinningData.h"
 #include "Graphics/GraphicsSettings.h"
-#include "Renderer/MaterialRuntime.h"
-#include "Renderer/SceneLightingRuntime.h"
-#include "Renderer/ShadowAmbientRuntime.h"
 #include <ostream>
 
 namespace Renderer
@@ -13,16 +10,6 @@ namespace Renderer
 inline void WriteSourceResourceAudit(std::ostream& output)
 {
     output << "GraphicsSettingsObjects=" << Graphics::liveSettingsStores << std::endl;
-    output << "ShadowMaps=" << liveShadowMaps << " ShadowViews=" << liveShadowViews << " ShadowPipelines=" << liveShadowPipelines << " ShadowBuffers=" << liveShadowBuffers
-           << " AOTargets=" << liveAOTargets << " AOViews=" << liveAOViews << " AOPipelines=" << liveAOPipelines << " AOBuffers=" << liveAOBuffers << std::endl;
-    output << "SceneLightingResources=" << liveSceneLightingResources << " LightBuffers=" << liveLightBuffers
-           << " LightingPipelines=" << liveLightingPipelines
-           << " LightBufferUpdates=" << lightBufferUpdates << " SceneLightingRevision=" << sceneLighting.Revision()
-           << " ModernTerrainDraws=" << modernTerrainDraws << " ModernVegetationDraws=" << modernVegetationDraws << std::endl;
-    output << "MaterialRuntimeObjects=" << liveMaterialRuntimeObjects << " PBRBindings=" << livePBRBindings
-           << " PBRPipelines=" << livePBRPipelines << " MaterialCreations=" << materialRuntimeCreations
-           << " PBRDraws=" << pbrDraws << " PBREnabledSamplesPerDrawSum=" << pbrTextureSamples
-           << " MaterialOverrides=" << AssetRuntime::materialOverrideApplications << std::endl;
     output << "SourceTextures=" << liveSourceTextures
            << " SourceBuffers=" << liveSourceBuffers << std::endl;
     // ZiiNAN: GPU skinning static mesh data

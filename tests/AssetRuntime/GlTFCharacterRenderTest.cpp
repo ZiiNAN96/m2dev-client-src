@@ -1,6 +1,3 @@
-#if defined(_DEBUG)
-#include <crtdbg.h>
-#endif
 #include "EterGrnLib/StdAfx.h"
 #include "EterGrnLib/Thing.h"
 #include "EterGrnLib/ModelInstance.h"
@@ -14,8 +11,8 @@
 #include "Renderer/DiligentActorRenderer.h"
 #include "Renderer/DiligentD3D11BackendInternal.h"
 #include "Renderer/AssetMaterialRenderData.h"
-#include "Renderer/GraphicsConfig.h"
 #include "Renderer/SkinningBenchmark.h"
+#include "../Graphics/ModernSceneTest.h"
 #include <fstream>
 #include <filesystem>
 #include <iostream>
@@ -31,7 +28,7 @@ static void Save(const std::vector<std::uint8_t>& rgb,unsigned width,unsigned he
     const auto pitch=(width*3+3)&~3u;
     BITMAPFILEHEADER file{0x4d42,DWORD(54+pitch*height),0,0,54};
     BITMAPINFOHEADER info{};info.biSize=40;info.biWidth=LONG(width);info.biHeight=-LONG(height);info.biPlanes=1;info.biBitCount=24;
-    std::ofstream output(name,std::ios::binary);output.write(reinterpret_cast<const char*>(&file),sizeof(file));output.write(reinterpret_cast<const char*>(&info),sizeof(info));
+    std::ofstream output((gdxTestModern?"gdx-modern-":"")+name,std::ios::binary);output.write(reinterpret_cast<const char*>(&file),sizeof(file));output.write(reinterpret_cast<const char*>(&info),sizeof(info));
     std::vector<char> row(pitch);
     for(unsigned y=0;y<height;++y) {for(unsigned x=0;x<width;++x) for(unsigned c=0;c<3;++c) row[x*3+c]=static_cast<char>(rgb[(y*width+x)*3+2-c]);output.write(row.data(),row.size());}
     Check(bool(output),"native screenshot saved");
@@ -52,7 +49,6 @@ static void Draw(CGrannyModelInstance& actor,DiligentActorRenderer& renderer,con
     Check(bool(data.geometry),"normal actor geometry");
     StaticObjectDraw draw;std::memcpy(draw.matrices.view.data(),&view,64);std::memcpy(draw.matrices.projection.data(),&projection,64);
     draw.ambient={.95f,.95f,.95f,1};draw.diffuse={0,0,0,1};draw.normalizeNormals=true;
-    if(GetGraphicsRuntimeConfig().usePBR){draw.ambient={.18f,.18f,.18f,1};draw.diffuse={1.2f,1.2f,1.2f,1};draw.lightDirection={.4f,.5f,1,0};}
     auto& materials=actor.GetStaticObjectMaterialPalette();
     for(int m=0;m<model->GetMeshCount();++m) {
         const auto* mesh=model->GetMeshPointer(m);const auto* world=actor.GetStaticObjectWorldMatrix(m);
@@ -61,7 +57,7 @@ static void Draw(CGrannyModelInstance& actor,DiligentActorRenderer& renderer,con
         draw.baseVertex=mesh->GetVertexBasePosition();draw.vertexCount=mesh->GetVertexCount();
         for(auto* group=mesh->GetTriGroupNodeList(CGrannyMaterial::TYPE_DIFFUSE_PNT);group;group=group->pNextTriGroupNode) {
             auto& material=materials.GetMaterialRef(group->mtrlIndex);ApplyAssetMaterial(material.GetAsset(),draw);
-            if(GetGraphicsRuntimeConfig().usePBR)draw.material=material.GetRenderMaterial(renderer);
+            if(gdxTestModern)draw.material=material.GetModernMaterial(renderer);
             auto* image=material.GetImagePointer(0);Check(image,"embedded image goes through normal texture cache");
             auto texture=image->GetAssetTexture(renderer);Check(bool(texture),"texture uploaded");
             draw.firstIndex=group->idxPos;draw.indexCount=group->triCount*3;renderer.Draw(&actor,data.geometry,texture,draw);
@@ -69,7 +65,6 @@ static void Draw(CGrannyModelInstance& actor,DiligentActorRenderer& renderer,con
     }
     Check(!renderer.Failed(),"normal Diligent actor draw");
 }
-#include "../Shadows/NativeCharacterProof.h"
 static void Numeric(DiligentD3D11Backend& backend,CGrannyModelInstance& actor)
 {
     const auto palette=actor.GetSkinningPalette();Check(bool(palette),"native bone palette");
@@ -91,16 +86,10 @@ static void Numeric(DiligentD3D11Backend& backend,CGrannyModelInstance& actor)
 }
 int main(int argc,char** argv)
 {
-#if defined(_DEBUG)
-    _CrtSetReportMode(_CRT_ASSERT,_CRTDBG_MODE_FILE);
-    _CrtSetReportFile(_CRT_ASSERT,_CRTDBG_FILE_STDERR);
-#endif
-    std::cout << std::unitbuf;
     HWND window=nullptr;
     try {
-        Check(argc==2||(argc==3&&(std::string_view(argv[2])=="--modern"||std::string_view(argv[2])=="--shadows")),"character fixture path and optional --modern or --shadows");
-        if(argc==3){Graphics::GraphicsSettings s;s.style=Graphics::GraphicsStyle::Modern;ApplyGraphicsRuntimeConfig(Graphics::Resolve(s,1));}
-        CPackManager packs;CResourceManager resources;
+        const bool modern=argc==3&&std::string_view(argv[2])=="--modern";
+        Check(argc==2||modern,"character fixture path and optional --modern");ConfigureModernScene(modern);CPackManager packs;CResourceManager resources;
         for(const auto extension:AssetRuntime::ModelExtensions())resources.RegisterResourceNewFunctionPointer(extension.data(),NewThing);
         window=CreateWindowW(L"STATIC",L"F5-X shared production actor proof",WS_OVERLAPPEDWINDOW,0,0,960,640,nullptr,nullptr,GetModuleHandleW(nullptr),nullptr);
         DiligentD3D11Backend backend;Check(window&&backend.Initialize({window,960,640}),"native Diligent backend");
@@ -121,25 +110,25 @@ int main(int argc,char** argv)
                     auto& actor=*actors[0];actor.SetLocalTime(0);actor.SetMotionPointer(thing->GetMotionPointer(clip),0,clip<3?0:1,1);
                     actor.SetLocalTime(thing->GetMotionPointer(clip)->GetDuration()*(clip==5?1.f:.3f));
                     Check(backend.BeginFrame(),"native frame");renderer.ResetFrame();++actorFrameSerial;backend.Clear({true,ClearColor{.04f,.05f,.07f,1}});
+                    BeginModernScene();
                     Deform(actor);Draw(actor,renderer,view,projection);Check(renderer.DrawCount()==2,"both material primitives draw");
                     BackendTestAccess::ValidateUploadedPalette(backend,*actor.GetSkinningPalette());
+                    EndModernScene();
                     std::vector<std::uint8_t> rgb;unsigned w{},h{};Check(backend.CaptureRGB(rgb,w,h),"native readback");
                     Check(std::count_if(rgb.begin(),rgb.end(),[](auto v){return v>55;})>2000,"textured character is visible");Save(rgb,w,h,"f5x-clip-"+std::to_string(clip)+".bmp");
                     backend.EndFrame();backend.Present();renderer.ReleaseBindings();Numeric(backend,actor);
                 }
                 eye={900,-1400,1000};target={0,160,80};Math::MatrixLookAtRH(&view,&eye,&target,&up);Math::MatrixPerspectiveFovRH(&projection,.70f,1.5f,1,4000);
-                const auto lightUpdatesBefore=lightBufferUpdates.load();
                 Check(backend.BeginFrame(),"multi-instance frame");renderer.ResetFrame();++actorFrameSerial;backend.Clear({true,ClearColor{.04f,.05f,.07f,1}});
+                BeginModernScene();
                 for(int i=0;i<20;++i) {
                     auto& actor=*actors[i];actor.SetLocalTime(0);actor.SetMotionPointer(thing->GetMotionPointer(i%6),0,i%6<3?0:1,1);actor.SetLocalTime(.08f*i);
                     Deform(actor,(i%5-2)*160.f,(i/5)*190.f);Draw(actor,renderer,view,projection);
                 }
                 std::cout<<"Multi-instance draws="<<renderer.DrawCount()<<" geometry wrappers="<<livePrototypeGeometry
                     <<" shared mesh buffers="<<livePrototypeStaticMeshes<<" textures="<<renderer.LiveTextureCount()<<'\n';
-                const bool pbrFixture=argc==3&&std::string_view(argv[2])=="--modern";
-                Check(renderer.DrawCount()==40&&livePrototypeStaticMeshes==1&&renderer.LiveTextureCount()==(pbrFixture?2u:1u),"20 actors share immutable mesh buffers and texture, all primitives draw");
-                if(argc==3){Check(liveLightBuffers==1&&lightBufferUpdates==lightUpdatesBefore,"20 animated actors share one warm scene light buffer without uploads");std::cout<<"SceneLightBuffers=1 additionalUploadsFor20Actors=0\n";}
-                std::vector<std::uint8_t> rgb;unsigned w{},h{};Check(backend.CaptureRGB(rgb,w,h),"20 actors native readback");Save(rgb,w,h,"f5x-20-actors.bmp");
+                Check(renderer.DrawCount()==40&&livePrototypeStaticMeshes==1&&renderer.LiveTextureCount()==1,"20 actors share immutable mesh buffers and texture, all primitives draw");
+                EndModernScene();std::vector<std::uint8_t> rgb;unsigned w{},h{};Check(backend.CaptureRGB(rgb,w,h),"20 actors native readback");Save(rgb,w,h,"f5x-20-actors.bmp");
                 backend.EndFrame();backend.Present();renderer.ReleaseBindings();
                 {
                     const auto path=(std::filesystem::path(argv[1]).parent_path()/"hand_prop.glb").string();
@@ -149,15 +138,15 @@ int main(int argc,char** argv)
                     Check(bool(binding),"stable RightHand attachment binding");prop.SetParentModelInstance(actors[0].get(),binding.bone);
                     eye={280,-510,255};target={0,0,95};Math::MatrixLookAtRH(&view,&eye,&target,&up);
                     Check(backend.BeginFrame(),"attachment frame");renderer.ResetFrame();++actorFrameSerial;backend.Clear({true,ClearColor{.04f,.05f,.07f,1}});
+                    BeginModernScene();
                     actors[0]->SetLocalTime(0);actors[0]->SetMotionPointer(thing->GetMotionPointer(3),0,1,1);actors[0]->SetLocalTime(.2f);
                     Deform(*actors[0]);Deform(prop);Draw(*actors[0],renderer,view,projection);Draw(prop,renderer,view,projection);
                     const auto* expected=actors[0]->GetBoneMatrixPointer(12);const auto* actual=prop.GetBoneMatrixPointer(0);
                     Check(expected&&actual,"attachment world matrices available");
+                    EndModernScene();
                     for(unsigned k=0;k<16;++k)Check(std::abs(expected[k]-actual[k])<.001,"rigid prop follows animated hand matrix");
                     Check(backend.CaptureRGB(rgb,w,h),"attachment image readback");Save(rgb,w,h,"f5x-hand-attachment.bmp");
-                    backend.EndFrame();backend.Present();renderer.ReleaseBindings();
-                    if(argc==3&&std::string_view(argv[2])=="--shadows")NativeShadowProof(backend,renderer,*thing.GetPointer(),*actors[0],prop,view,projection);
-                    prop.Clear();propThing.Clear();
+                    backend.EndFrame();backend.Present();renderer.ReleaseBindings();prop.Clear();propThing.Clear();
                 }
                 Check(SetWindowPos(window,nullptr,0,0,720,480,SWP_NOMOVE|SWP_NOZORDER|SWP_NOACTIVATE)!=FALSE,"owned native window resize");
                 Check(backend.Resize(720,480),"resize backend");
@@ -167,7 +156,9 @@ int main(int argc,char** argv)
                 Check(SetWindowPos(window,nullptr,0,0,960,640,SWP_NOMOVE|SWP_NOZORDER|SWP_NOACTIVATE)!=FALSE&&backend.Resize(960,640),"restored native window and backend size");
                 Check(backend.BeginFrame(),"post-restore animated actor frame");renderer.ResetFrame();++actorFrameSerial;
                 backend.Clear({true,ClearColor{.04f,.05f,.07f,1}});
+                BeginModernScene();
                 actors[0]->SetLocalTime(.4f);Deform(*actors[0]);Draw(*actors[0],renderer,view,projection);
+                EndModernScene();
                 Check(backend.CaptureRGB(rgb,w,h)&&w==960&&h==640,"post-restore readback");Save(rgb,w,h,"f5x-window-restored.bmp");
                 backend.EndFrame();backend.Present();renderer.ReleaseBindings();
                 std::cout<<"NativeWindow resize=720x480 minimized=1 restored=1 final=960x640 postRestoreAnimatedDraw=PASS\n";
@@ -175,7 +166,6 @@ int main(int argc,char** argv)
                 mapping.Clear();actors.clear();shared.Clear();thing.Clear();
             }
             resources.DestroyDeletingList();resources.Destroy();renderer.ReleaseBindings();
-            renderer.ResetFrame();
             Check(renderer.LiveGeometryCount()==0&&renderer.LiveTextureCount()==0&&livePrototypeGeometry==0&&livePrototypePalettes==0,"GPU geometry/palettes/textures released");
             actorRenderer=nullptr;actorWorldFrame=false;
         }
@@ -183,7 +173,6 @@ int main(int argc,char** argv)
         Check(AssetRuntime::liveDocuments==0&&AssetRuntime::liveAnimationInstances==0&&AssetRuntime::liveMeshBindings==0&&
             AnimationRuntime::GetLifetimeCounts().clips==0&&AnimationRuntime::GetLifetimeCounts().skeletons==0,"all GLB and animation lifetime counts zero");
         Check(skinningCpuCalls==0&&skinningFallbacks==0&&liveSkinMeshes==0&&liveBoneRemaps==0&&liveBonePalettes==0,"CPU deformation=0 fallback=0 skin resources=0");
-        if(argc==3)Check(pbrDraws>0 && liveMaterialRuntimeObjects==0 && livePBRBindings==0 && livePBRPipelines==0,"PBR used and every material owner released");
         std::cout<<"PASS F5-X native normal actor/GPU renderer, 6 clips, 20 actors, readbacks, numeric parity, cache sharing, lifecycle, resources=0\n";return 0;
     } catch(const std::exception& error) {std::cerr<<"FAIL "<<error.what()<<'\n';if(window)DestroyWindow(window);return 1;}
 }

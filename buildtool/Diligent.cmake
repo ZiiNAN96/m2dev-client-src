@@ -29,6 +29,10 @@ FetchContent_Declare(DiligentCore
     GIT_SUBMODULES_RECURSE FALSE
 )
 FetchContent_MakeAvailable(DiligentCore)
+if(M2_BUILD_WINDOWS_CLIENT)
+    include(ShaderLoadAudit)
+    include(ShaderBytecodeCache)
+endif()
 if(TARGET Diligent-Win32Platform AND MSVC)
     target_compile_options(Diligent-Win32Platform PRIVATE /UWIN32_LEAN_AND_MEAN)
 endif()

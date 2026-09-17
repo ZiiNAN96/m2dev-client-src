@@ -1,6 +1,6 @@
 #pragma once
 #include "TerrainRenderData.h"
-#include "MaterialRuntime.h"
+#include "MaterialRuntimeData.h"
 
 namespace Renderer
 {
@@ -19,17 +19,26 @@ struct StaticObjectSource
     // ZiiNAN: Modern asset pipeline; exactly one index stream is populated.
     std::vector<uint32_t> indices32;
     std::vector<StaticObjectVertexExtras> vertexExtras;
-    std::vector<AssetRuntime::MaterialVertex> materialVertices;
+    std::vector<std::array<float,4>> tangents;
 };
 struct StaticObjectGeometry { virtual ~StaticObjectGeometry() = default; };
 using StaticObjectGeometryPtr = std::shared_ptr<StaticObjectGeometry>;
+struct StaticObjectInstance {
+    std::array<float,16> world{};
+    std::array<float,4> parameters{}; // wind phase, signed LOD threshold, alpha cutoff, distance coverage
+    bool operator==(const StaticObjectInstance&)const=default;
+};
+inline std::atomic_size_t liveVegetationInstanceBuffers{},vegetationInstanceBytes{};
+inline std::atomic_uint64_t vegetationInstanceUploads{};
+struct StaticObjectInstanceBuffer {virtual ~StaticObjectInstanceBuffer()=default;};
+using StaticObjectInstanceBufferPtr=std::shared_ptr<StaticObjectInstanceBuffer>;
 enum class StaticObjectCull : uint32_t { None, Clockwise, CounterClockwise };
 enum class StaticObjectAlphaTest : uint32_t { Disabled, GreaterEqual, Greater };
 // ZiiNAN: Only the existing actor texture-stage operations, not a material graph.
 enum class ActorMaterialStage : uint32_t { None, Add, Modulate, Specular };
 struct StaticObjectDraw
 {
-    MaterialRuntimePtr material;
+    std::shared_ptr<const MaterialRuntimeData> material;
     TerrainMatrices matrices{};
     std::array<float,16> normalTransform{};
     std::array<float,4> ambient{1,1,1,1}, diffuse{}, lightDirection{};
@@ -52,6 +61,7 @@ struct StaticObjectDraw
     ActorMaterialStage actorStage = ActorMaterialStage::None;
     std::array<float,4> textureFactor{1,1,1,1};
     bool factorAlpha = false, factorAlphaOnly = false;
+    bool materialBaseColorInFactor = false; // Classic stage copy; Modern already uses MaterialRuntimeData.
     TerrainTexturePtr sphereMap; // Uses the mutually exclusive native stage-1 matrix/sampling above.
     // Existing point light 1 left by character selection, needed by PCBlocker MODULATE.
     std::array<float,4> pointPositionRange{}, pointAttenuation{}, pointAmbient{}, pointDiffuse{};
@@ -66,6 +76,12 @@ struct StaticObjectDraw
     std::array<float,4> cardPitch{};
     bool cardFog{},modulateCameraAlpha{};
     TerrainTexturePtr vertexShadow;
+    StaticObjectInstanceBufferPtr instances;
+    std::uint32_t instanceCount{};
+    // Modern vegetation only. Direction is the shared world wind, w is height.
+    std::array<float,4> worldWind{1,0,0,1},branchWind{};
+    std::array<float,4> foliage{}; // transmission tint and strength
+    bool modernVegetation{};
 };
 class IStaticObjectRenderer : public ITextureUploader
 {
@@ -73,6 +89,7 @@ public:
     virtual StaticObjectGeometryPtr UploadGeometry(const StaticObjectSource&) = 0;
     virtual void Draw(const StaticObjectGeometryPtr&, const TerrainTexturePtr&, const StaticObjectDraw&) = 0;
     virtual void ReleaseBindings() = 0;
+    virtual bool UpdateInstances(StaticObjectInstanceBufferPtr&,std::span<const StaticObjectInstance>) {return false;}
 };
 inline IStaticObjectRenderer* staticObjectRenderer = nullptr;
 inline unsigned staticObjectLoadDepth = 0;

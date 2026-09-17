@@ -26,7 +26,7 @@ struct ActorModelSource
     uint32_t deformVertexCount = 0;
     std::vector<StaticObjectVertex> rigidVertices;
     std::vector<uint32_t> indices32;
-    std::vector<AssetRuntime::MaterialVertex> materialVertices;
+    std::vector<std::array<float,4>> tangents; // Deform vertices, then rigid vertices.
     bool IsRigid() const { return vertexCount && !deformVertexCount && rigidVertices.size()==vertexCount; }
 };
 enum class ActorPart : uint32_t { Body=0, Weapon=1, WeaponLeft=3, Hair=4, Unsupported=5 };
@@ -51,7 +51,7 @@ struct ActorInstanceData
     bool ready = false;
     bool gpuPrototype = false;
     StaticObjectGeometryPtr geometry;
-    std::unordered_map<const void*,TerrainTexturePtr> cameraTextures;
+    std::unordered_map<std::string,TerrainTexturePtr> textures;
     std::unordered_set<std::string> reports;
 };
 class IActorRenderer : public ITextureUploader

@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "EterBase/MapLoadTrace.h"
 #include "PackLib/PackManager.h"
 #include "EterBase/Stl.h"
 #include "EterBase/CRC32.h"
@@ -7,8 +8,30 @@
 #include "Resource.h"
 #include "ResourceManager.h"
 #include "AssetRuntime/AnimationStallAudit.h"
+#include "AssetRuntime/GR2/GR2Preparation.h"
 
 #include <limits>
+
+namespace {
+class GR2ThreadTime {
+    std::string path_;
+    ULONGLONG start_{};
+    static ULONGLONG Cpu() {
+        FILETIME creation{},exit{},kernel{},user{};
+        if(!GetThreadTimes(GetCurrentThread(),&creation,&exit,&kernel,&user))return 0;
+        return (ULONGLONG(kernel.dwHighDateTime)<<32)+kernel.dwLowDateTime+
+               (ULONGLONG(user.dwHighDateTime)<<32)+user.dwLowDateTime;
+    }
+public:
+    GR2ThreadTime() {
+        if(MapLoadTrace::state.active && !MapLoadTrace::state.gr2Path.empty()) {
+            path_=MapLoadTrace::state.gr2Path;start_=Cpu();
+            MapLoadTrace::Count("gr2-thread",std::to_string(GetCurrentThreadId()));
+        }
+    }
+    ~GR2ThreadTime() { if(!path_.empty())MapLoadTrace::Count("gr2-thread-cpu-100ns",path_,Cpu()-start_); }
+};
+}
 
 bool CResource::ms_bDeleteImmediately = false;
 
@@ -41,13 +64,26 @@ void CResource::OnSelfDestruct()
 
 void CResource::Load()
 {
+    MapLoadTrace::GR2Context gr2Context(GetFileName());
+    GR2ThreadTime gr2Cpu;
+    MapLoadTrace::Scope p0lScope("Assets","resource load","cpu");
+    MapLoadTrace::Count("resource-load-request",GetFileName());
+    MapLoadTrace::Count(me_state==STATE_EMPTY?"resource-miss":"resource-hit",GetFileName());
+
 	if (me_state != STATE_EMPTY)
 		return;
 
 	const char * c_szFileName = GetFileName();
+    MapLoadTrace::Count("resource-load",c_szFileName,0,true);
 
 	DWORD		dwStart = ELTimer_GetMSec();
 	TPackFile	file;
+
+    if(const auto prepared=AssetRuntime::GR2::Preparation::Payload(c_szFileName); !prepared.empty()) {
+        me_state=OnLoad(static_cast<int>(prepared.size()),prepared.data())?STATE_EXIST:STATE_ERROR;
+        m_dwLoadCostMiliiSecond=ELTimer_GetMSec()-dwStart;
+        return;
+    }
 
 	//Tracenf("Load %s", c_szFileName);
 

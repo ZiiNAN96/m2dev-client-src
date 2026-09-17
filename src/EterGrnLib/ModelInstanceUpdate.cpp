@@ -1,3 +1,4 @@
+#include "EterBase/MapLoadTrace.h"
 #include "StdAfx.h"
 #include "Eterbase/Debug.h"
 #include "ModelInstance.h"
@@ -79,6 +80,8 @@ void CGrannyModelInstance::Deform(const Math::Matrix * c_pWorldMatrix)
         (Renderer::actorDeformTargets.prototypeBody==this ||
          (Renderer::actorDeformTargets.gpuSkinning && part!=Renderer::ActorPart::Unsupported));
     if(reference && Renderer::startupSkinningMode==Renderer::PrototypeSkinningMode::GPUPrototype) {
+        MapLoadTrace::GR2Context gr2Context(m_pModel->GetAssetHandle().GetDocument()->Id());
+        MapLoadTrace::Scope gr2Upload("Assets","GR2 GPU submission");
         const auto start=Renderer::PrototypeClock::now();
         const auto palette=GetSkinningPalette();
         if(Renderer::actorRenderer && palette && m_pModel->GetSkinningData() &&

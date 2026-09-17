@@ -1,4 +1,6 @@
 #include "StdAfx.h"
+#include "Renderer/WorldResidencyDiagnostics.h"
+#include "WorldResidencyPolicy.h"
 #include "EterLib/DrawState.h"
 #include "EterLib/Camera.h"
 #include "PRTerrainLib/StdAfx.h"
@@ -191,6 +193,9 @@ bool CMapOutdoor::Destroy()
 	for(auto& texture:m_terrainTextures)
 		if (Renderer::terrainRenderer) Renderer::terrainRenderer->ReleaseTexture(texture);
 	m_terrainTextures.clear();
+	for(auto& color:m_modernTerrainColors)
+		if(Renderer::terrainRenderer) Renderer::terrainRenderer->ReleaseTexture(color.texture);
+	m_modernTerrainColors.clear();
 	m_bEnableTerrainOnlyForHeight = FALSE;
 	m_bEnablePortal = FALSE;
 
@@ -336,6 +341,11 @@ bool CMapOutdoor::IsWireframe()
 void CMapOutdoor::CreateTerrainPatchProxyList()
 {
 	m_wPatchCount = ((m_lViewRadius * 2) / TERRAIN_PATCHSIZE) + 2;
+    if(m_stableWorld) {
+        const int sectors=m_residentWholeMap?std::max(m_sTerrainCountX,m_sTerrainCountY):WorldResidency::VisibleRadius*2+1;
+        m_wPatchCount=1;
+        while(m_wPatchCount<sectors*CTerrainImpl::PATCH_XCOUNT)m_wPatchCount*=2;
+    }
 	
 	m_pTerrainPatchProxyList = new CTerrainPatchProxy[m_wPatchCount * m_wPatchCount];
 	
@@ -379,6 +389,7 @@ void CMapOutdoor::EnablePortal(bool bFlag)
 
 void CMapOutdoor::DestroyArea()
 {
+    if(Renderer::verboseDiagnostics) {Renderer::worldResidency.areasUnloaded+=Renderer::worldResidency.areasResident; Renderer::worldResidency.areasResident=0;}
 	m_AreaVector.clear();
 	m_AreaDeleteVector.clear();
 
@@ -394,6 +405,7 @@ void CMapOutdoor::DestroyArea()
 
 void CMapOutdoor::DestroyTerrain()
 {
+    if(Renderer::verboseDiagnostics) {Renderer::worldResidency.terrainUnloaded+=Renderer::worldResidency.terrainResident; Renderer::worldResidency.terrainResident=0;}
 	m_TerrainVector.clear();
 	m_TerrainDeleteVector.clear();
 
@@ -894,6 +906,31 @@ float CMapOutdoor::GetTerrainHeight(float fx, float fy)
 }
 
 //////////////////////////////////////////////////////////////////////////
+// The legacy tile map is a categorical splat mask, not a greyscale image.
+// Interpolate grass-layer coverage, keeping water, blocked ground and cliffs clear.
+float CMapOutdoor::SampleGrassDensity(CTerrain& tile,float x,float y,float& height,const std::array<bool,256>& layers)
+{
+    // Grass candidates use positive map coordinates; do not mirror candidates
+    // outside the north edge back onto valid mask samples.
+    if(!std::isfinite(x)||!std::isfinite(y)||x<0||y<0)return 0;
+    WORD tx,ty;tile.GetCoordinate(&tx,&ty);auto*terrain=&tile;
+    const float localX=x-tx*CTerrainImpl::TERRAIN_XSIZE,localY=y-ty*CTerrainImpl::TERRAIN_YSIZE;
+    if(localX<0||localY<0||localX>=CTerrainImpl::TERRAIN_XSIZE||localY>=CTerrainImpl::TERRAIN_YSIZE)return 0;
+    const unsigned ix=unsigned(localX)/100,iy=unsigned(localY)/100;
+    if(terrain->GetAttr(WORD(ix),WORD(iy))&(CTerrainImpl::ATTRIBUTE_BLOCK|CTerrainImpl::ATTRIBUTE_WATER))return 0;
+    Math::Vector3 normal;if(!terrain->GetNormal(int(localX),int(localY),&normal)||normal.z<.8f)return 0;
+    height=terrain->GetHeight(int(x),int(y));
+    const unsigned waterX=unsigned(localX)/200,waterY=unsigned(localY)/200;
+    long waterHeight;if(terrain->GetWaterMap()[waterY*CTerrainImpl::WATERMAP_XSIZE+waterX]!=0xff&&terrain->GetWaterHeight(WORD(waterX),WORD(waterY),&waterHeight)&&waterHeight>height-5)return 0;
+    const auto*mask=terrain->RAW_GetTileMap();float density=0;
+    const float fx=localX/100-ix,fy=localY/100-iy;
+    for(unsigned dy=0;dy<2;++dy)for(unsigned dx=0;dx<2;++dx) {
+        const unsigned layer=mask[(iy+1+dy)*CTerrainImpl::TILEMAP_RAW_XSIZE+ix+1+dx];
+        if(layers[layer])density+=(dx?fx:1-fx)*(dy?fy:1-fy);
+    }
+    return density;
+}
+
 // For Grass
 float CMapOutdoor::GetHeight(float * pPos)
 {

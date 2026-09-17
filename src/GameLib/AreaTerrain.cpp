@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "EterBase/MapLoadTrace.h"
 #include "PRTerrainLib/StdAfx.h"
 
 #include "EterLib/ResourceManager.h"
@@ -7,6 +8,7 @@
 
 #include "AreaTerrain.h"
 #include "MapOutdoor.h"
+#include "Renderer/WorldResidencyDiagnostics.h"
 
 CDynamicPool<CTerrain>		CTerrain::ms_kPool;
 
@@ -22,6 +24,7 @@ CTerrain* CTerrain::New()
 
 void CTerrain::Delete(CTerrain* pkTerrain)
 {
+    if(Renderer::verboseDiagnostics) {++Renderer::worldResidency.terrainUnloaded; --Renderer::worldResidency.terrainResident;}
 	pkTerrain->Clear();
 	ms_kPool.Free(pkTerrain);
 }
@@ -453,6 +456,8 @@ void CTerrain::CalculateNormal(long x, long y)
 
 bool CTerrain::RAW_LoadTileMap(const char * c_pszFileName, bool bBGLoading)
 {
+    MapLoadTrace::Scope p0lScope("Terrain","tile and splat data","cpu");
+
 	CTerrainImpl::RAW_LoadTileMap(c_pszFileName);
 	DWORD dwStart = ELTimer_GetMSec();
 	RAW_AllocateSplats(bBGLoading);
@@ -462,7 +467,9 @@ bool CTerrain::RAW_LoadTileMap(const char * c_pszFileName, bool bBGLoading)
 
 bool CTerrain::LoadHeightMap(const char * c_pszFileName)
 {
-	CTerrainImpl::LoadHeightMap(c_pszFileName);
+    MapLoadTrace::Scope p0lScope("Terrain","height and normals","cpu");
+
+	if (!CTerrainImpl::LoadHeightMap(c_pszFileName)) return false;
 	DWORD dwStart = ELTimer_GetMSec();
 
 	const float fHeightScale = m_fHeightScale;
@@ -497,6 +504,17 @@ bool CTerrain::LoadHeightMap(const char * c_pszFileName)
 		
 	Tracef("LoadHeightMap::CalculateNormal %d ms\n", ELTimer_GetMSec() - dwStart);
 	return true;
+}
+
+bool CTerrain::LoadGrassData(const std::string& directory)
+{
+    MapLoadTrace::Scope p0lScope("Vegetation","grass source preparation","cpu");
+    MapLoadTrace::Count("grass-source",directory);
+
+    return LoadHeightMap((directory+"height.raw").c_str()) &&
+        CTerrainImpl::RAW_LoadTileMap((directory+"tile.raw").c_str()) &&
+        LoadAttrMap((directory+"attr.atr").c_str()) &&
+        LoadWaterMap((directory+"water.wtr").c_str());
 }
 
 bool CTerrain::LoadAttrMap(const char *c_pszFileName)
@@ -575,6 +593,8 @@ void CTerrain::RAW_DeallocateSplats(bool bBGLoading)
 
 void CTerrain::RAW_AllocateSplats(bool bBGLoading)
 {
+    MapLoadTrace::Scope p0lScope("Terrain","splat allocation","cpu");
+
 	RAW_DeallocateSplats(bBGLoading);
 	DWORD dwTexCount = GetTextureSet()->GetTextureCount();
 	
@@ -647,6 +667,8 @@ void CTerrain::RAW_CountTiles()
 
 void CTerrain::RAW_GenerateSplat(bool bBGLoading)
 {
+    MapLoadTrace::Scope p0lScope("Terrain","splat generation","cpu");
+
 	if (!m_TerrainSplatPatch.m_bNeedsUpdate)
 		return;
 
@@ -787,6 +809,8 @@ void CTerrain::SetCoordinate(WORD wCoordX, WORD wCoordY)
 
 void CTerrain::CalculateTerrainPatch()
 {
+    MapLoadTrace::Scope p0lScope("Terrain","geometry generation","cpu");
+
 	for (BYTE byPatchNumY = 0; byPatchNumY < PATCH_YCOUNT; ++byPatchNumY)
 		for (BYTE byPatchNumX = 0; byPatchNumX < PATCH_XCOUNT; ++byPatchNumX)
 			_CalculateTerrainPatch(byPatchNumX, byPatchNumY);

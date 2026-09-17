@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "EterLib/SourceResourceAudit.h"
 #include "MapOutdoor.h"
+#include "Renderer/GraphicsConfig.h"
 #include "TerrainPatch.h"
 #include "TerrainQuadtree.h"
 
@@ -36,6 +37,10 @@ void CMapOutdoor::__RenderTerrain_RenderSoftwareTransformPatch()
 
 	std::vector<std::pair<float ,long> >::iterator far_it = std::upper_bound(m_PatchVector.begin(),m_PatchVector.end(),fog_far);
 	std::vector<std::pair<float ,long> >::iterator near_it = std::upper_bound(m_PatchVector.begin(),m_PatchVector.end(),fog_near);
+    // Keep all visible Modern terrain textured. Classic retains its authored
+    // distance fog and the old solid-colour far patch optimization.
+    if(Renderer::GetGraphicsRuntimeConfig().style==Graphics::GraphicsStyle::Modern)
+        near_it=far_it=m_PatchVector.end();
 
 	WORD wPrimitiveCount;
 	Renderer::PrimitiveTopology ePrimitiveType;
@@ -49,6 +54,13 @@ void CMapOutdoor::__RenderTerrain_RenderSoftwareTransformPatch()
 
 
 	std::vector<std::pair<float, long> >::iterator it = m_PatchVector.begin();
+    if(m_stableWorld&&Renderer::GetGraphicsRuntimeConfig().style==Graphics::GraphicsStyle::Modern) {
+        for(const auto& entry:m_PatchVector) {
+            SelectIndexBuffer(BYTE(m_pTerrainPatchProxyList[entry.second].GetStableLod()),&wPrimitiveCount,&ePrimitiveType);
+            __SoftwareTransformPatch_RenderPatchSplat(kTPRS,entry.second,wPrimitiveCount,ePrimitiveType,false);
+        }
+        it=near_it;
+    }
 
 	for( ; it != near_it; ++it)
 	{
@@ -155,8 +167,8 @@ void CMapOutdoor::__SoftwareTransformPatch_RenderPatchSplat(SoftwareTransformPat
 	if (0xFF == ucTerrainNum)
 		return;
 
-	CTerrain * pTerrain;
-	if (!GetTerrainPointer(ucTerrainNum, &pTerrain))
+	CTerrain * pTerrain=pTerrainPatchProxy->terrainOwner;
+	if (!pTerrain&&!GetTerrainPointer(ucTerrainNum, &pTerrain))
 		return;
 
 	WORD wCoordX, wCoordY;
@@ -231,7 +243,7 @@ void CMapOutdoor::__SoftwareTransformPatch_RenderPatchSplat(SoftwareTransformPat
 		if (aIterator == m_RenderedTextureNumVector.end())
 			m_RenderedTextureNumVector.push_back(j);
 		++m_iRenderedSplatNum;
-		if (m_iRenderedSplatNum >= m_iSplatLimit)
+		if (m_iRenderedSplatNum >= m_iSplatLimit&&!(m_stableWorld&&Renderer::GetGraphicsRuntimeConfig().style==Graphics::GraphicsStyle::Modern))
 			break;
 	}	
 
@@ -295,8 +307,8 @@ void CMapOutdoor::__SoftwareTransformPatch_RenderPatchNone(SoftwareTransformPatc
 	if (0xFF == ucTerrainNum)
 		return;
 
-	CTerrain * pTerrain;
-	if (!GetTerrainPointer(ucTerrainNum, &pTerrain))
+	CTerrain * pTerrain=pTerrainPatchProxy->terrainOwner;
+	if (!pTerrain&&!GetTerrainPointer(ucTerrainNum, &pTerrain))
 		return;
 
 	WORD wCoordX, wCoordY;

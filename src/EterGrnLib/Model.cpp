@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "EterBase/MapLoadTrace.h"
 #include "Model.h"
 #include "Mesh.h"
 #include "SkinningDataAdapter.h"
@@ -108,6 +109,7 @@ void CGrannyModel::UnlockVertices() const
 
 bool CGrannyModel::LoadPNTVertices()
 {
+    MapLoadTrace::Scope gr2Detail("Assets","GR2 GPU preparation");
 	if (m_rigidVtxCount <= 0)
 		return true;
 
@@ -134,6 +136,7 @@ bool CGrannyModel::LoadPNTVertices()
 
 bool CGrannyModel::LoadIndices()
 {
+    MapLoadTrace::Scope gr2Detail("Assets","GR2 GPU preparation");
 	//assert(m_idxCount > 0);
 	if (m_idxCount <= 0)
 		return true;
@@ -257,7 +260,10 @@ bool CGrannyModel::CreateFromAsset(AssetRuntime::ModelHandle asset)
     if (!IsEmpty() || !asset || !asset.Get()->renderable) return false;
     m_asset = std::move(asset);
     if (!LoadAssetMeshes() || !__LoadVertices() || !LoadIndices()) { Destroy(); return false; }
-    m_skinningData = SkinningDataAdapter::Extract(m_asset);
+    {
+        MapLoadTrace::Scope gr2Detail("Assets","GR2 GPU preparation");
+        m_skinningData = SkinningDataAdapter::Extract(m_asset);
+    }
     if (!m_skinningData) { Destroy(); return false; }
     for (std::size_t mesh = 0; mesh < m_skinningData->status.size(); ++mesh) {
         const auto status = m_skinningData->status[mesh];
@@ -329,6 +335,7 @@ void CGrannyModel::Destroy()
 
 bool CGrannyModel::__LoadVertices()
 {
+    MapLoadTrace::Scope gr2Detail("Assets","GR2 GPU preparation");
 	if (m_rigidVtxCount <= 0)
 		return true;
 	
@@ -384,13 +391,13 @@ void CGrannyModel::Initialize()
 
 bool CGrannyModel::CaptureStaticObjectSource()
 {
+    MapLoadTrace::Scope gr2Detail("Assets","GR2 GPU preparation");
     if (!Renderer::staticObjectLoadDepth || m_deformVtxCount || m_bHaveBlendThing ||
         m_vertexLayout != (Renderer::VertexPosition | Renderer::VertexNormal | Renderer::VertexTex1) ||
         m_rigidVtxCount <= 0 || m_idxCount <= 0) return true;
     static_assert(sizeof(Renderer::StaticObjectVertex) == sizeof(TPNTVertex));
     auto source = std::make_shared<Renderer::StaticObjectSource>();
     source->vertices.resize(m_rigidVtxCount);
-    source->materialVertices.resize(m_rigidVtxCount);
     const bool wide = m_indexWidth == AssetRuntime::IndexWidth::UInt32;
     if (wide) source->indices32.resize(m_idxCount);
     else source->indices.resize(m_idxCount);
@@ -400,12 +407,13 @@ bool CGrannyModel::CaptureStaticObjectSource()
         // Preserve conversion and offsets while the source AssetHandle is alive.
         if (!m_meshs[i].NEW_LoadVertices(source->vertices.data()) ||
             !m_meshs[i].LoadIndices(indices, m_indexWidth)) return false;
-        const auto& mesh=m_asset.Get()->meshes[i];
-        const auto base=m_meshs[i].GetVertexBasePosition();
-        for(std::size_t v=0;v<mesh.vertexCount;++v) {
-            auto& output=source->materialVertices[base+v];
-            output=mesh.materialVertices.empty()?AssetRuntime::MaterialVertex{{},{source->vertices[base+v][6],source->vertices[base+v][7]}}:mesh.materialVertices[v];
-        }
+    }
+    for(int i=0;i<GetMeshCount();++i) {
+        const auto* asset=m_meshs[i].GetAsset();
+        if(!asset||asset->tangents.empty())continue;
+        if(asset->tangents.size()!=std::size_t(m_meshs[i].GetVertexCount()))return false;
+        if(source->tangents.empty())source->tangents.resize(source->vertices.size());
+        std::copy(asset->tangents.begin(),asset->tangents.end(),source->tangents.begin()+m_meshs[i].GetVertexBasePosition());
     }
     m_staticObjectSource = std::move(source);
     return true;
@@ -414,6 +422,7 @@ bool CGrannyModel::CaptureStaticObjectSource()
 // ZiiNAN: Original deform indices plus local PNT for rigid pieces inside the same body.
 bool CGrannyModel::CaptureActorSource(bool attachment)
 {
+    MapLoadTrace::Scope gr2Detail("Assets","GR2 GPU preparation");
     // ZiiNAN: Diligent actor attachment rendering
     if(!Renderer::actorRenderer || m_vtxCount<=0 || m_idxCount<=0 ||
        m_vertexLayout!=(Renderer::VertexPosition|Renderer::VertexNormal|Renderer::VertexTex1)) return true;
@@ -423,7 +432,6 @@ bool CGrannyModel::CaptureActorSource(bool attachment)
     source->vertexCount=static_cast<uint32_t>(vertexCount);
     source->deformVertexCount=static_cast<uint32_t>(m_deformVtxCount);
     source->rigidVertices.resize(m_rigidVtxCount);
-    source->materialVertices.resize(vertexCount);
     const bool wide = m_indexWidth == AssetRuntime::IndexWidth::UInt32;
     if (wide) source->indices32.resize(m_idxCount);
     else source->indices.resize(m_idxCount);
@@ -431,18 +439,14 @@ bool CGrannyModel::CaptureActorSource(bool attachment)
     for(int i=0;i<GetMeshCount();++i) {
         if(!m_meshs[i].LoadIndices(indices, m_indexWidth)) return false;
         if(m_rigidVtxCount && !m_meshs[i].NEW_LoadVertices(source->rigidVertices.data())) return false;
-        const auto& mesh=m_asset.Get()->meshes[i];
-        const auto base=m_meshs[i].GetVertexBasePosition()+(mesh.deformation==AssetRuntime::Deformation::Rigid?m_deformVtxCount:0);
-        if(!mesh.materialVertices.empty())
-            std::copy(mesh.materialVertices.begin(),mesh.materialVertices.end(),source->materialVertices.begin()+base);
-        else {
-            std::vector<TPNTVertex> vertices(mesh.vertexCount);
-            const auto document=m_asset.GetDocument();
-            if(document->CopyVertices(m_asset.Index(),i,AssetRuntime::VertexLayout::PositionNormalUV,
-                std::as_writable_bytes(std::span(vertices)))!=AssetRuntime::AssetError::None)return false;
-            const auto* values=reinterpret_cast<const Renderer::StaticObjectVertex*>(vertices.data());
-            for(std::size_t v=0;v<mesh.vertexCount;++v)source->materialVertices[base+v].uv={values[v][6],values[v][7]};
-        }
+    }
+    for(int i=0;i<GetMeshCount();++i) {
+        const auto* asset=m_meshs[i].GetAsset();
+        if(!asset||asset->tangents.empty())continue;
+        if(asset->tangents.size()!=std::size_t(m_meshs[i].GetVertexCount()))return false;
+        if(source->tangents.empty())source->tangents.resize(source->vertexCount);
+        const auto offset=m_meshs[i].GetVertexBasePosition()+(asset->deformation==AssetRuntime::Deformation::Rigid?m_deformVtxCount:0);
+        std::copy(asset->tangents.begin(),asset->tangents.end(),source->tangents.begin()+offset);
     }
     m_actorSource=std::move(source);
     return true;

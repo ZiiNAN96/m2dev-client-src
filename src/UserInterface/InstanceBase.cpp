@@ -1,5 +1,5 @@
 #include "StdAfx.h"
-#include "Renderer/ShadowAmbientRuntime.h"
+#include "Renderer/ModernFrame.h"
 #include "InstanceBase.h"
 #include "PythonBackground.h"
 #include "PythonNonPlayer.h"
@@ -1973,6 +1973,7 @@ bool CInstanceBase::PrepareInitialRenderData()
 
 void CInstanceBase::Deform()
 {
+    if(Renderer::shadowCasterCollection&&m_GraphicThingInstance.IsCameraShown())return;
 	// 2004.07.17.levites.isShow를 ViewFrustumCheck로 변경
 	if (!__CanRender())
 		return;
@@ -1995,7 +1996,7 @@ void CInstanceBase::Deform()
 
 void CInstanceBase::RenderTrace()
 {
-    if(Renderer::shadowPassIndex>=0)return;
+    if(Renderer::shadowCasterCollection)return;
 	if (!__CanRender())
 		return;
 
@@ -2017,9 +2018,9 @@ void CInstanceBase::Render()
     Renderer::ActorMountScope mountScope(MakeAnimatedMountPair(m_GraphicThingInstance,m_kHorse.GetActorPtr()));
 	m_kHorse.Render();
 	m_GraphicThingInstance.Render();
+    if(Renderer::shadowCasterCollection)return;
 
 	CPythonCharacterManager& rkChrMgr = CPythonCharacterManager::Instance();
-    if(Renderer::shadowPassIndex>=0)return;
 
 	for (auto ptr = rkChrMgr.CharacterInstanceBegin(); ptr != rkChrMgr.CharacterInstanceEnd(); ++ptr)
 	{

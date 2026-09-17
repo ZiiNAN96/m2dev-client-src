@@ -3,6 +3,7 @@
 #include "RaceManager.h"
 #include "ItemManager.h"
 #include "RaceData.h"
+#include "EterBase/MapLoadTrace.h"
 
 #include "EterLib/ResourceManager.h"
 #include "EterGrnLib/util.h"
@@ -111,6 +112,8 @@ bool CActorInstance::SetRace(DWORD eRace)
 				for (i = 0, it = c_rMotionVector.begin(); it != c_rMotionVector.end(); ++i, ++it)
 				{
 					DWORD dwMotionKey = MAKE_RANDOM_MOTION_KEY(wMotionMode, wMotionIndex, i);
+					if (MapLoadTrace::state.active && it->pMotion)
+						MapLoadTrace::Count("animation-actor-reference", std::string(it->pMotion->GetFileName())+"|"+std::to_string(m_eRace)+"|"+std::to_string(wMotionMode)+"|"+std::to_string(wMotionIndex));
 					CGraphicThingInstance::RegisterMotionThing(dwMotionKey, it->pMotion, it->pMotionData ? it->pMotionData->GetMotionClipIndex() : 0);
 				}
 			}

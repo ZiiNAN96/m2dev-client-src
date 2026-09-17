@@ -1,4 +1,5 @@
 #include "PackManager.h"
+#include "EterBase/MapLoadTrace.h"
 #include "EterLib/BufferPool.h"
 #include <cstdint>
 #include <fstream>
@@ -67,6 +68,9 @@ bool CPackManager::GetFile(std::string_view path, TPackFile& result)
 
 bool CPackManager::GetFileWithPool(std::string_view path, TPackFile& result, CBufferPool* pPool)
 {
+    MapLoadTrace::Scope p0lScope("File access","file lookup and loose read","io");
+    MapLoadTrace::Count("file-request",path);
+
 	thread_local std::string buf;
 	NormalizePath(path, buf);
 
@@ -79,6 +83,7 @@ bool CPackManager::GetFileWithPool(std::string_view path, TPackFile& result, CBu
 	}
 
 	// Fallback to disk (for files not in packs, like bgm folder)
+    MapLoadTrace::Count("loose-open-attempt",buf);
 	std::ifstream ifs(buf, std::ios::binary);
 	if (ifs.is_open()) {
 		ifs.seekg(0, std::ios::end);
@@ -124,6 +129,7 @@ bool CPackManager::GetFileWithPool(std::string_view path, TPackFile& result, CBu
 			return false;
 		}
 
+        MapLoadTrace::Count("loose-read",buf,size,true);
 		if (ifs.read(reinterpret_cast<char*>(result.data()), static_cast<std::streamsize>(size))) {
 			return true;
 		}
@@ -136,6 +142,9 @@ bool CPackManager::GetFileWithPool(std::string_view path, TPackFile& result, CBu
 
 bool CPackManager::IsExist(std::string_view path) const
 {
+    MapLoadTrace::Scope p0lScope("File access","existence lookup","io");
+    MapLoadTrace::Count("exist-request",path);
+
 	thread_local std::string buf;
 	NormalizePath(path, buf);
 

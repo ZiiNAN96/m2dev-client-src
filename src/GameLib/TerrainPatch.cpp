@@ -42,6 +42,7 @@ bool CTerrainPatch::SOFTWARE_TRANSFORM_PATCH_ENABLE=TRUE;
 
 void CTerrainPatch::Clear()
 {
+    stableLod=-1;
 	terrainGeometry.reset();
 	projectionVertices.clear();
 	waterGeometry.reset();
@@ -253,6 +254,7 @@ UINT CTerrainPatchProxy::GetWaterFaceCount()
 
 void CTerrainPatchProxy::Clear()
 {
+    terrainOwner=nullptr;
 	m_bUsed = false;
 	m_sPatchNum = 0;
 	m_byTerrainNum = 0xFF;

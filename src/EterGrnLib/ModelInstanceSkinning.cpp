@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "EterBase/MapLoadTrace.h"
 #include "ModelInstance.h"
 #include "SkinningDataAdapter.h"
 #include "EterBase/Debug.h"
@@ -59,6 +60,7 @@ bool CGrannyModelInstance::__RefreshLinkedLodBinding()
 // ZiiNAN BEGIN - GPU skinning bone palette preparation
 void CGrannyModelInstance::__PrepareSkinningBindings()
 {
+    MapLoadTrace::FirstUseScope trace("GPU skinning binding preparation");
     if(!m_pModel || !m_pModel->GetSkinningData() || !m_pModel->GetSkinningData()->HasSkinnedMeshes()) return;
     const auto* owner=m_ppkSkeletonInst?*m_ppkSkeletonInst:this;
     if(!owner || !owner->m_pModel || !owner->m_pModel->GetSkinningData()) {
@@ -96,6 +98,7 @@ void CGrannyModelInstance::__PrepareSkinningBindings()
 
 void CGrannyModelInstance::__CaptureSkinningPose()
 {
+    MapLoadTrace::FirstUseScope trace("GPU skinning palette preparation");
     if(!m_pModel || !m_pModel->GetSkinningData() || !m_pModel->GetSkinningData()->HasSkinnedMeshes()) return;
     if(!m_skinningPalette) m_skinningPalette=std::make_shared<Renderer::BonePalette>();
     const auto status=SkinningDataAdapter::CapturePose(*m_skinningPalette,m_pModel->GetSkinningData()->skeleton,

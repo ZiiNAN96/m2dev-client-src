@@ -1,3 +1,5 @@
+> Historischer G1/G2/G3/4-Bericht vom frueheren main. Die damalige eigene Renderer-Implementierung wurde durch den [DiligentFX-Neuaufbau](phase-gdx-diligentfx-rebuild.md) und G8/H2/P0 ersetzt. Dieser Bericht beschreibt keine aktuelle Implementierung oder erneute Abnahme. Bei MAIN-INTEGRATION-X als Historie erhalten.
+
 # G3/4-X — Shadows & Ambient Depth
 
 Stand: 15.09.2026. Windows x64, Diligent D3D11; portable Mathematik unter GCC/LP64.

@@ -22,17 +22,13 @@ public:
     bool Resize(uint32_t width, uint32_t height) override;
     void Shutdown() override;
     bool CaptureRGB(std::vector<uint8_t>& pixels,uint32_t& width,uint32_t& height);
-    unsigned BeginModernScene(const Graphics::Matrix4& view,const Graphics::Matrix4& projection);
-    bool BeginSunCascade(unsigned index);
-    void EndSunCascades();
-    void EndModernScene();
-    void ResetModernScene();
     const Graphics::GraphicsRuntimeConfig& GetGraphicsConfig() const { return m_graphicsConfig; }
 
 private:
     friend class BackendTestAccess;
     friend class DiligentTerrainRenderer;
     friend class DiligentStaticObjectRenderer;
+    friend class DiligentModernRenderer;
     friend class DiligentEffectRenderer; // ZiiNAN: Diligent effect rendering integration.
     struct Impl;
     std::unique_ptr<Impl> m_impl;

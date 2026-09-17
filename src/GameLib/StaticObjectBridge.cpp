@@ -1,3 +1,4 @@
+#include "EterBase/MapLoadTrace.h"
 #include "StdAfx.h"
 #include "EterLib/DrawStateView.h"
 #include "StaticObjectBridge.h"
@@ -7,6 +8,7 @@
 #include "Renderer/WorldRenderData.h"
 #include "Renderer/Diagnostics.h"
 #include "Renderer/AssetMaterialRenderData.h"
+#include "Renderer/GraphicsConfig.h"
 #include <unordered_map>
 #include <unordered_set>
 #include <fstream>
@@ -17,7 +19,7 @@ using namespace Renderer;
 struct ModelResources
 {
     StaticObjectGeometryPtr geometry;
-    std::unordered_map<const CGraphicImage*,TerrainTexturePtr> cameraTextures;
+    std::unordered_map<std::string,TerrainTexturePtr> textures;
 };
 struct ObjectResources
 {
@@ -323,17 +325,20 @@ void SubmitStaticMapObject(CGraphicThingInstance& thing, StaticMapObjectPass pas
         auto* instance=thing.GetLODControllerPointer(i)->GetModelInstance();
         auto* model=instance->GetModel(); auto& resource=object.models[model];
         if(!resource.geometry) {
+            MapLoadTrace::GR2Context gr2Context(model->GetAssetHandle().GetDocument()->Id());
+            MapLoadTrace::Scope gr2Upload("Assets","GR2 GPU submission");
             if(model->GetStaticObjectSource()) resource.geometry=renderer->UploadGeometry(*model->GetStaticObjectSource());
             else {
                 // ZiiNAN: An equipped weapon may already be cached; reuse its existing rigid CPU snapshot.
                 const auto& source=*model->GetActorSource();
-                resource.geometry=renderer->UploadGeometry({source.rigidVertices,source.indices,source.indices32});
+                resource.geometry=renderer->UploadGeometry({source.rigidVertices,source.indices,source.indices32,{},source.tangents});
             }
         }
         if(!resource.geometry) { Report(thing,"ERROR: geometry upload"); return; }
         if(pass==StaticMapObjectPass::CameraBlocker) {
-            auto& mask=resource.cameraTextures[cameraAlpha];
-            if(!mask) mask=LoadStaticObjectTextureFile(cameraAlpha->GetFileName(),*renderer);
+            const std::string name=cameraAlpha->GetFileName();
+            auto& mask=resource.textures[name];
+            if(!mask) mask=LoadStaticObjectTextureFile(name.c_str(),*renderer);
             if(!mask) { Report(thing,"ERROR: camera alpha upload"); return; }
             common.cameraAlpha=mask;
         }
@@ -353,11 +358,14 @@ void SubmitStaticMapObject(CGraphicThingInstance& thing, StaticMapObjectPass pas
             draw.baseVertex=node->pMesh->GetVertexBasePosition(); draw.vertexCount=mesh.vertexCount;
             for(auto* group=node->pMesh->GetTriGroupNodeList(CGrannyMaterial::TYPE_DIFFUSE_PNT);group;group=group->pNextTriGroupNode) {
                 auto& material=palette.GetMaterialRef(group->mtrlIndex);
-                draw.material=material.GetRenderMaterial(*renderer);
-                const auto texture=draw.material->classicDiffuse;
+                const auto& name=material.GetAsset().textures[0];
+                auto& texture=resource.textures[name];
+                if(!texture) texture=material.GetAsset().explicitRenderState && material.GetImagePointer(0) ?
+                    material.GetImagePointer(0)->GetAssetTexture(*renderer) : LoadStaticObjectTextureFile(name.c_str(),*renderer);
                 if(!texture) { Report(thing,"ERROR: texture upload"); return; }
                 draw.cull=material.GetAsset().culling==AssetRuntime::Culling::None ? StaticObjectCull::None : common.cull;
                 ApplyAssetMaterial(material.GetAsset(),draw);
+                if(GetGraphicsRuntimeConfig().style==Graphics::GraphicsStyle::Modern)draw.material=material.GetModernMaterial(*renderer);
                 draw.firstIndex=group->idxPos; draw.indexCount=group->triCount*3;
                 renderer->Draw(resource.geometry,texture,draw);
             }
@@ -397,16 +405,17 @@ void SubmitSpecialThing(void* context,const void* native,const Renderer::ActorNa
     if(group.material>=palette.GetMaterialCount()) { fail("ERROR: special thing material index"); return; }
     auto& material=palette.GetMaterialRef(group.material);
     const auto load=[&](CGraphicImage* image) -> TerrainTexturePtr {
-        if(!image) return {}; auto& texture=data.cameraTextures[image];
+        if(!image) return {}; auto& texture=data.textures[image->GetFileName()];
         if(!texture) texture=LoadStaticObjectTextureFile(image->GetFileName(),*actorRenderer); return texture;
     };
-    draw.material=material.GetRenderMaterial(*actorRenderer);
-    const auto texture=draw.material->classicDiffuse;
+    auto texture=material.GetAsset().explicitRenderState && material.GetImagePointer(0) ?
+        material.GetImagePointer(0)->GetAssetTexture(*actorRenderer) : load(material.GetImagePointer(0));
     if(!texture) { fail("ERROR: special thing diffuse image"); return; }
     if(c.cameraAlpha) { draw.cameraAlpha=load(c.cameraAlpha); if(!draw.cameraAlpha) { fail("ERROR: special thing camera mask"); return; } }
     ApplyAssetMaterial(material.GetAsset(),draw);
+    if(GetGraphicsRuntimeConfig().style==Graphics::GraphicsStyle::Modern)draw.material=material.GetModernMaterial(*actorRenderer);
     if(draw.actorStage==ActorMaterialStage::Specular) {
-        draw.sphereMap=draw.material->classicSphere; if(!draw.sphereMap) { fail("ERROR: special thing sphere image"); return; }
+        draw.sphereMap=load(material.GetSphereMapImage()); if(!draw.sphereMap) { fail("ERROR: special thing sphere image"); return; }
     }
     const auto* world=instance->GetStaticObjectWorldMatrix(group.mesh);
     if(!world) { fail("ERROR: special thing matrix"); return; }
@@ -416,7 +425,11 @@ void SubmitSpecialThing(void* context,const void* native,const Renderer::ActorNa
     Math::MatrixTranspose(&normal,&normal); memcpy(draw.normalTransform.data(),&normal,64);
     draw.baseVertex=group.baseVertex+(group.rigid ? source->deformVertexCount : 0);
     draw.vertexCount=group.vertexCount; draw.firstIndex=group.firstIndex; draw.indexCount=group.indexCount;
-    if(!data.geometry) data.geometry=actorRenderer->CreateGeometry(*source,ActorPart::Body,ActorCategory::Special);
+    if(!data.geometry) {
+        MapLoadTrace::GR2Context gr2Context(instance->GetModel()->GetAssetHandle().GetDocument()->Id());
+        MapLoadTrace::Scope gr2Upload("Assets","GR2 GPU submission");
+        data.geometry=actorRenderer->CreateGeometry(*source,ActorPart::Body,ActorCategory::Special);
+    }
     if(!data.geometry) { fail("ERROR: special thing geometry"); return; }
     if(!source->IsRigid() && data.uploadedRevision!=data.revision) {
         if(!actorRenderer->UpdateVertices(data.geometry,data.vertices,source->deformVertexCount,ActorCategory::Special)) { fail("ERROR: special thing pose upload"); return; }

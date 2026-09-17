@@ -1,6 +1,9 @@
 #include "StdAfx.h"
 
 #include "PythonNetworkStream.h"
+#include "PythonApplication.h"
+#include "Renderer/GraphicsConfig.h"
+#include "Renderer/FirstUseAudit.h"
 #include "Packet.h"
 #include "NetworkActorManager.h"
 #include "PythonCharacterManager.h"
@@ -465,10 +468,14 @@ bool CPythonNetworkStream::RecvPingPacket()
 
 bool CPythonNetworkStream::OnProcess()
 {
+    struct PhaseAudit {
+        const std::string& phase;
+        ~PhaseAudit(){static std::string previous;if(previous!=phase){previous=phase;Renderer::LogClientLifecycle(phase.c_str());}}
+    } phaseAudit{m_strPhase};
 	if (m_isStartGame)
 	{
 		m_isStartGame = FALSE;
-        if(AssetRuntime::startupGR2Reader==AssetRuntime::GR2ReaderMode::ZiiNAN && AssetRuntime::nativeGR2Prewarm) {
+        if((AssetRuntime::startupGR2Reader==AssetRuntime::GR2ReaderMode::ZiiNAN && AssetRuntime::nativeGR2Prewarm) || Renderer::GetGraphicsRuntimeConfig().style==Graphics::GraphicsStyle::Modern) {
             // Request the actor packets while Python still displays LoadingWindow.
             // GameWindow::Open sends ENTERGAME too; SendEnterGame suppresses that duplicate.
             m_waitForLocalPlayer=true;
@@ -504,6 +511,7 @@ void CPythonNetworkStream::PrepareGamePhase()
                 Disconnect(); ClosePhase(); return;
             }
             AssetRuntime::AnimationStallAudit::LocalPlayerScope release("scene_release",true);
+            Renderer::worldPrewarmPending=Renderer::GetGraphicsRuntimeConfig().style==Graphics::GraphicsStyle::Modern;
             PyCallClassMemberFunc(m_poHandler, "SetGamePhase", Py_BuildValue("()"));
         }
     }
@@ -514,6 +522,7 @@ void CPythonNetworkStream::PrepareGamePhase()
 // Set
 void CPythonNetworkStream::SetOffLinePhase()
 {
+    Renderer::worldPrewarmPending=Renderer::awaitingWorldPresent=false;
     m_isStartGame=FALSE;
     m_waitForLocalPlayer=m_enterGameSentDuringLoading=false;
 	if ("OffLine" != m_strPhase)

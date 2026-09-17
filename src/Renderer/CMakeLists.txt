@@ -1,21 +1,22 @@
 add_library(M2RendererInterface INTERFACE)
 target_include_directories(M2RendererInterface INTERFACE "${PROJECT_SOURCE_DIR}/src")
-target_link_libraries(M2RendererInterface INTERFACE M2GraphicsSettings)
 
 # ZiiNAN: Cross-platform bootstrap
 if(M2_BUILD_WINDOWS_CLIENT)
     add_library(M2RendererBootstrap STATIC RendererBootstrap.cpp TerrainPresentation.cpp)
     target_link_libraries(M2RendererBootstrap PRIVATE M2RendererInterface M2FirstPartyArchitectureChecks M2Platform)
     include(Diligent)
+    include(DiligentFX)
     if(NOT TARGET Diligent-GraphicsEngineD3D11-static)
         message(FATAL_ERROR "Diligent D3D11 needs the Windows SDK and Visual C++ ATL components")
     endif()
     add_library(M2RendererDiligent STATIC DiligentD3D11Backend.cpp DiligentTerrainRenderer.cpp DiligentStaticObjectRenderer.cpp)
-    target_sources(M2RendererDiligent PRIVATE DiligentShadowAmbient.cpp)
     # ZiiNAN: CPU-skinned actor submission reuses the existing D3D11 world renderer.
     target_sources(M2RendererDiligent PRIVATE DiligentActorRenderer.cpp)
     # ZiiNAN: Existing CPU effects, no simulation or other backend changes.
     target_sources(M2RendererDiligent PRIVATE DiligentEffectRenderer.cpp)
+    target_sources(M2RendererDiligent PRIVATE DiligentModernRenderer.cpp DiligentAtmosphere.cpp DiligentWater.cpp)
+    target_link_libraries(M2RendererDiligent PRIVATE M2DiligentFX)
     target_include_directories(M2RendererDiligent PRIVATE "${diligentcore_SOURCE_DIR}")
     target_link_libraries(M2RendererDiligent PUBLIC M2RendererInterface PRIVATE Diligent-GraphicsEngineD3D11-static M2FirstPartyArchitectureChecks)
     target_link_libraries(M2RendererBootstrap PRIVATE M2RendererDiligent)

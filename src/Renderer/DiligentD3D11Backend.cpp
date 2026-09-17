@@ -1,11 +1,29 @@
 #include "DiligentD3D11BackendInternal.h"
+#include "EterBase/MapLoadTrace.h"
 #include "TerrainPresentation.h"
+#include "FirstUseAudit.h"
+#include "Diagnostics.h"
+#include <mutex>
 #include "AssetRuntime/AnimationStallAudit.h"
 #include "Graphics/GraphicsEngineD3D11/interface/EngineFactoryD3D11.h"
 #include "Graphics/GraphicsEngine/interface/Texture.h"
 
 namespace Renderer
 {
+namespace {
+void DILIGENT_CALL_TYPE AuditDiligentMessage(Diligent::DEBUG_MESSAGE_SEVERITY severity,
+    const char* message,const char* function,const char* file,int line)
+{
+    if(severity==Diligent::DEBUG_MESSAGE_SEVERITY_ERROR)++diligentErrorCount;
+    if(severity==Diligent::DEBUG_MESSAGE_SEVERITY_FATAL_ERROR)++diligentFatalCount;
+    if(severity<Diligent::DEBUG_MESSAGE_SEVERITY_WARNING)return;
+    try {
+        static std::mutex mutex;std::lock_guard lock(mutex);
+        std::ofstream log("diligent-diagnostics.log",std::ios::app);
+        log<<"severity="<<int(severity)<<" file="<<(file?file:"")<<':'<<line<<" function="<<(function?function:"")<<' '<<(message?message:"")<<'\n';
+    }catch(...){}
+}
+}
 DiligentD3D11Backend::DiligentD3D11Backend() = default;
 DiligentD3D11Backend::~DiligentD3D11Backend() { Shutdown(); }
 
@@ -19,6 +37,7 @@ bool DiligentD3D11Backend::Initialize(const InitializeInfo& info)
         auto* factory = Diligent::GetEngineFactoryD3D11();
         if (!factory)
             return false;
+        if(auditDiligentDiagnostics)factory->SetMessageCallback(AuditDiligentMessage);
         Diligent::EngineD3D11CreateInfo engineInfo;
         // A release bootstrap does not require the optional Windows debug layer.
         factory->CreateDeviceAndContextsD3D11(engineInfo, &state->device, &state->context);
@@ -35,8 +54,6 @@ bool DiligentD3D11Backend::Initialize(const InitializeInfo& info)
             return false;
         const auto& adapter=state->device->GetAdapterInfo();
         graphicsCapabilities={adapter.Texture.MaxTexture2DDimension,adapter.Memory.LocalMemory};
-        if(!state->SyncSceneLighting())return false;
-        if(!state->depthEffects.Initialize(state->device,state->context))return false;
         m_impl = std::move(state);
         return true;
     }
@@ -51,10 +68,16 @@ bool DiligentD3D11Backend::BeginFrame()
     if (!m_impl || m_impl->suspended || m_impl->inFrame)
         return false;
     const auto& config = GetGraphicsRuntimeConfig();
-    if(config.style==Graphics::GraphicsStyle::Classic)m_impl->depthEffects.Reset();
     if (m_graphicsConfig.revision != config.revision) m_graphicsConfig = config;
+    if(config.style==Graphics::GraphicsStyle::Modern){
+        if(!m_impl->modern)m_impl->modern=std::make_unique<DiligentModernRenderer>(*this);
+        m_impl->modern->ResetFrame();modernFrame=m_impl->modern.get();
+    } else {
+        if(modernFrame==m_impl->modern.get())modernFrame=nullptr;
+        m_impl->modern.reset();
+    }
     auto* target = m_impl->swapChain->GetCurrentBackBufferRTV();
-    auto* depth = m_impl->swapChain->GetDepthBufferDSV();
+    auto* depth = m_impl->DepthDSV();
     if (!target || !depth)
         return false;
     m_impl->context->SetRenderTargets(1, &target, depth, Diligent::RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
@@ -82,7 +105,7 @@ void DiligentD3D11Backend::Clear(const ClearInfo& info)
     if (info.colorAndDepth)
         m_impl->context->ClearRenderTarget(m_impl->swapChain->GetCurrentBackBufferRTV(),
                                           m_impl->color.data(), Diligent::RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
-    m_impl->context->ClearDepthStencil(m_impl->swapChain->GetDepthBufferDSV(),
+    m_impl->context->ClearDepthStencil(m_impl->DepthDSV(),
         Diligent::CLEAR_DEPTH_FLAG, info.depthValue, 0, Diligent::RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
 }
 
@@ -107,11 +130,11 @@ bool DiligentD3D11Backend::CaptureRGB(std::vector<uint8_t>& pixels,uint32_t& wid
         if(desc.Format!=TEX_FORMAT_RGBA8_UNORM || !desc.Width || !desc.Height) return false;
         desc.Name="M11 screenshot staging"; desc.Usage=USAGE_STAGING; desc.BindFlags=BIND_NONE;
         desc.CPUAccessFlags=CPU_ACCESS_READ; desc.MiscFlags=MISC_TEXTURE_FLAG_NONE;
-        RefCntAutoPtr<ITexture> staging; s.device->CreateTexture(desc,nullptr,&staging);
+        RefCntAutoPtr<ITexture> staging; { MapLoadTrace::Scope p0lCreate("GPU resources","CreateTexture","gpu-api"); MapLoadTrace::Count("CreateTexture","",0,true); s.device->CreateTexture(desc,nullptr,&staging); }
         if(!staging) return false;
         CopyTextureAttribs copy; copy.pSrcTexture=source; copy.pDstTexture=staging;
         copy.SrcTextureTransitionMode=copy.DstTextureTransitionMode=RESOURCE_STATE_TRANSITION_MODE_TRANSITION;
-        s.context->CopyTexture(copy); s.context->WaitForIdle();
+        s.context->CopyTexture(copy); { MapLoadTrace::Scope p0lWait("Synchronization","screenshot WaitForIdle","wait"); s.context->WaitForIdle(); }
         pixels.resize(size_t(desc.Width)*desc.Height*3);
         MappedTextureSubresource mapped;
         s.context->MapTextureSubresource(staging,0,0,MAP_READ,MAP_FLAG_NONE,nullptr,mapped);
@@ -132,7 +155,9 @@ void DiligentD3D11Backend::Present()
     {
         const auto start=skinningBenchmarkEnabled ? PrototypeClock::now() : PrototypeClock::time_point{};
         AssetRuntime::AnimationStallAudit::WorkScope stallPresentWait(AssetRuntime::AnimationStallAudit::Work::PresentWait);
-        m_impl->swapChain->Present(1);
+        { MapLoadTrace::Scope p0lPresent("Synchronization","Present vsync","wait"); m_impl->swapChain->Present(1); }
+        MapLoadTrace::Presented();
+        if(awaitingWorldPresent){awaitingWorldPresent=false;LogClientLifecycle("WorldPresented");}
         stallPresentWait.Stop();
         if (AssetRuntime::AnimationStallAudit::enabled) ++AssetRuntime::AnimationStallAudit::swapchainPresents;
         if(skinningBenchmarkEnabled) {
@@ -147,14 +172,13 @@ bool DiligentD3D11Backend::Resize(uint32_t width, uint32_t height)
     if (!m_impl || m_impl->inFrame)
         return false;
     m_impl->suspended = width == 0 || height == 0;
-    m_impl->context->InvalidateState();
-    m_impl->depthEffects.Resize();
     if (m_impl->suspended)
         return true;
     try
     {
         // Release context bindings before DXGI replaces the back buffers.
         m_impl->context->SetRenderTargets(0, nullptr, nullptr, Diligent::RESOURCE_STATE_TRANSITION_MODE_NONE);
+        if(m_impl->modern)m_impl->modern->ReleaseWindowResources();
         m_impl->swapChain->Resize(width, height);
         const auto& desc = m_impl->swapChain->GetDesc();
         return desc.Width == width && desc.Height == height;
@@ -173,21 +197,13 @@ void DiligentD3D11Backend::Shutdown()
     m_impl->context->SetRenderTargets(0, nullptr, nullptr, Diligent::RESOURCE_STATE_TRANSITION_MODE_NONE);
     m_impl->context->Flush();
     m_impl->context->WaitForIdle();
+    if(modernFrame==m_impl->modern.get())modernFrame=nullptr;
+    m_impl->modern.reset();
     if(skinningBenchmarkEnabled) m_impl->CollectTimings();
     for(auto& slot:m_impl->benchmarkQueries) { slot.query.Release();slot.frame=0; }
-    m_impl->context->InvalidateState();
-    m_impl->depthEffects.Shutdown();
     m_impl->swapChain.Release();
     m_impl->context.Release();
     m_impl->device.Release();
     m_impl.reset();
 }
-unsigned DiligentD3D11Backend::BeginModernScene(const Graphics::Matrix4& view,const Graphics::Matrix4& projection){
-    if(!m_impl||!m_impl->inFrame)return 0;const auto& size=m_impl->swapChain->GetDesc();
-    return m_impl->depthEffects.Begin(view,projection,GetGraphicsRuntimeConfig(),size.Width,size.Height);
-}
-bool DiligentD3D11Backend::BeginSunCascade(unsigned index){return m_impl&&m_impl->inFrame&&m_impl->depthEffects.BeginCascade(index);}
-void DiligentD3D11Backend::EndSunCascades(){if(m_impl)m_impl->depthEffects.EndShadows(m_impl->swapChain);}
-void DiligentD3D11Backend::EndModernScene(){if(m_impl&&m_impl->inFrame)m_impl->depthEffects.Composite(m_impl->swapChain,m_impl->swapChain->GetDepthBufferDSV());}
-void DiligentD3D11Backend::ResetModernScene(){if(m_impl){m_impl->context->InvalidateState();m_impl->depthEffects.Reset();if(m_impl->inFrame)m_impl->depthEffects.BindTargets(m_impl->swapChain,false);}}
 }

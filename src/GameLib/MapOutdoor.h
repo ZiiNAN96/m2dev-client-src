@@ -181,6 +181,13 @@ class CMapOutdoor : public CMapBase
 		// 데이터
 		CTerrain *					m_pTerrain[AROUND_AREA_NUM];	// Terrain
 		CTerrainPatchProxy *		m_pTerrainPatchProxyList;			// CTerrain을 랜더링 할때 실제로 랜더링하는 폴리곤 패치들... Seamless Map 을 위해 CTerrain으로부터 독립...
+        bool m_stableWorld{},m_residentWholeMap{};
+        int m_renderSectorX{-1},m_renderSectorY{-1};
+        void UpdateWorldResidency(float x,float y);
+        void AssignResidentTerrainPatches();
+        void StabilizeTerrainLods();
+        int RenderAreaCount() const {return m_stableWorld?int(m_AreaVector.size()):AROUND_AREA_NUM;}
+        BOOL GetRenderAreaPointer(int index,CArea** area) {if(!m_stableWorld)return GetAreaPointer(BYTE(index),area);*area=m_AreaVector[index];return TRUE;}
 
 		long						m_lViewRadius;				// 시야 거리.. 셀단위임..
 		float						m_fHeightScale;				// 높이 스케일... 1.0일때 0~655.35미터까지 표현 가능.
@@ -204,6 +211,9 @@ class CMapOutdoor : public CMapBase
 		std::vector<uint16_t> m_projectionIndices;
 		Renderer::TerrainTexturePtr m_projectionTexture;
 		std::vector<Renderer::TerrainTexturePtr> m_terrainTextures;
+		// Optional map/slot color assets; original texture set and masks stay intact.
+		struct ModernTerrainColor { std::string filename; Renderer::TerrainTexturePtr texture; };
+		std::vector<ModernTerrainColor> m_modernTerrainColors;
 		BYTE m_terrainGeometryLOD = 0;
 		void SubmitTerrainGeometry(long patchnum);
 		void SubmitTerrainSplat(long patchnum, CTerrain* terrain, uint32_t layer);
@@ -244,6 +254,7 @@ class CMapOutdoor : public CMapBase
 	public:
 		BOOL			GetTerrainPointer(BYTE c_ucTerrainNum, CTerrain ** ppTerrain);
 		float			GetTerrainHeight(float fx, float fy);
+        static float SampleGrassDensity(CTerrain&,float x,float y,float& height,const std::array<bool,256>& layers);
 		bool			GetWaterHeight(int iX, int iY, long * plWaterHeight);
 		bool			GetNormal(int ix, int iy, Math::Vector3 * pv3Normal);
 

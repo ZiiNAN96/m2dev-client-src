@@ -1,7 +1,6 @@
 #include "StdAfx.h"
+#include "EterBase/MapLoadTrace.h"
 #include "Renderer/GraphicsConfig.h"
-#include "Renderer/SceneLightingRuntime.h"
-#include "Renderer/TerrainPresentation.h"
 #include "EterLib/DrawStateView.h"
 #include "EterLib/DrawState.h"
 #include "PackLib/PackManager.h"
@@ -57,6 +56,8 @@ void CMapManager::ReserveSoftwareTilingEnable(bool isEnable)
 
 void CMapManager::Initialize()
 {
+    MapLoadTrace::Scope p0lScope("Metadata","map index","cpu");
+
 	mc_pcurEnvironmentData = NULL;
 	__LoadMapInfoVector();
 }
@@ -80,9 +81,8 @@ void CMapManager::Create()
 
 void CMapManager::Destroy()
 {
-    if(Renderer::activePresentation)Renderer::activePresentation->ResetModernScene();
-    Renderer::sceneLighting.Set({});
-    mc_pcurEnvironmentData=nullptr;
+    MapLoadTrace::Scope p0lScope("Metadata","map teardown","cpu");
+
 	stl_wipe_second(m_EnvironmentDataMap);
 
 	if (m_pkMap)
@@ -95,8 +95,6 @@ void CMapManager::Destroy()
 
 void CMapManager::Clear()
 {
-    if(Renderer::activePresentation)Renderer::activePresentation->ResetModernScene();
-    Renderer::sceneLighting.Set({});
 	if (m_pkMap)
 		m_pkMap->Clear();
 }
@@ -111,6 +109,8 @@ CMapBase * CMapManager::AllocMap()
 //////////////////////////////////////////////////////////////////////////
 void CMapManager::LoadProperty()
 {
+    MapLoadTrace::Scope p0lScope("Metadata","property registry","cpu");
+
 	CPropertyLoader PropertyLoader;
 	PropertyLoader.SetPropertyManager(&m_PropertyManager);
 	PropertyLoader.Create("*.*", "Property");
@@ -118,6 +118,8 @@ void CMapManager::LoadProperty()
 
 bool CMapManager::LoadMap(const std::string & c_rstrMapName, float x, float y, float z)
 {
+    MapLoadTrace::Scope p0lScope("Metadata","map load orchestration","cpu");
+
 	CMapOutdoor& rkMap = GetMapOutdoorRef();
 
 	rkMap.Leave();
@@ -229,19 +231,6 @@ bool CMapManager::GetWaterHeight(int iX, int iY, long * plWaterHeight)
 //////////////////////////////////////////////////////////////////////////
 void CMapManager::BeginEnvironment()
 {
-    if(m_pkMap && mc_pcurEnvironmentData) {
-        const auto& light=mc_pcurEnvironmentData->DirLights[ENV_DIRLIGHT_BACKGROUND];
-        Graphics::MapLighting input;
-        input.direction={light.Direction.x,light.Direction.y,light.Direction.z};
-        input.diffuse={light.Diffuse.r,light.Diffuse.g,light.Diffuse.b};
-        input.ambient={light.Ambient.r,light.Ambient.g,light.Ambient.b};
-        const auto& material=mc_pcurEnvironmentData->Material;
-        input.materialDiffuse={material.Diffuse.r,material.Diffuse.g,material.Diffuse.b};
-        input.materialAmbient={material.Ambient.r,material.Ambient.g,material.Ambient.b};
-        input.materialEmissive={material.Emissive.r,material.Emissive.g,material.Emissive.b};
-        input.sunEnabled=mc_pcurEnvironmentData->bDirLightsEnable[ENV_DIRLIGHT_BACKGROUND];
-        Renderer::sceneLighting.SetMap(input);
-    } else Renderer::sceneLighting.Set({});
 	if (!m_pkMap)
 		return;
 
@@ -254,7 +243,8 @@ void CMapManager::BeginEnvironment()
 	DRAWSTATE.SaveRenderState(Renderer::StateLighting, TRUE);
 
 	// Fog
-	DRAWSTATE.SaveRenderState(Renderer::StateFogEnable, mc_pcurEnvironmentData->bFogEnable);
+	DRAWSTATE.SaveRenderState(Renderer::StateFogEnable,
+        Renderer::GetGraphicsRuntimeConfig().style==Graphics::GraphicsStyle::Classic && mc_pcurEnvironmentData->bFogEnable);
 
 	// Material
 	DRAWSTATE.SetMaterial(&mc_pcurEnvironmentData->Material);

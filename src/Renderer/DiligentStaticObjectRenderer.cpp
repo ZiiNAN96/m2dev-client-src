@@ -1,13 +1,12 @@
+#include "ShaderLoadAudit.h"
 #include "DiligentStaticObjectRenderer.h"
+#include "EterBase/MapLoadTrace.h"
 #include "GpuSkinningShader.h"
-#include "PBRShader.h"
-#include "SceneLightingShader.h"
-#include "ShadowAmbientShader.h"
-#include "GraphicsConfig.h"
 #include "AssetRuntime/AnimationStallAudit.h"
 #include "ActorRenderData.h"
 #include "DiligentD3D11BackendInternal.h"
 #include "Diagnostics.h"
+#include "WorldResidencyDiagnostics.h"
 #include "Graphics/GraphicsEngine/interface/Buffer.h"
 #include "Graphics/GraphicsEngine/interface/PipelineState.h"
 #include "Graphics/GraphicsEngine/interface/Shader.h"
@@ -25,11 +24,18 @@ using namespace Diligent;
 namespace
 {
 struct Counters { uint32_t geometry=0, textures=0; };
+struct InstanceBuffer final:StaticObjectInstanceBuffer {
+    RefCntAutoPtr<IBuffer> buffer;
+    std::vector<StaticObjectInstance> previous;
+    std::shared_ptr<Counters> owner;
+    std::size_t bytes{};
+    InstanceBuffer(){++liveVegetationInstanceBuffers;}
+    ~InstanceBuffer(){--liveVegetationInstanceBuffers;vegetationInstanceBytes-=bytes;}
+};
 // ZiiNAN: GPU skinning actor coverage
 struct SkinMeshBuffers
 {
-    RefCntAutoPtr<IBuffer> vertices, indices, rigidVertices;
-    RefCntAutoPtr<IBuffer> materialVertices;
+    RefCntAutoPtr<IBuffer> vertices, indices, rigidVertices,tangents;
     std::vector<std::shared_ptr<const StaticSkinnedMeshData>> meshes;
     std::vector<std::shared_ptr<const BoneRemap>> remaps;
     std::vector<uint16_t> validationIndices;
@@ -48,8 +54,7 @@ struct SkinPoseBuffer
 struct Geometry final : StaticObjectGeometry
 {
     RefCntAutoPtr<IBuffer> vertices, indices;
-    RefCntAutoPtr<IBuffer> extras;
-    RefCntAutoPtr<IBuffer> materialVertices;
+    RefCntAutoPtr<IBuffer> extras,tangents;
     std::shared_ptr<SkinMeshBuffers> skin;
     std::shared_ptr<SkinPoseBuffer> pose;
     std::vector<uint16_t> validationIndices;
@@ -59,8 +64,6 @@ struct Geometry final : StaticObjectGeometry
     uint32_t IndexAt(std::size_t index) const { return indexType==VT_UINT32 ? validationIndices32[index] : validationIndices[index]; }
     uint32_t vertexCount=0;
     bool dynamic=false; // ZiiNAN: Only actor VBs use discard updates.
-    Graphics::Vector3 boundsCenter{};
-    float boundsRadius{};
     std::shared_ptr<Counters> counters;
     ~Geometry() override {
         if(skin) --livePrototypeGeometry;
@@ -70,9 +73,8 @@ struct Geometry final : StaticObjectGeometry
 struct Texture final : TerrainTexture
 {
     RefCntAutoPtr<ITexture> texture;
-    RefCntAutoPtr<ITextureView> linearView, srgbView;
     RefCntAutoPtr<ISampler> sampler;
-    RefCntAutoPtr<IShaderResourceBinding> bindings[48];
+    RefCntAutoPtr<IShaderResourceBinding> bindings[24];
     RefCntAutoPtr<ISampler> cameraSampler;
     std::weak_ptr<Texture> cameraImage;
     TerrainSampling cameraSampling{};
@@ -99,29 +101,6 @@ struct Constants
     std::array<uint32_t,4> vertexModes;
 };
 static_assert(sizeof(Constants)%16==0 && sizeof(StaticObjectVertex)==32);
-struct PBRConstants
-{
-    TerrainMatrices matrices;
-    std::array<float,16> normal;
-    std::array<float,4> fogColor,fogParameters,baseColor,emissive,factors;
-    std::array<std::array<float,4>,10> uvRows;
-    std::array<uint32_t,4> flags,alpha;
-    std::array<float,4> fade;
-    std::array<float,16> camera;
-};
-static_assert(sizeof(PBRConstants)%16==0&&sizeof(AssetRuntime::MaterialVertex)==24);
-struct PBRBinding
-{
-    unsigned maps{},srgb{};
-    std::array<std::shared_ptr<Texture>,AssetRuntime::MaterialMapCount> images;
-    std::weak_ptr<const MaterialRuntime> material;
-    RefCntAutoPtr<IShaderResourceBinding> bindings[48];
-    IShaderResourceVariable* palettes[48]{};
-    IShaderResourceVariable* cameraVariables[48]{};
-    IShaderResourceVariable* cameraSamplers[48]{};
-    PBRBinding(){++livePBRBindings;}
-    ~PBRBinding(){--livePBRBindings;}
-};
 constexpr char shaderSource[] = R"(
 cbuffer ObjectConstants {
  row_major float4x4 World; row_major float4x4 View; row_major float4x4 Projection;
@@ -139,19 +118,11 @@ Texture2D DiffuseTexture;
 SamplerState ObjectSampler;
 Texture2D CameraAlphaTexture;
 SamplerState CameraAlphaSampler;
-struct Output { float4 position:SV_POSITION; float2 uv:TEXCOORD0; float4 diffuse:COLOR0; float fog:TEXCOORD1; float2 cameraUV:TEXCOORD2;
-#ifdef MODERN_VEGETATION
- float3 worldNormal:TEXCOORD3;
- float3 worldPosition:TEXCOORD4;
-#endif
-};
+struct Output { float4 position:SV_POSITION; float2 uv:TEXCOORD0; float4 diffuse:COLOR0; float fog:TEXCOORD1; float2 cameraUV:TEXCOORD2; };
 Output VS(float3 position:ATTRIB0, float3 normal:ATTRIB1, float2 uv:ATTRIB2) {
  Output o;
  float4 eye=mul(mul(float4(position,1),World),View);
  o.position=mul(eye,Projection); o.uv=uv;
-#ifdef MODERN_VEGETATION
- o.worldPosition=mul(float4(position,1),World).xyz;
-#endif
  float3 n=mul(float4(normal,0),NormalTransform).xyz;
  if(Modes.z!=0) n=normalize(n);
  float3 lighting=Ambient.rgb + Diffuse.rgb*max(0,dot(n,LightDirection.xyz));
@@ -185,28 +156,9 @@ Output VS(float3 position:ATTRIB0, float3 normal:ATTRIB1, float2 uv:ATTRIB2) {
  o.fog=saturate(o.fog);
  return o;
 }
-#ifdef SHADOW_CASTER
-cbuffer ShadowMaterial {float4 ShadowBase;float4 ShadowUV[2];};
-void PS(Output i,bool front:SV_IsFrontFace) {
- float2 materialUV=float2(dot(ShadowUV[0].xyz,float3(i.uv,1)),dot(ShadowUV[1].xyz,float3(i.uv,1)));
- float4 color=DiffuseTexture.Sample(ObjectSampler,materialUV)*ShadowBase;
-#else
-float4 PS(Output i,bool front:SV_IsFrontFace
-#ifdef AMBIENT_MRT
- ,out float4 ambientDelta:SV_TARGET1
-#endif
-):SV_TARGET0 {
+float4 PS(Output i):SV_TARGET {
  float4 color=DiffuseTexture.Sample(ObjectSampler,i.uv);
-#endif
-#ifdef MODERN_VEGETATION
- float3 n=LightingNormal(i.worldNormal,float3(0,0,1));if(!front)n=-n;
- float3 base=(VertexModes.w&2)?color.rgb:LightingToLinear(color.rgb);
- // Native vegetation COLOR_0 is a linear modulation factor, like glTF colors.
- float3 indirect=base*i.diffuse.rgb*SceneAmbient(n);
- color.rgb=indirect+base*i.diffuse.rgb*SceneSunColor.rgb*saturate(dot(n,SceneSunDirection.xyz))/3.14159265*SunVisibility(i.worldPosition,n);
-#else
  color.rgb*=i.diffuse.rgb;
-#endif
  if(AlphaModes.x==0) color.a*=i.diffuse.a;
  if(AlphaModes.x==2) color.a=i.diffuse.a;
  // ZiiNAN: Exact legacy factor/fade and stage-1 actor operations, before fog.
@@ -215,54 +167,19 @@ float4 PS(Output i,bool front:SV_IsFrontFace
  if(Modes.w==1) color.rgb=saturate(color.rgb+TextureFactor.rgb);
  if(Modes.w==2) color.rgb*=TextureFactor.rgb;
  if(Modes.w==3) color.rgb=saturate(color.rgb+color.a*CameraAlphaTexture.Sample(CameraAlphaSampler,i.cameraUV).rgb);
- if(AlphaModes.w!=0) {float mask=CameraAlphaTexture.Sample(CameraAlphaSampler,i.cameraUV).a;color.a=(VertexModes.w&1)!=0?color.a*mask:mask;}
- if(VertexModes.y!=0) {
-#ifdef MODERN_VEGETATION
-   float3 shadow=CameraAlphaTexture.Sample(CameraAlphaSampler,i.cameraUV).rgb;
-   color.rgb*=(VertexModes.w&4)?shadow:LightingToLinear(shadow);
-   indirect*=(VertexModes.w&4)?shadow:LightingToLinear(shadow);
-#else
-   color.rgb*=CameraAlphaTexture.Sample(CameraAlphaSampler,i.cameraUV).rgb;
-#endif
- }
+ if(AlphaModes.w!=0) {float mask=CameraAlphaTexture.Sample(CameraAlphaSampler,i.cameraUV).a;color.a=VertexModes.w!=0?color.a*mask:mask;}
+ if(VertexModes.y!=0) color.rgb*=CameraAlphaTexture.Sample(CameraAlphaSampler,i.cameraUV).rgb;
  // ZiiNAN: Native alpha test compares the 8-bit stage result, including filtered/factor alpha.
  float testedAlpha=floor(saturate(color.a)*255+0.5);
  if(AlphaModes.y==1 && testedAlpha<float(AlphaModes.z)) discard;
  if(AlphaModes.y==2 && testedAlpha<=float(AlphaModes.z)) discard;
-#ifdef SHADOW_CASTER
- return;
-#else
-#ifdef AMBIENT_MRT
- float3 withoutAmbient=LightingToSRGB(max(0,color.rgb-indirect));
- withoutAmbient=lerp(FogColor.rgb,withoutAmbient,i.fog);
-#endif
-#ifdef MODERN_VEGETATION
- color.rgb=LightingToSRGB(color.rgb);
-#endif
  color.rgb=lerp(FogColor.rgb,color.rgb,i.fog);
-#ifdef AMBIENT_MRT
- ambientDelta=float4(max(0,LightingToLinear(color.rgb)-LightingToLinear(withoutAmbient)),color.a);
-#endif
-#ifdef MODERN_VEGETATION
- if(ShadowSettings.w!=0)color.rgb=lerp(color.rgb,CascadeColor(i.worldPosition),.5);
-#endif
  return color;
-#endif
 }
 Output AuxiliaryVS(float3 position:ATTRIB0,float3 normal:ATTRIB1,float2 uv:ATTRIB2,
                    float4 color:ATTRIB3,float2 uv1:ATTRIB4,float3 pivot:ATTRIB5,float flexibility:ATTRIB6,float3 pitchCos:ATTRIB7,float3 pitchSin:ATTRIB8) {
  float3 offset=position-pivot;
  float sway=sin(Wind.x*Wind.z+pivot.x*.013+pivot.y*.017)*Wind.y*flexibility;
-#ifdef MODERN_VEGETATION
- float3x3 deform=float3x3(1,0,0,0,1,0,sway*CardRight.x,sway*CardRight.y,1);
- if(VertexModes.x!=0) {
-   float3x3 rock=float3x3(cos(sway),0,sin(sway),0,1,0,-sin(sway),0,cos(sway));
-   float3 pitch=VertexModes.x==1?CardPitch.x*pitchCos+CardPitch.y*pitchSin:float3(0,0,0);
-   float3x3 tilt=float3x3(1,0,0,0,1,0,pitch.x,pitch.y,1+pitch.z);
-   deform=mul(mul(rock,tilt),float3x3(CardRight.xyz,CardForward.xyz,CardUp.xyz));
- }
- float3 transformedNormal=LightingTransformNormal(normal,mul(deform,(float3x3)World));
-#endif
  if(VertexModes.x!=0) {
    float2 rocked=float2(offset.x*cos(sway)-offset.z*sin(sway),offset.x*sin(sway)+offset.z*cos(sway));
    offset.x=rocked.x;offset.z=rocked.y;
@@ -270,9 +187,6 @@ Output AuxiliaryVS(float3 position:ATTRIB0,float3 normal:ATTRIB1,float2 uv:ATTRI
    position=pivot+offset.x*CardRight.xyz+offset.y*CardForward.xyz+offset.z*CardUp.xyz;
  } else position.xy+=sway*position.z*CardRight.xy;
  Output o=VS(position,normal,uv);o.diffuse=color;
-#ifdef MODERN_VEGETATION
- o.worldNormal=transformedNormal;
-#endif
  if(VertexModes.y!=0)o.cameraUV=uv1;
  if(VertexModes.x==1&&AlphaModes.w!=0)o.cameraUV=float2(0,0);
  if(VertexModes.z!=0)o.fog=saturate((FogParameters.y-o.position.z)/(FogParameters.y-FogParameters.x));
@@ -284,15 +198,7 @@ struct DiligentStaticObjectRenderer::Impl
 {
     DiligentD3D11Backend& backend;
     RefCntAutoPtr<IBuffer> constants;
-    RefCntAutoPtr<IPipelineState> pipelines[60];
-    RefCntAutoPtr<IPipelineState> pbrPipelines[48];
-    RefCntAutoPtr<IPipelineState> shadowPipelines[9];
-    RefCntAutoPtr<IShaderResourceBinding> shadowBindings[9];
-    RefCntAutoPtr<IBuffer> shadowMaterial;
-    RefCntAutoPtr<ISampler> shadowSampler;
-    RefCntAutoPtr<IBuffer> pbrConstants;
-    RefCntAutoPtr<ISampler> pbrSampler;
-    std::unordered_map<const MaterialRuntime*,std::unique_ptr<PBRBinding>> pbrBindings;
+    RefCntAutoPtr<IPipelineState> pipelines[36];
     std::shared_ptr<Counters> counters=std::make_shared<Counters>();
     std::vector<std::weak_ptr<SkinMeshBuffers>> skinMeshes;
     std::vector<std::weak_ptr<SkinPoseBuffer>> skinPoses;
@@ -306,23 +212,10 @@ struct DiligentStaticObjectRenderer::Impl
         if (first) LogRendererFailure("DiligentStaticObjectRenderer.cpp", this, reason, line);
     }
     explicit Impl(DiligentD3D11Backend& b):backend(b) {}
-    ~Impl(){for(const auto& pipeline:pbrPipelines)if(pipeline)--livePBRPipelines;
-        for(unsigned i=36;i<60;++i)if(pipelines[i])--liveLightingPipelines;
-        for(const auto& p:shadowPipelines)if(p)--liveShadowPipelines;if(shadowMaterial)--liveShadowBuffers;}
-    bool InitializeShadows(bool gpu);
-    void DrawShadow(const std::shared_ptr<Geometry>&,const std::shared_ptr<Texture>&,const StaticObjectDraw&,bool,bool,bool);
-    bool InitializePBR(bool gpu);
-    void DrawPBR(const std::shared_ptr<Geometry>&,const std::shared_ptr<Texture>&,
-        const StaticObjectDraw&,bool skin,bool rigid,unsigned variant);
 };
-#include "DiligentPBRMaterial.inl"
-#include "DiligentShadowCaster.inl"
 DiligentStaticObjectRenderer::DiligentStaticObjectRenderer(DiligentD3D11Backend& b):m_impl(std::make_unique<Impl>(b)) {}
 DiligentStaticObjectRenderer::~DiligentStaticObjectRenderer() = default;
-void DiligentStaticObjectRenderer::ResetFrame() {
-    m_impl->draws=0;
-    std::erase_if(m_impl->pbrBindings,[](const auto& item){return item.second->material.expired();});
-}
+void DiligentStaticObjectRenderer::ResetFrame() { m_impl->draws=0; }
 bool DiligentStaticObjectRenderer::Failed() const { return m_impl->failed; }
 uint32_t DiligentStaticObjectRenderer::DrawCount() const { return m_impl->draws; }
 uint32_t DiligentStaticObjectRenderer::LiveGeometryCount() const { return m_impl->counters->geometry; }
@@ -336,15 +229,15 @@ bool DiligentStaticObjectRenderer::Initialize(bool gpuPrototype)
         BufferDesc buffer;
         buffer.Name="Static object original transforms/light"; buffer.Size=sizeof(Constants);
         buffer.Usage=USAGE_DYNAMIC; buffer.BindFlags=BIND_UNIFORM_BUFFER; buffer.CPUAccessFlags=CPU_ACCESS_WRITE;
-        device->CreateBuffer(buffer,nullptr,&s.constants);
+        { MapLoadTrace::Scope p0lCreate("GPU resources","CreateBuffer","gpu-api"); MapLoadTrace::Count("CreateBuffer","",0,true); device->CreateBuffer(buffer,nullptr,&s.constants); }
         if(!s.constants) return false;
         ShaderCreateInfo shader;
         shader.SourceLanguage=SHADER_SOURCE_LANGUAGE_HLSL; shader.Source=shaderSource;
         shader.Desc.Name="Static rigid PNT VS"; shader.Desc.ShaderType=SHADER_TYPE_VERTEX; shader.EntryPoint="VS";
         RefCntAutoPtr<IShader> vs,ps;
-        device->CreateShader(shader,&vs);
+        { MapLoadTrace::Scope p0lCreate("Shaders / PSOs","CreateShader","cpu"); MapLoadTrace::Count("CreateShader","",0,true); device->CreateShader(shader,&vs); }
         shader.Desc.Name="Static diffuse PS"; shader.Desc.ShaderType=SHADER_TYPE_PIXEL; shader.EntryPoint="PS";
-        device->CreateShader(shader,&ps);
+        { MapLoadTrace::Scope p0lCreate("Shaders / PSOs","CreateShader","cpu"); MapLoadTrace::Count("CreateShader","",0,true); device->CreateShader(shader,&ps); }
         if(!vs || !ps) return false;
         // ZiiNAN: Diligent GPU skinning prototype
         RefCntAutoPtr<IShader> skinVS;
@@ -356,21 +249,13 @@ Output SkinningVS(float3 position:ATTRIB0, float3 normal:ATTRIB1, float2 uv:ATTR
         if(gpuPrototype) {
             shader.Source=skinSource.c_str(); shader.Desc.Name="B3 original PWNT skinning VS";
             shader.Desc.ShaderType=SHADER_TYPE_VERTEX; shader.EntryPoint="SkinningVS";
-            device->CreateShader(shader,&skinVS);
+            { MapLoadTrace::Scope p0lCreate("Shaders / PSOs","CreateShader","cpu"); MapLoadTrace::Count("CreateShader","",0,true); device->CreateShader(shader,&skinVS); }
             if(!skinVS) return false;
         }
         RefCntAutoPtr<IShader> auxiliaryVS;
         shader.Source=shaderSource;shader.Desc.Name="Mesh auxiliary colors and card pivots";
         shader.Desc.ShaderType=SHADER_TYPE_VERTEX;shader.EntryPoint="AuxiliaryVS";
-        device->CreateShader(shader,&auxiliaryVS);if(!auxiliaryVS)return false;
-        const std::string modernVegetationSource=std::string("#define MODERN_VEGETATION\n")+sceneLightingShader+shadowReceiverShader+shaderSource;
-        RefCntAutoPtr<IShader> modernVegetationVS,modernVegetationPS;
-        shader.Source=modernVegetationSource.c_str();shader.Desc.Name="G2 vegetation world normals";
-        device->CreateShader(shader,&modernVegetationVS);
-        shader.Desc.ShaderType=SHADER_TYPE_PIXEL;shader.EntryPoint="PS";shader.Desc.Name="G2 vegetation scene lighting";
-        device->CreateShader(shader,&modernVegetationPS);if(!modernVegetationVS||!modernVegetationPS)return false;
-        const std::string ambientSource=std::string("#define AMBIENT_MRT\n")+modernVegetationSource;
-        RefCntAutoPtr<IShader> ambientPS;shader.Source=ambientSource.c_str();device->CreateShader(shader,&ambientPS);if(!ambientPS)return false;
+        { MapLoadTrace::Scope p0lCreate("Shaders / PSOs","CreateShader","cpu"); MapLoadTrace::Count("CreateShader","",0,true); device->CreateShader(shader,&auxiliaryVS); }if(!auxiliaryVS)return false;
         LayoutElement layout[]={{0,0,3,VT_FLOAT32,False,0,32},{1,0,3,VT_FLOAT32,False,12,32},{2,0,2,VT_FLOAT32,False,24,32}};
         LayoutElement skinLayout[]={{0,0,3,VT_FLOAT32,False,0,40},{1,0,3,VT_FLOAT32,False,20,40},
             {2,0,2,VT_FLOAT32,False,32,40},{3,0,4,VT_UINT8,False,12,40},{4,0,4,VT_UINT8,False,16,40}};
@@ -380,22 +265,20 @@ Output SkinningVS(float3 position:ATTRIB0, float3 normal:ATTRIB1, float2 uv:ATTR
             {SHADER_TYPE_PIXEL,"ObjectSampler",SHADER_RESOURCE_VARIABLE_TYPE_MUTABLE},
             {SHADER_TYPE_PIXEL,"CameraAlphaTexture",SHADER_RESOURCE_VARIABLE_TYPE_MUTABLE},
             {SHADER_TYPE_PIXEL,"CameraAlphaSampler",SHADER_RESOURCE_VARIABLE_TYPE_MUTABLE},
-            {SHADER_TYPE_VERTEX,"SkinningPalette",SHADER_RESOURCE_VARIABLE_TYPE_MUTABLE},
-            {SHADER_TYPE_PIXEL,"SunShadowDepth",SHADER_RESOURCE_VARIABLE_TYPE_DYNAMIC}};
-        for(unsigned variant=0;variant<60;++variant) {
+            {SHADER_TYPE_VERTEX,"SkinningPalette",SHADER_RESOURCE_VARIABLE_TYPE_MUTABLE}};
+        for(unsigned variant=0;variant<36;++variant) {
             const bool auxiliary=variant>=24;const bool skin=variant>=12&&!auxiliary;
             if(skin&&!gpuPrototype)continue;
             const auto cull=variant%3;
             GraphicsPipelineStateCreateInfo info;
             info.PSODesc.Name="Static object opaque diffuse"; info.PSODesc.PipelineType=PIPELINE_TYPE_GRAPHICS;
-            info.PSODesc.ResourceLayout.Variables=variables; info.PSODesc.ResourceLayout.NumVariables=variant>=36?6:(skin ? 5 : 4);
+            info.PSODesc.ResourceLayout.Variables=variables; info.PSODesc.ResourceLayout.NumVariables=skin ? 5 : 4;
             auto& g=info.GraphicsPipeline;
             const auto& swap=s.backend.m_impl->swapChain->GetDesc();
             g.NumRenderTargets=1; g.RTVFormats[0]=swap.ColorBufferFormat; g.DSVFormat=swap.DepthBufferFormat;
-            if(variant>=48){g.NumRenderTargets=2;g.RTVFormats[1]=TEX_FORMAT_RGBA8_UNORM;}
             g.PrimitiveTopology=PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
             g.RasterizerDesc.CullMode=cull==0 ? CULL_MODE_NONE : CULL_MODE_BACK;
-            g.RasterizerDesc.FrontCounterClockwise=variant>=36?cull!=2:cull==1;
+            g.RasterizerDesc.FrontCounterClockwise=cull==1;
             g.RasterizerDesc.DepthClipEnable=True;
             g.DepthStencilDesc.DepthEnable=True; g.DepthStencilDesc.DepthWriteEnable=variant%12<6;
             g.DepthStencilDesc.DepthFunc=COMPARISON_FUNC_LESS_EQUAL;
@@ -404,16 +287,14 @@ Output SkinningVS(float3 position:ATTRIB0, float3 normal:ATTRIB1, float2 uv:ATTR
             blend.SrcBlend=blend.SrcBlendAlpha=BLEND_FACTOR_SRC_ALPHA;
             blend.DestBlend=blend.DestBlendAlpha=BLEND_FACTOR_INV_SRC_ALPHA;
             g.InputLayout.LayoutElements=auxiliary?auxiliaryLayout:(skin ? skinLayout : layout); g.InputLayout.NumElements=auxiliary?9:(skin ? 5 : 3);
-            info.pVS=variant>=36?modernVegetationVS:(auxiliary?auxiliaryVS:(skin ? skinVS : vs)); info.pPS=variant>=48?ambientPS:variant>=36?modernVegetationPS:ps;
+            info.pVS=auxiliary?auxiliaryVS:(skin ? skinVS : vs); info.pPS=ps;
             auto& pipeline=s.pipelines[variant];
-            device->CreateGraphicsPipelineState(info,&pipeline);
+            { MapLoadTrace::Scope p0lCreate("Shaders / PSOs","CreateGraphicsPipelineState","gpu-api"); MapLoadTrace::Count("CreateGraphicsPipelineState","",0,true); device->CreateGraphicsPipelineState(info,&pipeline); }
             if(!pipeline) return false;
             for(auto stage:{SHADER_TYPE_VERTEX,SHADER_TYPE_PIXEL})
                 if(auto* variable=pipeline->GetStaticVariableByName(stage,"ObjectConstants")) variable->Set(s.constants);
-            if(variant>=36){++liveLightingPipelines;pipeline->GetStaticVariableByName(SHADER_TYPE_PIXEL,"SceneLightingConstants")->Set(s.backend.m_impl->lightBuffer);}
-            if(variant>=36)s.backend.m_impl->depthEffects.BindReceiver(pipeline);
         }
-        return s.InitializePBR(gpuPrototype)&&s.InitializeShadows(gpuPrototype);
+        return true;
     } catch(...) { s.Fail("initialization exception", __LINE__); return false; }
 }
 StaticObjectGeometryPtr DiligentStaticObjectRenderer::UploadGeometry(const StaticObjectSource& data)
@@ -455,27 +336,20 @@ bool DiligentStaticObjectRenderer::PreparePrototype(StaticObjectGeometryPtr& geo
                 shared->meshes=data.meshes; shared->remaps=remaps;
                 BufferDesc desc; desc.Name="Shared original PWNT"; desc.Size=vertices.size()*sizeof(SkinningVertex);
                 desc.Usage=USAGE_IMMUTABLE; desc.BindFlags=BIND_VERTEX_BUFFER;
-                BufferData initial{vertices.data(),desc.Size}; device->CreateBuffer(desc,&initial,&shared->vertices);
-                std::vector<AssetRuntime::MaterialVertex> materialVertices;
-                if(source&&!source->materialVertices.empty())materialVertices=source->materialVertices;
-                else {
-                    materialVertices.resize(shared->vertexCount);
-                    for(std::size_t i=0;i<vertices.size();++i)materialVertices[i].uv={vertices[i].uv[0],vertices[i].uv[1]};
-                    if(source)for(std::size_t i=0;i<source->rigidVertices.size();++i)
-                        materialVertices[vertices.size()+i].uv={source->rigidVertices[i][6],source->rigidVertices[i][7]};
-                }
-                if(materialVertices.size()!=shared->vertexCount)return false;
-                desc.Name="Shared PBR tangent and UV stream";desc.Size=materialVertices.size()*sizeof(AssetRuntime::MaterialVertex);
-                initial={materialVertices.data(),desc.Size};device->CreateBuffer(desc,&initial,&shared->materialVertices);
-                if(!shared->materialVertices)return false;
+                BufferData initial{vertices.data(),desc.Size}; { MapLoadTrace::Scope p0lCreate("GPU resources","CreateBuffer","gpu-api"); MapLoadTrace::Count("CreateBuffer","",0,true); device->CreateBuffer(desc,&initial,&shared->vertices); }
                 if(source && !source->rigidVertices.empty()) {
                     desc.Name="Shared rigid attachment PNT"; desc.Size=source->rigidVertices.size()*sizeof(StaticObjectVertex);
-                    initial={source->rigidVertices.data(),desc.Size}; device->CreateBuffer(desc,&initial,&shared->rigidVertices);
+                    initial={source->rigidVertices.data(),desc.Size}; { MapLoadTrace::Scope p0lCreate("GPU resources","CreateBuffer","gpu-api"); MapLoadTrace::Count("CreateBuffer","",0,true); device->CreateBuffer(desc,&initial,&shared->rigidVertices); }
                     if(!shared->rigidVertices) return false;
                 }
                 desc.Name="Shared original mesh-local indices"; desc.Size=indices.size()*sizeof(uint16_t); desc.BindFlags=BIND_INDEX_BUFFER;
-                initial={indices.data(),desc.Size}; device->CreateBuffer(desc,&initial,&shared->indices);
+                initial={indices.data(),desc.Size}; { MapLoadTrace::Scope p0lCreate("GPU resources","CreateBuffer","gpu-api"); MapLoadTrace::Count("CreateBuffer","",0,true); device->CreateBuffer(desc,&initial,&shared->indices); }
                 if(!shared->vertices || !shared->indices) return false;
+                if(source&&!source->tangents.empty()) {
+                    if(source->tangents.size()!=source->vertexCount)return false;
+                    desc.Name="Shared authored tangents";desc.BindFlags=BIND_VERTEX_BUFFER;desc.Size=source->tangents.size()*sizeof(source->tangents[0]);
+                    initial={source->tangents.data(),desc.Size};{ MapLoadTrace::Scope p0lCreate("GPU resources","CreateBuffer","gpu-api"); MapLoadTrace::Count("CreateBuffer","",0,true); device->CreateBuffer(desc,&initial,&shared->tangents); }if(!shared->tangents)return false;
+                }
                 shared->validationIndices=std::move(indices); s.skinMeshes.emplace_back(shared);
             }
             std::shared_ptr<SkinPoseBuffer> pose;
@@ -485,14 +359,13 @@ bool DiligentStaticObjectRenderer::PreparePrototype(StaticObjectGeometryPtr& geo
                 pose=std::make_shared<SkinPoseBuffer>(); pose->identity=palette.identity; pose->skeleton=palette.skeleton;
                 BufferDesc desc; desc.Name="Actor current composite palette"; desc.Size=gpuPrototypeBufferBones*sizeof(SkinningMatrix);
                 desc.Usage=USAGE_DYNAMIC; desc.BindFlags=BIND_UNIFORM_BUFFER; desc.CPUAccessFlags=CPU_ACCESS_WRITE;
-                device->CreateBuffer(desc,nullptr,&pose->buffer);
+                { MapLoadTrace::Scope p0lCreate("GPU resources","CreateBuffer","gpu-api"); MapLoadTrace::Count("CreateBuffer","",0,true); device->CreateBuffer(desc,nullptr,&pose->buffer); }
                 if(!pose->buffer) return false;
                 s.skinPoses.emplace_back(pose);
             }
             mesh=std::make_shared<Geometry>();
             mesh->skin=shared; ++livePrototypeGeometry;
-            mesh->pose=pose; mesh->vertices=shared->vertices; mesh->indices=shared->indices;
-            mesh->materialVertices=shared->materialVertices;
+            mesh->pose=pose; mesh->vertices=shared->vertices; mesh->indices=shared->indices;mesh->tangents=shared->tangents;
             mesh->vertexCount=shared->vertexCount; mesh->validationIndices=shared->validationIndices;
             mesh->counters=s.counters; ++s.counters->geometry;
         }
@@ -538,36 +411,26 @@ StaticObjectGeometryPtr DiligentStaticObjectRenderer::CreateGeometry(const Stati
         desc.Usage=dynamic ? USAGE_DYNAMIC : USAGE_IMMUTABLE; desc.BindFlags=BIND_VERTEX_BUFFER;
         desc.CPUAccessFlags=dynamic ? CPU_ACCESS_WRITE : CPU_ACCESS_NONE;
         BufferData initial{data.vertices.data(),desc.Size};
-        s.backend.m_impl->device->CreateBuffer(desc,dynamic ? nullptr : &initial,&result->vertices);
-        auto materialVertices=data.materialVertices;
-        if(materialVertices.empty()) {
-            materialVertices.resize(data.vertices.size());
-            for(std::size_t i=0;i<data.vertices.size();++i)materialVertices[i].uv={data.vertices[i][6],data.vertices[i][7]};
-        }
-        if(materialVertices.size()!=data.vertices.size())return fail(__LINE__);
-        for(const auto& v:materialVertices){for(float f:v.tangent)if(!std::isfinite(f))return fail(__LINE__);for(float f:v.uv)if(!std::isfinite(f))return fail(__LINE__);}
-        desc.Name="PBR tangent and UV stream";desc.Size=materialVertices.size()*sizeof(AssetRuntime::MaterialVertex);
-        desc.Usage=USAGE_IMMUTABLE;desc.CPUAccessFlags=CPU_ACCESS_NONE;
-        initial={materialVertices.data(),desc.Size};s.backend.m_impl->device->CreateBuffer(desc,&initial,&result->materialVertices);
-        if(!result->materialVertices)return fail(__LINE__);
+        { MapLoadTrace::Scope p0lCreate("GPU resources","CreateBuffer","gpu-api"); MapLoadTrace::Count("CreateBuffer","",0,true); s.backend.m_impl->device->CreateBuffer(desc,dynamic ? nullptr : &initial,&result->vertices); }
         if(!data.vertexExtras.empty()) {
             static_assert(sizeof(StaticObjectVertexExtras)==64);
             desc.Name="Shared mesh auxiliary vertex channels";desc.Size=data.vertexExtras.size()*sizeof(StaticObjectVertexExtras);
-            initial={data.vertexExtras.data(),desc.Size};s.backend.m_impl->device->CreateBuffer(desc,&initial,&result->extras);if(!result->extras)return fail(__LINE__);
+            initial={data.vertexExtras.data(),desc.Size};{ MapLoadTrace::Scope p0lCreate("GPU resources","CreateBuffer","gpu-api"); MapLoadTrace::Count("CreateBuffer","",0,true); s.backend.m_impl->device->CreateBuffer(desc,&initial,&result->extras); }if(!result->extras)return fail(__LINE__);
+        }
+        if(!data.tangents.empty()) {
+            if(data.tangents.size()!=data.vertices.size())return fail(__LINE__);
+            for(const auto& tangent:data.tangents)for(float value:tangent)if(!std::isfinite(value))return fail(__LINE__);
+            desc.Name="Shared authored tangents";desc.Size=data.tangents.size()*sizeof(data.tangents[0]);desc.BindFlags=BIND_VERTEX_BUFFER;
+            desc.Usage=USAGE_IMMUTABLE;desc.CPUAccessFlags=CPU_ACCESS_NONE;
+            initial={data.tangents.data(),desc.Size};{ MapLoadTrace::Scope p0lCreate("GPU resources","CreateBuffer","gpu-api"); MapLoadTrace::Count("CreateBuffer","",0,true); s.backend.m_impl->device->CreateBuffer(desc,&initial,&result->tangents); }if(!result->tangents)return fail(__LINE__);
         }
         desc.Name=wide ? "Static uint32 indices" : "Original static uint16 indices";
         desc.Size=indexCount*indexStride; desc.BindFlags=BIND_INDEX_BUFFER;
         desc.Usage=USAGE_IMMUTABLE; desc.CPUAccessFlags=CPU_ACCESS_NONE;
         initial={wide ? static_cast<const void*>(data.indices32.data()) : static_cast<const void*>(data.indices.data()),desc.Size};
-        s.backend.m_impl->device->CreateBuffer(desc,&initial,&result->indices);
+        { MapLoadTrace::Scope p0lCreate("GPU resources","CreateBuffer","gpu-api"); MapLoadTrace::Count("CreateBuffer","",0,true); s.backend.m_impl->device->CreateBuffer(desc,&initial,&result->indices); }
         if(!result->vertices || !result->indices) return fail(__LINE__);
         result->vertexCount=static_cast<uint32_t>(data.vertices.size()); result->validationIndices=data.indices;
-        if(!data.vertices.empty()){
-            Graphics::Vector3 lo{data.vertices[0][0],data.vertices[0][1],data.vertices[0][2]},hi=lo;
-            for(const auto& v:data.vertices)for(unsigned c=0;c<3;++c){lo[c]=std::min(lo[c],v[c]);hi[c]=std::max(hi[c],v[c]);}
-            for(unsigned c=0;c<3;++c)result->boundsCenter[c]=(lo[c]+hi[c])*.5f;
-            result->boundsRadius=std::hypot(hi[0]-lo[0],hi[1]-lo[1],hi[2]-lo[2])*.5f;
-        }
         result->validationIndices32=data.indices32; result->indexType=wide ? VT_UINT32 : VT_UINT16;
         result->dynamic=dynamic;
         result->counters=s.counters; ++s.counters->geometry;
@@ -623,24 +486,10 @@ TerrainTexturePtr DiligentStaticObjectRenderer::UploadTexture(const TerrainTextu
         TextureDesc desc;
         desc.Name="Original map object diffuse"; desc.Type=RESOURCE_DIM_TEX_2D;
         desc.Width=data.width; desc.Height=data.height; desc.MipLevels=static_cast<uint32_t>(mips.size());
-        TEXTURE_FORMAT srgb=TEX_FORMAT_UNKNOWN,storage=format;
-        switch(format) {
-        case TEX_FORMAT_RGBA8_UNORM:storage=TEX_FORMAT_RGBA8_TYPELESS;srgb=TEX_FORMAT_RGBA8_UNORM_SRGB;break;
-        case TEX_FORMAT_BGRA8_UNORM:storage=TEX_FORMAT_BGRA8_TYPELESS;srgb=TEX_FORMAT_BGRA8_UNORM_SRGB;break;
-        case TEX_FORMAT_BGRX8_UNORM:storage=TEX_FORMAT_BGRX8_TYPELESS;srgb=TEX_FORMAT_BGRX8_UNORM_SRGB;break;
-        case TEX_FORMAT_BC1_UNORM:storage=TEX_FORMAT_BC1_TYPELESS;srgb=TEX_FORMAT_BC1_UNORM_SRGB;break;
-        case TEX_FORMAT_BC2_UNORM:storage=TEX_FORMAT_BC2_TYPELESS;srgb=TEX_FORMAT_BC2_UNORM_SRGB;break;
-        case TEX_FORMAT_BC3_UNORM:storage=TEX_FORMAT_BC3_TYPELESS;srgb=TEX_FORMAT_BC3_UNORM_SRGB;break;
-        default:break;
-        }
-        desc.Format=storage; desc.Usage=USAGE_IMMUTABLE; desc.BindFlags=BIND_SHADER_RESOURCE;
+        desc.Format=format; desc.Usage=USAGE_IMMUTABLE; desc.BindFlags=BIND_SHADER_RESOURCE;
         TextureData initial{mips.data(),desc.MipLevels};
-        s.backend.m_impl->device->CreateTexture(desc,&initial,&result->texture);
+        { MapLoadTrace::Scope p0lCreate("GPU resources","CreateTexture","gpu-api"); MapLoadTrace::Count("CreateTexture","",0,true); s.backend.m_impl->device->CreateTexture(desc,&initial,&result->texture); }
         if(!result->texture) return fail(__LINE__);
-        TextureViewDesc view;view.ViewType=TEXTURE_VIEW_SHADER_RESOURCE;view.Format=format;
-        result->texture->CreateView(view,&result->linearView);
-        if(!result->linearView)return fail(__LINE__);
-        if(srgb!=TEX_FORMAT_UNKNOWN){view.Format=srgb;result->texture->CreateView(view,&result->srgbView);if(!result->srgbView)return fail(__LINE__);}
         result->counters=s.counters; ++s.counters->textures;
         return result;
     } catch(...) { return fail(__LINE__); }
@@ -657,9 +506,7 @@ void DiligentStaticObjectRenderer::Draw(const StaticObjectGeometryPtr& geometry,
     const bool rigid=mesh && mesh->skin && draw.baseVertex>=mesh->skin->deformCount;
     const bool skin=mesh && mesh->skin && !rigid;
     const bool auxiliary=mesh&&mesh->extras;
-    const bool modernVegetation=auxiliary&&Graphics::GraphicsFeatures{GetGraphicsRuntimeConfig()}.UsePBR();
-    const bool ambient=modernVegetation&&s.backend.m_impl&&s.backend.m_impl->depthEffects.ambientActive;
-    const auto variant=materialVariant+(modernVegetation?(ambient?48:36):(auxiliary?24:(skin ? 12 : 0)));
+    const auto variant=materialVariant+(auxiliary?24:(skin ? 12 : 0));
     if(!s.backend.m_impl || !s.backend.m_impl->inFrame || !mesh || !image || !cameraImage ||
        mesh->counters!=s.counters || image->counters!=s.counters || cameraImage->counters!=s.counters ||
        cull>=3 || !s.pipelines[variant] || draw.alphaReference>255 || static_cast<uint32_t>(draw.alphaTest)>2 ||
@@ -688,15 +535,31 @@ void DiligentStaticObjectRenderer::Draw(const StaticObjectGeometryPtr& geometry,
     }
     if((rigid && !mesh->skin->rigidVertices) ||
        (skin && draw.vertexCount>mesh->skin->deformCount-draw.baseVertex)) { s.Fail("rigid/deform vertex range or rigid buffer mismatch", __LINE__); return; }
-    if(shadowPassIndex>=0){s.DrawShadow(mesh,image,draw,skin,rigid,auxiliary);return;}
     for(size_t i=draw.firstIndex;i<size_t(draw.firstIndex)+draw.indexCount;++i)
         if(mesh->IndexAt(i)>=draw.vertexCount) { s.Fail("mesh-local index exceeds draw vertex count", __LINE__); return; }
-    if(draw.material && !auxiliary && Graphics::GraphicsFeatures{GetGraphicsRuntimeConfig()}.UsePBR()) {
-        s.DrawPBR(mesh,cameraImage,draw,skin,rigid,materialVariant+(skin?12:0));return;
-    }
     try {
         auto& b=*s.backend.m_impl;
-        if(modernVegetation&&!b.SyncSceneLighting()){s.Fail("vegetation scene lighting upload",__LINE__);return;}
+        if(b.modern&&b.modern->Active()) {
+            ModernMeshSubmission submission;
+            if(draw.instances) {
+                const auto instances=std::dynamic_pointer_cast<InstanceBuffer>(draw.instances);
+                if(!instances||instances->owner!=s.counters||!draw.instanceCount||draw.instanceCount>instances->previous.size()) {s.Fail("invalid vegetation instance buffer",__LINE__);return;}
+                submission.instances=instances->buffer;submission.instanceCount=draw.instanceCount;
+            }
+            submission.vertices=rigid?mesh->skin->rigidVertices:mesh->vertices;
+            submission.indices=mesh->indices;submission.extras=mesh->extras;
+            submission.tangents=mesh->tangents;submission.tangentOffset=rigid?mesh->skin->deformCount*16:0;
+            if(skin)submission.palette=mesh->pose->buffer;
+            submission.skinned=skin;submission.auxiliary=auxiliary;submission.indexType=mesh->indexType;
+            submission.draw=draw;submission.baseVertex=draw.baseVertex-(rigid?mesh->skin->deformCount:0);
+            submission.textures[0]=image->texture->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE);
+            if(draw.cameraAlpha)submission.cameraAlpha=cameraImage->texture->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE);
+            if(draw.sphereMap)submission.sphereMap=cameraImage->texture->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE);
+            if(draw.material)for(unsigned i=1;i<submission.textures.size();++i)
+                if(auto map=std::dynamic_pointer_cast<Texture>(draw.material->textures[i]))
+                    submission.textures[i]=map->texture->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE);
+            b.modern->Draw(submission);++s.draws;return;
+        }
         if(!image->sampler || !(image->sampling==draw.sampling) || image->anisotropic!=draw.anisotropic || image->maxAnisotropy!=draw.maxAnisotropy) {
             image->sampler.Release();
             SamplerDesc sampler;
@@ -738,13 +601,13 @@ void DiligentStaticObjectRenderer::Draw(const StaticObjectGeometryPtr& geometry,
         }
         // ZiiNAN: Diligent GPU skinning prototype
         RefCntAutoPtr<IShaderResourceBinding> skinBinding;
-        auto& binding=skin ? skinBinding : image->bindings[materialVariant+(modernVegetation?(ambient?36:24):(auxiliary?12:0))];
+        auto& binding=skin ? skinBinding : image->bindings[materialVariant+(auxiliary?12:0)];
         if(!binding) {
-            s.pipelines[variant]->CreateShaderResourceBinding(&binding,true);
+            ShaderLoadAudit::CreateSRB(s.pipelines[variant],&binding,true);
             if(!binding) { s.Fail("mesh shader resource binding creation failed", __LINE__); return; }
-            binding->GetVariableByName(SHADER_TYPE_PIXEL,"DiffuseTexture")->Set(modernVegetation&&image->srgbView?image->srgbView:image->linearView);
+            binding->GetVariableByName(SHADER_TYPE_PIXEL,"DiffuseTexture")->Set(image->texture->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE));
             binding->GetVariableByName(SHADER_TYPE_PIXEL,"ObjectSampler")->Set(image->sampler);
-            binding->GetVariableByName(SHADER_TYPE_PIXEL,"CameraAlphaTexture")->Set(modernVegetation&&cameraImage->srgbView?cameraImage->srgbView:cameraImage->linearView);
+            binding->GetVariableByName(SHADER_TYPE_PIXEL,"CameraAlphaTexture")->Set(cameraImage->texture->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE));
             binding->GetVariableByName(SHADER_TYPE_PIXEL,"CameraAlphaSampler")->Set(image->cameraSampler);
             if(skin) binding->GetVariableByName(SHADER_TYPE_VERTEX,"SkinningPalette")->Set(mesh->pose->buffer);
         }
@@ -771,12 +634,9 @@ void DiligentStaticObjectRenderer::Draw(const StaticObjectGeometryPtr& geometry,
             mapped->spotDirection=draw.spotDirection; mapped->spotCone=draw.spotCone;
             mapped->cardRight=draw.cardRight;mapped->cardForward=draw.cardForward;mapped->cardUp=draw.cardUp;mapped->wind=draw.wind;
             mapped->cardPitch=draw.cardPitch;
-            mapped->vertexModes={draw.cardMode,draw.vertexShadow?1u:0u,draw.cardFog?1u:0u,
-                (draw.modulateCameraAlpha?1u:0u)|(modernVegetation&&image->srgbView?2u:0u)|(modernVegetation&&cameraImage->srgbView?4u:0u)};
+            mapped->vertexModes={draw.cardMode,draw.vertexShadow?1u:0u,draw.cardFog?1u:0u,draw.modulateCameraAlpha?1u:0u};
             mapped->alphaModes={draw.factorAlphaOnly ? 4u : (draw.factorAlpha ? 3u : (draw.diffuseAlphaOnly ? 2u : uint32_t(draw.textureAlpha))),static_cast<uint32_t>(draw.alphaTest),draw.alphaReference,draw.cameraAlpha ? 1u : 0u};
         }
-        b.depthEffects.BindTargets(b.swapChain,modernVegetation);
-        if(modernVegetation)b.depthEffects.SetReceiver(binding);
         b.context->SetPipelineState(s.pipelines[variant]);
         const auto& extent=b.swapChain->GetDesc();
         Viewport viewport{float(draw.viewport[0]),float(draw.viewport[1]),float(draw.viewport[2] ? draw.viewport[2] : extent.Width),float(draw.viewport[3] ? draw.viewport[3] : extent.Height),0,1};
@@ -790,9 +650,28 @@ void DiligentStaticObjectRenderer::Draw(const StaticObjectGeometryPtr& geometry,
         attributes.FirstIndexLocation=draw.firstIndex;
         attributes.BaseVertex=draw.baseVertex-(rigid ? mesh->skin->deformCount : 0);
         b.context->DrawIndexed(attributes); ++s.draws;
-        if(modernVegetation)b.depthEffects.SetReceiver(binding,true);
-        if(modernVegetation)++modernVegetationDraws;
     } catch(...) { s.Fail("mesh draw exception", __LINE__); }
+}
+bool DiligentStaticObjectRenderer::UpdateInstances(StaticObjectInstanceBufferPtr& handle,std::span<const StaticObjectInstance> values) {
+    auto& s=*m_impl;if(values.empty()||values.size()>1000000||!s.backend.m_impl)return false;
+    auto buffer=std::dynamic_pointer_cast<InstanceBuffer>(handle);
+    if(buffer&&buffer->owner!=s.counters)return false;
+    if(buffer&&buffer->previous.size()==values.size()&&std::equal(values.begin(),values.end(),buffer->previous.begin()))return true;
+    if(!buffer){buffer=std::make_shared<InstanceBuffer>();buffer->owner=s.counters;}
+    const auto bytes=values.size_bytes();auto& backend=*s.backend.m_impl;
+    if(buffer->bytes<bytes) {
+        const auto capacity=std::max<std::size_t>(256, std::max(bytes,buffer->bytes*2));
+        BufferDesc desc;desc.Name="H2 shared vegetation instances";desc.Size=capacity;desc.Usage=USAGE_DYNAMIC;
+        desc.BindFlags=BIND_VERTEX_BUFFER;desc.CPUAccessFlags=CPU_ACCESS_WRITE;
+        RefCntAutoPtr<IBuffer> replacement;{ MapLoadTrace::Scope p0lCreate("GPU resources","CreateBuffer","gpu-api"); MapLoadTrace::Count("CreateBuffer","",0,true); backend.device->CreateBuffer(desc,nullptr,&replacement); }
+        if(!replacement)return false;
+        if(verboseDiagnostics)++worldResidency.instanceBufferCreates;
+        buffer->buffer=replacement;vegetationInstanceBytes-=buffer->bytes;buffer->bytes=capacity;vegetationInstanceBytes+=capacity;
+    }
+    MapHelper<StaticObjectInstance> mapped(backend.context,buffer->buffer,MAP_WRITE,MAP_FLAG_DISCARD);
+    if(!mapped)return false;
+    std::memcpy(mapped,values.data(),bytes);buffer->previous.assign(values.begin(),values.end());handle=buffer;
+    ++vegetationInstanceUploads;return true;
 }
 void DiligentStaticObjectRenderer::ReleaseBindings()
 {
@@ -801,7 +680,7 @@ void DiligentStaticObjectRenderer::ReleaseBindings()
     b.context->InvalidateState();
     if(b.inFrame) {
         auto* target=b.swapChain->GetCurrentBackBufferRTV();
-        b.context->SetRenderTargets(1,&target,b.swapChain->GetDepthBufferDSV(),RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
+        b.BindTargets();
     }
 }
 }

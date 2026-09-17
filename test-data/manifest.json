@@ -1,0 +1,2132 @@
+[
+  {
+    "path": "legacy-renderer/actor-root/animated_actor_smoke.py",
+    "bytes": 7695,
+    "sha256": "44ca41af1a6296f0871f2e7d9dc181f500fe336cac1f6c34e868d7c211a4f40b"
+  },
+  {
+    "path": "legacy-renderer/actor-root/atlasinfo.txt",
+    "bytes": 5038,
+    "sha256": "e140309f7518b07e1fcb0836e7b82df72cd387c9e6dbcef2441c7d9f69108ff2"
+  },
+  {
+    "path": "legacy-renderer/actor-root/colorinfo.py",
+    "bytes": 1135,
+    "sha256": "47043fd61a143721efd936968d8bf730f0ec43107abe99f2b45244103c5d9faf"
+  },
+  {
+    "path": "legacy-renderer/actor-root/consolemodule.py",
+    "bytes": 25412,
+    "sha256": "d6d0229cf6224c366acc0a2be34c3a6e9397d8e0e552a4332f1a351c741d34e7"
+  },
+  {
+    "path": "legacy-renderer/actor-root/constinfo.py",
+    "bytes": 7406,
+    "sha256": "0bd425af9860a708931b9f23b574a4680f7faf870dca373a3bc7491fc2ec1e3a"
+  },
+  {
+    "path": "legacy-renderer/actor-root/debuginfo.py",
+    "bytes": 172,
+    "sha256": "8fec1bfdf94b212e8354869212a601ece86fcdaa18338edcdbe5780380f51fd6"
+  },
+  {
+    "path": "legacy-renderer/actor-root/dragon_soul_refine_settings.py",
+    "bytes": 1519,
+    "sha256": "056ab4a4eceaede539ae038a97629427023a3d13d05132998deabcde35a8c6a3"
+  },
+  {
+    "path": "legacy-renderer/actor-root/emotion.py",
+    "bytes": 11372,
+    "sha256": "1b5a46291371bacf48f2c5d3c9f6b7b3102c7c815a5d4f6b066c084f4b76f220"
+  },
+  {
+    "path": "legacy-renderer/actor-root/exception.py",
+    "bytes": 754,
+    "sha256": "a222a135a1ef5777b3c372cab410eb9966ee62c41fd994ecb22f685bbda4525b"
+  },
+  {
+    "path": "legacy-renderer/actor-root/game.py",
+    "bytes": 71727,
+    "sha256": "1e4ae5edc28f4cde89818dc06827f7b44e128d7915e3ded9072bcc77db3d5624"
+  },
+  {
+    "path": "legacy-renderer/actor-root/grpblk.txt",
+    "bytes": 474,
+    "sha256": "b8181f16c1e89d917c8c20069657b84dbd51684cfa943c304f00d85fefcccff3"
+  },
+  {
+    "path": "legacy-renderer/actor-root/interfacemodule.py",
+    "bytes": 49295,
+    "sha256": "0beee296f7ab1418f56dd6577eef8056141036ffb76decae9b9ab876438c6f02"
+  },
+  {
+    "path": "legacy-renderer/actor-root/introcreate.py",
+    "bytes": 19814,
+    "sha256": "eb92566d32b275135f8ffc03f94e9c81160f74e237ae0ae345ffead8b44004c9"
+  },
+  {
+    "path": "legacy-renderer/actor-root/introempire.py",
+    "bytes": 8594,
+    "sha256": "2c1b5edb48e9cbea8b8c3c5775c2056fe65998a7be1492fe7da3b335988e2825"
+  },
+  {
+    "path": "legacy-renderer/actor-root/introloading.py",
+    "bytes": 10827,
+    "sha256": "62aba0609b39282bbae86620433d2a58fbe56286a02fce98c7bc57bf10a2a5be"
+  },
+  {
+    "path": "legacy-renderer/actor-root/intrologin.py",
+    "bytes": 35134,
+    "sha256": "d5012be4e65a75476aecf47d1259dd27908c663f5fc2f15b55bffd7c939889ad"
+  },
+  {
+    "path": "legacy-renderer/actor-root/introselect.py",
+    "bytes": 22434,
+    "sha256": "fed610dc39fb967ba92dd0e2f1319cddeab14943b33ad28ef6b52f5d17e1286b"
+  },
+  {
+    "path": "legacy-renderer/actor-root/localeinfo.py",
+    "bytes": 16231,
+    "sha256": "8f11cf3b5c6924bd75120af74f976866848d3060c25872dc31f8cfb96a96981e"
+  },
+  {
+    "path": "legacy-renderer/actor-root/makepackscript_onlyrootnopython.txt",
+    "bytes": 1254,
+    "sha256": "22ec4b74367d30d63143932dcb1bc2c37c094f2f65d8c5c209c667ae8ad1b9c4"
+  },
+  {
+    "path": "legacy-renderer/actor-root/mousemodule.py",
+    "bytes": 11915,
+    "sha256": "d17f0b121e022d50bd45047e61ed5da5c89d1ac2d6df371f1e2c999db2fe0c37"
+  },
+  {
+    "path": "legacy-renderer/actor-root/musicinfo.py",
+    "bytes": 519,
+    "sha256": "c909612c37bb16ecca1627c2d238feb3f7cf1f552f5f4aca625fda72bd33dc4f"
+  },
+  {
+    "path": "legacy-renderer/actor-root/networkmodule.py",
+    "bytes": 7310,
+    "sha256": "e427c6039e84ee56ab846badcb187a68a676d58073c73e72ac54aa7191cf9810"
+  },
+  {
+    "path": "legacy-renderer/actor-root/npclist.txt",
+    "bytes": 30796,
+    "sha256": "664368352d16619f1c08e5f9e8528d1db0b138f962603be91bf9922c1651209f"
+  },
+  {
+    "path": "legacy-renderer/actor-root/playersettingmodule.py",
+    "bytes": 91750,
+    "sha256": "ca8458e6a804db52c98b3b171f45c510709565352491da2d498045a19628aa81"
+  },
+  {
+    "path": "legacy-renderer/actor-root/prototype.py",
+    "bytes": 1662,
+    "sha256": "06966ce97ddad228e06f347be5b55cf7819253b78ea08b963589740b605c47ba"
+  },
+  {
+    "path": "legacy-renderer/actor-root/rootlibcythonizer.py",
+    "bytes": 1113,
+    "sha256": "913cdb2090e2e57f473d9fcc4fb48b365e928e8cdbdcbefaf0de7d814f7a8e18"
+  },
+  {
+    "path": "legacy-renderer/actor-root/servercommandparser.py",
+    "bytes": 1619,
+    "sha256": "298ed8b7a71a7f201ba84da048afea6a5da9e93722db1455275847ff953cd401"
+  },
+  {
+    "path": "legacy-renderer/actor-root/serverinfo.py",
+    "bytes": 1690,
+    "sha256": "14f206c7c4be758f88f39fc163fe76c43261141d88db12134cb5cb286091419b"
+  },
+  {
+    "path": "legacy-renderer/actor-root/static_material_smoke.py",
+    "bytes": 5319,
+    "sha256": "fba360d5695ddf1774799163435c1557797802d894d8ef822dc2689d780f7434"
+  },
+  {
+    "path": "legacy-renderer/actor-root/static_object_smoke.py",
+    "bytes": 3925,
+    "sha256": "d73da35b542d70ff120be43fcf2d9d2248d4d0b92ef029b25b9a637161d278fa"
+  },
+  {
+    "path": "legacy-renderer/actor-root/stringcommander.py",
+    "bytes": 1552,
+    "sha256": "38681bb4448f5cc71963560db877b5d86bdb6c6f0324157118bcd3c10778a5b2"
+  },
+  {
+    "path": "legacy-renderer/actor-root/system.py",
+    "bytes": 8188,
+    "sha256": "fd5ebcbc3a1b069d60aa405976b8bc1339b76eef505e702cf6b45bdb186ab72f"
+  },
+  {
+    "path": "legacy-renderer/actor-root/terrain_map_smoke.py",
+    "bytes": 3795,
+    "sha256": "6e40fd1e2bf1271a03065edb6c2eea4c9e54728ec6c7891ce19d19b10aab5b17"
+  },
+  {
+    "path": "legacy-renderer/actor-root/terrain_splat_smoke.py",
+    "bytes": 4990,
+    "sha256": "a80a11d402d708cbfeaf960f71dd6d7753e3fe8e7080412fa5245969dcdc77bd"
+  },
+  {
+    "path": "legacy-renderer/actor-root/test_affect.py",
+    "bytes": 1186,
+    "sha256": "feab2d72d947b61c6cc1ad95786d82694d29722a4dd31fd2eae8bef8398fbe4a"
+  },
+  {
+    "path": "legacy-renderer/actor-root/ui.py",
+    "bytes": 103308,
+    "sha256": "feca1cc0f48749e4fa22badb9260cc61e4b2e842b760cc688cb48f4667d4a7e3"
+  },
+  {
+    "path": "legacy-renderer/actor-root/uiaffectshower.py",
+    "bytes": 33625,
+    "sha256": "5691df5117324ecb4b4af4c1fedb28bd962564aa404d1ad0f19cb42529876b16"
+  },
+  {
+    "path": "legacy-renderer/actor-root/uiattachmetin.py",
+    "bytes": 4231,
+    "sha256": "3826d14a6b5a50301afea440c3429478577203ed698905e3e3f55e314eec72c5"
+  },
+  {
+    "path": "legacy-renderer/actor-root/uiauction.py",
+    "bytes": 4518,
+    "sha256": "24ae306d48867b461bbc8f99dba385e9568f0705f16edf401957cfe60f5b97cc"
+  },
+  {
+    "path": "legacy-renderer/actor-root/uicandidate.py",
+    "bytes": 3895,
+    "sha256": "42bbc122bb18315605408aa4a0b49fd8e8125933ccc055eece1ea8a2e2e8e6e9"
+  },
+  {
+    "path": "legacy-renderer/actor-root/uicharacter.py",
+    "bytes": 42469,
+    "sha256": "41a8c95af90387568fde84d13fc00fa520b3dc7eb8a9d696daceeb1356538fe9"
+  },
+  {
+    "path": "legacy-renderer/actor-root/uichat.py",
+    "bytes": 33179,
+    "sha256": "86b98ce1cfc2fcbd1046d9af7aebbcfadf16aff5746b832773b19053c5fe4af7"
+  },
+  {
+    "path": "legacy-renderer/actor-root/uicommon.py",
+    "bytes": 12266,
+    "sha256": "4a7fd7462953bbce2cc509c88d7ca0a2be8730ce9a9ebcf9ed80a3afffd096c4"
+  },
+  {
+    "path": "legacy-renderer/actor-root/uicube.py",
+    "bytes": 18332,
+    "sha256": "36272fe1e10ce4a700539c2981b45128774a34acbf4b6c91eabfc0e1b8f4ef74"
+  },
+  {
+    "path": "legacy-renderer/actor-root/uidragonsoul.py",
+    "bytes": 56477,
+    "sha256": "6d3d17ca025c7e9d02fe11b4b0b57779afc4fa57f4bc84f51adae3c4fa1baee1"
+  },
+  {
+    "path": "legacy-renderer/actor-root/uiequipmentdialog.py",
+    "bytes": 3308,
+    "sha256": "9bb761ef97952844d895ee1e73d0263fa6f133f31d818cd4a7d617a3bee9d40c"
+  },
+  {
+    "path": "legacy-renderer/actor-root/uiex.py",
+    "bytes": 1562,
+    "sha256": "fd8dd946dc8b521098823c2dd54922e19d3a5ca03f2c0481128f922e0a8a5dcb"
+  },
+  {
+    "path": "legacy-renderer/actor-root/uiexchange.py",
+    "bytes": 7851,
+    "sha256": "25a65cb999948021001c386520ec4b89f4331ce73bc829b55955c2fc3c8b1a1f"
+  },
+  {
+    "path": "legacy-renderer/actor-root/uigamebutton.py",
+    "bytes": 2623,
+    "sha256": "1c3bfd54100dca3793ee0b3ec9a33edf016fa9e3fb0893580ca163c54e8508a3"
+  },
+  {
+    "path": "legacy-renderer/actor-root/uigameoption.py",
+    "bytes": 12817,
+    "sha256": "88eaab3f89b0e9d710de10e1adcce3cafb0291cac3bc09a4b63bd45627a9de18"
+  },
+  {
+    "path": "legacy-renderer/actor-root/uiguild.py",
+    "bytes": 86429,
+    "sha256": "f35d5711b0b23c0aefb01334da97e036f43e0dcf75c607bd7ba7c92c81bdcee4"
+  },
+  {
+    "path": "legacy-renderer/actor-root/uihelp.py",
+    "bytes": 3187,
+    "sha256": "05a9faaa1531c59e30949fe1d516d72af24437b64f8157cff1bbf6ce5ff812bd"
+  },
+  {
+    "path": "legacy-renderer/actor-root/uiinventory.py",
+    "bytes": 40745,
+    "sha256": "ba6309487117f84cb2fa30e46de557f0507e0eeb0d5acc6819dda9d021dc3dd3"
+  },
+  {
+    "path": "legacy-renderer/actor-root/uilocalerefresh.py",
+    "bytes": 1674,
+    "sha256": "9bc461a073ff773ac03bf8c37f497a706539113ac030d115f21cf28f685a27e9"
+  },
+  {
+    "path": "legacy-renderer/actor-root/uilocaleselector.py",
+    "bytes": 5513,
+    "sha256": "a80b5bbb7d07fb4172cf5e4f81b4aa13e1c8542c093c8f324b46eb571d546525"
+  },
+  {
+    "path": "legacy-renderer/actor-root/uimapnameshower.py",
+    "bytes": 6308,
+    "sha256": "67b0e690aa9062f88b26b5872fed6279350ccfdf885aaddeff6bc21435c74190"
+  },
+  {
+    "path": "legacy-renderer/actor-root/uimessenger.py",
+    "bytes": 18523,
+    "sha256": "b3cad4e3d1ae3d6469c663af6e3a78f3a3fb7b72d6fca0c102019963894f1d88"
+  },
+  {
+    "path": "legacy-renderer/actor-root/uiminimap.py",
+    "bytes": 13521,
+    "sha256": "de842a9ecaa86f5d77be9f2acfac9eacc3c187a9ebb103fd03603dbfe99e6aef"
+  },
+  {
+    "path": "legacy-renderer/actor-root/uioption.py",
+    "bytes": 11200,
+    "sha256": "4930ebdd058689af8a6285b3d2d642e1d00e774ddc11ecbf71301eda61aa8167"
+  },
+  {
+    "path": "legacy-renderer/actor-root/uiparty.py",
+    "bytes": 23171,
+    "sha256": "f57394cc561ab1e28091eb6117bf3b25ef0b9bf9b05910320e9351f13dcc178b"
+  },
+  {
+    "path": "legacy-renderer/actor-root/uiphasecurtain.py",
+    "bytes": 1658,
+    "sha256": "6805c8a4dfac943cd6d42731396c8bbdca6d29696271fea63037862e5923f5f3"
+  },
+  {
+    "path": "legacy-renderer/actor-root/uipickmoney.py",
+    "bytes": 2635,
+    "sha256": "42846627fba35cddddbcf96aa68bc98d7b80a9a42ea6024c57947954830871aa"
+  },
+  {
+    "path": "legacy-renderer/actor-root/uiplayergauge.py",
+    "bytes": 1224,
+    "sha256": "c5e07a2e4a383578ff03b06968ed9dd002e45fa08274c04aa485b9646944323a"
+  },
+  {
+    "path": "legacy-renderer/actor-root/uipointreset.py",
+    "bytes": 2315,
+    "sha256": "9e334d342242a4370992b8704f259391ea0ab6cc13c7dc114c6521a1a3180427"
+  },
+  {
+    "path": "legacy-renderer/actor-root/uiprivateshopbuilder.py",
+    "bytes": 9436,
+    "sha256": "862db291fd96fcb64ae9ba055895b6cb3d96671e81330074082e74043c5705db"
+  },
+  {
+    "path": "legacy-renderer/actor-root/uiquest.py",
+    "bytes": 25147,
+    "sha256": "4ba900b2e57e1b6af78c2b646bb678848dce917cc43d2d3706f9b8866fe6cd67"
+  },
+  {
+    "path": "legacy-renderer/actor-root/uirefine.py",
+    "bytes": 12218,
+    "sha256": "7c69a9948187b0e23c4ad8af45e0b6780eb3dc9c2c5aa159da9d99d560760cd1"
+  },
+  {
+    "path": "legacy-renderer/actor-root/uirestart.py",
+    "bytes": 1509,
+    "sha256": "daedb0804d6a25ae0e4d6c4277aafce31f1fc4867211e2619d93eb147c5b5d63"
+  },
+  {
+    "path": "legacy-renderer/actor-root/uisafebox.py",
+    "bytes": 20559,
+    "sha256": "b212fae1f9742c9adfb898691d4f6cbc5a6e1487bb6045ed1deac6f0a17785e2"
+  },
+  {
+    "path": "legacy-renderer/actor-root/uiscriptlocale.py",
+    "bytes": 3525,
+    "sha256": "2781481c39ba3a53ee93e06b30c00b1108a04b0880629424d138730b7d9c0374"
+  },
+  {
+    "path": "legacy-renderer/actor-root/uiselectitem.py",
+    "bytes": 3474,
+    "sha256": "68bb916e15f1197839a29bd2405045fb4e8764ff9bda655674fb6ff1beabca1d"
+  },
+  {
+    "path": "legacy-renderer/actor-root/uiselectmusic.py",
+    "bytes": 5283,
+    "sha256": "3d42d955cfd86685349b1aded97078cb9fee35af1ba4258310ed1990018968bb"
+  },
+  {
+    "path": "legacy-renderer/actor-root/uishop.py",
+    "bytes": 14269,
+    "sha256": "d63899e0b5543991e8e6194407411d4cc2c956bf94484bc1113ec581f95636ae"
+  },
+  {
+    "path": "legacy-renderer/actor-root/uisystem.py",
+    "bytes": 4549,
+    "sha256": "dac0c68cf489efc12c2e79a917157cb2b4b0dee342e9167a04038c49ee586ae8"
+  },
+  {
+    "path": "legacy-renderer/actor-root/uisystemoption.py",
+    "bytes": 7759,
+    "sha256": "cf0186b5f30e39657abb0dc6d6f91542666c21e1b3aaec265e7c16baa6e726f6"
+  },
+  {
+    "path": "legacy-renderer/actor-root/uitarget.py",
+    "bytes": 15902,
+    "sha256": "6a4bf8278f759a66aa64652a6e22a7dded8a91ffb4874319290a55e68d9fd0f8"
+  },
+  {
+    "path": "legacy-renderer/actor-root/uitaskbar.py",
+    "bytes": 36923,
+    "sha256": "3fd83acb79ceab475d2e7f84ae5f346d33edeb6103930e61bcbc5517177fd9fc"
+  },
+  {
+    "path": "legacy-renderer/actor-root/uitip.py",
+    "bytes": 7663,
+    "sha256": "40a1415c3fe2fce392413e1154d2bfb42b410371ea58c57e9503ea87a24b60c7"
+  },
+  {
+    "path": "legacy-renderer/actor-root/uitooltip.py",
+    "bytes": 89931,
+    "sha256": "a433ad55c8da77667f2ebe4a23c83b4273c74b1350696af4fd2ed2d404c4c187"
+  },
+  {
+    "path": "legacy-renderer/actor-root/uiuploadmark.py",
+    "bytes": 10814,
+    "sha256": "f91ac90d10ec258e794ea5a8eaecdbea8bb5f1f28f865c01cdd96776df0683c0"
+  },
+  {
+    "path": "legacy-renderer/actor-root/uiweb.py",
+    "bytes": 2741,
+    "sha256": "40336924403b7be653a6e6f91959daaeb145a27b75aabfab04a0731fdaf207ca"
+  },
+  {
+    "path": "legacy-renderer/actor-root/uiwhisper.py",
+    "bytes": 9825,
+    "sha256": "476c6832169a07eee0966e3d3237bcf6193319844836629bfc3558b40307131d"
+  },
+  {
+    "path": "legacy-renderer/actor-root/utils.py",
+    "bytes": 2272,
+    "sha256": "26c68dfd2bd96c653812ee162f515436d1bb3c67953e8a9e63e9d5dbb203de25"
+  },
+  {
+    "path": "legacy-renderer/actor-root/msm/assassin_m.msm",
+    "bytes": 36070,
+    "sha256": "ad344dbfd9015f02611e09cda4e231189194eaf3b39f58131608df015b55b173"
+  },
+  {
+    "path": "legacy-renderer/actor-root/msm/assassin_w.msm",
+    "bytes": 38386,
+    "sha256": "706a6aa78e3d9f99c71aa6e0ccd94ddebcd0fd0247b70d423b1113f719ba8f98"
+  },
+  {
+    "path": "legacy-renderer/actor-root/msm/shaman_m.msm",
+    "bytes": 36790,
+    "sha256": "95f76cb12bf1e9cd6d42f759e2a84eefbb02ae9bf39d9fc73e97aefe29495a43"
+  },
+  {
+    "path": "legacy-renderer/actor-root/msm/shaman_w.msm",
+    "bytes": 37592,
+    "sha256": "b14b61a0956a527121c5588b12acd7adf0a2fbe72ab640eef8c1f021011bee26"
+  },
+  {
+    "path": "legacy-renderer/actor-root/msm/sura_m.msm",
+    "bytes": 35427,
+    "sha256": "65f34ae92467b9b92bcff8588d8727d20b9850d6b7713c21e9e732d1e031cbbc"
+  },
+  {
+    "path": "legacy-renderer/actor-root/msm/sura_w.msm",
+    "bytes": 37621,
+    "sha256": "d825393ae5aefba606d6994cbfbda25a9ef6af263ee93c1fdd721514cf016546"
+  },
+  {
+    "path": "legacy-renderer/actor-root/msm/warrior_m.msm",
+    "bytes": 37628,
+    "sha256": "5a519531607feaf016da2486ca097fd6ecc8d0826779cc0fa07aa34d0812f644"
+  },
+  {
+    "path": "legacy-renderer/actor-root/msm/warrior_w.msm",
+    "bytes": 39386,
+    "sha256": "dd1519611556715212283c7513455fd7db5e853cbc7df6252a3d9d8c4ad20e03"
+  },
+  {
+    "path": "legacy-renderer/diligent-config/channel.inf",
+    "bytes": 5,
+    "sha256": "b8d40bd75b3d39e965bd6bd5704d5453892ed155b447746ce4758e1f9aefda77"
+  },
+  {
+    "path": "legacy-renderer/diligent-config/metin2.cfg",
+    "bytes": 361,
+    "sha256": "e762b86fd3e2b99c3ea388b27fc98def809baed39ee3f987395565889d179b0a"
+  },
+  {
+    "path": "legacy-renderer/diligent-config/mouse.cfg",
+    "bytes": 3,
+    "sha256": "0a109b3200c3c88382ec0d55fed73b91ecbe7f6884a3e8794a5131f59535936d"
+  },
+  {
+    "path": "legacy-renderer/legacy-config/channel.inf",
+    "bytes": 5,
+    "sha256": "b8d40bd75b3d39e965bd6bd5704d5453892ed155b447746ce4758e1f9aefda77"
+  },
+  {
+    "path": "legacy-renderer/legacy-config/metin2.cfg",
+    "bytes": 361,
+    "sha256": "e762b86fd3e2b99c3ea388b27fc98def809baed39ee3f987395565889d179b0a"
+  },
+  {
+    "path": "legacy-renderer/legacy-config/mouse.cfg",
+    "bytes": 3,
+    "sha256": "0a109b3200c3c88382ec0d55fed73b91ecbe7f6884a3e8794a5131f59535936d"
+  },
+  {
+    "path": "legacy-renderer/world-config/channel.inf",
+    "bytes": 5,
+    "sha256": "b8d40bd75b3d39e965bd6bd5704d5453892ed155b447746ce4758e1f9aefda77"
+  },
+  {
+    "path": "legacy-renderer/world-config/metin2.cfg",
+    "bytes": 361,
+    "sha256": "e762b86fd3e2b99c3ea388b27fc98def809baed39ee3f987395565889d179b0a"
+  },
+  {
+    "path": "legacy-renderer/world-config/mouse.cfg",
+    "bytes": 3,
+    "sha256": "0a109b3200c3c88382ec0d55fed73b91ecbe7f6884a3e8794a5131f59535936d"
+  },
+  {
+    "path": "legacy-renderer/world-config/renderer-audit.enabled",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "legacy-renderer/world-root/atlasinfo.txt",
+    "bytes": 5038,
+    "sha256": "e140309f7518b07e1fcb0836e7b82df72cd387c9e6dbcef2441c7d9f69108ff2"
+  },
+  {
+    "path": "legacy-renderer/world-root/colorinfo.py",
+    "bytes": 1135,
+    "sha256": "47043fd61a143721efd936968d8bf730f0ec43107abe99f2b45244103c5d9faf"
+  },
+  {
+    "path": "legacy-renderer/world-root/consolemodule.py",
+    "bytes": 25412,
+    "sha256": "d6d0229cf6224c366acc0a2be34c3a6e9397d8e0e552a4332f1a351c741d34e7"
+  },
+  {
+    "path": "legacy-renderer/world-root/constinfo.py",
+    "bytes": 7406,
+    "sha256": "0bd425af9860a708931b9f23b574a4680f7faf870dca373a3bc7491fc2ec1e3a"
+  },
+  {
+    "path": "legacy-renderer/world-root/debuginfo.py",
+    "bytes": 172,
+    "sha256": "8fec1bfdf94b212e8354869212a601ece86fcdaa18338edcdbe5780380f51fd6"
+  },
+  {
+    "path": "legacy-renderer/world-root/dragon_soul_refine_settings.py",
+    "bytes": 1519,
+    "sha256": "056ab4a4eceaede539ae038a97629427023a3d13d05132998deabcde35a8c6a3"
+  },
+  {
+    "path": "legacy-renderer/world-root/emotion.py",
+    "bytes": 11372,
+    "sha256": "1b5a46291371bacf48f2c5d3c9f6b7b3102c7c815a5d4f6b066c084f4b76f220"
+  },
+  {
+    "path": "legacy-renderer/world-root/exception.py",
+    "bytes": 754,
+    "sha256": "a222a135a1ef5777b3c372cab410eb9966ee62c41fd994ecb22f685bbda4525b"
+  },
+  {
+    "path": "legacy-renderer/world-root/game.py",
+    "bytes": 71727,
+    "sha256": "1e4ae5edc28f4cde89818dc06827f7b44e128d7915e3ded9072bcc77db3d5624"
+  },
+  {
+    "path": "legacy-renderer/world-root/grpblk.txt",
+    "bytes": 474,
+    "sha256": "b8181f16c1e89d917c8c20069657b84dbd51684cfa943c304f00d85fefcccff3"
+  },
+  {
+    "path": "legacy-renderer/world-root/interfacemodule.py",
+    "bytes": 49295,
+    "sha256": "0beee296f7ab1418f56dd6577eef8056141036ffb76decae9b9ab876438c6f02"
+  },
+  {
+    "path": "legacy-renderer/world-root/introcreate.py",
+    "bytes": 19814,
+    "sha256": "eb92566d32b275135f8ffc03f94e9c81160f74e237ae0ae345ffead8b44004c9"
+  },
+  {
+    "path": "legacy-renderer/world-root/introempire.py",
+    "bytes": 8594,
+    "sha256": "2c1b5edb48e9cbea8b8c3c5775c2056fe65998a7be1492fe7da3b335988e2825"
+  },
+  {
+    "path": "legacy-renderer/world-root/introloading.py",
+    "bytes": 10827,
+    "sha256": "62aba0609b39282bbae86620433d2a58fbe56286a02fce98c7bc57bf10a2a5be"
+  },
+  {
+    "path": "legacy-renderer/world-root/intrologin.py",
+    "bytes": 35134,
+    "sha256": "d5012be4e65a75476aecf47d1259dd27908c663f5fc2f15b55bffd7c939889ad"
+  },
+  {
+    "path": "legacy-renderer/world-root/introselect.py",
+    "bytes": 22434,
+    "sha256": "fed610dc39fb967ba92dd0e2f1319cddeab14943b33ad28ef6b52f5d17e1286b"
+  },
+  {
+    "path": "legacy-renderer/world-root/localeinfo.py",
+    "bytes": 16231,
+    "sha256": "8f11cf3b5c6924bd75120af74f976866848d3060c25872dc31f8cfb96a96981e"
+  },
+  {
+    "path": "legacy-renderer/world-root/makepackscript_onlyrootnopython.txt",
+    "bytes": 1254,
+    "sha256": "22ec4b74367d30d63143932dcb1bc2c37c094f2f65d8c5c209c667ae8ad1b9c4"
+  },
+  {
+    "path": "legacy-renderer/world-root/mousemodule.py",
+    "bytes": 11915,
+    "sha256": "d17f0b121e022d50bd45047e61ed5da5c89d1ac2d6df371f1e2c999db2fe0c37"
+  },
+  {
+    "path": "legacy-renderer/world-root/musicinfo.py",
+    "bytes": 519,
+    "sha256": "c909612c37bb16ecca1627c2d238feb3f7cf1f552f5f4aca625fda72bd33dc4f"
+  },
+  {
+    "path": "legacy-renderer/world-root/networkmodule.py",
+    "bytes": 7310,
+    "sha256": "e427c6039e84ee56ab846badcb187a68a676d58073c73e72ac54aa7191cf9810"
+  },
+  {
+    "path": "legacy-renderer/world-root/npclist.txt",
+    "bytes": 30796,
+    "sha256": "664368352d16619f1c08e5f9e8528d1db0b138f962603be91bf9922c1651209f"
+  },
+  {
+    "path": "legacy-renderer/world-root/playersettingmodule.py",
+    "bytes": 91750,
+    "sha256": "ca8458e6a804db52c98b3b171f45c510709565352491da2d498045a19628aa81"
+  },
+  {
+    "path": "legacy-renderer/world-root/prototype.py",
+    "bytes": 4132,
+    "sha256": "77c293fb0106d430b39dafc0259455912e65f0f53f346f6ce14f245e1d3a5c27"
+  },
+  {
+    "path": "legacy-renderer/world-root/rootlibcythonizer.py",
+    "bytes": 1113,
+    "sha256": "913cdb2090e2e57f473d9fcc4fb48b365e928e8cdbdcbefaf0de7d814f7a8e18"
+  },
+  {
+    "path": "legacy-renderer/world-root/servercommandparser.py",
+    "bytes": 1619,
+    "sha256": "298ed8b7a71a7f201ba84da048afea6a5da9e93722db1455275847ff953cd401"
+  },
+  {
+    "path": "legacy-renderer/world-root/serverinfo.py",
+    "bytes": 1690,
+    "sha256": "14f206c7c4be758f88f39fc163fe76c43261141d88db12134cb5cb286091419b"
+  },
+  {
+    "path": "legacy-renderer/world-root/stringcommander.py",
+    "bytes": 1552,
+    "sha256": "38681bb4448f5cc71963560db877b5d86bdb6c6f0324157118bcd3c10778a5b2"
+  },
+  {
+    "path": "legacy-renderer/world-root/system.py",
+    "bytes": 8188,
+    "sha256": "fd5ebcbc3a1b069d60aa405976b8bc1339b76eef505e702cf6b45bdb186ab72f"
+  },
+  {
+    "path": "legacy-renderer/world-root/test_affect.py",
+    "bytes": 1186,
+    "sha256": "feab2d72d947b61c6cc1ad95786d82694d29722a4dd31fd2eae8bef8398fbe4a"
+  },
+  {
+    "path": "legacy-renderer/world-root/ui_fixture_panels.py",
+    "bytes": 7700,
+    "sha256": "3a16d99c4b347573e340197f690a241fe110ac4a770cd2683c313e404b8038a1"
+  },
+  {
+    "path": "legacy-renderer/world-root/ui.py",
+    "bytes": 103308,
+    "sha256": "feca1cc0f48749e4fa22badb9260cc61e4b2e842b760cc688cb48f4667d4a7e3"
+  },
+  {
+    "path": "legacy-renderer/world-root/uiaffectshower.py",
+    "bytes": 33625,
+    "sha256": "5691df5117324ecb4b4af4c1fedb28bd962564aa404d1ad0f19cb42529876b16"
+  },
+  {
+    "path": "legacy-renderer/world-root/uiattachmetin.py",
+    "bytes": 4231,
+    "sha256": "3826d14a6b5a50301afea440c3429478577203ed698905e3e3f55e314eec72c5"
+  },
+  {
+    "path": "legacy-renderer/world-root/uiauction.py",
+    "bytes": 4518,
+    "sha256": "24ae306d48867b461bbc8f99dba385e9568f0705f16edf401957cfe60f5b97cc"
+  },
+  {
+    "path": "legacy-renderer/world-root/uicandidate.py",
+    "bytes": 3895,
+    "sha256": "42bbc122bb18315605408aa4a0b49fd8e8125933ccc055eece1ea8a2e2e8e6e9"
+  },
+  {
+    "path": "legacy-renderer/world-root/uicharacter.py",
+    "bytes": 42469,
+    "sha256": "41a8c95af90387568fde84d13fc00fa520b3dc7eb8a9d696daceeb1356538fe9"
+  },
+  {
+    "path": "legacy-renderer/world-root/uichat.py",
+    "bytes": 33179,
+    "sha256": "86b98ce1cfc2fcbd1046d9af7aebbcfadf16aff5746b832773b19053c5fe4af7"
+  },
+  {
+    "path": "legacy-renderer/world-root/uicommon.py",
+    "bytes": 12266,
+    "sha256": "4a7fd7462953bbce2cc509c88d7ca0a2be8730ce9a9ebcf9ed80a3afffd096c4"
+  },
+  {
+    "path": "legacy-renderer/world-root/uicube.py",
+    "bytes": 18332,
+    "sha256": "36272fe1e10ce4a700539c2981b45128774a34acbf4b6c91eabfc0e1b8f4ef74"
+  },
+  {
+    "path": "legacy-renderer/world-root/uidragonsoul.py",
+    "bytes": 56477,
+    "sha256": "6d3d17ca025c7e9d02fe11b4b0b57779afc4fa57f4bc84f51adae3c4fa1baee1"
+  },
+  {
+    "path": "legacy-renderer/world-root/uiequipmentdialog.py",
+    "bytes": 3308,
+    "sha256": "9bb761ef97952844d895ee1e73d0263fa6f133f31d818cd4a7d617a3bee9d40c"
+  },
+  {
+    "path": "legacy-renderer/world-root/uiex.py",
+    "bytes": 1562,
+    "sha256": "fd8dd946dc8b521098823c2dd54922e19d3a5ca03f2c0481128f922e0a8a5dcb"
+  },
+  {
+    "path": "legacy-renderer/world-root/uiexchange.py",
+    "bytes": 7851,
+    "sha256": "25a65cb999948021001c386520ec4b89f4331ce73bc829b55955c2fc3c8b1a1f"
+  },
+  {
+    "path": "legacy-renderer/world-root/uigamebutton.py",
+    "bytes": 2623,
+    "sha256": "1c3bfd54100dca3793ee0b3ec9a33edf016fa9e3fb0893580ca163c54e8508a3"
+  },
+  {
+    "path": "legacy-renderer/world-root/uigameoption.py",
+    "bytes": 12817,
+    "sha256": "88eaab3f89b0e9d710de10e1adcce3cafb0291cac3bc09a4b63bd45627a9de18"
+  },
+  {
+    "path": "legacy-renderer/world-root/uiguild.py",
+    "bytes": 86429,
+    "sha256": "f35d5711b0b23c0aefb01334da97e036f43e0dcf75c607bd7ba7c92c81bdcee4"
+  },
+  {
+    "path": "legacy-renderer/world-root/uihelp.py",
+    "bytes": 3187,
+    "sha256": "05a9faaa1531c59e30949fe1d516d72af24437b64f8157cff1bbf6ce5ff812bd"
+  },
+  {
+    "path": "legacy-renderer/world-root/uiinventory.py",
+    "bytes": 40745,
+    "sha256": "ba6309487117f84cb2fa30e46de557f0507e0eeb0d5acc6819dda9d021dc3dd3"
+  },
+  {
+    "path": "legacy-renderer/world-root/uilocalerefresh.py",
+    "bytes": 1674,
+    "sha256": "9bc461a073ff773ac03bf8c37f497a706539113ac030d115f21cf28f685a27e9"
+  },
+  {
+    "path": "legacy-renderer/world-root/uilocaleselector.py",
+    "bytes": 5513,
+    "sha256": "a80b5bbb7d07fb4172cf5e4f81b4aa13e1c8542c093c8f324b46eb571d546525"
+  },
+  {
+    "path": "legacy-renderer/world-root/uimapnameshower.py",
+    "bytes": 6308,
+    "sha256": "67b0e690aa9062f88b26b5872fed6279350ccfdf885aaddeff6bc21435c74190"
+  },
+  {
+    "path": "legacy-renderer/world-root/uimessenger.py",
+    "bytes": 18523,
+    "sha256": "b3cad4e3d1ae3d6469c663af6e3a78f3a3fb7b72d6fca0c102019963894f1d88"
+  },
+  {
+    "path": "legacy-renderer/world-root/uiminimap.py",
+    "bytes": 13521,
+    "sha256": "de842a9ecaa86f5d77be9f2acfac9eacc3c187a9ebb103fd03603dbfe99e6aef"
+  },
+  {
+    "path": "legacy-renderer/world-root/uioption.py",
+    "bytes": 11200,
+    "sha256": "4930ebdd058689af8a6285b3d2d642e1d00e774ddc11ecbf71301eda61aa8167"
+  },
+  {
+    "path": "legacy-renderer/world-root/uiparty.py",
+    "bytes": 23171,
+    "sha256": "f57394cc561ab1e28091eb6117bf3b25ef0b9bf9b05910320e9351f13dcc178b"
+  },
+  {
+    "path": "legacy-renderer/world-root/uiphasecurtain.py",
+    "bytes": 1658,
+    "sha256": "6805c8a4dfac943cd6d42731396c8bbdca6d29696271fea63037862e5923f5f3"
+  },
+  {
+    "path": "legacy-renderer/world-root/uipickmoney.py",
+    "bytes": 2635,
+    "sha256": "42846627fba35cddddbcf96aa68bc98d7b80a9a42ea6024c57947954830871aa"
+  },
+  {
+    "path": "legacy-renderer/world-root/uiplayergauge.py",
+    "bytes": 1224,
+    "sha256": "c5e07a2e4a383578ff03b06968ed9dd002e45fa08274c04aa485b9646944323a"
+  },
+  {
+    "path": "legacy-renderer/world-root/uipointreset.py",
+    "bytes": 2315,
+    "sha256": "9e334d342242a4370992b8704f259391ea0ab6cc13c7dc114c6521a1a3180427"
+  },
+  {
+    "path": "legacy-renderer/world-root/uiprivateshopbuilder.py",
+    "bytes": 9436,
+    "sha256": "862db291fd96fcb64ae9ba055895b6cb3d96671e81330074082e74043c5705db"
+  },
+  {
+    "path": "legacy-renderer/world-root/uiquest.py",
+    "bytes": 25147,
+    "sha256": "4ba900b2e57e1b6af78c2b646bb678848dce917cc43d2d3706f9b8866fe6cd67"
+  },
+  {
+    "path": "legacy-renderer/world-root/uirefine.py",
+    "bytes": 12218,
+    "sha256": "7c69a9948187b0e23c4ad8af45e0b6780eb3dc9c2c5aa159da9d99d560760cd1"
+  },
+  {
+    "path": "legacy-renderer/world-root/uirestart.py",
+    "bytes": 1509,
+    "sha256": "daedb0804d6a25ae0e4d6c4277aafce31f1fc4867211e2619d93eb147c5b5d63"
+  },
+  {
+    "path": "legacy-renderer/world-root/uisafebox.py",
+    "bytes": 20559,
+    "sha256": "b212fae1f9742c9adfb898691d4f6cbc5a6e1487bb6045ed1deac6f0a17785e2"
+  },
+  {
+    "path": "legacy-renderer/world-root/uiscriptlocale.py",
+    "bytes": 3525,
+    "sha256": "2781481c39ba3a53ee93e06b30c00b1108a04b0880629424d138730b7d9c0374"
+  },
+  {
+    "path": "legacy-renderer/world-root/uiselectitem.py",
+    "bytes": 3474,
+    "sha256": "68bb916e15f1197839a29bd2405045fb4e8764ff9bda655674fb6ff1beabca1d"
+  },
+  {
+    "path": "legacy-renderer/world-root/uiselectmusic.py",
+    "bytes": 5283,
+    "sha256": "3d42d955cfd86685349b1aded97078cb9fee35af1ba4258310ed1990018968bb"
+  },
+  {
+    "path": "legacy-renderer/world-root/uishop.py",
+    "bytes": 14269,
+    "sha256": "d63899e0b5543991e8e6194407411d4cc2c956bf94484bc1113ec581f95636ae"
+  },
+  {
+    "path": "legacy-renderer/world-root/uisystem.py",
+    "bytes": 4549,
+    "sha256": "dac0c68cf489efc12c2e79a917157cb2b4b0dee342e9167a04038c49ee586ae8"
+  },
+  {
+    "path": "legacy-renderer/world-root/uisystemoption.py",
+    "bytes": 7759,
+    "sha256": "cf0186b5f30e39657abb0dc6d6f91542666c21e1b3aaec265e7c16baa6e726f6"
+  },
+  {
+    "path": "legacy-renderer/world-root/uitarget.py",
+    "bytes": 15902,
+    "sha256": "6a4bf8278f759a66aa64652a6e22a7dded8a91ffb4874319290a55e68d9fd0f8"
+  },
+  {
+    "path": "legacy-renderer/world-root/uitaskbar.py",
+    "bytes": 36923,
+    "sha256": "3fd83acb79ceab475d2e7f84ae5f346d33edeb6103930e61bcbc5517177fd9fc"
+  },
+  {
+    "path": "legacy-renderer/world-root/uitip.py",
+    "bytes": 7663,
+    "sha256": "40a1415c3fe2fce392413e1154d2bfb42b410371ea58c57e9503ea87a24b60c7"
+  },
+  {
+    "path": "legacy-renderer/world-root/uitooltip.py",
+    "bytes": 89931,
+    "sha256": "a433ad55c8da77667f2ebe4a23c83b4273c74b1350696af4fd2ed2d404c4c187"
+  },
+  {
+    "path": "legacy-renderer/world-root/uiuploadmark.py",
+    "bytes": 10814,
+    "sha256": "f91ac90d10ec258e794ea5a8eaecdbea8bb5f1f28f865c01cdd96776df0683c0"
+  },
+  {
+    "path": "legacy-renderer/world-root/uiweb.py",
+    "bytes": 2741,
+    "sha256": "40336924403b7be653a6e6f91959daaeb145a27b75aabfab04a0731fdaf207ca"
+  },
+  {
+    "path": "legacy-renderer/world-root/uiwhisper.py",
+    "bytes": 9825,
+    "sha256": "476c6832169a07eee0966e3d3237bcf6193319844836629bfc3558b40307131d"
+  },
+  {
+    "path": "legacy-renderer/world-root/utils.py",
+    "bytes": 2272,
+    "sha256": "26c68dfd2bd96c653812ee162f515436d1bb3c67953e8a9e63e9d5dbb203de25"
+  },
+  {
+    "path": "legacy-renderer/world-root/water_smoke.py",
+    "bytes": 10355,
+    "sha256": "bd5bf012ed66ea342b94f34b48a1e197e85b595b2531cc5bc0444a1556fe244f"
+  },
+  {
+    "path": "legacy-renderer/world-root/msm/assassin_m.msm",
+    "bytes": 36070,
+    "sha256": "ad344dbfd9015f02611e09cda4e231189194eaf3b39f58131608df015b55b173"
+  },
+  {
+    "path": "legacy-renderer/world-root/msm/assassin_w.msm",
+    "bytes": 38386,
+    "sha256": "706a6aa78e3d9f99c71aa6e0ccd94ddebcd0fd0247b70d423b1113f719ba8f98"
+  },
+  {
+    "path": "legacy-renderer/world-root/msm/shaman_m.msm",
+    "bytes": 36790,
+    "sha256": "95f76cb12bf1e9cd6d42f759e2a84eefbb02ae9bf39d9fc73e97aefe29495a43"
+  },
+  {
+    "path": "legacy-renderer/world-root/msm/shaman_w.msm",
+    "bytes": 37592,
+    "sha256": "b14b61a0956a527121c5588b12acd7adf0a2fbe72ab640eef8c1f021011bee26"
+  },
+  {
+    "path": "legacy-renderer/world-root/msm/sura_m.msm",
+    "bytes": 35427,
+    "sha256": "65f34ae92467b9b92bcff8588d8727d20b9850d6b7713c21e9e732d1e031cbbc"
+  },
+  {
+    "path": "legacy-renderer/world-root/msm/sura_w.msm",
+    "bytes": 37621,
+    "sha256": "d825393ae5aefba606d6994cbfbda25a9ef6af263ee93c1fdd721514cf016546"
+  },
+  {
+    "path": "legacy-renderer/world-root/msm/warrior_m.msm",
+    "bytes": 37628,
+    "sha256": "5a519531607feaf016da2486ca097fd6ecc8d0826779cc0fa07aa34d0812f644"
+  },
+  {
+    "path": "legacy-renderer/world-root/msm/warrior_w.msm",
+    "bytes": 39386,
+    "sha256": "dd1519611556715212283c7513455fd7db5e853cbc7df6252a3d9d8c4ad20e03"
+  },
+  {
+    "path": "vegetation/vegetation/registry.json",
+    "bytes": 11780,
+    "sha256": "a3353b4d8f1ed14b1e12f913648711353f65f0238ee5118c4163a00c9730de78"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b1_baobab_rt.glb",
+    "bytes": 416016,
+    "sha256": "cb91c1018d18d0663fcec2ddd15e7baf4d8edab19a1162f2bdfc9da030b2f3b4"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b1_baobab_rt.zveg",
+    "bytes": 15809,
+    "sha256": "d4235997717f28ed705c9393bbd8105b1b1e491d0a60066c2df37d77a82e8355"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b1_baobab_rt2.glb",
+    "bytes": 426088,
+    "sha256": "22665631ef3068fab8e17b97022ce9e605ad123ea3628f6cb77ee9058e18ab75"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b1_baobab_rt2.zveg",
+    "bytes": 15823,
+    "sha256": "8b023a0ce24249dc29c6d42577f08f89698bd52a956639741750855353e17500"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b1_beech_rt.glb",
+    "bytes": 315048,
+    "sha256": "bef873dbfb64a09d7cd1f30ad8ecd773c25ffeeda03dab73ec5de02bbfe1c32a"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b1_beech_rt.zveg",
+    "bytes": 15836,
+    "sha256": "838368d15774adce7c61efd2137bbb999ea933dc92d2ac18f5ee2f57a96e47f5"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b1_beech_rt2.glb",
+    "bytes": 349232,
+    "sha256": "05a43b93ab539bf8bad379dc14141c9386edb6ea5b7434e4c98a8b1b0a17fb01"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b1_beech_rt2.zveg",
+    "bytes": 15854,
+    "sha256": "9ffa4b20cb58b5eb21c862309c2fe0ce9ed59a066e0e7b7e26e1955c0c78092f"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b1_beech_rt3.glb",
+    "bytes": 349188,
+    "sha256": "1ccbbc1a3cb90630055320fc4727caf20b2482d605950b10422dba2080ea75aa"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b1_beech_rt3.zveg",
+    "bytes": 15843,
+    "sha256": "798901bd6a6d2bf4f46ff465a539039a031fa805f8b26ff4e4a9c7cc3b35c13f"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b1_beech_rt4.glb",
+    "bytes": 313536,
+    "sha256": "df9a9fac9249f6d85b04b19434b858c80f7c9b4f184703e2f97b6cf810ccac8d"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b1_beech_rt4.zveg",
+    "bytes": 15844,
+    "sha256": "044414795971853d73649365ca5dbd9cf8f47daa42a828e3d1ac855647f9db6e"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b1_montereycypress_rt.glb",
+    "bytes": 522972,
+    "sha256": "612e913fadd7a15c61a5eecb44bc9a68ca251eef4f443f3a4ca641c79c70bf2c"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b1_montereycypress_rt.zveg",
+    "bytes": 15795,
+    "sha256": "139493f86c6f92b2fe43c3cd8f4453002e9a8661622cf3453573d25cf84866d8"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b1_montereycypress_rt2.glb",
+    "bytes": 526732,
+    "sha256": "50fe6e2314dce504460a5ca83f83471648709ce2b05c28077b87f84c5308ea5a"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b1_montereycypress_rt2.zveg",
+    "bytes": 15787,
+    "sha256": "d7f9ef1c033e1440a17d924b65b6889d89e6ec5f4e462f7c7f9561d703305a28"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b1_montereycypress_rt3.glb",
+    "bytes": 797856,
+    "sha256": "d4a03acfdd5a9b6a3406bfb016a2a404adb269a34df81223c397d0d4b030c5a3"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b1_montereycypress_rt3.zveg",
+    "bytes": 15781,
+    "sha256": "ed059975cd64d2df82ffcac9cdf245e19cf984538c3394a930a81a3b2a152d66"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b1_montereycypress_rt4.glb",
+    "bytes": 491428,
+    "sha256": "fb4b8f313afa74a7c6df4cd565f1f4b27c48748c8c3e4a10f1cfdb94cb92b808"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b1_montereycypress_rt4.zveg",
+    "bytes": 15772,
+    "sha256": "936e49ebb66b1120f7c0fe4aa4c7e1d0524216f7b28042f0caabd8ef49a86e00"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b1_montereycypress_rt5.glb",
+    "bytes": 707452,
+    "sha256": "db324187937724bf3fdab314ca905759850a1c896c3777ae4166f64246e428c4"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b1_montereycypress_rt5.zveg",
+    "bytes": 15790,
+    "sha256": "979fb5883469f4bb4c374c18854401998b8399a327f6e22fab06d1d7f04a9b4f"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b1_pagodatree_rt.glb",
+    "bytes": 520388,
+    "sha256": "83971d86ac05ee6d79c40a9b2497bbae52a7115444d9129857f0370b38627c2f"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b1_pagodatree_rt.zveg",
+    "bytes": 15881,
+    "sha256": "989e8f688e2b8dbdf17f9b1152480558e1e1984bdc9522f33b561399fdd03de5"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b1_pagodatree_rt2.glb",
+    "bytes": 559704,
+    "sha256": "627d9909f9be1d4b1db3c0394d78583e02a5a7f85d80b5db19dc1ac4edd90b5c"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b1_pagodatree_rt2.zveg",
+    "bytes": 15955,
+    "sha256": "e7ca3ede3168331b04f746c95a86fce45b14086854fa6c5580b2c7428c6b3589"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b1_pagodatree_rt3.glb",
+    "bytes": 488796,
+    "sha256": "de5085f9be262ca4d11bfaccbc8845e488e8a906d7ff5a5448856807d417d2a8"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b1_pagodatree_rt3.zveg",
+    "bytes": 15876,
+    "sha256": "ae1ffb81962ced22f1002c7cb35250231551565c39ee2afd0cb7fabe3987c184"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b1_sassafras_rt_fall.glb",
+    "bytes": 347260,
+    "sha256": "fd64895a592cccb80c2eb97c153498a66d50618e8d2b68563108802d6a422da6"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b1_sassafras_rt_fall.zveg",
+    "bytes": 15864,
+    "sha256": "86cd1a671b7accb2ee81fc1a842ab482497add3c47977030c5e59ca7df695e5f"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b1_sassafras_rt_fall2.glb",
+    "bytes": 338092,
+    "sha256": "40f26b3ab93ddf3939f76a0720de1f46f0292fb2894e46e71f335d844651d0bd"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b1_sassafras_rt_fall2.zveg",
+    "bytes": 15994,
+    "sha256": "65df0132b0411f6f2cea1a0773380ea0d44842360e54542f74a695311ac0cf50"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b2_cedaroflebanon_rt.glb",
+    "bytes": 308664,
+    "sha256": "a12294bdde7ffd76e1f058fb893834267359092c641056d882ac8e4e7a5dfd6e"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b2_cedaroflebanon_rt.zveg",
+    "bytes": 15849,
+    "sha256": "c1caa40bc5c798167f3598eaea730579c937d0e13d4f07864cabb4acc50fb250"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b2_cedaroflebanon_rt2.glb",
+    "bytes": 312476,
+    "sha256": "d4ab3cc593614e25b9e9edeedd422b91bb373fabc55c07589616d4a0c58d971d"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b2_cedaroflebanon_rt2.zveg",
+    "bytes": 15862,
+    "sha256": "401259a2d1b0a04c65ff9fc0a27b9370ef15471d4d1a6daab138e96d16d1f030"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b2_cedaroflebanon_rt3.glb",
+    "bytes": 301360,
+    "sha256": "574bf54f201d6d9c790e540ea731ee6788c5e9268575f0a4a916f076c4e35108"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b2_cedaroflebanon_rt3.zveg",
+    "bytes": 15831,
+    "sha256": "a0ad08ecaa0eebf132c6b7a6449d5e134487d26a596fb7093c6350b0f361b196"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b2_ivyspy_rt_winter.glb",
+    "bytes": 339904,
+    "sha256": "1088ee7626940ca2cd99c1be60a878e094de02892613c3419b460e55c3a8ccd8"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b2_ivyspy_rt_winter.zveg",
+    "bytes": 15825,
+    "sha256": "4377c5957b86298354f0429c80b72a0d697352315ab68255f0d5b41c8ccd9a5d"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b2_ivyspy_rt_winter2.glb",
+    "bytes": 345544,
+    "sha256": "8e19034ccf1aa5d34b3b698f1df74edcb48e7d924144096998269dc0710b6248"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b2_ivyspy_rt_winter2.zveg",
+    "bytes": 15781,
+    "sha256": "6a61873f37774059b1a6d4c6399095808f7b7537c1452a6688789600efc93b03"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b2_ivyspy_rt.glb",
+    "bytes": 448952,
+    "sha256": "2be6cbbe1a8cb6ee45e5dbc7587a442c94b87daf09e8a70f4e6b3dfbaa5ade5d"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b2_ivyspy_rt.zveg",
+    "bytes": 15867,
+    "sha256": "978fdad38d08d9da112d4684c1d93985cf5e8503690e7bc6a058ff609438a731"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b2_ivyspy_rt2.glb",
+    "bytes": 461268,
+    "sha256": "093e01086492354e282e8eb53138c5fac83c4fef7d626d8a2dce5514ce6a19f2"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b2_ivyspy_rt2.zveg",
+    "bytes": 15883,
+    "sha256": "6f6dedb1b8d4d5c5acbb989e48b819c2d25e048b002f6983f32751aebd4e0628"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b2_ivyspy_rt3.glb",
+    "bytes": 437432,
+    "sha256": "67388a2eb35305e8973887568c66121e05300f4468a46bdccc6d14bd79392e44"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b2_ivyspy_rt3.zveg",
+    "bytes": 15877,
+    "sha256": "b1fe0e09f14e109bacd6fd51da045dbababce08b90f3d63f34458cd8f89cca45"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b2_ivyspy_rt4.glb",
+    "bytes": 459112,
+    "sha256": "ef8a474e7f0807a42693c73bd4bb12862dc4a69e3ac2b0a25f130b4213fa5a3b"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b2_ivyspy_rt4.zveg",
+    "bytes": 15856,
+    "sha256": "1766c7ce7c9151b0a4b92edcb30f3703f2a1ba8c8638314a8cdc1a4da417b29d"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b2_ivyspy_rt5.glb",
+    "bytes": 438512,
+    "sha256": "784f7d3e04d21713a5d20e2b48a08183c7736f3a9863a5b0c364a531847b01c8"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b2_ivyspy_rt5.zveg",
+    "bytes": 15848,
+    "sha256": "3fa98be90194141740c37eb482bb219c07fb5c7ec14a51d82d3dc76496e11e6d"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b2_japanesemaple_rt_fall.glb",
+    "bytes": 230760,
+    "sha256": "f9729efdbd33ffedbad7131a7dd3a59e1d50934b10413fe8735638e705590b3d"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b2_japanesemaple_rt_fall.zveg",
+    "bytes": 15866,
+    "sha256": "5aa93736ad6c39da36f61003bcd7870147c371a4b3a57bd1e1bdbdb271558a41"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b2_japanesemaple_rt_fall2.glb",
+    "bytes": 199376,
+    "sha256": "610a9a86daaf24cdfcf7393e19ab93cdf205e09cffca677aa39175e0a3900754"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b2_japanesemaple_rt_fall2.zveg",
+    "bytes": 15860,
+    "sha256": "cafa7562a1a77d5c555bd1807a1567fcafd6f9ffc43eacece1cff3ef4f3da5ce"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b2_redoak_rt.glb",
+    "bytes": 585536,
+    "sha256": "774be0b0933c5d0640fe70cb8cef123c5e18c51000c0a51d859912185b63b4c6"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b2_redoak_rt.zveg",
+    "bytes": 15012,
+    "sha256": "de7926ddb8b86e8420c7f37d1ca20aed2015bfcb904af11a70ad9c67ada9b341"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b2_redoak_rt2.glb",
+    "bytes": 504860,
+    "sha256": "ae7729a07020faaf4c7af02d12d3eb19cf62925a3a129b334de0184defcc1707"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b2_redoak_rt2.zveg",
+    "bytes": 15004,
+    "sha256": "174aaa0c8d72d22f360fc59244c99f238fb0a7f129543926ab02e9b2da2db816"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b2_redoak_rt3.glb",
+    "bytes": 575084,
+    "sha256": "2af100b7700da60bef1c544ad231521fba30473e167eb5b57ecf565e06fa1a20"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b2_redoak_rt3.zveg",
+    "bytes": 15008,
+    "sha256": "0f33cec255273fc26cb96810262a86de0615600aab1afaa6afa6c240264c0a3a"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b2_redoak_rt4.glb",
+    "bytes": 549060,
+    "sha256": "ad765f85a05fc4fdbbd5ff32ab935c7c5799012a9b823d99ce9c4b36ef3df559"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b2_redoak_rt4.zveg",
+    "bytes": 15012,
+    "sha256": "491a21bc923279576ba0442289b98ec9e1df02e1dba7809f10b9e227702938a6"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b3_beech_rt_fall.glb",
+    "bytes": 340488,
+    "sha256": "9a3ec60b51ca44f1f017bdab31df20733c54253e17046587dbdbc89390aae8c7"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b3_beech_rt_fall.zveg",
+    "bytes": 15856,
+    "sha256": "42b673fdfb37105fef2a82edca71ae9506a182f40f1ae3dde642646af2ee74ec"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b3_beech_rt_fall2.glb",
+    "bytes": 327412,
+    "sha256": "fce36dfb855a7837d496dbed2bc37e462d5f4c22f7d6e9a04343702ac61c2fb2"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b3_beech_rt_fall2.zveg",
+    "bytes": 15852,
+    "sha256": "87c273605dd352472a00e3ca09edd1119631c1085bad51709ce27d6cf89df3b7"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b3_beech_rt.glb",
+    "bytes": 315048,
+    "sha256": "318f6c359df2a4e60fd3edb4bd1078288cd5a45dfd7ccfc121650147d49c0ad1"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b3_beech_rt.zveg",
+    "bytes": 15844,
+    "sha256": "5e111d3e9a1e52e063aa4abbd0d2e5daae0e3ba05cfc6af9c711e05164132f4a"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b3_beech_rt2.glb",
+    "bytes": 350580,
+    "sha256": "cc6e7c7761a6fae8a6192b8ada245de04d2737e869f74322710a520f573760f3"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b3_beech_rt2.zveg",
+    "bytes": 15841,
+    "sha256": "05a264f47c27a3754c7e0f2779f6a49886e5d97bcdfd73d30454340f2a6cde89"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b3_beech_rt3.glb",
+    "bytes": 311740,
+    "sha256": "f5bfb9e88bc3e666b9c2c0070afb440c95e93d23928f1232c34c18d3e2ff5f0f"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b3_beech_rt3.zveg",
+    "bytes": 15842,
+    "sha256": "08dc259dc7236fe07889fe165932033e256f13d08d85cfb364f64d8ee872bc6c"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b3_pagodatree_rt_winter.glb",
+    "bytes": 360016,
+    "sha256": "34a32403adf5c93c8ac9878488a8760813f8a1f3579173b4a30f248440ab9070"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b3_pagodatree_rt_winter.zveg",
+    "bytes": 15840,
+    "sha256": "d4977645ddf7fe37435f62006542b7bba7b28cf9028d277d6d9f332515329967"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b3_pagodatree_rt_winter2.glb",
+    "bytes": 341704,
+    "sha256": "cf6811387e2b8b28b3696af192c419d4190fd1bcf2b77b90ff2550bbe39b0c01"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b3_pagodatree_rt_winter2.zveg",
+    "bytes": 15805,
+    "sha256": "bbff641faba03f671a42154e23426e33860e1a30789876599dc80fcc7c1e9017"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b3_shingleoak_rt.glb",
+    "bytes": 1665576,
+    "sha256": "ed23e56e1fad8522008159973f8b8d5bb7de23548678b2b350d3a61f0ea35dcf"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b3_shingleoak_rt.zveg",
+    "bytes": 15783,
+    "sha256": "c2b8720dc19ca0dbd93dceca22b8063b9506aefb9272502741b5a0b33365829f"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b3_shingleoak_rt2.glb",
+    "bytes": 1422516,
+    "sha256": "e0614b0c8b6fbc66285aa902e533b51d77cc7156cac6ebcba95a94516b17e177"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b3_shingleoak_rt2.zveg",
+    "bytes": 15761,
+    "sha256": "bb49f7eb762fafd3aedafbfb30520f2089715a438967fba1dedde18282ab5d52"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b3_shingleoak_rt3.glb",
+    "bytes": 1509960,
+    "sha256": "43df6342abce0ba695de47cc07c3192d89a0e6a95b46099a6cafc23f8f505380"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b3_shingleoak_rt3.zveg",
+    "bytes": 15761,
+    "sha256": "a7be1cb6ba5a08212a09f5b230d57cbe017fefaddf2dbe0c5f6119a755873ea4"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b3_shingleoak_rt4.glb",
+    "bytes": 1893368,
+    "sha256": "c676ef447ec55a13637e5292c9df33ff3feb31db22e21ae7ecaed4a4cc39d8d6"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b3_shingleoak_rt4.zveg",
+    "bytes": 15766,
+    "sha256": "078166001de97ae9b86addd2b3a5502d05891f37c891aef3f7c7d370e5a75101"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b3_shingleoak_rt5.glb",
+    "bytes": 1633416,
+    "sha256": "0a1fac21e6f42961ef1be402da1093ee239160c2224f5ce9eee72d87dac9720a"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b3_shingleoak_rt5.zveg",
+    "bytes": 15778,
+    "sha256": "fcb2c192d4e142360fdcdae57c57ec919e21b9a6309607089da9205cbd52281d"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b3_umbrellathorn_rt_flowers.glb",
+    "bytes": 344628,
+    "sha256": "73dd1b231a00ea3c699ff8d0e3622c5c13f1504bc06570dd9ea9c9e7d4adf956"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b3_umbrellathorn_rt_flowers.zveg",
+    "bytes": 15890,
+    "sha256": "6c793f93abef2218b8cd5ad5ca81c68d5b9fc00894c728992f6d65e826e89976"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b3_umbrellathorn_rt_flowers2.glb",
+    "bytes": 399588,
+    "sha256": "a701c0ddb45b5abd21874a1e82ca154d9c9ea228e253f26a23ee18d0451ce65a"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b3_umbrellathorn_rt_flowers2.zveg",
+    "bytes": 15798,
+    "sha256": "cd0f255c16f6fb96dcf16a580012ca9c4f43aad4bc8802b820251f8953938a2f"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b3_umbrellathorn_rt_flowers3.glb",
+    "bytes": 400596,
+    "sha256": "66e1d28e928454a21f421ce31d27990ce93fbc4e52e575b16623f7a10e192811"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b3_umbrellathorn_rt_flowers3.zveg",
+    "bytes": 15810,
+    "sha256": "b2b4e069a0bde591698aecee320491e8b580714d44190801b7d53f95bf62028c"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b3_umbrellathorn_rt_flowers4.glb",
+    "bytes": 483476,
+    "sha256": "e271ba2e062f36f602bca8d854cc945140afd6bba0dadc1c47aae7852f10022f"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/b3_umbrellathorn_rt_flowers4.zveg",
+    "bytes": 15789,
+    "sha256": "ca3b805daa7f917a966a5ddf469e8bca9cbbad0b82e884adfa0b82558ff74ef3"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/christmastree1.glb",
+    "bytes": 878460,
+    "sha256": "b6ec20e6cb1939232df142556a2ddbf68ffb9e958ce1f7cdafc667ddb2f54183"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/christmastree1.zveg",
+    "bytes": 14448,
+    "sha256": "1a7dace51bf0b7352720fdecc8104885d8603c24c17b1c1af7dd61cf9bc16dc9"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/christmastree2.glb",
+    "bytes": 878460,
+    "sha256": "253c4894e2e4243cd925fb3cccc390d6b015afc3463ca7104b09a33c721b0248"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/christmastree2.zveg",
+    "bytes": 14466,
+    "sha256": "679700b0c323660ac5c80716037d08676ea2d883a752829abe38165ff738ed25"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/christmastree3.glb",
+    "bytes": 878460,
+    "sha256": "e9fccc16f2fea30b45c45416275aaa0a813187c14c82894b9cbe32c33cc75875"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/christmastree3.zveg",
+    "bytes": 14467,
+    "sha256": "afd9b7719e6422dd1f4f96031fae1e8029c750e685a60234a8ebe7e741d68a74"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n1_baobab_rt_winter.glb",
+    "bytes": 345932,
+    "sha256": "3c0137a1357a1ea9c0c06ef5e365b2f36f3a8ee67f382cdcd7d0838c9f333248"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n1_baobab_rt_winter.zveg",
+    "bytes": 15768,
+    "sha256": "c9858ae1c67968d14bad121e4062a5eb80ffbdacc03e75406118ee7654ac4f60"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n1_beech_rt_winter.glb",
+    "bytes": 293152,
+    "sha256": "f59e3bc0b842dd5d35550a27dfd6de2bbd46af66e7587ae82957344153182275"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n1_beech_rt_winter.zveg",
+    "bytes": 15819,
+    "sha256": "4437525765970cca2bfdb740c74756dfe5693c0bcf2ff515cf036767ebc4f565"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n1_beech_rt_winter02.glb",
+    "bytes": 287956,
+    "sha256": "7d24394b21f70b7005eebcd68f26b8aed4d9676bf2f1369cfa72f583f0aaa6cf"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n1_beech_rt_winter02.zveg",
+    "bytes": 15809,
+    "sha256": "964ef52cd840aeb7636713fd4d91bc4b48db34fc879d2034d17195bc0d50c81c"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n1_beech_rt_winter03.glb",
+    "bytes": 306740,
+    "sha256": "64872265bb1c77641cafee780f6ea18190378b5a6cfe47fd31048086c3c8dac8"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n1_beech_rt_winter03.zveg",
+    "bytes": 15840,
+    "sha256": "9d2b6c6a2bdfb92d3e7d9d30973fa6478654bff99c0225c89eb24a84dabe3cd7"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n1_coloradobluespruce_rt_01.glb",
+    "bytes": 1077056,
+    "sha256": "9716f1128fb0ad48e721f1884302060fcf8cdab73d13b06444bc0adc7f0818cb"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n1_coloradobluespruce_rt_01.zveg",
+    "bytes": 15964,
+    "sha256": "b385abeded9f37941f629211371998284ffa63ba55d72bebad030caa8e752946"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n1_coloradobluespruce_rt_02.glb",
+    "bytes": 1025868,
+    "sha256": "2d19f22ddbedfe49f83a02e6ed3f1ebea67f6a5639a96268615d50e15e979476"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n1_coloradobluespruce_rt_02.zveg",
+    "bytes": 15965,
+    "sha256": "21a564b2f271ba7ef68c58ee12432d7a1088b8a44ada40638e1c53382e74e59b"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n1_coloradobluespruce_rt_03.glb",
+    "bytes": 1077268,
+    "sha256": "f63b34bedb43550f9e805c781fc763efbec2739b2a0f5ecc5c4e5ce43c0a4dda"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n1_coloradobluespruce_rt_03.zveg",
+    "bytes": 15977,
+    "sha256": "604161ac0a60e3dc1ebbf9205c85aae2d2b0df84868dbdc67efdba5dc9512d39"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n1_commonolive_rt_winter.glb",
+    "bytes": 357604,
+    "sha256": "022203ac3e92a459383f3e2ca51fc629628621b08f76e76d60b353ed8c401f40"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n1_commonolive_rt_winter.zveg",
+    "bytes": 15823,
+    "sha256": "20f1bb3fba0dc74617bc28a1b6d78c8015367c947818edac68c0592889964667"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n1_montereycypress_rt_winter_01.glb",
+    "bytes": 525412,
+    "sha256": "bd99bc898a1dc30ecdd590f8380f11121f8eaf5f9d143aff53460c04a254da15"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n1_montereycypress_rt_winter_01.zveg",
+    "bytes": 15776,
+    "sha256": "63d504b56e27cf7ba424d10eb5bd2eb4846a92741be3992382b232e07896f979"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n1_montereycypress_rt_winter_02.glb",
+    "bytes": 536428,
+    "sha256": "38775296c03b19203b942f00514b8a553406d1efb90bd139f6a4e3aea97a86ce"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n1_montereycypress_rt_winter_02.zveg",
+    "bytes": 15760,
+    "sha256": "7a56a839ca54211427c5b4bc5a97e24f259d27a8a82e8719fcc955adf2ab134f"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n1_montereycypress_rt_winter_03.glb",
+    "bytes": 437744,
+    "sha256": "c855e351e81f82893dbf585e0d35e9d293dba505f8ab9b5e54fdca58ea1da8b6"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n1_montereycypress_rt_winter_03.zveg",
+    "bytes": 15809,
+    "sha256": "a9be15fbb32a49834441b8741ab6e974113b8652ee634d01a742878b001a71f0"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n1_tulip_rt_winter_01.glb",
+    "bytes": 4384404,
+    "sha256": "ecdc3c3812b09df51cd87cc897da8f4521cd5f52f9cd356200d43281b349811d"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n1_tulip_rt_winter_01.zveg",
+    "bytes": 15924,
+    "sha256": "2a14a47d75a7197b8127d80156375925c69db708f7601ae3a6a83b1f8cd1b529"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n1_whitepine_rt_low_01.glb",
+    "bytes": 159312,
+    "sha256": "2cd9a51ccb08d80b32ecc2428cabba2c714c8669c8a89aebaec1370211da2a3f"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n1_whitepine_rt_low_01.zveg",
+    "bytes": 15759,
+    "sha256": "15830da4317ca4fc73657549a7fbe89629accb52649a49866392c5df8b02ff4d"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n1_whitepine_rt_low_02.glb",
+    "bytes": 178196,
+    "sha256": "5377a060b2cea50561e11610ecb3ecca5e4d0cfabd512a77717a28889d39b055"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n1_whitepine_rt_low_02.zveg",
+    "bytes": 15756,
+    "sha256": "f0205c1067c8e9cb6d38d75185fe5baa4c82b767fced87ce0e0eeec2bf9766c2"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n2_aloevera_rt_flowers_01.glb",
+    "bytes": 267156,
+    "sha256": "8ee9876009f9e7b2e78a356302d818b50779fe51d0add0efefe23b7a0c9590c1"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n2_aloevera_rt_flowers_01.zveg",
+    "bytes": 15852,
+    "sha256": "eb28ebea652a827ba80d4ed33ed2914f5a88c8773f9879774f9d48b2fa7948fe"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n2_aloevera_rt_flowers_02.glb",
+    "bytes": 267044,
+    "sha256": "3c997112d18d7c215ffd79e33e6905ecb413e902fb8367698ae12e741f32e7bd"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n2_aloevera_rt_flowers_02.zveg",
+    "bytes": 15850,
+    "sha256": "7103a9caaf85d122877f80d92eb038f76be224b00df455a7975e811730e178e4"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n2_bananatree_rt_01.glb",
+    "bytes": 395528,
+    "sha256": "f4275bbb3068783cc4e8f3e51cacfe041ea783629b532299f075bc191600bf1f"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n2_bananatree_rt_01.zveg",
+    "bytes": 15942,
+    "sha256": "2c18b925418400ae42d742d8cb5600cac686fd52d7e45d6ded911f129f8a01b1"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n2_bananatree_rt_02.glb",
+    "bytes": 395520,
+    "sha256": "8025107a24a2b32512ff1525568e03034e3fdcb29e80d764828dfdfcff21b145"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n2_bananatree_rt_02.zveg",
+    "bytes": 15939,
+    "sha256": "f35ad04d944b03b9a1b0b16abe6129474a0aac910514fdfe66c2eae72afd7cd8"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n2_cinnamonfern_rt_01.glb",
+    "bytes": 175576,
+    "sha256": "b4fec6499b63ea5a74dfcea5172ff2c2287ef42658b047c31554506faddbad44"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n2_cinnamonfern_rt_01.zveg",
+    "bytes": 15850,
+    "sha256": "b1905cfe5ed26d2068169b54a2e69e256b2fe516f95320b4e1d889d79cb0a412"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n2_cinnamonfern_rt_02.glb",
+    "bytes": 175404,
+    "sha256": "23356a7e1fedc142ee371ff760156f115b2497245900f94f027b9118742ab5b3"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n2_cinnamonfern_rt_02.zveg",
+    "bytes": 15847,
+    "sha256": "3137beac12afbf6ee93dda4a6ed446fb788a8b87e0941b2b61ebf685f6bf5fb6"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n2_cinnamonfern_rt_03.glb",
+    "bytes": 175596,
+    "sha256": "91fd5882009a3991025210958526d627efc030c43718f5a2e505ab6c24a9282f"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n2_cinnamonfern_rt_03.zveg",
+    "bytes": 15849,
+    "sha256": "070c62cac126f0550829f1597e1c5301a4189788d4445c1f844738626c85a232"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n2_coconutpalm_rt_01.glb",
+    "bytes": 384276,
+    "sha256": "f2acdad06df23827caa1033516ae222c5f93b94537ba85a8fc0cf5b05d92c2a1"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n2_coconutpalm_rt_01.zveg",
+    "bytes": 15944,
+    "sha256": "9322b64f104b84d5e9bf5c9be628338c982e3e324290851d86ac5a42506a8124"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n2_coconutpalm_rt_02.glb",
+    "bytes": 412392,
+    "sha256": "03651cb3278a7a0449a375e188fcd07eff9519aa71bf5c45862206e830c2de0e"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n2_coconutpalm_rt_02.zveg",
+    "bytes": 15931,
+    "sha256": "d7db1c4cf9ba079b625fd7cf826b0c47cb86e70615372f624663bb52a65d8827"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n2_coconutpalm_rt_03.glb",
+    "bytes": 383952,
+    "sha256": "860961e051dac17c316365f49502ca128872c1f4aefdd0b4e8f658080b4995c6"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n2_coconutpalm_rt_03.zveg",
+    "bytes": 15944,
+    "sha256": "e87fed224df0e0e36101027798f85326cd1ce4586e700d5073261c4d5581b086"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n2_curlypalm_rt_01.glb",
+    "bytes": 450824,
+    "sha256": "832f9b69e69152df242c4cdd95f088cc3993c34a580538a0770c8742f2071457"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n2_curlypalm_rt_01.zveg",
+    "bytes": 15951,
+    "sha256": "72512e69e698ff5057cf1534f969fdc9ef5b68116b57723c5336a46443b9160f"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n2_curlypalm_rt_02.glb",
+    "bytes": 451080,
+    "sha256": "63cffda69ae2ec909665c9c24ac710e08d33b84965889d5eb198bd84df64f341"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n2_curlypalm_rt_02.zveg",
+    "bytes": 15952,
+    "sha256": "ce1fa2b94f197f4ee017e869c9f0a0d8c3162b0c2afcc15f77a47d6c352debec"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n2_curlypalm_rt_03.glb",
+    "bytes": 450732,
+    "sha256": "3f77fdca733095ccc67e9bc25e72e07b651f7542acc9c99165a32bfe48d727ba"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n2_curlypalm_rt_03.zveg",
+    "bytes": 15955,
+    "sha256": "3468fb453ab684b55d8f139185859a08af036f28d9ac00e7fedd414cf82cde15"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n2_datepalm_rt_01.glb",
+    "bytes": 511856,
+    "sha256": "70cb3c2dd791516843332e389aee3606b9f78f6f3fe91e2623d9c7d667d2b986"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n2_datepalm_rt_01.zveg",
+    "bytes": 15940,
+    "sha256": "2385fdee0a220d03016b606cc55930f655f4592974a69fd84202b4a3bbce9ce3"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n2_datepalm_rt_02.glb",
+    "bytes": 511488,
+    "sha256": "2d77683bbce6ae5b913b44ea3602115709d4bfdb1c4a604eb84fa7652f489704"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n2_datepalm_rt_02.zveg",
+    "bytes": 15947,
+    "sha256": "96fabcf895edfc4545647176e6a7287d963cf457eaeef87c8fdf5454c8209d8a"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n2_datepalm_rt_03.glb",
+    "bytes": 511588,
+    "sha256": "0db8958a8e44055c655d905d01ba9142e3beda595ecc3c04076fb4f9793c6440"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n2_datepalm_rt_03.zveg",
+    "bytes": 15938,
+    "sha256": "cdbd10067256002ed43cca91bf53a81865bb69bfae11eb66f2617e77642a041a"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n2_joshuatree_rt_01.glb",
+    "bytes": 388216,
+    "sha256": "f76e53bcbaec4ec840f77be0c9e437ad9af5bc15f0fc087dc70f8e7472ce5a41"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n2_joshuatree_rt_01.zveg",
+    "bytes": 15869,
+    "sha256": "b95452d90398278183dbb373da5f4aa7f0d708fa7536d4c808a9fcf159217fcc"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n2_joshuatree_rt_02.glb",
+    "bytes": 474856,
+    "sha256": "5adb0ca272d1585841b44b6f2f482451e2c82c8ce518840bac576d28fe7817d7"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n2_joshuatree_rt_02.zveg",
+    "bytes": 15847,
+    "sha256": "f588aca17f637338313b2d5b41ba8794018e648818c105a730da1979ab37f46d"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n2_joshuatree_rt_03.glb",
+    "bytes": 473172,
+    "sha256": "3a40b1c329005dee659fe8a573c2fa0dc1c635ae8b1e967a3a316cd4ea2215a8"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n2_joshuatree_rt_03.zveg",
+    "bytes": 15851,
+    "sha256": "8b50c80b4d2d0137af94efff5988f418f947d779cf419e86b12048915e62984f"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n2_palmetto_rt_01.glb",
+    "bytes": 366232,
+    "sha256": "b8ebd6e2575629054c13c660d3b7713f0b615aa7655c30544fba7b41fdaa60f2"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n2_palmetto_rt_01.zveg",
+    "bytes": 14801,
+    "sha256": "3768b1dae413cca115550341e18c96f12304c796cc3ec3e77947d97b9f45c795"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n2_palmetto_rt_02.glb",
+    "bytes": 365828,
+    "sha256": "a88eef9d765096ed6083491d180760dde841518717c50f6c017538cb544bfafb"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n2_palmetto_rt_02.zveg",
+    "bytes": 14796,
+    "sha256": "f41c2672f2c52efd7d773cc08f3905679bfe21fc85f8ae4f5b319387643caabd"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n2_palmetto_rt_03.glb",
+    "bytes": 371136,
+    "sha256": "0b73b9fcaeaba9ba9900f9b2e04239675cb8694fda0b0b57dcbef62959e1b666"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/tree/n2_palmetto_rt_03.zveg",
+    "bytes": 14797,
+    "sha256": "bd988339960ad39ab1e6eff869b68434ea0c4bc34cbbae9516776dbad742e9ce"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/1/baobab_rt.glb",
+    "bytes": 415212,
+    "sha256": "b35bb07fb245c0cec5ecba2488e2c2b389aa07da7024de86a0aae48ebe06ba4e"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/1/baobab_rt.zveg",
+    "bytes": 15844,
+    "sha256": "b283cd5c72efaebecd7b41be756c238d9f70d3666d647d5334caa50aa51c86a4"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/1/baobab_rt2.glb",
+    "bytes": 426128,
+    "sha256": "0a68b164ceb54ead21e38e84865aac9223b360c9357b680fad48022548b862b2"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/1/baobab_rt2.zveg",
+    "bytes": 15864,
+    "sha256": "52211bf8a4741a46094462d27a7b1a1272b17a8c72f9b4587181c2b8577de908"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/1/beech_rt.glb",
+    "bytes": 315084,
+    "sha256": "e16164fadafad21caf34dd018566a11cb2a9a0d06fbbbcb725f24409a4fb861e"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/1/beech_rt.zveg",
+    "bytes": 15860,
+    "sha256": "6ce90bde3b545f8d38d43e41c657ba93de2791cdd5d4d2cc7ab44f73b2937af3"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/1/beech_rt2.glb",
+    "bytes": 349240,
+    "sha256": "3f50f8c9dec9f7bc7f111ce3e096703d93de6b1a0c6b3ec427397029a990495f"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/1/beech_rt2.zveg",
+    "bytes": 15857,
+    "sha256": "26534d2908b6db1dff754b225bd5418bd5f9cb16a01ac2c43a072617b8ebb028"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/1/beech_rt3.glb",
+    "bytes": 349536,
+    "sha256": "7b84320e9b1c68ff642ef08a18a6b2f55883a5af4c2362f93c0dac539892f553"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/1/beech_rt3.zveg",
+    "bytes": 15872,
+    "sha256": "f66e703e57e89e3a2899ba4fbddb798d2d59e0d77aff9423655715f63069fefc"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/1/beech_rt4.glb",
+    "bytes": 313564,
+    "sha256": "a73c2f3ef882fdba3eb13f60ca95a14dbe1eaee7e7493ff67a0b259ea138e32d"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/1/beech_rt4.zveg",
+    "bytes": 15862,
+    "sha256": "fe317a7c27f42ed50762d3278838903a78b6f7caedeadfd9d7ded931ca299a80"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/1/montereycypress_rt.glb",
+    "bytes": 522996,
+    "sha256": "e6ae65ee358ff20cd806b71d2c8ac51f0eb24ad6a071c6da4a88327041c4e491"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/1/montereycypress_rt.zveg",
+    "bytes": 15844,
+    "sha256": "36a2d70792e7004762aa538bd0271d9dbee52af69e741fddce876943d8e2e9a5"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/1/montereycypress_rt2.glb",
+    "bytes": 527072,
+    "sha256": "7b71c1c8055bc9e3fbe235bef305511ee90696d0abd608e2f1b1d15d871f6b48"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/1/montereycypress_rt2.zveg",
+    "bytes": 15811,
+    "sha256": "37a5786683ecd6d39eac8f38de67e95060557214232da50dc0adccfeb06664af"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/1/montereycypress_rt3.glb",
+    "bytes": 797564,
+    "sha256": "f8a7e6da9eb6be5c8701218852590e664629f06868bb501a37a7b59da0aa291e"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/1/montereycypress_rt3.zveg",
+    "bytes": 15848,
+    "sha256": "11577b1548edc22a5fed97f93c8070ff897cc06c88046980f2630f0045acf364"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/1/montereycypress_rt4.glb",
+    "bytes": 491448,
+    "sha256": "8d7d164ee14daa09f3cfec6c6b7a739e84336a5e0455b32ed3bbc0a04bed81cb"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/1/montereycypress_rt4.zveg",
+    "bytes": 15800,
+    "sha256": "32d9bf18298da8445333655e2965b6dcfe519eac92e3545339c72a6f3b9eba5c"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/1/montereycypress_rt5.glb",
+    "bytes": 711268,
+    "sha256": "e6ed4e2a9449398c71164c7f0c27f9489976d0bbafd6b14abe44db9d0050953e"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/1/montereycypress_rt5.zveg",
+    "bytes": 15777,
+    "sha256": "4209395959b8c499abfb939f918e7ff1a8f25da65a9c55206981809e16aaafc3"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/1/pagodatree_rt.glb",
+    "bytes": 518840,
+    "sha256": "0f05131a015411921945a7277c35cf52dd5600657be37a1626f0c5ac3eca7e7b"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/1/pagodatree_rt.zveg",
+    "bytes": 15902,
+    "sha256": "9ce52bf55591531200c0b2735211f5efbccd9161df6fdb8d4fc9f9518523dd55"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/1/pagodatree_rt2.glb",
+    "bytes": 559764,
+    "sha256": "6a1d3108f2b1d09e36d94d3dfd45ea4ff8d4d7f99f79aaf8e28ce70d83a6e726"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/1/pagodatree_rt2.zveg",
+    "bytes": 15978,
+    "sha256": "8fc61f82a1a069f3d388ad7bffe4f14170f34e654bc8ad626a0f00f00d31ebcd"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/1/pagodatree_rt3.glb",
+    "bytes": 488816,
+    "sha256": "d4f33895ca1cb62eca984cc36eecd45d2ee00bf7e2b98ab281a3f0f67a84625f"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/1/pagodatree_rt3.zveg",
+    "bytes": 15888,
+    "sha256": "95430b8bc0fd4163686330edde25b5c03b1ca279eeb9a5fb5f3ed42810646a6e"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/1/sassafras_rt_fall.glb",
+    "bytes": 347300,
+    "sha256": "b85417f68074555a39925f0a06a2e31abaebcd6f10f69fc9228cab7ca835fc38"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/1/sassafras_rt_fall.zveg",
+    "bytes": 15879,
+    "sha256": "e90f1f482cf29affc51d8d41d316762be32abbd5f431e9a129f99fd1a1438926"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/1/sassafras_rt_fall2.glb",
+    "bytes": 338124,
+    "sha256": "ee453b484056b8fa13f91e838edbcca946ca9b4484e8281276042f2da7c5ce39"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/1/sassafras_rt_fall2.zveg",
+    "bytes": 15875,
+    "sha256": "2a437ccbe50528b6366cd0f37eb99c803ee91f7fc864e4013d3393024d745ac5"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/c/englishoak_rt_low_01.glb",
+    "bytes": 948512,
+    "sha256": "a59bdadd2fb4aa2c46de4d199268af2175b93b3ba3204fd21cbf35d94a38f45b"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/c/englishoak_rt_low_01.zveg",
+    "bytes": 15823,
+    "sha256": "a05e5bf65b35ffc1dc55be6918fc6c49f53bc30df393986dda15c5ab6bb3813a"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/c/englishoak_rt_low_02.glb",
+    "bytes": 951848,
+    "sha256": "b852025c66d5df883c34eef865bd208659ddee8c1f9c5287fd3c995167ef0e34"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/c/englishoak_rt_low_02.zveg",
+    "bytes": 15769,
+    "sha256": "67abbe664c42b93b09f7d58778104059510d5ddb6b1c3b431b8b57f7c0b2d88b"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/c/englishoak_rt_low_03.glb",
+    "bytes": 940584,
+    "sha256": "ab1ee358b50f0d92371d189367be45bf345da14b95a0e4f09967609718e75df1"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/c/englishoak_rt_low_03.zveg",
+    "bytes": 15773,
+    "sha256": "a826cb9438f5559252cf5f56a352b0d77d655436b5f62842a83713bbc02c7d51"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/c/greenash_rt_01.glb",
+    "bytes": 552056,
+    "sha256": "f27eb6a4fe6c4d5c8a3343b63e3b2697c0b05fc889ea64ab7f661d752cde1759"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/c/greenash_rt_01.zveg",
+    "bytes": 15821,
+    "sha256": "88af0dbbeb89eacdc40e487092de1da84f87c1f9626a77e35b4b4df1404c214d"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/c/greenash_rt_02.glb",
+    "bytes": 524584,
+    "sha256": "c0768f28c23ec2248a244476b2de76f34c84371e2118f79a692e9d4e7de06b7f"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/c/greenash_rt_02.zveg",
+    "bytes": 15808,
+    "sha256": "206b1e22071e52188b528f2e49762bd54aef0f150961eaa3d7d31418811de2e6"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/c/greenash_rt_03.glb",
+    "bytes": 533432,
+    "sha256": "4522f8609827d3ace8a664927e519ec8a7acab2d286b34093a20aac072c8e5db"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/c/greenash_rt_03.zveg",
+    "bytes": 15804,
+    "sha256": "074d1720c4e9bdb4cb5ea26fe55f401c95b90434712cb18d00f93e6eef11b1b0"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/c/redmaple_rt_01.glb",
+    "bytes": 727240,
+    "sha256": "7b8c3a33b74673ae5a30797972f4f17341d27c8da0814feeefe0566588ed968f"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/c/redmaple_rt_01.zveg",
+    "bytes": 15647,
+    "sha256": "cb3df177005caf1125673b18ea52af35f10d9e9a949f52511048125f1c203d78"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/c/redmaple_rt_02.glb",
+    "bytes": 711724,
+    "sha256": "ea10997a82a1adb71f6ac66e96ebf0616bb92a859f9f3fefff2f6b056f3f519e"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/c/redmaple_rt_02.zveg",
+    "bytes": 15663,
+    "sha256": "d7ec5d4ed6440e28feaa3bb2a70e1411d6cf4c08b7cd7b62e8f8c27dba1876d2"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/c/redmaple_rt_03.glb",
+    "bytes": 721872,
+    "sha256": "51fe6df9574d99da594869c10d5424c0b0f06a95184944024582a5b95177fb97"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/c/redmaple_rt_03.zveg",
+    "bytes": 15652,
+    "sha256": "c81702939a85b9bb35ae573d7640e2363280d97bb797fdfce509c16b35b7846a"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/c/riverbirch_rt_01.glb",
+    "bytes": 1025364,
+    "sha256": "eac587defd9f29feb5c283f50b7b3a2f01ebac11064f5fe92c3b498eae0cb984"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/c/riverbirch_rt_01.zveg",
+    "bytes": 15813,
+    "sha256": "add51e1d3f54f7d17e78d5077774dd602c06db07c19695a29930cc9024a72877"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/c/riverbirch_rt_02.glb",
+    "bytes": 1019080,
+    "sha256": "f9d1fee35fe964d0259b3380eabe19df15a7a29c640fa5cd070deb2cf521823b"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/c/riverbirch_rt_02.zveg",
+    "bytes": 15772,
+    "sha256": "80b637013db45539a13cce70ec7ceb3e3cf8903c142f1652cc45862ef0dcda51"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/c/riverbirch_rt_03.glb",
+    "bytes": 1070432,
+    "sha256": "33fc1172708fee4d55b19d5e30f697a1ebf62a76a62302c6f7a425ecbd9bb55a"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/c/riverbirch_rt_03.zveg",
+    "bytes": 15771,
+    "sha256": "f08d2709d8cc645b3a8ff9b67345e4355b50a6b6871d5d8874d6fc5b5c03bf70"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/c/sugarmaple_rt_01.glb",
+    "bytes": 801464,
+    "sha256": "2833e7d4eb8dc2f32986c6fbd12c86366d764eaf34eeaca507b7067ed81c7b61"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/c/sugarmaple_rt_01.zveg",
+    "bytes": 15844,
+    "sha256": "a4825e245df3c6d9e4de572fa85ce98ca715760de149dcb47952502eac435b23"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/c/sugarmaple_rt_02.glb",
+    "bytes": 890448,
+    "sha256": "9300aa30fc250450b84c8d3a94a4deb64adad74a4d1a3dcbedf75b63768df524"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/c/sugarmaple_rt_02.zveg",
+    "bytes": 15844,
+    "sha256": "e0571e7c6f8eee983373c68144043597b51040207309566994fc98594b819db5"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/c/sugarmaple_rt_03.glb",
+    "bytes": 704136,
+    "sha256": "48158c1dd4921b9021774a9488c4534535f562fe10bef39c936f868d2ba5395c"
+  },
+  {
+    "path": "vegetation/vegetation/ymir work/zone/b/tree/c/sugarmaple_rt_03.zveg",
+    "bytes": 15832,
+    "sha256": "4ad406f69c50d08bd111e2957eea5e601307fcf733ca44c919b3f35b7c05b3c3"
+  }
+]

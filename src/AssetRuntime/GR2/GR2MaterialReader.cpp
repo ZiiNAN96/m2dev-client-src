@@ -1,4 +1,5 @@
 #include "GR2Reader.h"
+#include "EterBase/MapLoadTrace.h"
 #include "AssetRuntime/AnimationStallAudit.h"
 #include <algorithm>
 
@@ -23,6 +24,7 @@ std::string Texture(Types& t,Object material,std::string_view usage) { std::set<
 }
 MaterialAsset ReadMaterial(Types& t,Object source)
 {
+    MapLoadTrace::Scope gr2Detail("Assets","GR2 materials");
     AnimationStallAudit::WorkScope audit(AnimationStallAudit::Work::Material);
     MaterialAsset result; if(!source) return result;
     result.name=t.Text(source,"Name"); result.hasMatchingTextures=true;

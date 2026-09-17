@@ -1,3 +1,5 @@
+> Historischer G1/G2/G3/4-Bericht vom frueheren main. Die damalige eigene Renderer-Implementierung wurde durch den [DiligentFX-Neuaufbau](phase-gdx-diligentfx-rebuild.md) und G8/H2/P0 ersetzt. Dieser Bericht beschreibt keine aktuelle Implementierung oder erneute Abnahme. Bei MAIN-INTEGRATION-X als Historie erhalten.
+
 # G1-X — Material System 2.0 / PBR Foundation
 
 Datum: 2026-09-15. Windows x64, Diligent D3D11, natives GR2 und GLB; GCC/LP64 für den neutralen Kern.

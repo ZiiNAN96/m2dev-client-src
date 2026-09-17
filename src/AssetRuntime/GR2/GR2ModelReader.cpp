@@ -1,4 +1,5 @@
 #include "GR2Reader.h"
+#include "EterBase/MapLoadTrace.h"
 #include "AssetRuntime/AnimationStallAudit.h"
 #include <algorithm>
 
@@ -23,6 +24,8 @@ AnimationRuntime::LocalTransform RuntimeTransform(const LocalTransform& source)
 }
 SkeletonAsset ReadSkeleton(Types& t, Object source)
 {
+    MapLoadTrace::Scope p0lScope("Actors","GR2 skeleton","cpu");
+
     SkeletonAsset result; result.name=t.Text(source,"Name");
     const auto bones=t.Array(source,"Bones"); Require(bones.size()<=65536,"invalid bone count");
     for(const auto& bone:bones) {
@@ -38,6 +41,8 @@ SkeletonAsset ReadSkeleton(Types& t, Object source)
 }
 Contents Read(const File& f)
 {
+    MapLoadTrace::Scope p0lScope("Assets","GR2 object graph","cpu");
+
     Types t(f); Contents result;
     const auto root=t.Root();
     auto models=t.Array(root,"Models"), animations=t.Array(root,"Animations");
@@ -48,6 +53,7 @@ Contents Read(const File& f)
         if(auto skeleton=t.Child(source,"Skeleton")) {
             AnimationStallAudit::WorkScope skeletonAudit(AnimationStallAudit::Work::Skeleton);
             model.skeleton=ReadSkeleton(t,skeleton);
+            MapLoadTrace::Scope runtimeTrace("Assets","GR2 runtime skeleton");
             std::vector<AnimationRuntime::SkeletonBone> bones;
             for(const auto& b:model.skeleton->bones) bones.push_back({b.name,b.parentIndex,RuntimeTransform(b.localBind),b.inverseBind});
             if(!bones.empty()) {
@@ -78,6 +84,12 @@ Contents Read(const File& f)
     for(auto source:animations) {
         AnimationAsset metadata; auto data=ReadAnimation(t,source,metadata,result);
         result.animations.push_back(std::move(metadata)); result.animationData.push_back(std::move(data));
+    }
+    MapLoadTrace::Count("gr2-models",MapLoadTrace::state.gr2Path,result.models.size());
+    MapLoadTrace::Count("gr2-animations",MapLoadTrace::state.gr2Path,result.animations.size());
+    for(const auto& model:result.models) {
+        MapLoadTrace::Count("gr2-meshes",MapLoadTrace::state.gr2Path,model.meshes.size());
+        if(model.skeleton)MapLoadTrace::Count("gr2-skeletons",MapLoadTrace::state.gr2Path,model.skeleton->bones.size());
     }
     return result;
 }

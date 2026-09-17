@@ -3,14 +3,42 @@
 // LICENSE-Boost.txt. ZiiNAN changes: checked spans, explicit little-endian
 // parameters, offset-based output, bounded models and malformed-stream errors.
 #include "GR2File.h"
+#include "EterBase/MapLoadTrace.h"
 #include "AssetRuntime/AnimationStallAudit.h"
 #include <algorithm>
 #include <numeric>
+#if defined(_M_X64) || defined(__SSE2__)
+#include <emmintrin.h>
+#endif
 
 namespace AssetRuntime::GR2
 {
 namespace
 {
+// The coarse CDF gives short sorted intervals. Compare four probabilities at
+// once on SSE2 (baseline on x64), preserving exact upper_bound semantics.
+// Never load past last, including empty intervals and the 16384 sentinel.
+auto SymbolUpperBound(std::vector<std::uint32_t>::const_iterator first,
+    std::vector<std::uint32_t>::const_iterator last, std::uint32_t value)
+{
+#if defined(_M_X64) || defined(__SSE2__)
+    // Keep logarithmic work for unusually wide intervals as well as malformed
+    // inputs. The measured production intervals are almost all <=16 entries.
+    if(last-first>16)return std::upper_bound(first,last,value);
+    // All CDF entries are validated in [0,16384], so signed comparison is exact.
+    const auto limit=_mm_set1_epi32(static_cast<int>(value+1));
+    while(last-first>=4) {
+        const auto cdf=_mm_loadu_si128(reinterpret_cast<const __m128i*>(&*first));
+        const auto mask=static_cast<unsigned>(_mm_movemask_ps(_mm_castsi128_ps(_mm_cmpgt_epi32(limit,cdf))));
+        if(mask!=15)return first+std::countr_one(mask);
+        first+=4;
+    }
+    while(first!=last && *first<=value)++first;
+    return first;
+#else
+    return std::upper_bound(first,last,value);
+#endif
+}
 struct Decoder
 {
     std::span<const std::byte> input;
@@ -49,6 +77,9 @@ struct Decoder
 struct Window
 {
     std::vector<std::uint32_t> ranges{0,16384}, values{0}, weights{4};
+    // Coarse inverse CDF, refreshed only with ranges. Small models keep their
+    // original search; larger models search only the exact enclosing interval.
+    std::array<std::uint16_t,65> search{};
     std::uint32_t total=4, increase=4, rebuild=8, weightLimit{}, increaseLimit{}, capacity{};
     Window(std::uint32_t maximum, std::uint32_t count) : capacity(count+1)
     {
@@ -74,6 +105,13 @@ struct Window
         std::uint32_t start=0;
         for(std::size_t i=0;i<weights.size();++i) { ranges[i]=start; start+=weights[i]*factor/8; }
         Require(start<=16384, "Oodle1 model range overflow"); ranges.back()=16384;
+        if(ranges.size()>=16) {
+            std::size_t cursor=0;
+            for(unsigned bucket=0;bucket<search.size();++bucket) {
+                while(cursor<ranges.size() && ranges[cursor]<=bucket*256u) ++cursor;
+                search[bucket]=static_cast<std::uint16_t>(cursor);
+            }
+        }
         if(increase>increaseLimit/2) rebuild=total+increaseLimit;
         else { increase*=2; rebuild=total+increase; }
     }
@@ -81,7 +119,10 @@ struct Window
     {
         if(total>=rebuild) { if(rebuild>=weightLimit) Rescale(); Rebuild(); }
         const auto value=decoder.Decode(16384);
-        const auto upper=std::upper_bound(ranges.begin(),ranges.end(),value);
+        const auto bucket=value>>8;
+        const auto first=ranges.size()>=16?ranges.begin()+search[bucket]:ranges.begin();
+        const auto last=ranges.size()>=16?ranges.begin()+search[bucket+1]:ranges.end();
+        const auto upper=SymbolUpperBound(first,last,value);
         Require(upper!=ranges.begin() && upper!=ranges.end(), "invalid Oodle1 model range");
         const auto index=static_cast<std::size_t>(upper-ranges.begin()-1);
         Require(index<weights.size(), "invalid Oodle1 symbol index");
@@ -109,6 +150,7 @@ void DecodeBlock(std::span<const std::byte> header, Decoder& decoder,
         Bad("invalid Oodle1 parameters max="+std::to_string(byteMaximum)+" count="+std::to_string(byteCount)+" reserved="+std::to_string(word1&0x7fe00));
     const auto lowMaximum=std::min(offsetMaximum+1,4u), midMaximum=std::min(offsetMaximum/4+1,256u), highMaximum=offsetMaximum/1024+1;
     Require(highCount<highMaximum, "invalid Oodle1 offset model");
+    MapLoadTrace::Scope setupTrace("Assets","GR2 decoder model setup");
     Window low(lowMaximum-1,lowMaximum), high(highMaximum-1,highCount+1);
     std::vector<Window> mid, literal, length;
     mid.reserve(highMaximum); for(std::uint32_t i=0;i<highMaximum;++i) mid.emplace_back(midMaximum-1,midMaximum);
@@ -117,6 +159,8 @@ void DecodeBlock(std::span<const std::byte> header, Decoder& decoder,
         const auto count=(word2 >> ((3-std::min(i/16,3u))*8))&255;
         Require(count<=65,"invalid Oodle1 length model"); length.emplace_back(64,count);
     }
+    setupTrace.Stop();
+    MapLoadTrace::Scope loopTrace("Assets","GR2 decoder loop");
     const auto start=position;
     std::uint32_t previous=0;
     while(position<stop) {
@@ -140,6 +184,8 @@ void DecodeBlock(std::span<const std::byte> header, Decoder& decoder,
 }
 std::vector<std::byte> Decompress(const Section& section, std::span<const std::byte> bytes)
 {
+    MapLoadTrace::Scope p0lScope("Assets","GR2 section decompression","cpu");
+
     AnimationStallAudit::WorkScope audit(AnimationStallAudit::Work::Decompress,section.compression!=0 && section.expanded!=0);
     if(section.compression!=0 && section.compression!=2)
         throw Error(Failure::UnsupportedCompression,"unsupported compression "+std::to_string(section.compression));
@@ -148,7 +194,9 @@ std::vector<std::byte> Decompress(const Section& section, std::span<const std::b
     if(!section.expanded) { Require(bytes.empty(),"empty compressed section mismatch"); return {}; }
     Require(bytes.size()>=37,"truncated Oodle1 header");
     Require(section.stop0<=section.stop1 && section.stop1<=section.expanded,"invalid Oodle1 stops");
+    MapLoadTrace::Scope allocateTrace("Assets","GR2 output allocation");
     std::vector<std::byte> result(section.expanded);
+    allocateTrace.Stop();
     Decoder decoder(bytes.subspan(36));
     const std::array<std::size_t,3> stops{section.stop0,section.stop1,section.expanded};
     std::size_t position=0;

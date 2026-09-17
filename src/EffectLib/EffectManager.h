@@ -28,7 +28,9 @@ class CEffectManager : public CScreen, public CSingleton<CEffectManager>
 
 		void UpdateSound();
 		void Update();
-		void Render();
+        enum class RenderPass { All, World, Screen };
+        void Render(RenderPass pass=RenderPass::All);
+        void MarkScreenOverlay(DWORD instance);
 
 		void GetInfo(std::string* pstInfo);
 

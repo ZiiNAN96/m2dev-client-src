@@ -5,7 +5,6 @@
 #include <string>
 #include <string_view>
 #include <thread>
-#include "ShadowAmbient.h"
 
 // Platform-neutral settings. Only the owner (game/main) thread may access a Store.
 // Asset loading never accesses it; render consumers receive resolved value copies.
@@ -19,8 +18,8 @@ enum class GraphicsPreset { Low, Medium, High, Ultra, Custom };
 enum class GraphicsStyle { Classic, Modern };
 // Keep all six existing shadow modes, including old configs with solo shadows.
 enum class ShadowQuality { Off, Low, LegacySolo, Medium, High, Ultra };
-enum class AmbientOcclusionQuality { Off, Low, High, SSAO=Low, GTAO=High }; // Preserve G0 file values.
-enum class WaterQuality { Low, Medium, High };
+enum class AmbientOcclusionQuality { Off, SSAO, GTAO };
+enum class WaterQuality { Low, Medium, High, Ultra };
 enum class VegetationQuality { Low, Medium, High, Ultra };
 enum class TextureQuality { Medium, High, Ultra };
 
@@ -33,26 +32,23 @@ struct GraphicsSettings
     WaterQuality water{WaterQuality::High};
     VegetationQuality vegetation{VegetationQuality::High};
     TextureQuality textures{TextureQuality::High};
-    bool hdr{}, bloom{}, modernSky{}, highQualityFog{};
+    bool hdr{}, bloom{}, modernSky{};
     float viewDistance{DefaultViewDistance};
-    int fogLevel{}; // Existing dense / middle / light choice, distinct from future fog quality.
+    int fogLevel{}; // Classic-only dense / middle / light choice.
     bool operator==(const GraphicsSettings&) const = default;
 };
 
 struct GraphicsRuntimeConfig
 {
-    bool usePBR{};
     std::uint64_t revision{};
     GraphicsStyle style{GraphicsStyle::Classic};
     ShadowQuality shadows{ShadowQuality::Off};
-    ShadowQualityConfig shadowConfig;
-    AmbientDepthConfig ambientConfig;
     int legacyShadowLevel{3};
     AmbientOcclusionQuality ambientOcclusion{AmbientOcclusionQuality::Off};
     WaterQuality water{WaterQuality::High};
     VegetationQuality vegetation{VegetationQuality::High};
     TextureQuality textures{TextureQuality::High};
-    bool hdr{}, bloom{}, modernSky{}, highQualityFog{};
+    bool hdr{}, bloom{}, modernSky{};
     float viewDistance{DefaultViewDistance};
     float vegetationDistanceScale{1.f};
     float fogDistanceScale{.75f}, fogDensity{.000006f};
@@ -65,8 +61,7 @@ struct GraphicsFeatures
     bool ShadowsEnabled() const { return config.shadows != ShadowQuality::Off; }
     bool UseHDR() const { return config.hdr; }
     bool UseBloom() const { return config.bloom; }
-    bool UseModernSky() const { return config.modernSky; }
-    bool UsePBR() const { return config.usePBR; }
+    bool UseModernSky() const { return config.style==GraphicsStyle::Modern; }
     AmbientOcclusionQuality AOQuality() const { return config.ambientOcclusion; }
 };
 

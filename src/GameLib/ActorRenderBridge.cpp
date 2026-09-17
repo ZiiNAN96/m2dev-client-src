@@ -1,3 +1,4 @@
+#include "EterBase/MapLoadTrace.h"
 #include "StdAfx.h"
 #include "EterLib/DrawStateView.h"
 #include "ActorRenderBridge.h"
@@ -7,6 +8,7 @@
 #include "EterLib/DrawState.h"
 #include "Renderer/Diagnostics.h"
 #include "Renderer/AssetMaterialRenderData.h"
+#include "Renderer/GraphicsConfig.h"
 #include <fstream>
 
 // ZiiNAN: Diligent mount actor rendering
@@ -22,6 +24,17 @@ namespace
 {
 using namespace Renderer;
 std::ofstream diagnostics;
+TerrainTexturePtr LoadActorTexture(ActorInstanceData& data,const std::string& name,ActorPart part,ActorCategory category)
+{
+    if(name.empty()) return {};
+    auto& texture=data.textures[name];
+    if(!texture) {
+        texture=LoadStaticObjectTextureFile(name.c_str(),*actorRenderer);
+        if(texture && part!=ActorPart::Body) actorRenderer->TrackAttachmentTexture(texture);
+        if(texture && category==ActorCategory::Mount) actorRenderer->TrackMountTexture(texture);
+    }
+    return texture;
+}
 // ZiiNAN: Bounded, read-only evidence for rejected native states, never per-frame logging.
 struct ActorStateDiagnostic : CGraphicBase
 {
@@ -109,12 +122,17 @@ void Submit(void* context, const void* nativeInstance, ActorPart part, const Act
     auto& material=palette.GetMaterialRef(native.material);
     const auto& materialAsset=material.GetAsset();
     ApplyAssetMaterial(materialAsset,draw);
-    draw.material=material.GetRenderMaterial(*actorRenderer);
+    if(GetGraphicsRuntimeConfig().style==Graphics::GraphicsStyle::Modern)draw.material=material.GetModernMaterial(*actorRenderer);
     // OneTexture's opacity pass uses the same native stage-0 image, not a synthetic second mask.
-    const auto texture=draw.material->classicDiffuse;
+    auto load=[&](const std::string& name) -> TerrainTexturePtr {
+        return LoadActorTexture(data,name,part,category);
+    };
+    const auto texture=materialAsset.explicitRenderState && material.GetImagePointer(0) ?
+        material.GetImagePointer(0)->GetAssetTexture(*actorRenderer) : load(materialAsset.textures[0]);
     if(!texture) { Report(actor,*instance,"ERROR: actor diffuse texture upload"); return; }
     if(draw.actorStage==ActorMaterialStage::Specular) {
-        draw.sphereMap=draw.material->classicSphere;
+        const auto* sphere=material.GetSphereMapImage();
+        draw.sphereMap=sphere ? load(sphere->GetFileName()) : TerrainTexturePtr{};
         if(!draw.sphereMap) { Report(actor,*instance,"excluded: missing native sphere map"); return; }
     }
     const auto* world=instance->GetStaticObjectWorldMatrix(native.mesh);
@@ -126,7 +144,11 @@ void Submit(void* context, const void* nativeInstance, ActorPart part, const Act
     Math::MatrixTranspose(&normal,&normal); memcpy(draw.normalTransform.data(),&normal,64);
     draw.baseVertex=native.baseVertex+(native.rigid ? source->deformVertexCount : 0);
     draw.vertexCount=mesh.vertexCount; draw.firstIndex=native.firstIndex; draw.indexCount=native.indexCount;
-    if(!data.geometry) data.geometry=actorRenderer->CreateGeometry(*source,part,category);
+    if(!data.geometry) {
+        MapLoadTrace::GR2Context gr2Context(instance->GetModel()->GetAssetHandle().GetDocument()->Id());
+        MapLoadTrace::Scope gr2Upload("Assets","GR2 GPU submission");
+        data.geometry=actorRenderer->CreateGeometry(*source,part,category);
+    }
     if(!data.geometry) { Report(actor,*instance,"ERROR: actor geometry upload"); return; }
     if(!data.gpuPrototype && !source->IsRigid() && data.uploadedRevision!=data.revision) {
         if(!actorRenderer->UpdateVertices(data.geometry,data.vertices,source->deformVertexCount,category)) {
@@ -158,17 +180,22 @@ bool PrepareAnimatedActorResources(CActorInstance& actor)
         if(!data.ready || !source) return false;
         if(startupSkinningMode==PrototypeSkinningMode::GPUPrototype && source->deformVertexCount && !data.gpuPrototype)
             return false;
-        if(!data.geometry) data.geometry=actorRenderer->CreateGeometry(*source,part,parts.category);
+        if(!data.geometry) {
+        MapLoadTrace::GR2Context gr2Context(instance->GetModel()->GetAssetHandle().GetDocument()->Id());
+        MapLoadTrace::Scope gr2Upload("Assets","GR2 GPU submission");
+        data.geometry=actorRenderer->CreateGeometry(*source,part,parts.category);
+    }
         if(!data.geometry) return false;
         auto& palette=instance->GetStaticObjectMaterialPalette();
         for(uint32_t materialIndex=0;materialIndex<palette.GetMaterialCount();++materialIndex) {
             auto& material=palette.GetMaterialRef(materialIndex);
-            const auto runtime=material.GetRenderMaterial(*actorRenderer);
-            const auto texture=runtime->classicDiffuse;
-            if(texture && part!=ActorPart::Body)actorRenderer->TrackAttachmentTexture(texture);
-            if(texture && parts.category==ActorCategory::Mount)actorRenderer->TrackMountTexture(texture);
+            const auto& asset=material.GetAsset();
+            const auto texture=asset.explicitRenderState && material.GetImagePointer(0) ?
+                material.GetImagePointer(0)->GetAssetTexture(*actorRenderer) :
+                LoadActorTexture(data,asset.textures[0],part,parts.category);
             if(!texture) return false;
-            if(material.IsSpecularEnabled() && !runtime->classicSphere) return false;
+            if(const auto* sphere=material.IsSpecularEnabled() ? material.GetSphereMapImage() : nullptr)
+                if(!LoadActorTexture(data,sphere->GetFileName(),part,parts.category)) return false;
         }
     }
     return true;

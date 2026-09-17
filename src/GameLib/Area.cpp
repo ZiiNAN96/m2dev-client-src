@@ -1,6 +1,10 @@
 #include "StdAfx.h"
+#include "EterBase/MapLoadTrace.h"
 
 #include "EterLib/ResourceManager.h"
+#include "EterLib/GameThreadPool.h"
+#include "PackLib/PackManager.h"
+#include "AssetRuntime/GR2/GR2Preparation.h"
 #include "EterLib/DrawState.h"
 #include "EffectLib/EffectManager.h"
 #include "EterBase/Timer.h"
@@ -9,6 +13,7 @@
 #include "StaticObjectBridge.h"
 #include "PropertyManager.h"
 #include "Property.h"
+#include "Renderer/WorldResidencyDiagnostics.h"
 
 CDynamicPool<CArea::TObjectInstance>	CArea::ms_ObjectInstancePool;
 CDynamicPool<CAttributeInstance>		CArea::ms_AttributeInstancePool;
@@ -28,6 +33,7 @@ CArea* CArea::New()
 
 void CArea::Delete(CArea* pkArea)
 {
+    if(Renderer::verboseDiagnostics) {++Renderer::worldResidency.areasUnloaded; --Renderer::worldResidency.areasResident;}
 	pkArea->Clear();
 	ms_kPool.Free(pkArea);
 }
@@ -347,6 +353,8 @@ void CArea::RenderDungeon()
 
 void CArea::Refresh()
 {
+    MapLoadTrace::Scope p0lScope("Static objects","area refresh","cpu");
+
 	m_TreeCloneInstaceVector.clear();
 	m_ThingCloneInstaceVector.clear();
 	m_DungeonBlockCloneInstanceVector.clear();
@@ -427,12 +435,53 @@ void CArea::Refresh()
 
 void CArea::__Load_BuildObjectInstances()
 {
+    MapLoadTrace::Scope p0lScope("Static objects","instance build","cpu");
+
 	m_ObjectInstanceVector.clear();
 	m_ObjectInstanceVector.resize(GetObjectDataCount());
 
 	m_GraphicThingInstanceCRCMap.clear();
 
  	std::sort(m_ObjectDataVector.begin(), m_ObjectDataVector.end(), ObjectDataComp());
+
+    AssetRuntime::GR2::Preparation preparation;
+    auto* pool=CGameThreadPool::InstancePtr();
+    if(preparation.Enabled() && pool && pool->IsInitialized()) {
+        auto& resources=CResourceManager::Instance();
+        const auto add=[&](const std::string& path) {
+            if(resources.IsResourceLoaded(path.c_str())) return;
+            preparation.Add(path,[&] {
+                TPackFile file;
+                if(!CPackManager::Instance().GetFile(path,file)) return std::vector<std::byte>{};
+                const auto* first=static_cast<const std::byte*>(static_cast<const void*>(file.data()));
+                return std::vector<std::byte>(first,first+file.size());
+            });
+        };
+        // Use the existing, sorted placement list. No manifest or streaming;
+        // every job finishes before the original instance/publication loop.
+        for(const auto& object:m_ObjectDataVector) {
+            CProperty* property{}; const char* type{};
+            if(!CPropertyManager::Instance().Get(object.dwCRC,&property) ||
+               !property->GetString("PropertyType",&type) || prt::GetPropertyType(type)!=prt::PROPERTY_TYPE_BUILDING) continue;
+            prt::TPropertyBuilding data;
+            if(!prt::PropertyBuildingStringToData(property,&data)) continue;
+            add(data.strFileName);
+            for(unsigned lod=1;lod<=3;++lod) {
+                const auto path=CFileNameHelper::NoExtension(data.strFileName)+"_lod_0"+std::to_string(lod)+".gr2";
+                if(!resources.IsFileExist(path.c_str())) break;
+                add(path);
+            }
+        }
+        preparation.Run(static_cast<unsigned>(pool->GetWorkerCount()),[pool](std::function<void()> work) {
+            return pool->Enqueue(std::move(work));
+        },[]() -> std::uint64_t {
+            // Platform timing stays in the Windows consumer, outside GR2 core.
+            FILETIME created{},exited{},kernel{},user{};
+            if(!GetThreadTimes(GetCurrentThread(),&created,&exited,&kernel,&user)) return 0;
+            return (((std::uint64_t(kernel.dwHighDateTime)<<32)|kernel.dwLowDateTime)+
+                    ((std::uint64_t(user.dwHighDateTime)<<32)|user.dwLowDateTime))*100;
+        });
+    }
 
 	DWORD i=0;
 	TObjectInstanceVector::iterator it;
@@ -495,6 +544,8 @@ void CArea::__SetObjectInstance(TObjectInstance * pObjectInstance, const TObject
 
 void CArea::__SetObjectInstance_SetEffect(TObjectInstance * pObjectInstance, const TObjectData * c_pData, CProperty * pProperty)
 {
+    MapLoadTrace::Scope p0lScope("Effects","world effects","cpu");
+
 	prt::TPropertyEffect Data;
 	if (!prt::PropertyEffectStringToData(pProperty, &Data))
 		return;
@@ -535,6 +586,8 @@ void CArea::__SetObjectInstance_SetEffect(TObjectInstance * pObjectInstance, con
 
 void CArea::__SetObjectInstance_SetTree(TObjectInstance * pObjectInstance, const TObjectData * c_pData, CProperty * pProperty)
 {
+    MapLoadTrace::Scope p0lScope("Vegetation","tree bush placement preparation","cpu");
+
 	const char * c_szTreeName;
 	if (!pProperty->GetString("TreeFile", &c_szTreeName))
 		return;
@@ -556,6 +609,8 @@ void CArea::TObjectInstance::SetTree(float x, float y, float z, DWORD dwTreeCRC,
 
 void CArea::__SetObjectInstance_SetBuilding(TObjectInstance * pObjectInstance, const TObjectData * c_pData, CProperty * pProperty)
 {
+    MapLoadTrace::Scope p0lScope("Static objects","building preparation","cpu");
+
     Renderer::StaticObjectLoadScope staticObjectLoad;
 	prt::TPropertyBuilding Data;
 	if (!prt::PropertyBuildingStringToData(pProperty, &Data))
@@ -740,6 +795,9 @@ void CArea::__LoadAttribute(TObjectInstance * pObjectInstance, const char * c_sz
 
 bool CArea::Load(const char * c_szPathName)
 {
+    MapLoadTrace::Scope p0lScope("Static objects","placement and instances","cpu");
+    MapLoadTrace::Count("area-build",c_szPathName);
+
 	Clear();
 
 	std::string strObjectDataFileName = c_szPathName + std::string("AreaData.txt");
@@ -754,6 +812,8 @@ bool CArea::Load(const char * c_szPathName)
 
 bool CArea::__Load_LoadObject(const char * c_szFileName)
 {
+    MapLoadTrace::Scope p0lScope("Static objects","placement parsing","cpu");
+
 	CTokenVectorMap stTokenVectorMap;
 
 	if (!LoadMultipleTextData(c_szFileName, stTokenVectorMap))
