@@ -1,6 +1,7 @@
 #include "GR2AssetProvider.h"
 #include "EterBase/MapLoadTrace.h"
 #include "GR2Reader.h"
+#include "GR2Preparation.h"
 #include "AssetRuntime/RuntimeAnimationInstance.h"
 #include "AssetRuntime/AnimationRuntimeMode.h"
 #include "AssetRuntime/AnimationStallAudit.h"
@@ -206,6 +207,13 @@ class Provider final : public AssetProvider
 public:
     LoadResult Load(AssetId id,std::span<const std::byte> bytes) override
     {
+        if(auto prepared=GR2::Preparation::Take(id)) {
+            try {
+                if(prepared->error) std::rethrow_exception(prepared->error);
+                MapLoadTrace::Scope convertTrace("Assets","GR2 document conversion");
+                return {AssetHandle(std::make_shared<Document>(std::move(id),std::move(prepared->contents))),AssetError::None};
+            } catch(const std::exception& error) { return {{},AssetError::InvalidAsset,"GR2 reader: "+std::string(error.what())}; }
+        }
     MapLoadTrace::Scope p0lScope("Assets","GR2 parse","cpu");
     MapLoadTrace::Count("gr2-parse",id,bytes.size(),true);
 

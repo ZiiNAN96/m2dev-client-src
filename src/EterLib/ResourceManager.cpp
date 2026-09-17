@@ -412,6 +412,11 @@ bool CResourceManager::isResourcePointerData(DWORD dwFileCRC)
 	return (itor->second)->IsData();
 }
 
+bool CResourceManager::IsResourceLoaded(const char* fileName)
+{
+    return isResourcePointerData(__GetFileCRC(fileName));
+}
+
 DWORD CResourceManager::__GetFileCRC(const char * c_szFileName, const char ** c_ppszLowerFileName)
 {
 	static char s_szFullPathFileName[MAX_PATH];

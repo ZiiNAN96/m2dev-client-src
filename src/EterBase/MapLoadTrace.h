@@ -32,6 +32,8 @@ struct State {
     std::map<std::string, Cost> gr2Costs;
     Cost* gr2References{};
     Cost* gr2ReferencesTotal{};
+    // Opt-in CPU decode intervals, used to measure their union across workers.
+    std::vector<std::pair<Clock::time_point,Clock::time_point>> gr2DecodeIntervals;
 };
 // Background threads deliberately do not contribute to main-thread attribution.
 inline thread_local State state;
@@ -57,7 +59,9 @@ public:
     void Stop() {
         if(!active_)return; active_=false;
         auto f=std::move(state.stack.back()); state.stack.pop_back();
-        const auto elapsed=Ms(Clock::now()-f.start);
+        const auto end=Clock::now();
+        const auto elapsed=Ms(end-f.start);
+        if(f.key=="Assets\tcpu\tGR2 section decompression") state.gr2DecodeIntervals.emplace_back(f.start,end);
         auto& c=state.costs[f.key]; c.inclusive+=elapsed; c.exclusive+=elapsed-f.children; ++c.calls;
         if(elapsed>c.maximum)c.maximum=elapsed;
         if(!state.gr2Path.empty()) {

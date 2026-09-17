@@ -8,6 +8,7 @@
 #include "Resource.h"
 #include "ResourceManager.h"
 #include "AssetRuntime/AnimationStallAudit.h"
+#include "AssetRuntime/GR2/GR2Preparation.h"
 
 #include <limits>
 
@@ -77,6 +78,12 @@ void CResource::Load()
 
 	DWORD		dwStart = ELTimer_GetMSec();
 	TPackFile	file;
+
+    if(const auto prepared=AssetRuntime::GR2::Preparation::Payload(c_szFileName); !prepared.empty()) {
+        me_state=OnLoad(static_cast<int>(prepared.size()),prepared.data())?STATE_EXIST:STATE_ERROR;
+        m_dwLoadCostMiliiSecond=ELTimer_GetMSec()-dwStart;
+        return;
+    }
 
 	//Tracenf("Load %s", c_szFileName);
 

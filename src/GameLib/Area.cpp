@@ -2,6 +2,9 @@
 #include "EterBase/MapLoadTrace.h"
 
 #include "EterLib/ResourceManager.h"
+#include "EterLib/GameThreadPool.h"
+#include "PackLib/PackManager.h"
+#include "AssetRuntime/GR2/GR2Preparation.h"
 #include "EterLib/DrawState.h"
 #include "EffectLib/EffectManager.h"
 #include "EterBase/Timer.h"
@@ -440,6 +443,45 @@ void CArea::__Load_BuildObjectInstances()
 	m_GraphicThingInstanceCRCMap.clear();
 
  	std::sort(m_ObjectDataVector.begin(), m_ObjectDataVector.end(), ObjectDataComp());
+
+    AssetRuntime::GR2::Preparation preparation;
+    auto* pool=CGameThreadPool::InstancePtr();
+    if(preparation.Enabled() && pool && pool->IsInitialized()) {
+        auto& resources=CResourceManager::Instance();
+        const auto add=[&](const std::string& path) {
+            if(resources.IsResourceLoaded(path.c_str())) return;
+            preparation.Add(path,[&] {
+                TPackFile file;
+                if(!CPackManager::Instance().GetFile(path,file)) return std::vector<std::byte>{};
+                const auto* first=static_cast<const std::byte*>(static_cast<const void*>(file.data()));
+                return std::vector<std::byte>(first,first+file.size());
+            });
+        };
+        // Use the existing, sorted placement list. No manifest or streaming;
+        // every job finishes before the original instance/publication loop.
+        for(const auto& object:m_ObjectDataVector) {
+            CProperty* property{}; const char* type{};
+            if(!CPropertyManager::Instance().Get(object.dwCRC,&property) ||
+               !property->GetString("PropertyType",&type) || prt::GetPropertyType(type)!=prt::PROPERTY_TYPE_BUILDING) continue;
+            prt::TPropertyBuilding data;
+            if(!prt::PropertyBuildingStringToData(property,&data)) continue;
+            add(data.strFileName);
+            for(unsigned lod=1;lod<=3;++lod) {
+                const auto path=CFileNameHelper::NoExtension(data.strFileName)+"_lod_0"+std::to_string(lod)+".gr2";
+                if(!resources.IsFileExist(path.c_str())) break;
+                add(path);
+            }
+        }
+        preparation.Run(static_cast<unsigned>(pool->GetWorkerCount()),[pool](std::function<void()> work) {
+            return pool->Enqueue(std::move(work));
+        },[]() -> std::uint64_t {
+            // Platform timing stays in the Windows consumer, outside GR2 core.
+            FILETIME created{},exited{},kernel{},user{};
+            if(!GetThreadTimes(GetCurrentThread(),&created,&exited,&kernel,&user)) return 0;
+            return (((std::uint64_t(kernel.dwHighDateTime)<<32)|kernel.dwLowDateTime)+
+                    ((std::uint64_t(user.dwHighDateTime)<<32)|user.dwLowDateTime))*100;
+        });
+    }
 
 	DWORD i=0;
 	TObjectInstanceVector::iterator it;

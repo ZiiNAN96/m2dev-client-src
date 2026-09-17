@@ -8,7 +8,7 @@ target_link_libraries(AssetRuntimeGlTF PUBLIC AssetRuntime AnimationRuntime PRIV
 target_include_directories(AssetRuntimeGlTF SYSTEM PRIVATE "${CMAKE_SOURCE_DIR}/vendor/cgltf")
 
 add_library(AssetRuntimeGR2 STATIC GR2/GR2File.cpp GR2/GR2Compression.cpp GR2/GR2Types.cpp
-    GR2/GR2ModelReader.cpp GR2/GR2MeshReader.cpp GR2/GR2MaterialReader.cpp GR2/GR2AnimationReader.cpp GR2/GR2AssetProvider.cpp)
+    GR2/GR2ModelReader.cpp GR2/GR2MeshReader.cpp GR2/GR2MaterialReader.cpp GR2/GR2AnimationReader.cpp GR2/GR2AssetProvider.cpp GR2/GR2Preparation.cpp)
 target_link_libraries(AssetRuntimeGR2 PUBLIC AssetRuntime AnimationRuntime PRIVATE M2FirstPartyArchitectureChecks)
 add_executable(GR2CorpusScanner ../../tools/GR2/CorpusScanner.cpp)
 target_link_libraries(GR2CorpusScanner PRIVATE AssetRuntimeGR2 M2FirstPartyArchitectureChecks)

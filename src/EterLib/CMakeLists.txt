@@ -7,6 +7,7 @@ target_link_libraries(EterLib
 	mio
 	freetype
 	M2Platform
+	AssetRuntimeGR2
 )
 
 GroupSourcesByFolder(EterLib)
