@@ -41,6 +41,16 @@ struct Metadata {
     FoliageProfile foliage;
 };
 struct LodBlend { LodState first,second;float transition{}; };
+// At most two representations; a third request waits for the current handover.
+struct LodTransition {
+    LodState from,to;
+    float coverage{},lastTime{};
+    bool initialized{},active{};
+    LodBlend Update(const LodState& target,float seconds);
+};
+struct StableLod { LodState state; float distance{}; };
+std::vector<StableLod> BuildStableLods(const Metadata&);
+LodState SelectStableLOD(std::span<const StableLod>, float distance, float hysteresis, int& state);
 struct Quality {float treeDistance{1},grassDistance{2400},grassDensity{.5f},windDetail{1},transmission{1};};
 Quality ResolveQuality(unsigned level);
 LodBlend SelectModernLOD(const Metadata&,float distance);
@@ -83,16 +93,20 @@ private:
 };
 struct Asset {
     Metadata metadata;AssetRuntime::AssetHandle geometry;
+    std::vector<StableLod> stableLods;
     Asset(){++liveAssets;}~Asset(){--liveAssets;}
     Asset(const Asset&)=delete;Asset& operator=(const Asset&)=delete;
 };
 using AssetPtr=std::shared_ptr<const Asset>;
 struct Instance {
     AssetPtr asset;Matrix transform{Identity};LodState lod;float phase{};
+    int stableLod{-1};bool distanceVisible{true};
+    LodTransition transition;
     Instance(AssetPtr,const Matrix&,std::uint64_t stableId=0);
     ~Instance(){--liveInstances;}
     Instance(const Instance&)=delete;Instance& operator=(const Instance&)=delete;
     bool Update(const Vec3& camera,std::span<const std::array<float,4>> planes={},float distanceScale=1.f);
+    bool UpdateStable(const Vec3& camera,std::span<const std::array<float,4>> planes={},float distanceScale=1.f,bool fixedDetail=false);
 };
 using ReadFile=std::function<bool(std::string_view,std::vector<std::byte>&)>;
 struct LoadResult { AssetPtr asset;std::string error;explicit operator bool()const{return bool(asset);} };

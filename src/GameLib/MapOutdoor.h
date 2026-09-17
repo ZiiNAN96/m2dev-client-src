@@ -181,6 +181,13 @@ class CMapOutdoor : public CMapBase
 		// 데이터
 		CTerrain *					m_pTerrain[AROUND_AREA_NUM];	// Terrain
 		CTerrainPatchProxy *		m_pTerrainPatchProxyList;			// CTerrain을 랜더링 할때 실제로 랜더링하는 폴리곤 패치들... Seamless Map 을 위해 CTerrain으로부터 독립...
+        bool m_stableWorld{},m_residentWholeMap{};
+        int m_renderSectorX{-1},m_renderSectorY{-1};
+        void UpdateWorldResidency(float x,float y);
+        void AssignResidentTerrainPatches();
+        void StabilizeTerrainLods();
+        int RenderAreaCount() const {return m_stableWorld?int(m_AreaVector.size()):AROUND_AREA_NUM;}
+        BOOL GetRenderAreaPointer(int index,CArea** area) {if(!m_stableWorld)return GetAreaPointer(BYTE(index),area);*area=m_AreaVector[index];return TRUE;}
 
 		long						m_lViewRadius;				// 시야 거리.. 셀단위임..
 		float						m_fHeightScale;				// 높이 스케일... 1.0일때 0~655.35미터까지 표현 가능.

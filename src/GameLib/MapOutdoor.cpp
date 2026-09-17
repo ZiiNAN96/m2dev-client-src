@@ -1,4 +1,6 @@
 #include "StdAfx.h"
+#include "Renderer/WorldResidencyDiagnostics.h"
+#include "WorldResidencyPolicy.h"
 #include "EterLib/DrawState.h"
 #include "EterLib/Camera.h"
 #include "PRTerrainLib/StdAfx.h"
@@ -339,6 +341,11 @@ bool CMapOutdoor::IsWireframe()
 void CMapOutdoor::CreateTerrainPatchProxyList()
 {
 	m_wPatchCount = ((m_lViewRadius * 2) / TERRAIN_PATCHSIZE) + 2;
+    if(m_stableWorld) {
+        const int sectors=m_residentWholeMap?std::max(m_sTerrainCountX,m_sTerrainCountY):WorldResidency::VisibleRadius*2+1;
+        m_wPatchCount=1;
+        while(m_wPatchCount<sectors*CTerrainImpl::PATCH_XCOUNT)m_wPatchCount*=2;
+    }
 	
 	m_pTerrainPatchProxyList = new CTerrainPatchProxy[m_wPatchCount * m_wPatchCount];
 	
@@ -382,6 +389,7 @@ void CMapOutdoor::EnablePortal(bool bFlag)
 
 void CMapOutdoor::DestroyArea()
 {
+    if(Renderer::verboseDiagnostics) {Renderer::worldResidency.areasUnloaded+=Renderer::worldResidency.areasResident; Renderer::worldResidency.areasResident=0;}
 	m_AreaVector.clear();
 	m_AreaDeleteVector.clear();
 
@@ -397,6 +405,7 @@ void CMapOutdoor::DestroyArea()
 
 void CMapOutdoor::DestroyTerrain()
 {
+    if(Renderer::verboseDiagnostics) {Renderer::worldResidency.terrainUnloaded+=Renderer::worldResidency.terrainResident; Renderer::worldResidency.terrainResident=0;}
 	m_TerrainVector.clear();
 	m_TerrainDeleteVector.clear();
 

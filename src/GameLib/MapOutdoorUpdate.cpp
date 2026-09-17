@@ -8,6 +8,9 @@
 #include "AreaTerrain.h"
 #include "TerrainQuadtree.h"
 #include "ActorInstance.h"
+#include "Renderer/WorldResidencyDiagnostics.h"
+#include "Renderer/GraphicsConfig.h"
+#include "WorldResidencyPolicy.h"
 
 // 2004.08.17.myevan.std::vector 를 사용할 경우 메모리 접근에 오래걸려 스택쪽으로 계산하도록 수정
 class PCBlocker_CDynamicSphereInstanceVector
@@ -46,6 +49,18 @@ class PCBlocker_CDynamicSphereInstanceVector
 
 bool CMapOutdoor::Update(float fX, float fY, float fZ)
 {
+    // Settings are published at the first render-frame boundary, which may be
+    // after Load(). Promote a Classic-loaded map once when Modern becomes active.
+    if(!m_stableWorld&&Renderer::GetGraphicsRuntimeConfig().style==Graphics::GraphicsStyle::Modern) {
+        __ClearGarvage();
+        m_stableWorld=true;m_residentWholeMap=WorldResidency::WholeMap(m_sTerrainCountX,m_sTerrainCountY);
+        m_renderSectorX=m_renderSectorY=-1;
+        DestroyTerrainPatchProxyList();FreeQuadTree();CreateTerrainPatchProxyList();BuildQuadTree();
+        if(m_residentWholeMap)for(WORD ty=0;ty<m_sTerrainCountY;++ty)for(WORD tx=0;tx<m_sTerrainCountX;++tx) {
+            LoadTerrain(tx,ty,0,0);LoadArea(tx,ty,0,0);
+        }
+        AssignTerrainPtr();
+    }
 	Math::Vector3 v3Player(fX, fY, fZ);
 
 	m_v3Player=v3Player;
@@ -116,7 +131,8 @@ bool CMapOutdoor::Update(float fX, float fY, float fZ)
 #ifdef __PERFORMANCE_CHECKER__
 	DWORD t4=ELTimer_GetMSec();
 #endif
-	__UpdateGarvage();
+    if(m_stableWorld)UpdateWorldResidency(fX,fY);
+    else __UpdateGarvage();
 #ifdef __PERFORMANCE_CHECKER__
 	DWORD t5=ELTimer_GetMSec();
 #endif
@@ -154,6 +170,57 @@ bool CMapOutdoor::Update(float fX, float fY, float fZ)
 #endif
 	
 	return true;
+}
+
+void CMapOutdoor::UpdateWorldResidency(float x,float y)
+{
+    // Residency encloses the view; gameplay retains its original 3x3 lookup.
+    if(auto* camera=CCameraManager::Instance().GetCurrentCamera()) {
+        const auto eye=camera->GetEye();x=eye.x;y=-eye.y;
+    }
+    const int cx=std::clamp(int(std::floor(x/CTerrainImpl::TERRAIN_XSIZE)),0,int(m_sTerrainCountX)-1);
+    const int cy=std::clamp(int(std::floor(y/CTerrainImpl::TERRAIN_YSIZE)),0,int(m_sTerrainCountY)-1);
+    if(m_residentWholeMap&&m_renderSectorX>=0)return;
+    if(cx==m_renderSectorX&&cy==m_renderSectorY)return;
+    m_renderSectorX=cx;m_renderSectorY=cy;
+    if(!m_residentWholeMap) {
+        for(int ty=std::max(0,cy-WorldResidency::PreloadRadius);ty<=std::min(int(m_sTerrainCountY)-1,cy+WorldResidency::PreloadRadius);++ty)
+            for(int tx=std::max(0,cx-WorldResidency::PreloadRadius);tx<=std::min(int(m_sTerrainCountX)-1,cx+WorldResidency::PreloadRadius);++tx) {
+                LoadTerrain(WORD(tx),WORD(ty),0,0);LoadArea(WORD(tx),WORD(ty),0,0);
+            }
+        const auto outside=[&](auto* sector) {
+            WORD sx,sy;sector->GetCoordinate(&sx,&sy);
+            return WorldResidency::Outside(sx,sy,cx,cy,WorldResidency::UnloadRadius)&&
+                WorldResidency::Outside(sx,sy,m_CurCoordinate.m_sTerrainCoordX,m_CurCoordinate.m_sTerrainCoordY,LOAD_SIZE_WIDTH);
+        };
+        // Delete only outside both render/preload and gameplay ranges. No hidden
+        // deletion queue: a resident coordinate always has exactly one owner.
+        std::erase_if(m_TerrainVector,[&](CTerrain* sector){if(!outside(sector))return false;CTerrain::Delete(sector);return true;});
+        std::erase_if(m_AreaVector,[&](CArea* sector){if(!outside(sector))return false;CArea::Delete(sector);return true;});
+    }
+    AssignTerrainPtr();
+    AssignResidentTerrainPatches();
+}
+
+void CMapOutdoor::AssignResidentTerrainPatches()
+{
+    if(Renderer::verboseDiagnostics)++Renderer::worldResidency.terrainAssignments;
+    for(unsigned i=0;i<unsigned(m_wPatchCount)*m_wPatchCount;++i)m_pTerrainPatchProxyList[i].Clear();
+    const int originX=m_residentWholeMap?0:m_renderSectorX-WorldResidency::VisibleRadius;
+    const int originY=m_residentWholeMap?0:m_renderSectorY-WorldResidency::VisibleRadius;
+    for(auto* terrain:m_TerrainVector) {
+        WORD tx,ty;terrain->GetCoordinate(&tx,&ty);
+        if(!m_residentWholeMap&&WorldResidency::Outside(tx,ty,m_renderSectorX,m_renderSectorY,WorldResidency::VisibleRadius))continue;
+        for(unsigned py=0;py<CTerrainImpl::PATCH_YCOUNT;++py)for(unsigned px=0;px<CTerrainImpl::PATCH_XCOUNT;++px) {
+            const unsigned gx=(int(tx)-originX)*CTerrainImpl::PATCH_XCOUNT+px;
+            const unsigned gy=(int(ty)-originY)*CTerrainImpl::PATCH_YCOUNT+py;
+            auto& proxy=m_pTerrainPatchProxyList[gy*m_wPatchCount+gx];
+            proxy.SetTerrainPatch(terrain->GetTerrainPatchPtr(BYTE(px),BYTE(py)));
+            proxy.terrainOwner=terrain;proxy.SetTerrainNum(0); // Legacy number unused by resident render paths.
+            proxy.SetPatchNum(short(py*CTerrainImpl::PATCH_XCOUNT+px));proxy.SetUsed(true);
+        }
+    }
+    UpdateQuadTreeHeights(m_pRootNode);
 }
 
 void CMapOutdoor::UpdateSky()
@@ -289,6 +356,7 @@ void CMapOutdoor::__Game_UpdateArea(Math::Vector3& v3Player)
 
 void CMapOutdoor::__UpdateAroundAreaList()
 {
+    if(m_stableWorld) {for(auto* area:m_AreaVector)area->Update();return;}
 #ifdef __PERFORMANCE_CHECKER__
 	DWORD ft1=Platform::Time::TickMilliseconds();
 #endif
@@ -541,6 +609,7 @@ struct PCBlocker_SInstanceList
 			return;
 
 		++m_dwInstCount;
+        if(pInstance->GetType()==TREE_OBJECT&&Renderer::GetGraphicsRuntimeConfig().style==Graphics::GraphicsStyle::Modern)return;
 
 		PCBlocker_CDynamicSphereInstanceVector::Iterator i;
 
@@ -711,6 +780,7 @@ bool CMapOutdoor::__IsInPCBlockerList(CGraphicObjectInstance* pkObjInstTest)
 // Updates the position of the terrain
 void CMapOutdoor::UpdateTerrain(float fX, float fY)
 {
+    if(m_stableWorld)return; // Fixed sector proxies are assigned only when residency changes.
 	if (fY < 0)
 		fY = -fY;
 
@@ -870,6 +940,7 @@ void CMapOutdoor::__UpdateGarvage()
 
 void CMapOutdoor::UpdateAreaList(long lCenterX, long lCenterY)
 {
+    if(m_stableWorld)return;
 	if (m_TerrainVector.size() <= AROUND_AREA_NUM && m_AreaVector.size() <= AROUND_AREA_NUM)
 		return;
 
@@ -935,6 +1006,7 @@ void CMapOutdoor::UpdateAreaList(long lCenterX, long lCenterY)
 
 void CMapOutdoor::ConvertTerrainToTnL(long lx, long ly)
 {
+    if(Renderer::verboseDiagnostics) ++Renderer::worldResidency.terrainAssignments;
 	assert(NULL!=m_pTerrainPatchProxyList && "CMapOutdoor::ConvertTerrainToTnL");
 	
 	for (long i = 0; i < m_wPatchCount * m_wPatchCount; i++)
@@ -1054,6 +1126,7 @@ void CMapOutdoor::AssignPatch(long lPatchNum, long x0, long y0, long x1, long y1
 
 	pTerrainPatchProxy->SetPatchNum(byPatchNumY * CTerrainImpl::PATCH_XCOUNT + byPatchNumX);
 	pTerrainPatchProxy->SetTerrainPatch(pTerrainPatch);
+    pTerrainPatchProxy->terrainOwner=pTerrain;
 	pTerrainPatchProxy->SetUsed(true);
 }
 

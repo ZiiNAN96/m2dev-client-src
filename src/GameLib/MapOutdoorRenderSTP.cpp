@@ -54,6 +54,13 @@ void CMapOutdoor::__RenderTerrain_RenderSoftwareTransformPatch()
 
 
 	std::vector<std::pair<float, long> >::iterator it = m_PatchVector.begin();
+    if(m_stableWorld&&Renderer::GetGraphicsRuntimeConfig().style==Graphics::GraphicsStyle::Modern) {
+        for(const auto& entry:m_PatchVector) {
+            SelectIndexBuffer(BYTE(m_pTerrainPatchProxyList[entry.second].GetStableLod()),&wPrimitiveCount,&ePrimitiveType);
+            __SoftwareTransformPatch_RenderPatchSplat(kTPRS,entry.second,wPrimitiveCount,ePrimitiveType,false);
+        }
+        it=near_it;
+    }
 
 	for( ; it != near_it; ++it)
 	{
@@ -160,8 +167,8 @@ void CMapOutdoor::__SoftwareTransformPatch_RenderPatchSplat(SoftwareTransformPat
 	if (0xFF == ucTerrainNum)
 		return;
 
-	CTerrain * pTerrain;
-	if (!GetTerrainPointer(ucTerrainNum, &pTerrain))
+	CTerrain * pTerrain=pTerrainPatchProxy->terrainOwner;
+	if (!pTerrain&&!GetTerrainPointer(ucTerrainNum, &pTerrain))
 		return;
 
 	WORD wCoordX, wCoordY;
@@ -236,7 +243,7 @@ void CMapOutdoor::__SoftwareTransformPatch_RenderPatchSplat(SoftwareTransformPat
 		if (aIterator == m_RenderedTextureNumVector.end())
 			m_RenderedTextureNumVector.push_back(j);
 		++m_iRenderedSplatNum;
-		if (m_iRenderedSplatNum >= m_iSplatLimit)
+		if (m_iRenderedSplatNum >= m_iSplatLimit&&!(m_stableWorld&&Renderer::GetGraphicsRuntimeConfig().style==Graphics::GraphicsStyle::Modern))
 			break;
 	}	
 
@@ -300,8 +307,8 @@ void CMapOutdoor::__SoftwareTransformPatch_RenderPatchNone(SoftwareTransformPatc
 	if (0xFF == ucTerrainNum)
 		return;
 
-	CTerrain * pTerrain;
-	if (!GetTerrainPointer(ucTerrainNum, &pTerrain))
+	CTerrain * pTerrain=pTerrainPatchProxy->terrainOwner;
+	if (!pTerrain&&!GetTerrainPointer(ucTerrainNum, &pTerrain))
 		return;
 
 	WORD wCoordX, wCoordY;

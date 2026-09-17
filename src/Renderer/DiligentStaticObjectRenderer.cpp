@@ -4,6 +4,7 @@
 #include "ActorRenderData.h"
 #include "DiligentD3D11BackendInternal.h"
 #include "Diagnostics.h"
+#include "WorldResidencyDiagnostics.h"
 #include "Graphics/GraphicsEngine/interface/Buffer.h"
 #include "Graphics/GraphicsEngine/interface/PipelineState.h"
 #include "Graphics/GraphicsEngine/interface/Shader.h"
@@ -657,11 +658,13 @@ bool DiligentStaticObjectRenderer::UpdateInstances(StaticObjectInstanceBufferPtr
     if(!buffer){buffer=std::make_shared<InstanceBuffer>();buffer->owner=s.counters;}
     const auto bytes=values.size_bytes();auto& backend=*s.backend.m_impl;
     if(buffer->bytes<bytes) {
-        BufferDesc desc;desc.Name="H2 shared vegetation instances";desc.Size=bytes;desc.Usage=USAGE_DYNAMIC;
+        const auto capacity=std::max<std::size_t>(256, std::max(bytes,buffer->bytes*2));
+        BufferDesc desc;desc.Name="H2 shared vegetation instances";desc.Size=capacity;desc.Usage=USAGE_DYNAMIC;
         desc.BindFlags=BIND_VERTEX_BUFFER;desc.CPUAccessFlags=CPU_ACCESS_WRITE;
         RefCntAutoPtr<IBuffer> replacement;backend.device->CreateBuffer(desc,nullptr,&replacement);
         if(!replacement)return false;
-        buffer->buffer=replacement;vegetationInstanceBytes-=buffer->bytes;buffer->bytes=bytes;vegetationInstanceBytes+=bytes;
+        if(verboseDiagnostics)++worldResidency.instanceBufferCreates;
+        buffer->buffer=replacement;vegetationInstanceBytes-=buffer->bytes;buffer->bytes=capacity;vegetationInstanceBytes+=capacity;
     }
     MapHelper<StaticObjectInstance> mapped(backend.context,buffer->buffer,MAP_WRITE,MAP_FLAG_DISCARD);
     if(!mapped)return false;

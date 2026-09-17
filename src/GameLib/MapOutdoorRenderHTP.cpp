@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "MapOutdoor.h"
 #include "Renderer/GraphicsConfig.h"
+#include "TerrainPatch.h"
 
 #include "EterLib/DrawState.h"
 
@@ -99,6 +100,15 @@ void CMapOutdoor::__RenderTerrain_RenderHardwareTransformPatch()
 	// DWORD dwFogEnable = DRAWSTATE.GetRenderState(Renderer::StateFogEnable);
 	// MR-14: -- END OF -- Fog update by Alaric
 	std::vector<std::pair<float, long> >::iterator it = m_PatchVector.begin();
+    const bool stable=m_stableWorld&&Renderer::GetGraphicsRuntimeConfig().style==Graphics::GraphicsStyle::Modern;
+    if(stable) {
+        for(const auto& entry:m_PatchVector) {
+            SelectIndexBuffer(BYTE(m_pTerrainPatchProxyList[entry.second].GetStableLod()),&wPrimitiveCount,&ePrimitiveType);
+            __HardwareTransformPatch_RenderPatchSplat(entry.second,wPrimitiveCount,ePrimitiveType);
+            if(m_bDrawWireFrame)DrawWireFrame(entry.second,wPrimitiveCount,ePrimitiveType);
+        }
+        it=near_it; // All visible patches rendered once; no distance-window holes.
+    }
 
 	// NOTE: 맵툴에서는 view ~ fog near 사이의 지형을 fog disabled 상태로 그리는 작업을 하지 않음.
 	// MR-14: Fog update by Alaric
@@ -255,8 +265,8 @@ void CMapOutdoor::__HardwareTransformPatch_RenderPatchSplat(long patchnum, WORD 
 	if (0xFF == ucTerrainNum)
 		return;
 
-	CTerrain * pTerrain;
-	if (!GetTerrainPointer(ucTerrainNum, &pTerrain))
+	CTerrain * pTerrain=pTerrainPatchProxy->terrainOwner;
+	if (!pTerrain&&!GetTerrainPointer(ucTerrainNum, &pTerrain))
 		return;
 
 	DWORD dwFogColor;
@@ -329,7 +339,7 @@ void CMapOutdoor::__HardwareTransformPatch_RenderPatchSplat(long patchnum, WORD 
 		if (aIterator == m_RenderedTextureNumVector.end())
 			m_RenderedTextureNumVector.push_back(j);
 		++m_iRenderedSplatNum;
-		if (m_iRenderedSplatNum >= m_iSplatLimit)
+		if (m_iRenderedSplatNum >= m_iSplatLimit&&!(m_stableWorld&&Renderer::GetGraphicsRuntimeConfig().style==Graphics::GraphicsStyle::Modern))
 			break;
 		
 	}

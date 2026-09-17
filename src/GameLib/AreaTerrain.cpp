@@ -7,6 +7,7 @@
 
 #include "AreaTerrain.h"
 #include "MapOutdoor.h"
+#include "Renderer/WorldResidencyDiagnostics.h"
 
 CDynamicPool<CTerrain>		CTerrain::ms_kPool;
 
@@ -22,6 +23,7 @@ CTerrain* CTerrain::New()
 
 void CTerrain::Delete(CTerrain* pkTerrain)
 {
+    if(Renderer::verboseDiagnostics) {++Renderer::worldResidency.terrainUnloaded; --Renderer::worldResidency.terrainResident;}
 	pkTerrain->Clear();
 	ms_kPool.Free(pkTerrain);
 }

@@ -83,7 +83,7 @@ LoadResult Runtime::LoadCompiled(std::string_view compiled,const ReadFile& read)
         std::set<std::uint32_t> used;
         for(const auto& p:metadata.parts){if(p.mesh>=model.meshes.size()||!used.insert(p.mesh).second)return fail("invalid part mesh");const auto& mesh=model.meshes[p.mesh];if(!ValidBounds(mesh.bounds)||!mesh.vertexCount||!mesh.indexCount)return fail("invalid part bounds or geometry");if(mesh.vertexExtrasChannels!=63||mesh.vertexExtras.size()!=mesh.vertexCount)return fail("missing compiled auxiliary channels");for(unsigned k=0;k<3;++k)if(mesh.bounds.min[k]<metadata.renderBounds.min[k]-.1f||mesh.bounds.max[k]>metadata.renderBounds.max[k]+.1f)return fail("render bounds do not enclose geometry");}
         for(const auto& lod:metadata.lods)for(auto index:lod.meshes)if(index>=0&&!used.contains(static_cast<std::uint32_t>(index)))return fail("LOD references nonexistent mesh");
-        auto asset=std::make_shared<Asset>();asset->metadata=std::move(metadata);asset->geometry=std::move(loaded.asset);assets_[*path]=asset;return {asset,{}};
+        auto asset=std::make_shared<Asset>();asset->metadata=std::move(metadata);asset->stableLods=BuildStableLods(asset->metadata);asset->geometry=std::move(loaded.asset);assets_[*path]=asset;return {asset,{}};
     }catch(const std::exception&e){return fail(e.what());}
 }
 }

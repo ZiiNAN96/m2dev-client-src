@@ -42,10 +42,14 @@ int main(int argc,char**argv){try{
         auto settings=Graphics::PresetSettings(Graphics::GraphicsPreset::High,Graphics::GraphicsStyle::Modern);settings.ambientOcclusion=Graphics::AmbientOcclusionQuality::Off;settings.shadows=Graphics::ShadowQuality::Low;settings.bloom=false;
         unsigned revision=0;
         Graphics::SceneLighting light;light.sunDirection={.3f,.5f,-.6f};light.sunIntensity=3.14159265f;light.ambient={.28f,.28f,.28f};
-        auto render=[&](const std::string&label,const RenderAsset&asset,std::span<Instance*const>instances,Vec3 eye,Vec3 target,float time,float scale=1.f,unsigned quality=2,bool capture=true,float transmission=1.f,unsigned transparent=0,std::span<const GrassPlacement*const> placements={}){
+        auto render=[&](const std::string&label,const RenderAsset&asset,std::span<Instance*const>instances,Vec3 eye,Vec3 target,float time,float scale=1.f,unsigned quality=2,bool capture=true,float transmission=1.f,unsigned transparent=0,std::span<const GrassPlacement*const> placements={},float lodSeconds=-1.f,bool fixedTreeDetail=false){
             auto config=Graphics::Resolve(settings,++revision);Renderer::ApplyGraphicsRuntimeConfig(config);
             Check(backend.BeginFrame(),"frame");backend.Clear({true,Renderer::ClearColor{.15f,.2f,.3f,1}});Renderer::modernFrame->Begin(light);
-            RenderContext c;c.modern=true;c.time=time;c.quality=ResolveQuality(quality);c.distanceScale=scale;c.camera=eye;c.view=View(eye,target);
+            // Static gallery cases capture settled endpoints. Temporal cases
+            // supply a separate clock while keeping wind and camera fixed.
+            if(lodSeconds<0)for(auto* instance:instances)instance->transition={};
+            RenderContext c;c.modern=true;c.time=time;c.lodTime=lodSeconds<0?time:lodSeconds;c.quality=ResolveQuality(quality);c.distanceScale=scale;c.camera=eye;c.view=View(eye,target);
+            c.fixedTreeDetail=fixedTreeDetail;
             c.quality.transmission*=transmission;
             c.state.blend=transparent!=0;
             c.projection={1.299038f,0,0,0,0,1.732051f,0,0,0,0,-50000.f/49990.f,-1,0,0,-500000.f/49990.f,0};c.state.sampling={true,true,true,true,true,false};
@@ -75,6 +79,48 @@ int main(int argc,char**argv){try{
             const auto still=render(std::string(name)+"-near",*asset,one,eye,target,0);
             const auto uploads=Renderer::vegetationInstanceUploads.load();const auto repeat=render(std::string(name)+"-repeat",*asset,one,eye,target,0);
             Check(Difference(still,repeat)==0,"repeat image deterministic");Check(Renderer::vegetationInstanceUploads==uploads,"unchanged static instances not uploaded again");
+            const auto retained=asset->instanceBuffers;
+            render(std::string(name)+"-temporarily-hidden",*asset,one,eye,{eye[0]*2,eye[1]*2,eye[2]},0,1,2,false);
+            for(unsigned i=0;i<retained.size();++i)if(retained[i])Check(retained[i]==asset->instanceBuffers[i],"offscreen culling retains instance allocation");
+            const auto restored=render(std::string(name)+"-visible-again",*asset,one,eye,target,0,1,2,false);
+            Check(Difference(still,restored)==0,"returning after culling preserves solid tree");
+            if(std::string(name)=="beech") {
+                const auto blocked=render("tree-camera-blocker-solid",*asset,one,eye,target,0,1,2,true,1,1);
+                Check(Difference(still,blocked)==0,"tree camera classification cannot enable transparency");
+                single.transition={};single.stableLod=-1;
+                const auto initial=render("tree-handover-near",*asset,one,eye,target,0,1,2,true,1,0,{},10);
+                const auto start=render("tree-handover-start",*asset,one,eye,target,0,.5f,2,true,1,0,{},11);
+                Check(Difference(initial,start)==0,"LOD threshold crossing cannot change pixels immediately");
+                const auto middle=render("tree-handover-midpoint",*asset,one,eye,target,0,.5f,2,true,1,0,{},11.15f);
+                Check(Difference(initial,middle)>100,"LOD handover progresses on GPU");
+                const auto reverse=render("tree-handover-reverse",*asset,one,eye,target,0,1,2,true,1,0,{},11.15f);
+                Check(Difference(middle,reverse)==0,"reversal preserves exact GPU coverage mask");
+                const auto returned=render("tree-handover-returned",*asset,one,eye,target,0,1,2,true,1,0,{},11.4f);
+                Check(Difference(initial,returned)==0,"return completes without holes or residual dither");
+                // Isolate a foliage-only LOD change: trunk must stay solid and
+                // submit once while both leaf representations share coverage.
+                auto shared=std::make_shared<Asset>();shared->metadata=loaded.asset->metadata;shared->geometry=loaded.asset->geometry;
+                shared->metadata.lods[2].meshes[0]=shared->metadata.lods[3].meshes[0];
+                shared->stableLods=BuildStableLods(shared->metadata);
+                auto sharedRender=Prepare(shared,renderer,texture,error);Check(bool(sharedRender),error);
+                Instance sharedTree(shared,Identity);const std::array<Instance*,1> sharedOne{&sharedTree};
+                render("tree-shared-trunk-near",*sharedRender,sharedOne,eye,target,0,1,2,false,1,0,{},20);
+                render("tree-shared-trunk-start",*sharedRender,sharedOne,eye,target,0,.5f,2,false,1,0,{},21);
+                const auto beforeBatches=statistics.batches;
+                render("tree-shared-trunk-midpoint",*sharedRender,sharedOne,eye,target,0,.5f,2,true,1,0,{},21.15f);
+                Check(statistics.batches-beforeBatches==3,"shared trunk draws once alongside two leaf LODs");
+                const auto fixed=render("tree-fixed-high-near",*asset,one,eye,target,0,1,2,true,1,0,{},30,true);
+                for(float scale:{.5f,.25f,.12f,.5f,1.f}) {
+                    const auto before=statistics;
+                    const auto image=render("tree-fixed-high-"+std::to_string(scale),*asset,one,eye,target,0,scale,2,true,1,0,{},31,true);
+                    Check(Difference(fixed,image)==0,"fixed high remains pixel identical across former LOD ranges");
+                    Check(statistics.batches-before.batches==2&&statistics.lodChanges==before.lodChanges&&!single.transition.active,"fixed high draws one solid trunk and crown without handover");
+                    Check(single.lod.meshes==loaded.asset->stableLods.front().state.meshes,"fixed high selects highest authored 3D geometry");
+                }
+                const auto culled=statistics.culled;
+                render("tree-fixed-high-culled",*asset,one,eye,target,0,.001f,2,false,1,0,{},32,true);
+                Check(statistics.culled==culled+1,"fixed high still honors distance culling");
+            }
             const auto wind=render(std::string(name)+"-wind",*asset,one,eye,target,1.3f);Check(Difference(still,wind)>100,"visible GPU wind");
             if(std::string(name)=="grass") {
                 const auto placed=PlaceGrass(GrassCandidate{},0,1);const std::array<const GrassPlacement*,1> compact{&placed};

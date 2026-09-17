@@ -63,6 +63,10 @@ namespace {
         draw.wind={context.time+instance.phase,amplitude*w.strength*context.windStrength,w.frequency,0};
         if(!draw.cameraAlpha&&(part.kind==PartKind::Branch||part.kind==PartKind::Frond))draw.vertexShadow=asset.shadow;
         if(context.modern) {
+            // Trees always remain opaque/cutout, including camera occluders.
+            if(instance.asset->metadata.plantKind!=PlantKind::Grass) {
+                draw.blend=false;draw.cameraAlpha.reset();draw.modulateCameraAlpha=false;
+            }
             const auto&m=instance.asset->metadata;draw.modernVegetation=m.version==2;
             const float len=std::hypot(context.windDirection[0],context.windDirection[1]);
             draw.worldWind={len>1e-6f?context.windDirection[0]/len:0,len>1e-6f?context.windDirection[1]/len:0,0,m.bounds.max[2]-m.bounds.min[2]};
@@ -79,6 +83,7 @@ namespace {
                 if(part.kind==PartKind::Leaf)draw.cardMode=0;
             }
         }
+        if(context.modern&&part.kind==PartKind::Branch)draw.alphaTest=::Renderer::StaticObjectAlphaTest::Disabled;
         return draw;
 }
 }
@@ -111,10 +116,14 @@ bool DrawBatchImpl(std::size_t count,GetInstance getInstance,const RenderAsset&a
         if(!instance||instance->asset!=asset.asset)return false;
         const auto previous=instance->lod.meshes;
         const auto planeSpan=context.shadowPass?std::span<const std::array<float,4>>{}:std::span<const std::array<float,4>>{planes};
-        if(!instance->Update(context.camera,planeSpan,context.distanceScale)){++statistics.culled;continue;}
+        const bool stable=m.plantKind!=PlantKind::Grass;
+        const bool fixedTree=context.fixedTreeDetail&&m.plantKind==PlantKind::Tree;
+        if(!(stable?instance->UpdateStable(context.camera,planeSpan,context.distanceScale,fixedTree):instance->Update(context.camera,planeSpan,context.distanceScale))){++statistics.culled;continue;}
         float distance=0;for(unsigned k=0;k<3;++k){const float delta=context.camera[k]-instance->transform[12+k];distance+=delta*delta;}distance=std::sqrt(distance);
         if(m.plantKind==PlantKind::Grass&&distance>context.quality.grassDistance){++statistics.culled;continue;}
-        const auto selected=SelectModernLOD(m,distance/context.distanceScale);instance->lod=selected.first;
+        if(fixedTree)instance->transition={};
+        const auto selected=fixedTree?LodBlend{instance->lod,{},0}:stable?instance->transition.Update(instance->lod,context.lodTime):SelectModernLOD(m,distance/context.distanceScale);
+        if(!stable)instance->lod=selected.first;
         if(previous!=instance->lod.meshes)++statistics.lodChanges;++statistics.visible;
         const float grassFade=m.plantKind==PlantKind::Grass?std::clamp((distance/context.quality.grassDistance-.6f)*2.5f,0.f,1.f):0;
         const auto&t=instance->transform;
@@ -124,16 +133,22 @@ bool DrawBatchImpl(std::size_t count,GetInstance getInstance,const RenderAsset&a
             const auto&lod=pass?selected.second:selected.first;
             for(unsigned slot=0;slot<5;++slot)if(lod.meshes[slot]>=0) {
                 const auto part=unsigned(lod.meshes[slot]),group=part*4+pass*2+mirrored;
+                // Geometry shared by both LODs must not be stippled or drawn
+                // twice (in particular the opaque trunk during leaf changes).
+                const auto& other=pass?selected.first:selected.second;
+                const bool shared=std::find(other.meshes.begin(),other.meshes.end(),int(part))!=other.meshes.end();
+                if(pass&&shared)continue;
                 auto alpha=lod.alpha[slot];
                 if(m.version==2){const auto&model=*asset.asset->geometry.Model(0).Get();alpha=model.materials[model.meshes[part].materialBindings[0]].alphaCutoff*255;}
-                groups[group].push_back({instance->transform,{instance->phase,pass?-selected.transition:selected.transition,alpha,1-grassFade}});
-                examples[group]={instance->transform,instance->lod,instance->phase};slots[group]=slot;
+                const float coverage=shared?0.f:pass?-selected.transition:selected.transition;
+                groups[group].push_back({instance->transform,{instance->phase,coverage,alpha,1-grassFade}});
+                examples[group]={instance->transform,lod,instance->phase};slots[group]=slot;
             }
         }
     }
     for(unsigned group=0;group<groups.size();++group) {
         auto&buffer=context.state.blend?transparentBuffers[group]:asset.instanceBuffers[group+(context.shadowPass?groups.size():0)];
-        if(groups[group].empty()){buffer.reset();continue;}
+        if(groups[group].empty())continue; // Keep capacity across culling and LOD changes.
         if(!renderer.UpdateInstances(buffer,groups[group])){++statistics.failures;return false;}
         const auto&data=examples[group];Instance example(asset.asset,data.transform);example.lod=data.lod;example.phase=data.phase;
         const unsigned part=group/4;auto draw=PartDraw(example,asset,context,slots[group],part);

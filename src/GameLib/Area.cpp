@@ -9,6 +9,7 @@
 #include "StaticObjectBridge.h"
 #include "PropertyManager.h"
 #include "Property.h"
+#include "Renderer/WorldResidencyDiagnostics.h"
 
 CDynamicPool<CArea::TObjectInstance>	CArea::ms_ObjectInstancePool;
 CDynamicPool<CAttributeInstance>		CArea::ms_AttributeInstancePool;
@@ -28,6 +29,7 @@ CArea* CArea::New()
 
 void CArea::Delete(CArea* pkArea)
 {
+    if(Renderer::verboseDiagnostics) {++Renderer::worldResidency.areasUnloaded; --Renderer::worldResidency.areasResident;}
 	pkArea->Clear();
 	ms_kPool.Free(pkArea);
 }

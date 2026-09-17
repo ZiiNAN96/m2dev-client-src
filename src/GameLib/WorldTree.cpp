@@ -8,6 +8,7 @@
 #include "EterBase/Timer.h"
 #include "PackLib/PackManager.h"
 #include "Renderer/Diagnostics.h"
+#include "Renderer/WorldResidencyDiagnostics.h"
 #include "Renderer/GraphicsConfig.h"
 #include "Renderer/StaticObjectRenderData.h"
 #include "Renderer/ModernFrame.h"
@@ -46,9 +47,10 @@ std::shared_ptr<NativeResources> Resources(Vegetation::AssetPtr asset,bool optio
 }
 float RenderFloat(Renderer::RenderStateKey key){const auto bits=DRAWSTATE.GetRenderState(key);float f;std::memcpy(&f,&bits,4);return f;}
 Vegetation::RenderContext Context(bool blocker){
+    if(blocker&&Renderer::verboseDiagnostics)++Renderer::worldResidency.treeBlockerDraws;
     Vegetation::RenderContext c;Math::Matrix view,projection;DRAWSTATE.GetTransform(Renderer::MatrixView,&view);DRAWSTATE.GetTransform(Renderer::MatrixProjection,&projection);std::memcpy(c.view.data(),&view,64);std::memcpy(c.projection.data(),&projection,64);
     if(auto*camera=CCameraManager::Instance().GetCurrentCamera()){const auto&e=camera->GetEye();c.camera={e.x,e.y,e.z};}
-    c.time=CTimer::Instance().GetCurrentSecond();c.windStrength=World().windStrength;
+    c.time=CTimer::Instance().GetCurrentSecond();c.lodTime=c.time;c.windStrength=World().windStrength;
     if(Vegetation::developmentSeconds>=0)c.time=Vegetation::developmentSeconds;
     c.distanceScale=Renderer::GetGraphicsRuntimeConfig().vegetationDistanceScale;
     const auto&config=Renderer::GetGraphicsRuntimeConfig();c.modern=config.style==Graphics::GraphicsStyle::Modern;

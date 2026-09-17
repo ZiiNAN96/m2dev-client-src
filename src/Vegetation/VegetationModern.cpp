@@ -3,6 +3,84 @@
 #include <cmath>
 
 namespace Vegetation {
+std::vector<StableLod> BuildStableLods(const Metadata& m) {
+    std::vector<StableLod> result;
+    if(m.version==2) {
+        if(m.lods.size()!=4)return result;
+        for(unsigned i=0;i<4;++i)result.push_back({m.lods[3-i],i?m.lodDistances[i-1]:0});
+        return result;
+    }
+    // Converted samples encode fades with rising alpha-test thresholds. Choose
+    // one complete representation, retaining each part's authored cutout value.
+    std::vector<float> cutoffs(m.parts.size(),255);
+    for(const auto& lod:m.lods)for(unsigned slot=0;slot<5;++slot)
+        if(lod.meshes[slot]>=0)cutoffs[lod.meshes[slot]]=std::min(cutoffs[lod.meshes[slot]],lod.alpha[slot]);
+    for(std::size_t reverse=m.lods.size();reverse>0;--reverse) {
+        const auto i=reverse-1;auto lod=m.lods[i];
+        if(lod.meshes[3]>=0&&(lod.meshes[2]<0||lod.alpha[3]<lod.alpha[2])) {
+            lod.meshes[2]=lod.meshes[3];lod.alpha[2]=lod.alpha[3];
+        }
+        lod.meshes[3]=-1;
+        float geometryAlpha=255;
+        for(unsigned slot=0;slot<3;++slot)if(lod.meshes[slot]>=0)geometryAlpha=std::min(geometryAlpha,lod.alpha[slot]);
+        // Converted single-view atlases do not preserve the 3D silhouette or
+        // lighting. Modern retains the last complete low-poly representation;
+        // Classic still uses the original sample table and billboard.
+        if(lod.meshes[4]>=0&&lod.alpha[4]<=geometryAlpha)continue;
+        lod.meshes[4]=-1;
+        for(unsigned slot=0;slot<5;++slot)if(lod.meshes[slot]>=0)lod.alpha[slot]=cutoffs[lod.meshes[slot]];
+        if(std::none_of(lod.meshes.begin(),lod.meshes.end(),[](int part){return part>=0;}))continue;
+        const float distance=m.lods.size()>1?m.farDistance-float(i)*(m.farDistance-m.nearDistance)/float(m.lods.size()-1):0;
+        if(result.empty()||result.back().state.meshes!=lod.meshes)result.push_back({lod,result.empty()?0:distance});
+    }
+    return result;
+}
+LodState SelectStableLOD(std::span<const StableLod> levels,float distance,float hysteresis,int& state) {
+    if(levels.empty()||!std::isfinite(distance)||distance<0)return {};
+    const float margin=std::clamp(hysteresis,0.f,.2f);
+    if(state<0||std::size_t(state)>=levels.size()) {
+        state=0;while(std::size_t(state+1)<levels.size()&&distance>=levels[state+1].distance)++state;
+    }else {
+        while(std::size_t(state+1)<levels.size()&&distance>=levels[state+1].distance*(1+margin))++state;
+        while(state>0&&distance<levels[state].distance*(1-margin))--state;
+    }
+    return levels[state].state;
+}
+LodBlend LodTransition::Update(const LodState& target,float seconds) {
+    constexpr float duration=.3f;
+    if(!std::isfinite(seconds))seconds=lastTime;
+    if(!initialized||seconds<lastTime) {
+        initialized=true;active=false;from=to=target;coverage=0;lastTime=seconds;
+    }
+    if(active) {
+        const bool reverse=target.meshes==from.meshes;
+        coverage=std::clamp(coverage+(reverse?-1.f:1.f)*(seconds-lastTime)/duration,0.f,1.f);
+        // Keep the original pair/mask orientation on reversal, so the exact
+        // same screen samples survive; only the coverage threshold moves.
+        if(coverage>=1) {from=to;active=false;}
+        else if(reverse&&coverage<=0)active=false;
+    }
+    lastTime=seconds;
+    if(!active&&target.meshes!=from.meshes) {
+        to=target;coverage=0;active=true;
+    }
+    return active?LodBlend{from,to,coverage}:LodBlend{from,{},0};
+}
+bool Instance::UpdateStable(const Vec3& camera,std::span<const std::array<float,4>> planes,float scale,bool fixedDetail) {
+    if(!std::isfinite(scale)||scale<=0)return false;
+    double squared=0;for(unsigned k=0;k<3;++k){const double delta=double(camera[k])-transform[12+k];squared+=delta*delta;}
+    const float distance=float(std::sqrt(squared))/scale;
+    if(!std::isfinite(distance))return false;
+    const auto& m=asset->metadata;
+    if(distanceVisible?distance>m.cullDistance:distance>m.cullDistance*.94f){distanceVisible=false;return false;}
+    distanceVisible=true;
+    // Offscreen culling does not erase LOD history or change the next threshold.
+    if(!Visible(TransformBounds(m.renderBounds,transform),planes))return false;
+    if(fixedDetail&&!asset->stableLods.empty()) {
+        stableLod=0;lod=asset->stableLods.front().state;
+    }else lod=SelectStableLOD(asset->stableLods,distance,m.version==2?m.transitionFraction*.5f:.06f,stableLod);
+    return true;
+}
 Quality ResolveQuality(unsigned level) {
     constexpr Quality presets[]={{.65f,5000,.18f,.35f,0},{.85f,7500,.35f,.65f,.5f},
         {1,10000,.65f,1,1},{1.25f,13000,1,1,1}};

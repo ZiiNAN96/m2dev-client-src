@@ -2,6 +2,18 @@
 #include "Graphics/AtmosphereConfig.h"
 #include "Renderer/WaterDiagnostics.h"
 #include "Vegetation/VegetationRenderer.h"
+#include "Renderer/WorldResidencyDiagnostics.h"
+static PyObject* systemTestWorldResidency(PyObject*,PyObject*)
+{
+    const auto& w=Renderer::worldResidency;
+    return Py_BuildValue("{s:K,s:K,s:K,s:K,s:K,s:K,s:K,s:K,s:K,s:K,s:K,s:K,s:K}",
+        "terrainLoaded",w.terrainLoaded,"terrainUnloaded",w.terrainUnloaded,
+        "areasLoaded",w.areasLoaded,"areasUnloaded",w.areasUnloaded,
+        "terrainResident",w.terrainResident,"areasResident",w.areasResident,
+        "terrainAssignments",w.terrainAssignments,"treeBlockerDraws",w.treeBlockerDraws,
+        "instanceBufferCreates",w.instanceBufferCreates,"treeLodSwitches",Vegetation::statistics.lodChanges,
+        "treeCreated",Vegetation::statistics.created,"terrainVisible",w.terrainVisible,"terrainDrawn",w.terrainDrawn);
+}
 static PyObject* systemTestVegetationTime(PyObject*,PyObject* args)
 {
     float seconds;if(!PyArg_ParseTuple(args,"f",&seconds))return nullptr;

@@ -24,10 +24,12 @@ std::shared_ptr<const RenderAsset> Prepare(AssetPtr,::Renderer::IStaticObjectRen
 struct RenderContext {
     Matrix view{Identity},projection{Identity};Vec3 camera{};
     float time{},windStrength{1};
+    float lodTime{}; // Frame clock, independent of the diagnostic frozen wind.
     float distanceScale{1.f};
     Vec3 windDirection{1,0,0};
     Quality quality;
     bool modern{},shadowPass{};
+    bool fixedTreeDetail{true}; // Private fixed-high tree experiment; adaptive path retained for comparison.
     ::Renderer::StaticObjectDraw state;
 };
 bool Draw(Instance&,const RenderAsset&,::Renderer::IStaticObjectRenderer&,const RenderContext&);

@@ -483,6 +483,7 @@ void initsystem()
         { "TestSkyTime", systemTestSkyTime, METH_VARARGS },
         { "TestVegetationTime", systemTestVegetationTime, METH_VARARGS },
         { "TestVegetationStats", systemTestVegetationStats, METH_VARARGS },
+        { "TestWorldResidency", systemTestWorldResidency, METH_VARARGS },
 #endif
 		// MR-14: Fog update by Alaric
 		{ "GetFogLevel",				systemGetFogLevel,				METH_VARARGS },
