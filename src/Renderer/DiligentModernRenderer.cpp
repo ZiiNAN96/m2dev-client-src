@@ -1,4 +1,6 @@
+#include "ShaderLoadAudit.h"
 #include "DiligentModernRenderer.h"
+#include "EterBase/MapLoadTrace.h"
 #include "DiligentD3D11BackendInternal.h"
 #include "DiligentAtmosphere.h"
 #include "DiligentWater.h"
@@ -164,13 +166,13 @@ struct DiligentModernRenderer::Impl
         if(buffer)return;
         BufferDesc desc;desc.Name=name;desc.Size=size;desc.Usage=USAGE_DYNAMIC;
         desc.BindFlags=BIND_UNIFORM_BUFFER;desc.CPUAccessFlags=CPU_ACCESS_WRITE;
-        State().device->CreateBuffer(desc,nullptr,&buffer);Require(bool(buffer),name);
+        { MapLoadTrace::Scope p0lCreate("GPU resources","CreateBuffer","gpu-api"); MapLoadTrace::Count("CreateBuffer","",0,true); State().device->CreateBuffer(desc,nullptr,&buffer); }Require(bool(buffer),name);
         if(std::addressof(buffer)==std::addressof(lightCB))++stats.lightBufferCreations;
     }
     RefCntAutoPtr<ITexture> Texture(TEXTURE_FORMAT format,const char* name,BIND_FLAGS binds) {
         TextureDesc desc;desc.Name=name;desc.Type=RESOURCE_DIM_TEX_2D;desc.Width=width;desc.Height=height;
         desc.Format=format;desc.BindFlags=binds;
-        RefCntAutoPtr<ITexture> result;State().device->CreateTexture(desc,nullptr,&result);Require(bool(result),name);return result;
+        RefCntAutoPtr<ITexture> result;{ MapLoadTrace::Scope p0lCreate("GPU resources","CreateTexture","gpu-api"); MapLoadTrace::Count("CreateTexture","",0,true); State().device->CreateTexture(desc,nullptr,&result); }Require(bool(result),name);return result;
     }
     void Resources() {
         const auto& swap=State().swapChain->GetDesc();
@@ -195,21 +197,21 @@ struct DiligentModernRenderer::Impl
         ci.SourceLanguage=SHADER_SOURCE_LANGUAGE_HLSL;ci.Source=source;ci.Macros=macros;
         ci.CompileFlags=SHADER_COMPILE_FLAG_PACK_MATRIX_ROW_MAJOR;
         ci.pShaderSourceStreamFactory=&DiligentFXShaderSourceStreamFactory::GetInstance();
-        RefCntAutoPtr<IShader> shader;State().device->CreateShader(ci,&shader);Require(bool(shader),entry);return shader;
+        RefCntAutoPtr<IShader> shader;{ MapLoadTrace::Scope p0lCreate("Shaders / PSOs","CreateShader","cpu"); MapLoadTrace::Count("CreateShader","",0,true); State().device->CreateShader(ci,&shader); }Require(bool(shader),entry);return shader;
     }
     void IBL() {
         if(brdf)return;
         FirstUseAudit timing("fx-total","BRDF-IBL");
         auto& state=State();TextureDesc desc;desc.Name="G-DX FX BRDF LUT";desc.Type=RESOURCE_DIM_TEX_2D;
         desc.Width=desc.Height=256;desc.Format=TEX_FORMAT_RG16_FLOAT;desc.BindFlags=BIND_RENDER_TARGET|BIND_SHADER_RESOURCE;
-        state.device->CreateTexture(desc,nullptr,&brdf);Require(bool(brdf),"G-DX BRDF LUT");
+        { MapLoadTrace::Scope p0lCreate("GPU resources","CreateTexture","gpu-api"); MapLoadTrace::Count("CreateTexture","",0,true); state.device->CreateTexture(desc,nullptr,&brdf); }Require(bool(brdf),"G-DX BRDF LUT");
         ShaderMacroHelper macros;macros.Add("NUM_SAMPLES",512u);
         auto vs=Shader("#include \"FullScreenTriangleVS.fx\"","FullScreenTriangleVS",SHADER_TYPE_VERTEX);
         auto ps=Shader("#include \"PrecomputeBRDF.psh\"","PrecomputeBRDF_PS",SHADER_TYPE_PIXEL,macros);
         GraphicsPipelineStateCreateInfo ci;ci.PSODesc.Name="G-DX FX BRDF preintegration";ci.PSODesc.PipelineType=PIPELINE_TYPE_GRAPHICS;
         auto& g=ci.GraphicsPipeline;g.NumRenderTargets=1;g.RTVFormats[0]=desc.Format;g.PrimitiveTopology=PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
         g.RasterizerDesc.CullMode=CULL_MODE_NONE;g.DepthStencilDesc.DepthEnable=False;ci.pVS=vs;ci.pPS=ps;
-        RefCntAutoPtr<IPipelineState> pso;{FirstUseAudit timing("pso",ci.PSODesc.Name);state.device->CreateGraphicsPipelineState(ci,&pso);}Require(bool(pso),"G-DX BRDF PSO");
+        RefCntAutoPtr<IPipelineState> pso;{FirstUseAudit timing("pso",ci.PSODesc.Name);{ MapLoadTrace::Scope p0lCreate("Shaders / PSOs","CreateGraphicsPipelineState","gpu-api"); MapLoadTrace::Count("CreateGraphicsPipelineState","",0,true); state.device->CreateGraphicsPipelineState(ci,&pso); }}Require(bool(pso),"G-DX BRDF PSO");
         auto* target=brdf->GetDefaultView(TEXTURE_VIEW_RENDER_TARGET);state.context->SetRenderTargets(1,&target,nullptr,RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
         Viewport viewport{0,0,256,256,0,1};state.context->SetViewports(1,&viewport,256,256);
         state.context->SetPipelineState(pso);state.context->Draw(DrawAttribs{3,DRAW_FLAG_VERIFY_ALL});
@@ -218,28 +220,43 @@ struct DiligentModernRenderer::Impl
         desc.Name="G-DX constant environment";desc.Type=RESOURCE_DIM_TEX_CUBE;desc.Width=desc.Height=1;desc.ArraySize=6;
         desc.Format=TEX_FORMAT_RGBA32_FLOAT;desc.BindFlags=BIND_SHADER_RESOURCE;desc.Usage=USAGE_IMMUTABLE;
         const float pixels[]{1,1,1,1};TextureSubResData faces[6];for(auto& face:faces){face.pData=pixels;face.Stride=16;}
-        TextureData data{faces,6};state.device->CreateTexture(desc,&data,&unitEnvironment);Require(bool(unitEnvironment),"G-DX environment cube");
+        TextureData data{faces,6};{ MapLoadTrace::Scope p0lCreate("GPU resources","CreateTexture","gpu-api"); MapLoadTrace::Count("CreateTexture","",0,true); state.device->CreateTexture(desc,&data,&unitEnvironment); }Require(bool(unitEnvironment),"G-DX environment cube");
         SamplerDesc sampling;sampling.AddressU=sampling.AddressV=sampling.AddressW=TEXTURE_ADDRESS_CLAMP;
         state.device->CreateSampler(sampling,&iblSampler);Require(bool(iblSampler),"G-DX IBL sampler");
     }
     void MeshShaders(unsigned shaderIndex) {
-        if(vertexShaders[shaderIndex])return;
+        {
+            ShaderLoadAudit::Scope lookup("shader-session-lookup",ShaderLoadAudit::Name("mesh variant"));
+            MapLoadTrace::Count(pixelShaders[shaderIndex]?"mesh-shader-hit":"mesh-shader-miss",ShaderLoadAudit::Name("mesh variant"));
+            if(pixelShaders[shaderIndex])return;
+        }
         const auto geometry=shaderIndex%3,pass=(shaderIndex%9)/3;
         ShaderMacroHelper macros;macros.Add("GDX_SKIN",geometry==1);macros.Add("GDX_AUX",geometry==2);
         macros.Add("GDX_SHADOW",pass==1);macros.Add("GDX_FORWARD",pass==2);macros.Add("GDX_TANGENT",shaderIndex%18>=9);
         macros.Add("H2_INSTANCED",shaderIndex>=18);
-        vertexShaders[shaderIndex]=Shader(modernMeshShader,"ModernVS",SHADER_TYPE_VERTEX,macros);
+        // ModernVS is pass-independent; only ModernPS uses SHADOW/FORWARD.
+        // Preserve geometry, tangents and instancing in the key. Keep per-pass
+        // aliases for the existing PSO lookup and all pixel shader variants.
+        // tests/Loading/mesh_vertex_equivalence.cpp checks all 36 combinations.
+        const unsigned vertexIndex=shaderIndex-pass*3;
+        MapLoadTrace::Count(vertexShaders[vertexIndex]?"modern-vs-reuse":"modern-vs-create",ShaderLoadAudit::Name("ModernVS"));
+        if(!vertexShaders[vertexIndex])vertexShaders[vertexIndex]=Shader(modernMeshShader,"ModernVS",SHADER_TYPE_VERTEX,macros);
+        vertexShaders[shaderIndex]=vertexShaders[vertexIndex];
         pixelShaders[shaderIndex]=Shader(modernMeshShader,"ModernPS",SHADER_TYPE_PIXEL,macros);
         ++stats.meshShaderVariants;
     }
     Pipeline& GetPipeline(const ModernMeshSubmission& draw,bool shadowPass,bool forwardPass) {
+        ShaderLoadAudit::Domain p0lDomain(shadowPass?"shadow":draw.auxiliary||draw.instances?"vegetation":"PBR");
         const unsigned geometry=draw.skinned?1:draw.auxiliary?2:0;
         const unsigned shaderIndex=geometry+(shadowPass?3:forwardPass?6:0)+(draw.tangents?9:0)+(draw.instances?18:0);
         unsigned cull=static_cast<unsigned>(draw.draw.cull);
         const auto world=Matrix(draw.draw.matrices.world);
         const bool mirrored=dot(cross(float3{world._11,world._12,world._13},float3{world._21,world._22,world._23}),float3{world._31,world._32,world._33})<0;
         const unsigned key=cull|(unsigned(draw.draw.blend)<<2)|(unsigned(draw.draw.depthWrite)<<3)|(shaderIndex<<4)|(unsigned(mirrored)<<10);
-        auto& result=pipelines[key];if(result.pso)return result;
+        ShaderLoadAudit::Scope lookup("pso-session-lookup",ShaderLoadAudit::Name("mesh pipeline"));
+        auto& result=pipelines[key];lookup.Stop();
+        MapLoadTrace::Count(result.pso?"mesh-pso-hit":"mesh-pso-miss",ShaderLoadAudit::Name("mesh pipeline"));
+        if(result.pso)return result;
         Buffer(objectCB,sizeof(ObjectConstants),"G-DX material/object constants");
         Buffer(lightCB,sizeof(LightConstants),"G-DX shared sun constants");
         MeshShaders(shaderIndex);
@@ -269,9 +286,9 @@ struct DiligentModernRenderer::Impl
             blend.DestBlend=blend.DestBlendAlpha=BLEND_FACTOR_INV_SRC_ALPHA;
         }
         ci.pVS=vertexShaders[shaderIndex];ci.pPS=pixelShaders[shaderIndex];
-        {FirstUseAudit timing("pso",ci.PSODesc.Name);State().device->CreateGraphicsPipelineState(ci,&result.pso);}Require(bool(result.pso),"G-DX mesh PSO");
+        {FirstUseAudit timing("pso",ci.PSODesc.Name);{ MapLoadTrace::Scope p0lCreate("Shaders / PSOs","CreateGraphicsPipelineState","gpu-api"); MapLoadTrace::Count("CreateGraphicsPipelineState","",0,true); State().device->CreateGraphicsPipelineState(ci,&result.pso); }}Require(bool(result.pso),"G-DX mesh PSO");
         ++stats.psoCount;
-        result.pso->CreateShaderResourceBinding(&result.srb,true);Require(bool(result.srb),"G-DX mesh SRB");return result;
+        ShaderLoadAudit::CreateSRB(result.pso,&result.srb,true);Require(bool(result.srb),"G-DX mesh SRB");return result;
     }
     static void Set(IShaderResourceBinding* srb,SHADER_TYPE stage,const char* name,IDeviceObject* resource) {
         if(auto* variable=srb->GetVariableByName(stage,name))variable->Set(resource);
@@ -355,6 +372,7 @@ struct DiligentModernRenderer::Impl
         ++stats.terrainShaderVariants;
     }
     void DrawTerrain(const ModernTerrainSubmission& item,bool shadowPass,const float4x4& lightVP) {
+        ShaderLoadAudit::Domain p0lDomain(shadowPass?"shadow-terrain":"terrain");
         auto& state=State();const auto& p=item.parameters;
         const unsigned key=unsigned(item.strip)+2*unsigned(p.blend)+4*unsigned(shadowPass)+8*unsigned(item.solid);
         auto& pipeline=terrainPipelines[key];
@@ -374,9 +392,9 @@ struct DiligentModernRenderer::Impl
             if(shadowPass){g.RasterizerDesc.DepthBias=100;g.RasterizerDesc.SlopeScaledDepthBias=1.f;g.RasterizerDesc.DepthBiasClamp=.002f;}
             g.DepthStencilDesc.DepthEnable=True;g.DepthStencilDesc.DepthWriteEnable=True;g.DepthStencilDesc.DepthFunc=COMPARISON_FUNC_LESS_EQUAL;
             for(auto& b:g.BlendDesc.RenderTargets){b.BlendEnable=!shadowPass&&p.blend;b.SrcBlend=b.SrcBlendAlpha=BLEND_FACTOR_SRC_ALPHA;b.DestBlend=b.DestBlendAlpha=BLEND_FACTOR_INV_SRC_ALPHA;}
-            ci.pVS=vs;ci.pPS=ps;{FirstUseAudit timing("pso",ci.PSODesc.Name);state.device->CreateGraphicsPipelineState(ci,&pipeline.pso);}Require(bool(pipeline.pso),"G-DX terrain PSO");
+            ci.pVS=vs;ci.pPS=ps;{FirstUseAudit timing("pso",ci.PSODesc.Name);{ MapLoadTrace::Scope p0lCreate("Shaders / PSOs","CreateGraphicsPipelineState","gpu-api"); MapLoadTrace::Count("CreateGraphicsPipelineState","",0,true); state.device->CreateGraphicsPipelineState(ci,&pipeline.pso); }}Require(bool(pipeline.pso),"G-DX terrain PSO");
             ++stats.psoCount;
-            pipeline.pso->CreateShaderResourceBinding(&pipeline.srb,true);
+            ShaderLoadAudit::CreateSRB(pipeline.pso,&pipeline.srb,true);
         }
         Buffer(terrainCB,sizeof(TerrainConstants),"G-DX terrain constants");
         TerrainConstants data{};data.matrices=item.matrices;
@@ -617,6 +635,7 @@ void DiligentModernRenderer::End() {
         Require(s.post->IsPSOsReady(),"FX shared PostFX pipelines are unavailable");
     }
     if(useAO){
+        FirstUseAudit p0lAO("fx-total","SSAO-first",!s.ao);
         if(!s.ao)s.ao=std::make_unique<ScreenSpaceAmbientOcclusion>(state.device,ScreenSpaceAmbientOcclusion::CreateInfo{});
         const auto flags=s.config.ambientOcclusion==Graphics::AmbientOcclusionQuality::SSAO?ScreenSpaceAmbientOcclusion::FEATURE_FLAG_HALF_RESOLUTION:ScreenSpaceAmbientOcclusion::FEATURE_FLAG_NONE;
         s.ao->PrepareResources(state.device,state.context,s.post.get(),flags);
@@ -642,9 +661,9 @@ void DiligentModernRenderer::End() {
         ci.GraphicsPipeline.PrimitiveTopology=PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;ci.GraphicsPipeline.RasterizerDesc.CullMode=CULL_MODE_NONE;
         ci.GraphicsPipeline.DepthStencilDesc.DepthEnable=False;
         auto vs=s.Shader(compositeShader,"CompositeVS",SHADER_TYPE_VERTEX),ps=s.Shader(compositeShader,"CompositePS",SHADER_TYPE_PIXEL);
-        ci.pVS=vs;ci.pPS=ps;{FirstUseAudit timing("pso",ci.PSODesc.Name);state.device->CreateGraphicsPipelineState(ci,&s.composite.pso);}Require(bool(s.composite.pso),"G-DX composition pipeline");
+        ci.pVS=vs;ci.pPS=ps;{FirstUseAudit timing("pso",ci.PSODesc.Name);{ MapLoadTrace::Scope p0lCreate("Shaders / PSOs","CreateGraphicsPipelineState","gpu-api"); MapLoadTrace::Count("CreateGraphicsPipelineState","",0,true); state.device->CreateGraphicsPipelineState(ci,&s.composite.pso); }}Require(bool(s.composite.pso),"G-DX composition pipeline");
     }
-    if(!s.composite.srb)s.composite.pso->CreateShaderResourceBinding(&s.composite.srb,true);
+    if(!s.composite.srb)ShaderLoadAudit::CreateSRB(s.composite.pso,&s.composite.srb,true);
     Require(bool(s.composite.srb),"G-DX composition binding");
     s.Buffer(s.compositeCB,sizeof(CompositeConstants),"G-DX composition constants");
     {MapHelper<CompositeConstants> data(state.context,s.compositeCB,MAP_WRITE,MAP_FLAG_DISCARD);Require(bool(data),"G-DX composition map");
@@ -723,9 +742,9 @@ void DiligentModernRenderer::FinishWorld() {
         ci.GraphicsPipeline.NumRenderTargets=1;ci.GraphicsPipeline.RTVFormats[0]=state.swapChain->GetDesc().ColorBufferFormat;
         ci.GraphicsPipeline.PrimitiveTopology=PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;ci.GraphicsPipeline.RasterizerDesc.CullMode=CULL_MODE_NONE;
         ci.GraphicsPipeline.DepthStencilDesc.DepthEnable=False;ci.pVS=vs;ci.pPS=ps;
-        {FirstUseAudit timing("pso",ci.PSODesc.Name);state.device->CreateGraphicsPipelineState(ci,&s.tone.pso);}Require(bool(s.tone.pso),"G56 tone mapping PSO");
+        {FirstUseAudit timing("pso",ci.PSODesc.Name);{ MapLoadTrace::Scope p0lCreate("Shaders / PSOs","CreateGraphicsPipelineState","gpu-api"); MapLoadTrace::Count("CreateGraphicsPipelineState","",0,true); state.device->CreateGraphicsPipelineState(ci,&s.tone.pso); }}Require(bool(s.tone.pso),"G56 tone mapping PSO");
     }
-    if(!s.tone.srb)s.tone.pso->CreateShaderResourceBinding(&s.tone.srb,true);
+    if(!s.tone.srb)ShaderLoadAudit::CreateSRB(s.tone.pso,&s.tone.srb,true);
     s.Buffer(s.toneCB,sizeof(ToneConstants),"G56 fixed exposure");
     {MapHelper<ToneConstants> data(state.context,s.toneCB,MAP_WRITE,MAP_FLAG_DISCARD);Require(bool(data),"G56 exposure map");data->exposure={config.exposure,0,0,0};}
     Impl::Set(s.tone.srb,SHADER_TYPE_PIXEL,"Tone",s.toneCB);Impl::Set(s.tone.srb,SHADER_TYPE_PIXEL,"Scene",source);

@@ -1,4 +1,6 @@
+#include "ShaderLoadAudit.h"
 #include "DiligentStaticObjectRenderer.h"
+#include "EterBase/MapLoadTrace.h"
 #include "GpuSkinningShader.h"
 #include "AssetRuntime/AnimationStallAudit.h"
 #include "ActorRenderData.h"
@@ -227,15 +229,15 @@ bool DiligentStaticObjectRenderer::Initialize(bool gpuPrototype)
         BufferDesc buffer;
         buffer.Name="Static object original transforms/light"; buffer.Size=sizeof(Constants);
         buffer.Usage=USAGE_DYNAMIC; buffer.BindFlags=BIND_UNIFORM_BUFFER; buffer.CPUAccessFlags=CPU_ACCESS_WRITE;
-        device->CreateBuffer(buffer,nullptr,&s.constants);
+        { MapLoadTrace::Scope p0lCreate("GPU resources","CreateBuffer","gpu-api"); MapLoadTrace::Count("CreateBuffer","",0,true); device->CreateBuffer(buffer,nullptr,&s.constants); }
         if(!s.constants) return false;
         ShaderCreateInfo shader;
         shader.SourceLanguage=SHADER_SOURCE_LANGUAGE_HLSL; shader.Source=shaderSource;
         shader.Desc.Name="Static rigid PNT VS"; shader.Desc.ShaderType=SHADER_TYPE_VERTEX; shader.EntryPoint="VS";
         RefCntAutoPtr<IShader> vs,ps;
-        device->CreateShader(shader,&vs);
+        { MapLoadTrace::Scope p0lCreate("Shaders / PSOs","CreateShader","cpu"); MapLoadTrace::Count("CreateShader","",0,true); device->CreateShader(shader,&vs); }
         shader.Desc.Name="Static diffuse PS"; shader.Desc.ShaderType=SHADER_TYPE_PIXEL; shader.EntryPoint="PS";
-        device->CreateShader(shader,&ps);
+        { MapLoadTrace::Scope p0lCreate("Shaders / PSOs","CreateShader","cpu"); MapLoadTrace::Count("CreateShader","",0,true); device->CreateShader(shader,&ps); }
         if(!vs || !ps) return false;
         // ZiiNAN: Diligent GPU skinning prototype
         RefCntAutoPtr<IShader> skinVS;
@@ -247,13 +249,13 @@ Output SkinningVS(float3 position:ATTRIB0, float3 normal:ATTRIB1, float2 uv:ATTR
         if(gpuPrototype) {
             shader.Source=skinSource.c_str(); shader.Desc.Name="B3 original PWNT skinning VS";
             shader.Desc.ShaderType=SHADER_TYPE_VERTEX; shader.EntryPoint="SkinningVS";
-            device->CreateShader(shader,&skinVS);
+            { MapLoadTrace::Scope p0lCreate("Shaders / PSOs","CreateShader","cpu"); MapLoadTrace::Count("CreateShader","",0,true); device->CreateShader(shader,&skinVS); }
             if(!skinVS) return false;
         }
         RefCntAutoPtr<IShader> auxiliaryVS;
         shader.Source=shaderSource;shader.Desc.Name="Mesh auxiliary colors and card pivots";
         shader.Desc.ShaderType=SHADER_TYPE_VERTEX;shader.EntryPoint="AuxiliaryVS";
-        device->CreateShader(shader,&auxiliaryVS);if(!auxiliaryVS)return false;
+        { MapLoadTrace::Scope p0lCreate("Shaders / PSOs","CreateShader","cpu"); MapLoadTrace::Count("CreateShader","",0,true); device->CreateShader(shader,&auxiliaryVS); }if(!auxiliaryVS)return false;
         LayoutElement layout[]={{0,0,3,VT_FLOAT32,False,0,32},{1,0,3,VT_FLOAT32,False,12,32},{2,0,2,VT_FLOAT32,False,24,32}};
         LayoutElement skinLayout[]={{0,0,3,VT_FLOAT32,False,0,40},{1,0,3,VT_FLOAT32,False,20,40},
             {2,0,2,VT_FLOAT32,False,32,40},{3,0,4,VT_UINT8,False,12,40},{4,0,4,VT_UINT8,False,16,40}};
@@ -287,7 +289,7 @@ Output SkinningVS(float3 position:ATTRIB0, float3 normal:ATTRIB1, float2 uv:ATTR
             g.InputLayout.LayoutElements=auxiliary?auxiliaryLayout:(skin ? skinLayout : layout); g.InputLayout.NumElements=auxiliary?9:(skin ? 5 : 3);
             info.pVS=auxiliary?auxiliaryVS:(skin ? skinVS : vs); info.pPS=ps;
             auto& pipeline=s.pipelines[variant];
-            device->CreateGraphicsPipelineState(info,&pipeline);
+            { MapLoadTrace::Scope p0lCreate("Shaders / PSOs","CreateGraphicsPipelineState","gpu-api"); MapLoadTrace::Count("CreateGraphicsPipelineState","",0,true); device->CreateGraphicsPipelineState(info,&pipeline); }
             if(!pipeline) return false;
             for(auto stage:{SHADER_TYPE_VERTEX,SHADER_TYPE_PIXEL})
                 if(auto* variable=pipeline->GetStaticVariableByName(stage,"ObjectConstants")) variable->Set(s.constants);
@@ -334,19 +336,19 @@ bool DiligentStaticObjectRenderer::PreparePrototype(StaticObjectGeometryPtr& geo
                 shared->meshes=data.meshes; shared->remaps=remaps;
                 BufferDesc desc; desc.Name="Shared original PWNT"; desc.Size=vertices.size()*sizeof(SkinningVertex);
                 desc.Usage=USAGE_IMMUTABLE; desc.BindFlags=BIND_VERTEX_BUFFER;
-                BufferData initial{vertices.data(),desc.Size}; device->CreateBuffer(desc,&initial,&shared->vertices);
+                BufferData initial{vertices.data(),desc.Size}; { MapLoadTrace::Scope p0lCreate("GPU resources","CreateBuffer","gpu-api"); MapLoadTrace::Count("CreateBuffer","",0,true); device->CreateBuffer(desc,&initial,&shared->vertices); }
                 if(source && !source->rigidVertices.empty()) {
                     desc.Name="Shared rigid attachment PNT"; desc.Size=source->rigidVertices.size()*sizeof(StaticObjectVertex);
-                    initial={source->rigidVertices.data(),desc.Size}; device->CreateBuffer(desc,&initial,&shared->rigidVertices);
+                    initial={source->rigidVertices.data(),desc.Size}; { MapLoadTrace::Scope p0lCreate("GPU resources","CreateBuffer","gpu-api"); MapLoadTrace::Count("CreateBuffer","",0,true); device->CreateBuffer(desc,&initial,&shared->rigidVertices); }
                     if(!shared->rigidVertices) return false;
                 }
                 desc.Name="Shared original mesh-local indices"; desc.Size=indices.size()*sizeof(uint16_t); desc.BindFlags=BIND_INDEX_BUFFER;
-                initial={indices.data(),desc.Size}; device->CreateBuffer(desc,&initial,&shared->indices);
+                initial={indices.data(),desc.Size}; { MapLoadTrace::Scope p0lCreate("GPU resources","CreateBuffer","gpu-api"); MapLoadTrace::Count("CreateBuffer","",0,true); device->CreateBuffer(desc,&initial,&shared->indices); }
                 if(!shared->vertices || !shared->indices) return false;
                 if(source&&!source->tangents.empty()) {
                     if(source->tangents.size()!=source->vertexCount)return false;
                     desc.Name="Shared authored tangents";desc.BindFlags=BIND_VERTEX_BUFFER;desc.Size=source->tangents.size()*sizeof(source->tangents[0]);
-                    initial={source->tangents.data(),desc.Size};device->CreateBuffer(desc,&initial,&shared->tangents);if(!shared->tangents)return false;
+                    initial={source->tangents.data(),desc.Size};{ MapLoadTrace::Scope p0lCreate("GPU resources","CreateBuffer","gpu-api"); MapLoadTrace::Count("CreateBuffer","",0,true); device->CreateBuffer(desc,&initial,&shared->tangents); }if(!shared->tangents)return false;
                 }
                 shared->validationIndices=std::move(indices); s.skinMeshes.emplace_back(shared);
             }
@@ -357,7 +359,7 @@ bool DiligentStaticObjectRenderer::PreparePrototype(StaticObjectGeometryPtr& geo
                 pose=std::make_shared<SkinPoseBuffer>(); pose->identity=palette.identity; pose->skeleton=palette.skeleton;
                 BufferDesc desc; desc.Name="Actor current composite palette"; desc.Size=gpuPrototypeBufferBones*sizeof(SkinningMatrix);
                 desc.Usage=USAGE_DYNAMIC; desc.BindFlags=BIND_UNIFORM_BUFFER; desc.CPUAccessFlags=CPU_ACCESS_WRITE;
-                device->CreateBuffer(desc,nullptr,&pose->buffer);
+                { MapLoadTrace::Scope p0lCreate("GPU resources","CreateBuffer","gpu-api"); MapLoadTrace::Count("CreateBuffer","",0,true); device->CreateBuffer(desc,nullptr,&pose->buffer); }
                 if(!pose->buffer) return false;
                 s.skinPoses.emplace_back(pose);
             }
@@ -409,24 +411,24 @@ StaticObjectGeometryPtr DiligentStaticObjectRenderer::CreateGeometry(const Stati
         desc.Usage=dynamic ? USAGE_DYNAMIC : USAGE_IMMUTABLE; desc.BindFlags=BIND_VERTEX_BUFFER;
         desc.CPUAccessFlags=dynamic ? CPU_ACCESS_WRITE : CPU_ACCESS_NONE;
         BufferData initial{data.vertices.data(),desc.Size};
-        s.backend.m_impl->device->CreateBuffer(desc,dynamic ? nullptr : &initial,&result->vertices);
+        { MapLoadTrace::Scope p0lCreate("GPU resources","CreateBuffer","gpu-api"); MapLoadTrace::Count("CreateBuffer","",0,true); s.backend.m_impl->device->CreateBuffer(desc,dynamic ? nullptr : &initial,&result->vertices); }
         if(!data.vertexExtras.empty()) {
             static_assert(sizeof(StaticObjectVertexExtras)==64);
             desc.Name="Shared mesh auxiliary vertex channels";desc.Size=data.vertexExtras.size()*sizeof(StaticObjectVertexExtras);
-            initial={data.vertexExtras.data(),desc.Size};s.backend.m_impl->device->CreateBuffer(desc,&initial,&result->extras);if(!result->extras)return fail(__LINE__);
+            initial={data.vertexExtras.data(),desc.Size};{ MapLoadTrace::Scope p0lCreate("GPU resources","CreateBuffer","gpu-api"); MapLoadTrace::Count("CreateBuffer","",0,true); s.backend.m_impl->device->CreateBuffer(desc,&initial,&result->extras); }if(!result->extras)return fail(__LINE__);
         }
         if(!data.tangents.empty()) {
             if(data.tangents.size()!=data.vertices.size())return fail(__LINE__);
             for(const auto& tangent:data.tangents)for(float value:tangent)if(!std::isfinite(value))return fail(__LINE__);
             desc.Name="Shared authored tangents";desc.Size=data.tangents.size()*sizeof(data.tangents[0]);desc.BindFlags=BIND_VERTEX_BUFFER;
             desc.Usage=USAGE_IMMUTABLE;desc.CPUAccessFlags=CPU_ACCESS_NONE;
-            initial={data.tangents.data(),desc.Size};s.backend.m_impl->device->CreateBuffer(desc,&initial,&result->tangents);if(!result->tangents)return fail(__LINE__);
+            initial={data.tangents.data(),desc.Size};{ MapLoadTrace::Scope p0lCreate("GPU resources","CreateBuffer","gpu-api"); MapLoadTrace::Count("CreateBuffer","",0,true); s.backend.m_impl->device->CreateBuffer(desc,&initial,&result->tangents); }if(!result->tangents)return fail(__LINE__);
         }
         desc.Name=wide ? "Static uint32 indices" : "Original static uint16 indices";
         desc.Size=indexCount*indexStride; desc.BindFlags=BIND_INDEX_BUFFER;
         desc.Usage=USAGE_IMMUTABLE; desc.CPUAccessFlags=CPU_ACCESS_NONE;
         initial={wide ? static_cast<const void*>(data.indices32.data()) : static_cast<const void*>(data.indices.data()),desc.Size};
-        s.backend.m_impl->device->CreateBuffer(desc,&initial,&result->indices);
+        { MapLoadTrace::Scope p0lCreate("GPU resources","CreateBuffer","gpu-api"); MapLoadTrace::Count("CreateBuffer","",0,true); s.backend.m_impl->device->CreateBuffer(desc,&initial,&result->indices); }
         if(!result->vertices || !result->indices) return fail(__LINE__);
         result->vertexCount=static_cast<uint32_t>(data.vertices.size()); result->validationIndices=data.indices;
         result->validationIndices32=data.indices32; result->indexType=wide ? VT_UINT32 : VT_UINT16;
@@ -486,7 +488,7 @@ TerrainTexturePtr DiligentStaticObjectRenderer::UploadTexture(const TerrainTextu
         desc.Width=data.width; desc.Height=data.height; desc.MipLevels=static_cast<uint32_t>(mips.size());
         desc.Format=format; desc.Usage=USAGE_IMMUTABLE; desc.BindFlags=BIND_SHADER_RESOURCE;
         TextureData initial{mips.data(),desc.MipLevels};
-        s.backend.m_impl->device->CreateTexture(desc,&initial,&result->texture);
+        { MapLoadTrace::Scope p0lCreate("GPU resources","CreateTexture","gpu-api"); MapLoadTrace::Count("CreateTexture","",0,true); s.backend.m_impl->device->CreateTexture(desc,&initial,&result->texture); }
         if(!result->texture) return fail(__LINE__);
         result->counters=s.counters; ++s.counters->textures;
         return result;
@@ -601,7 +603,7 @@ void DiligentStaticObjectRenderer::Draw(const StaticObjectGeometryPtr& geometry,
         RefCntAutoPtr<IShaderResourceBinding> skinBinding;
         auto& binding=skin ? skinBinding : image->bindings[materialVariant+(auxiliary?12:0)];
         if(!binding) {
-            s.pipelines[variant]->CreateShaderResourceBinding(&binding,true);
+            ShaderLoadAudit::CreateSRB(s.pipelines[variant],&binding,true);
             if(!binding) { s.Fail("mesh shader resource binding creation failed", __LINE__); return; }
             binding->GetVariableByName(SHADER_TYPE_PIXEL,"DiffuseTexture")->Set(image->texture->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE));
             binding->GetVariableByName(SHADER_TYPE_PIXEL,"ObjectSampler")->Set(image->sampler);
@@ -661,7 +663,7 @@ bool DiligentStaticObjectRenderer::UpdateInstances(StaticObjectInstanceBufferPtr
         const auto capacity=std::max<std::size_t>(256, std::max(bytes,buffer->bytes*2));
         BufferDesc desc;desc.Name="H2 shared vegetation instances";desc.Size=capacity;desc.Usage=USAGE_DYNAMIC;
         desc.BindFlags=BIND_VERTEX_BUFFER;desc.CPUAccessFlags=CPU_ACCESS_WRITE;
-        RefCntAutoPtr<IBuffer> replacement;backend.device->CreateBuffer(desc,nullptr,&replacement);
+        RefCntAutoPtr<IBuffer> replacement;{ MapLoadTrace::Scope p0lCreate("GPU resources","CreateBuffer","gpu-api"); MapLoadTrace::Count("CreateBuffer","",0,true); backend.device->CreateBuffer(desc,nullptr,&replacement); }
         if(!replacement)return false;
         if(verboseDiagnostics)++worldResidency.instanceBufferCreates;
         buffer->buffer=replacement;vegetationInstanceBytes-=buffer->bytes;buffer->bytes=capacity;vegetationInstanceBytes+=capacity;

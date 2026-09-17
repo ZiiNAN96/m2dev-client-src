@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "EterBase/MapLoadTrace.h"
 #include "WorldTree.h"
 #include "MapOutdoor.h"
 #include "EterLib/Camera.h"
@@ -32,6 +33,8 @@ void Log(const std::string&line){auto&s=World();if(!s.log.is_open())s.log.open("
 void Failure(const std::string&error){++Vegetation::statistics.failures;if(World().errors.insert(error).second){TraceError("Vegetation Runtime: %s",error.c_str());Log("ERROR "+error);}}
 bool Read(std::string_view name,std::vector<std::byte>&bytes){TPackFile file;if(!CPackManager::Instance().GetFile(name,file)||file.size()>128*1024*1024)return false;bytes.resize(file.size());std::memcpy(bytes.data(),file.data(),file.size());return true;}
 std::shared_ptr<NativeResources> Resources(Vegetation::AssetPtr asset,bool optional=false){
+    MapLoadTrace::Scope p0lScope("Vegetation","render asset preparation","cpu");
+
     auto&s=World();if(auto it=s.resources.find(asset.get());it!=s.resources.end())return it->second;
     if(optional&&s.optionalResourceFailures.contains(asset.get()))return {};
     if(!Renderer::staticObjectRenderer){Failure("static mesh renderer unavailable");return {};}
@@ -113,6 +116,8 @@ private:Vegetation::Instance instance_;std::shared_ptr<NativeResources>resources
 };
 }
 WorldTreePtr CreateWorldTree(float x,float y,float z,std::uint32_t,const char*key){
+    MapLoadTrace::Scope p0lScope("Vegetation","tree bush instance creation","cpu");
+
     auto&s=World();if(!s.registryAttempted){s.registryAttempted=true;std::vector<std::byte>bytes;if(!Read("vegetation/registry.json",bytes)){Failure("compiled registry missing");return {};}
         const auto r=s.runtime.registry.Parse({reinterpret_cast<const char*>(bytes.data()),bytes.size()});if(!r){Failure(r.error);return {};}Log("registry entries="+std::to_string(s.runtime.registry.Size()));}
     const auto loaded=s.runtime.Load(key,Read);if(!loaded){Failure(loaded.error);return {};}

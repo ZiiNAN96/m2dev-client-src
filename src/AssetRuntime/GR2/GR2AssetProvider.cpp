@@ -1,4 +1,5 @@
 #include "GR2AssetProvider.h"
+#include "EterBase/MapLoadTrace.h"
 #include "GR2Reader.h"
 #include "AssetRuntime/RuntimeAnimationInstance.h"
 #include "AssetRuntime/AnimationRuntimeMode.h"
@@ -199,11 +200,15 @@ class Provider final : public AssetProvider
 public:
     LoadResult Load(AssetId id,std::span<const std::byte> bytes) override
     {
+    MapLoadTrace::Scope p0lScope("Assets","GR2 parse","cpu");
+    MapLoadTrace::Count("gr2-parse",id,bytes.size(),true);
+
         try {
             AnimationStallAudit::WorkScope audit(AnimationStallAudit::Work::Import);
             ++GR2::nativeFileReads;
             AnimationStallAudit::WorkScope containerAudit(AnimationStallAudit::Work::Container);
-            GR2::File file(bytes); containerAudit.Stop();
+            MapLoadTrace::Scope containerTrace("Assets","GR2 container");
+            GR2::File file(bytes); containerTrace.Stop(); containerAudit.Stop();
             AnimationStallAudit::WorkScope parseAudit(AnimationStallAudit::Work::Parse);
             auto content=GR2::Read(file); parseAudit.Stop();
             return {AssetHandle(std::make_shared<Document>(std::move(id),std::move(content))),AssetError::None};

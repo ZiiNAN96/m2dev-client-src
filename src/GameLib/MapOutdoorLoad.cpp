@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "EterBase/MapLoadTrace.h"
 #include "MapOutdoor.h"
 #include "AreaTerrain.h"
 #include "AreaLoaderThread.h"
@@ -13,6 +14,8 @@
 
 bool CMapOutdoor::Load(float x, float y, float z)
 {
+    MapLoadTrace::Scope p0lScope("Metadata","outdoor orchestration","cpu");
+
 	Destroy();
 
 	{
@@ -164,6 +167,8 @@ void CMapOutdoor::AssignTerrainPtr()
 
 bool CMapOutdoor::LoadArea(WORD wAreaCoordX, WORD wAreaCoordY, WORD wCellCoordX, WORD wCellCoordY)
 {
+    MapLoadTrace::Scope p0lScope("Static objects","area load","cpu");
+
 	if (isAreaLoaded(wAreaCoordX, wAreaCoordY))
 		return true;
 #ifdef _DEBUG
@@ -201,6 +206,8 @@ bool CMapOutdoor::LoadArea(WORD wAreaCoordX, WORD wAreaCoordY, WORD wCellCoordX,
 
 bool CMapOutdoor::LoadTerrain(WORD wTerrainCoordX, WORD wTerrainCoordY, WORD wCellCoordX, WORD wCellCoordY)
 {
+    MapLoadTrace::Scope p0lScope("Terrain","sector load","cpu");
+
 	if (isTerrainLoaded(wTerrainCoordX, wTerrainCoordY))
 		return true;
 
@@ -298,6 +305,8 @@ bool CMapOutdoor::LoadTerrain(WORD wTerrainCoordX, WORD wTerrainCoordY, WORD wCe
 
 bool CMapOutdoor::LoadSetting(const char * c_szFileName)
 {
+    MapLoadTrace::Scope p0lScope("Metadata","settings and material setup","cpu");
+
 	NANOBEGIN
 	CTokenVectorMap stTokenVectorMap;
 

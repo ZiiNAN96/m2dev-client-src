@@ -1,4 +1,6 @@
+#include "ShaderLoadAudit.h"
 #include "DiligentTerrainRenderer.h"
+#include "EterBase/MapLoadTrace.h"
 #include "DiligentD3D11BackendInternal.h"
 #include "Diagnostics.h"
 #include "Common/interface/BasicMath.hpp"
@@ -172,7 +174,7 @@ bool DiligentTerrainRenderer::Initialize()
         camera.Usage = USAGE_DYNAMIC;
         camera.BindFlags = BIND_UNIFORM_BUFFER;
         camera.CPUAccessFlags = CPU_ACCESS_WRITE;
-        device->CreateBuffer(camera, nullptr, &s.camera);
+        { MapLoadTrace::Scope p0lCreate("GPU resources","CreateBuffer","gpu-api"); MapLoadTrace::Count("CreateBuffer","",0,true); device->CreateBuffer(camera, nullptr, &s.camera); }
         if (!s.camera) return false;
         ShaderCreateInfo shader;
         shader.SourceLanguage = SHADER_SOURCE_LANGUAGE_HLSL;
@@ -181,14 +183,14 @@ bool DiligentTerrainRenderer::Initialize()
         shader.Desc.ShaderType = SHADER_TYPE_VERTEX;
         shader.Source = vertexShader;
         RefCntAutoPtr<IShader> vs, ps, texturedPS;
-        device->CreateShader(shader, &vs);
+        { MapLoadTrace::Scope p0lCreate("Shaders / PSOs","CreateShader","cpu"); MapLoadTrace::Count("CreateShader","",0,true); device->CreateShader(shader, &vs); }
         shader.Desc.Name = "Metin2 terrain constant PS";
         shader.Desc.ShaderType = SHADER_TYPE_PIXEL;
         shader.Source = pixelShader;
-        device->CreateShader(shader, &ps);
+        { MapLoadTrace::Scope p0lCreate("Shaders / PSOs","CreateShader","cpu"); MapLoadTrace::Count("CreateShader","",0,true); device->CreateShader(shader, &ps); }
         shader.Desc.Name = "Metin2 single terrain texture PS";
         shader.Source = texturePixelShader;
-        device->CreateShader(shader, &texturedPS);
+        { MapLoadTrace::Scope p0lCreate("Shaders / PSOs","CreateShader","cpu"); MapLoadTrace::Count("CreateShader","",0,true); device->CreateShader(shader, &texturedPS); }
         if (!vs || !ps || !texturedPS) return false;
         // Consume the unchanged 24-byte source; normals stay in the buffer but are unused.
         LayoutElement layout{0, 0, 3, VT_FLOAT32, False, 0, 24};
@@ -228,7 +230,7 @@ bool DiligentTerrainRenderer::Initialize()
                 info.PSODesc.ResourceLayout.NumImmutableSamplers = 1;
             }
             auto& pipeline = textured ? s.texturedPipelines[strip] : s.pipelines[strip];
-            device->CreateGraphicsPipelineState(info, &pipeline);
+            { MapLoadTrace::Scope p0lCreate("Shaders / PSOs","CreateGraphicsPipelineState","gpu-api"); MapLoadTrace::Count("CreateGraphicsPipelineState","",0,true); device->CreateGraphicsPipelineState(info, &pipeline); }
             if (!pipeline) return false;
             auto* variable = pipeline->GetStaticVariableByName(SHADER_TYPE_VERTEX, "TerrainCamera");
             if (!variable) return false;
@@ -237,7 +239,7 @@ bool DiligentTerrainRenderer::Initialize()
                 pixelCamera->Set(s.camera);
             if (!textured)
             {
-                pipeline->CreateShaderResourceBinding(&s.bindings[strip], true);
+                ShaderLoadAudit::CreateSRB(pipeline,&s.bindings[strip], true);
                 if (!s.bindings[strip]) return false;
             }
         }
@@ -245,22 +247,22 @@ bool DiligentTerrainRenderer::Initialize()
         constants.Name="Metin2 original splat constants";
         constants.Size=sizeof(SplatConstants); constants.Usage=USAGE_DYNAMIC;
         constants.BindFlags=BIND_UNIFORM_BUFFER; constants.CPUAccessFlags=CPU_ACCESS_WRITE;
-        device->CreateBuffer(constants,nullptr,&s.splatConstants);
+        { MapLoadTrace::Scope p0lCreate("GPU resources","CreateBuffer","gpu-api"); MapLoadTrace::Count("CreateBuffer","",0,true); device->CreateBuffer(constants,nullptr,&s.splatConstants); }
         BufferDesc attributes;
         attributes.Name="Metin2 existing STP attributes"; attributes.Size=289*sizeof(TerrainSplatVertex);
         attributes.Usage=USAGE_DYNAMIC; attributes.BindFlags=BIND_VERTEX_BUFFER; attributes.CPUAccessFlags=CPU_ACCESS_WRITE;
-        device->CreateBuffer(attributes,nullptr,&s.dynamicVertices);
+        { MapLoadTrace::Scope p0lCreate("GPU resources","CreateBuffer","gpu-api"); MapLoadTrace::Count("CreateBuffer","",0,true); device->CreateBuffer(attributes,nullptr,&s.dynamicVertices); }
         std::array<TerrainSplatVertex,289> white{};
         attributes.Name="Metin2 HTP default diffuse"; attributes.Usage=USAGE_IMMUTABLE; attributes.CPUAccessFlags=CPU_ACCESS_NONE;
         BufferData whiteData{white.data(),sizeof(white)};
-        device->CreateBuffer(attributes,&whiteData,&s.whiteVertices);
+        { MapLoadTrace::Scope p0lCreate("GPU resources","CreateBuffer","gpu-api"); MapLoadTrace::Count("CreateBuffer","",0,true); device->CreateBuffer(attributes,&whiteData,&s.whiteVertices); }
         if(!s.splatConstants || !s.dynamicVertices || !s.whiteVertices) return false;
         shader.Source=splatShader; shader.EntryPoint="vs_main"; shader.Desc.ShaderType=SHADER_TYPE_VERTEX;
         shader.Desc.Name="Metin2 original splat VS";
         RefCntAutoPtr<IShader> splatVS,splatPS;
-        device->CreateShader(shader,&splatVS);
+        { MapLoadTrace::Scope p0lCreate("Shaders / PSOs","CreateShader","cpu"); MapLoadTrace::Count("CreateShader","",0,true); device->CreateShader(shader,&splatVS); }
         shader.EntryPoint="ps_main"; shader.Desc.ShaderType=SHADER_TYPE_PIXEL; shader.Desc.Name="Metin2 original splat PS";
-        device->CreateShader(shader,&splatPS);
+        { MapLoadTrace::Scope p0lCreate("Shaders / PSOs","CreateShader","cpu"); MapLoadTrace::Count("CreateShader","",0,true); device->CreateShader(shader,&splatPS); }
         if(!splatVS || !splatPS) return false;
         const LayoutElement splatLayout[]{
             {0,0,3,VT_FLOAT32,False,0,24}, {1,1,4,VT_FLOAT32,False,0,36},
@@ -289,7 +291,7 @@ bool DiligentTerrainRenderer::Initialize()
             g.InputLayout.LayoutElements=splatLayout; g.InputLayout.NumElements=5;
             info.pVS=splatVS; info.pPS=splatPS;
             auto& pipeline=s.splatPipelines[blend*2+strip];
-            device->CreateGraphicsPipelineState(info,&pipeline);
+            { MapLoadTrace::Scope p0lCreate("Shaders / PSOs","CreateGraphicsPipelineState","gpu-api"); MapLoadTrace::Count("CreateGraphicsPipelineState","",0,true); device->CreateGraphicsPipelineState(info,&pipeline); }
             if(!pipeline) return false;
             for(auto stage:{SHADER_TYPE_VERTEX,SHADER_TYPE_PIXEL})
             {
@@ -329,7 +331,7 @@ TerrainBufferPtr DiligentTerrainRenderer::UploadVertices(const void* data, uint3
         desc.Usage = USAGE_IMMUTABLE;
         desc.BindFlags = result->bind;
         BufferData initial{data, desc.Size};
-        s.backend.m_impl->device->CreateBuffer(desc, &initial, &result->buffer);
+        { MapLoadTrace::Scope p0lCreate("GPU resources","CreateBuffer","gpu-api"); MapLoadTrace::Count("CreateBuffer","",0,true); s.backend.m_impl->device->CreateBuffer(desc, &initial, &result->buffer); }
         if (result->buffer) return result;
     }
     catch (...) {}
@@ -353,7 +355,7 @@ TerrainBufferPtr DiligentTerrainRenderer::UploadIndices(const uint16_t* data, ui
         desc.Usage = USAGE_IMMUTABLE;
         desc.BindFlags = result->bind;
         BufferData initial{data, desc.Size};
-        s.backend.m_impl->device->CreateBuffer(desc, &initial, &result->buffer);
+        { MapLoadTrace::Scope p0lCreate("GPU resources","CreateBuffer","gpu-api"); MapLoadTrace::Count("CreateBuffer","",0,true); s.backend.m_impl->device->CreateBuffer(desc, &initial, &result->buffer); }
         if (result->buffer) return result;
     }
     catch (...) {}
@@ -406,14 +408,14 @@ TerrainTexturePtr DiligentTerrainRenderer::UploadTexture(const TerrainTextureDat
         desc.MipLevels=static_cast<uint32_t>(mips.size()); desc.Format=format;
         desc.Usage=USAGE_IMMUTABLE; desc.BindFlags=BIND_SHADER_RESOURCE;
         TextureData initial{mips.data(),static_cast<uint32_t>(mips.size())};
-        s.backend.m_impl->device->CreateTexture(desc,&initial,&resource->texture);
+        { MapLoadTrace::Scope p0lCreate("GPU resources","CreateTexture","gpu-api"); MapLoadTrace::Count("CreateTexture","",0,true); s.backend.m_impl->device->CreateTexture(desc,&initial,&resource->texture); }
         if (!resource->texture) return fail(__LINE__);
         auto* view=resource->texture->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE);
         if (!view) return fail(__LINE__);
         resource->isAlpha=data.format==TerrainTextureFormat::Alpha8;
         for (int strip=0;!resource->isAlpha && strip<2;++strip)
         {
-            s.texturedPipelines[strip]->CreateShaderResourceBinding(&resource->bindings[strip],true);
+            ShaderLoadAudit::CreateSRB(s.texturedPipelines[strip],&resource->bindings[strip],true);
             if (!resource->bindings[strip]) return fail(__LINE__);
             auto* variable=resource->bindings[strip]->GetVariableByName(SHADER_TYPE_PIXEL,"TerrainTexture");
             if (!variable) return fail(__LINE__);
@@ -530,7 +532,7 @@ TerrainSplatMaterialPtr DiligentTerrainRenderer::CreateSplatMaterial(const Terra
         {
             if(!s.splatPipelines[index]) { s.Fail("missing splat pipeline", __LINE__); return {}; }
             auto& binding=material->bindings[index];
-            s.splatPipelines[index]->CreateShaderResourceBinding(&binding,true);
+            ShaderLoadAudit::CreateSRB(s.splatPipelines[index],&binding,true);
             if(!binding) { s.Fail("splat shader resource binding creation failed", __LINE__); return {}; }
             auto* colorVariable=binding->GetVariableByName(SHADER_TYPE_PIXEL,"ColorTexture");
             auto* alphaVariable=binding->GetVariableByName(SHADER_TYPE_PIXEL,"AlphaTexture");

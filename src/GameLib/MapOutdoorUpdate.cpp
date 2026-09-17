@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "EterBase/MapLoadTrace.h"
 #include "EterLib/Camera.h"
 #include "Platform/PlatformTime.h"
 #include "PRTerrainLib/StdAfx.h"
@@ -49,6 +50,8 @@ class PCBlocker_CDynamicSphereInstanceVector
 
 bool CMapOutdoor::Update(float fX, float fY, float fZ)
 {
+    MapLoadTrace::Scope p0lScope("Residency","visibility sector update","cpu");
+
     // Settings are published at the first render-frame boundary, which may be
     // after Load(). Promote a Classic-loaded map once when Modern becomes active.
     if(!m_stableWorld&&Renderer::GetGraphicsRuntimeConfig().style==Graphics::GraphicsStyle::Modern) {

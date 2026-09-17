@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "EterBase/MapLoadTrace.h"
 #include <io.h>
 #include "EterBase/CRC32.h"
 #include "EterBase/Timer.h"
@@ -338,6 +339,8 @@ CResource * CResourceManager::GetTypeResourcePointer(const char * c_szFileName, 
 
 CResource * CResourceManager::GetResourcePointer(const char * c_szFileName)
 {
+    MapLoadTrace::Scope p0lScope("Assets","shared resource lookup","cpu");
+
 	if (!c_szFileName || !*c_szFileName)
 	{
 		TraceError("CResourceManager::GetResourcePointer: filename error!");

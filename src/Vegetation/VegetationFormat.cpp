@@ -1,4 +1,5 @@
 #include "VegetationRuntime.h"
+#include "EterBase/MapLoadTrace.h"
 #include <rapidjson/document.h>
 #include <rapidjson/writer.h>
 #include <rapidjson/stringbuffer.h>
@@ -98,6 +99,9 @@ Result Registry::Add(std::string_view legacy,std::string_view compiled){
     if(!entries_.emplace(key,path).second)return {false,"duplicate vegetation registry key"};return {true,{}};
 }
 Result Registry::Parse(std::string_view text){
+    MapLoadTrace::Scope p0lScope("Vegetation","registry parse","cpu");
+    MapLoadTrace::Count("registry-parse","vegetation");
+
     try{
         rapidjson::Document d;Vegetation::Parse(text,d);Require(Unsigned(Field(d,"version"))==1,"unsupported vegetation registry version");
         const auto& entries=Field(d,"entries");Require(entries.IsObject()&&entries.MemberCount()<=32768,"invalid registry entries");Registry candidate;

@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "EterBase/MapLoadTrace.h"
 #include "PackLib/PackManager.h"
 #include "EterBase/Stl.h"
 #include "EterBase/CRC32.h"
@@ -41,10 +42,15 @@ void CResource::OnSelfDestruct()
 
 void CResource::Load()
 {
+    MapLoadTrace::Scope p0lScope("Assets","resource load","cpu");
+    MapLoadTrace::Count("resource-load-request",GetFileName());
+    MapLoadTrace::Count(me_state==STATE_EMPTY?"resource-miss":"resource-hit",GetFileName());
+
 	if (me_state != STATE_EMPTY)
 		return;
 
 	const char * c_szFileName = GetFileName();
+    MapLoadTrace::Count("resource-load",c_szFileName,0,true);
 
 	DWORD		dwStart = ELTimer_GetMSec();
 	TPackFile	file;

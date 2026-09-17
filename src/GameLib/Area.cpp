@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "EterBase/MapLoadTrace.h"
 
 #include "EterLib/ResourceManager.h"
 #include "EterLib/DrawState.h"
@@ -349,6 +350,8 @@ void CArea::RenderDungeon()
 
 void CArea::Refresh()
 {
+    MapLoadTrace::Scope p0lScope("Static objects","area refresh","cpu");
+
 	m_TreeCloneInstaceVector.clear();
 	m_ThingCloneInstaceVector.clear();
 	m_DungeonBlockCloneInstanceVector.clear();
@@ -429,6 +432,8 @@ void CArea::Refresh()
 
 void CArea::__Load_BuildObjectInstances()
 {
+    MapLoadTrace::Scope p0lScope("Static objects","instance build","cpu");
+
 	m_ObjectInstanceVector.clear();
 	m_ObjectInstanceVector.resize(GetObjectDataCount());
 
@@ -497,6 +502,8 @@ void CArea::__SetObjectInstance(TObjectInstance * pObjectInstance, const TObject
 
 void CArea::__SetObjectInstance_SetEffect(TObjectInstance * pObjectInstance, const TObjectData * c_pData, CProperty * pProperty)
 {
+    MapLoadTrace::Scope p0lScope("Effects","world effects","cpu");
+
 	prt::TPropertyEffect Data;
 	if (!prt::PropertyEffectStringToData(pProperty, &Data))
 		return;
@@ -537,6 +544,8 @@ void CArea::__SetObjectInstance_SetEffect(TObjectInstance * pObjectInstance, con
 
 void CArea::__SetObjectInstance_SetTree(TObjectInstance * pObjectInstance, const TObjectData * c_pData, CProperty * pProperty)
 {
+    MapLoadTrace::Scope p0lScope("Vegetation","tree bush placement preparation","cpu");
+
 	const char * c_szTreeName;
 	if (!pProperty->GetString("TreeFile", &c_szTreeName))
 		return;
@@ -558,6 +567,8 @@ void CArea::TObjectInstance::SetTree(float x, float y, float z, DWORD dwTreeCRC,
 
 void CArea::__SetObjectInstance_SetBuilding(TObjectInstance * pObjectInstance, const TObjectData * c_pData, CProperty * pProperty)
 {
+    MapLoadTrace::Scope p0lScope("Static objects","building preparation","cpu");
+
     Renderer::StaticObjectLoadScope staticObjectLoad;
 	prt::TPropertyBuilding Data;
 	if (!prt::PropertyBuildingStringToData(pProperty, &Data))
@@ -742,6 +753,9 @@ void CArea::__LoadAttribute(TObjectInstance * pObjectInstance, const char * c_sz
 
 bool CArea::Load(const char * c_szPathName)
 {
+    MapLoadTrace::Scope p0lScope("Static objects","placement and instances","cpu");
+    MapLoadTrace::Count("area-build",c_szPathName);
+
 	Clear();
 
 	std::string strObjectDataFileName = c_szPathName + std::string("AreaData.txt");
@@ -756,6 +770,8 @@ bool CArea::Load(const char * c_szPathName)
 
 bool CArea::__Load_LoadObject(const char * c_szFileName)
 {
+    MapLoadTrace::Scope p0lScope("Static objects","placement parsing","cpu");
+
 	CTokenVectorMap stTokenVectorMap;
 
 	if (!LoadMultipleTextData(c_szFileName, stTokenVectorMap))

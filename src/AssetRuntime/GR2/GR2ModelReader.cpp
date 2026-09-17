@@ -1,4 +1,5 @@
 #include "GR2Reader.h"
+#include "EterBase/MapLoadTrace.h"
 #include "AssetRuntime/AnimationStallAudit.h"
 #include <algorithm>
 
@@ -23,6 +24,8 @@ AnimationRuntime::LocalTransform RuntimeTransform(const LocalTransform& source)
 }
 SkeletonAsset ReadSkeleton(Types& t, Object source)
 {
+    MapLoadTrace::Scope p0lScope("Actors","GR2 skeleton","cpu");
+
     SkeletonAsset result; result.name=t.Text(source,"Name");
     const auto bones=t.Array(source,"Bones"); Require(bones.size()<=65536,"invalid bone count");
     for(const auto& bone:bones) {
@@ -38,6 +41,8 @@ SkeletonAsset ReadSkeleton(Types& t, Object source)
 }
 Contents Read(const File& f)
 {
+    MapLoadTrace::Scope p0lScope("Assets","GR2 object graph","cpu");
+
     Types t(f); Contents result;
     const auto root=t.Root();
     auto models=t.Array(root,"Models"), animations=t.Array(root,"Animations");

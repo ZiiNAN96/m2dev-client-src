@@ -1,4 +1,5 @@
 #include "Pack.h"
+#include "EterBase/MapLoadTrace.h"
 #include "EterLib/BufferPool.h"
 #include <cstring>
 #include <limits>
@@ -115,6 +116,10 @@ bool CPack::GetFile(const TPackFileEntry& entry, TPackFile& result)
 
 bool CPack::GetFileWithPool(const TPackFileEntry& entry, TPackFile& result, CBufferPool* pPool)
 {
+    MapLoadTrace::Scope p0lScope("File access","mapped read decompress decrypt","io+cpu");
+    MapLoadTrace::Count("pack-read",entry.file_name,entry.compressed_size,true);
+    MapLoadTrace::Count("pack-decoded-bytes",entry.file_name,entry.file_size);
+
 	const size_t mapped_size = m_file.size();
 	size_t data_begin = 0;
 	size_t entry_offset = 0;

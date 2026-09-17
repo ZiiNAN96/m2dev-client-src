@@ -1,4 +1,6 @@
+#include "ShaderLoadAudit.h"
 #include "DiligentWater.h"
+#include "EterBase/MapLoadTrace.h"
 #include "ModernWaterShader.h"
 #include "FirstUseAudit.h"
 #include "Diagnostics.h"
@@ -52,16 +54,17 @@ struct DiligentWater::Impl
     }
     RefCntAutoPtr<ITexture> Texture(TEXTURE_FORMAT format,BIND_FLAGS binds,const char* name) {
         TextureDesc desc;desc.Name=name;desc.Type=RESOURCE_DIM_TEX_2D;desc.Width=width;desc.Height=height;desc.Format=format;desc.BindFlags=binds;
-        RefCntAutoPtr<ITexture> texture;device->CreateTexture(desc,nullptr,&texture);RequireWater(bool(texture),name);++stats.resourceCreations;return texture;
+        RefCntAutoPtr<ITexture> texture;{ MapLoadTrace::Scope p0lCreate("GPU resources","CreateTexture","gpu-api"); MapLoadTrace::Count("CreateTexture","",0,true); device->CreateTexture(desc,nullptr,&texture); }RequireWater(bool(texture),name);++stats.resourceCreations;return texture;
     }
     RefCntAutoPtr<IShader> Shader(const char* entry,SHADER_TYPE type) {
         FirstUseAudit timing("shader",entry);ShaderCreateInfo ci;ci.Desc.Name=entry;ci.Desc.ShaderType=type;
         ci.Source=modernWaterShader;ci.EntryPoint=entry;ci.SourceLanguage=SHADER_SOURCE_LANGUAGE_HLSL;
         ci.CompileFlags=SHADER_COMPILE_FLAG_PACK_MATRIX_ROW_MAJOR;
         ci.pShaderSourceStreamFactory=&DiligentFXShaderSourceStreamFactory::GetInstance();
-        RefCntAutoPtr<IShader> shader;device->CreateShader(ci,&shader);RequireWater(bool(shader),entry);return shader;
+        RefCntAutoPtr<IShader> shader;{ MapLoadTrace::Scope p0lCreate("Shaders / PSOs","CreateShader","cpu"); MapLoadTrace::Count("CreateShader","",0,true); device->CreateShader(ci,&shader); }RequireWater(bool(shader),entry);return shader;
     }
     void MakePipeline(Pipeline& result,const char* pixel,TEXTURE_FORMAT format,bool geometry=false) {
+        ShaderLoadAudit::Domain p0lDomain("water");
         if(result.pso)return;
         auto vs=Shader(geometry?"WaterVS":"WaterScreenVS",SHADER_TYPE_VERTEX),ps=Shader(pixel,SHADER_TYPE_PIXEL);
         GraphicsPipelineStateCreateInfo ci;ci.PSODesc.Name=pixel;ci.PSODesc.PipelineType=PIPELINE_TYPE_GRAPHICS;
@@ -71,15 +74,15 @@ struct DiligentWater::Impl
         g.DepthStencilDesc.DepthFunc=COMPARISON_FUNC_LESS_EQUAL;g.DSVFormat=geometry?TEX_FORMAT_D24_UNORM_S8_UINT:TEX_FORMAT_UNKNOWN;
         LayoutElement layout[]={{0,0,3,VT_FLOAT32,False,0,sizeof(EffectVertex)},{1,0,4,VT_UINT8,True,12,sizeof(EffectVertex)}};
         if(geometry)g.InputLayout={layout,2};ci.pVS=vs;ci.pPS=ps;
-        {FirstUseAudit timing("pso",pixel);device->CreateGraphicsPipelineState(ci,&result.pso);}
-        RequireWater(bool(result.pso),pixel);result.pso->CreateShaderResourceBinding(&result.srb,true);++stats.resourceCreations;
+        {FirstUseAudit timing("pso",pixel);{ MapLoadTrace::Scope p0lCreate("Shaders / PSOs","CreateGraphicsPipelineState","gpu-api"); MapLoadTrace::Count("CreateGraphicsPipelineState","",0,true); device->CreateGraphicsPipelineState(ci,&result.pso); }}
+        RequireWater(bool(result.pso),pixel);ShaderLoadAudit::CreateSRB(result.pso,&result.srb,true);++stats.resourceCreations;
     }
     void SharedResources() {
         if(!constants) {
             BufferDesc desc;desc.Name="G7 shared water constants";desc.Size=sizeof(Constants);desc.Usage=USAGE_DYNAMIC;
-            desc.BindFlags=BIND_UNIFORM_BUFFER;desc.CPUAccessFlags=CPU_ACCESS_WRITE;device->CreateBuffer(desc,nullptr,&constants);
+            desc.BindFlags=BIND_UNIFORM_BUFFER;desc.CPUAccessFlags=CPU_ACCESS_WRITE;{ MapLoadTrace::Scope p0lCreate("GPU resources","CreateBuffer","gpu-api"); MapLoadTrace::Count("CreateBuffer","",0,true); device->CreateBuffer(desc,nullptr,&constants); }
             desc.Name="G7 shared water vertex stream";desc.Size=StreamVertices*sizeof(EffectVertex);desc.BindFlags=BIND_VERTEX_BUFFER;
-            device->CreateBuffer(desc,nullptr,&vertices);RequireWater(constants&&vertices,"water shared buffers");stats.resourceCreations+=2;
+            { MapLoadTrace::Scope p0lCreate("GPU resources","CreateBuffer","gpu-api"); MapLoadTrace::Count("CreateBuffer","",0,true); device->CreateBuffer(desc,nullptr,&vertices); }RequireWater(constants&&vertices,"water shared buffers");stats.resourceCreations+=2;
         }
         if(!normalMap) {
             // Deterministic tileable analytic height derivatives, generated once.
@@ -104,10 +107,10 @@ struct DiligentWater::Impl
             }
             TextureDesc desc;desc.Name="G7 generated tileable wave normals";desc.Type=RESOURCE_DIM_TEX_2D;
             desc.Width=desc.Height=128;desc.MipLevels=8;desc.Format=TEX_FORMAT_RGBA8_UNORM;desc.BindFlags=BIND_SHADER_RESOURCE;desc.Usage=USAGE_IMMUTABLE;
-            TextureData source{levels.data(),8};device->CreateTexture(desc,&source,&normalMap);RequireWater(bool(normalMap),"water normal map");
+            TextureData source{levels.data(),8};{ MapLoadTrace::Scope p0lCreate("GPU resources","CreateTexture","gpu-api"); MapLoadTrace::Count("CreateTexture","",0,true); device->CreateTexture(desc,&source,&normalMap); }RequireWater(bool(normalMap),"water normal map");
             const float zero[4]{};TextureSubResData blackPixel{zero,16};TextureData blackData{&blackPixel,1};
             desc.Name="G7 no SSR radiance fallback";desc.Width=desc.Height=desc.MipLevels=1;desc.Format=TEX_FORMAT_RGBA32_FLOAT;
-            device->CreateTexture(desc,&blackData,&black);RequireWater(bool(black),"water fallback");
+            { MapLoadTrace::Scope p0lCreate("GPU resources","CreateTexture","gpu-api"); MapLoadTrace::Count("CreateTexture","",0,true); device->CreateTexture(desc,&blackData,&black); }RequireWater(bool(black),"water fallback");
             SamplerDesc sampler;sampler.AddressU=sampler.AddressV=sampler.AddressW=TEXTURE_ADDRESS_WRAP;
             device->CreateSampler(sampler,&normalSampler);sampler.AddressU=sampler.AddressV=sampler.AddressW=TEXTURE_ADDRESS_CLAMP;
             device->CreateSampler(sampler,&sceneSampler);stats.resourceCreations+=4;
@@ -124,7 +127,7 @@ struct DiligentWater::Impl
         // Explicit GPU-test readback only; never allocated by a production frame.
         auto desc=source->GetDesc();desc.Name="G7 diagnostic HDR readback";desc.Usage=USAGE_STAGING;
         desc.BindFlags=BIND_NONE;desc.CPUAccessFlags=CPU_ACCESS_READ;desc.MiscFlags=MISC_TEXTURE_FLAG_NONE;
-        RefCntAutoPtr<ITexture> staging;device->CreateTexture(desc,nullptr,&staging);RequireWater(bool(staging),"HDR diagnostic staging");
+        RefCntAutoPtr<ITexture> staging;{ MapLoadTrace::Scope p0lCreate("GPU resources","CreateTexture","gpu-api"); MapLoadTrace::Count("CreateTexture","",0,true); device->CreateTexture(desc,nullptr,&staging); }RequireWater(bool(staging),"HDR diagnostic staging");
         context->SetRenderTargets(0,nullptr,nullptr,RESOURCE_STATE_TRANSITION_MODE_TRANSITION);Copy(source,staging);context->WaitForIdle();
         MappedTextureSubresource mapped;context->MapTextureSubresource(staging,0,0,MAP_READ,MAP_FLAG_NONE,nullptr,mapped);
         RequireWater(mapped.pData!=nullptr,"HDR diagnostic map");float peak=0;

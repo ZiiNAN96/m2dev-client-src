@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "EterBase/MapLoadTrace.h"
 #include "Renderer/FirstUseAudit.h"
 #include "Renderer/GraphicsConfig.h"
 #include "Renderer/ModernFrame.h"
@@ -209,6 +210,9 @@ bool CPythonApplication::PrewarmModernWorld()
 
 void CPythonApplication::RenderGame()
 {
+    MapLoadTrace::Scope p0lScope("First frames","world render","cpu");
+    MapLoadTrace::WorldRendered();
+
     if(Renderer::worldPrewarmPending&&!Renderer::loadingPrewarm) {
         Renderer::worldPrewarmPending=false;
         // SetGamePhase schedules a curtain transition. Only this callback runs

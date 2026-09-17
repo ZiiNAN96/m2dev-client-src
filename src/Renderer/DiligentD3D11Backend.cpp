@@ -1,4 +1,5 @@
 #include "DiligentD3D11BackendInternal.h"
+#include "EterBase/MapLoadTrace.h"
 #include "TerrainPresentation.h"
 #include "FirstUseAudit.h"
 #include "Diagnostics.h"
@@ -129,11 +130,11 @@ bool DiligentD3D11Backend::CaptureRGB(std::vector<uint8_t>& pixels,uint32_t& wid
         if(desc.Format!=TEX_FORMAT_RGBA8_UNORM || !desc.Width || !desc.Height) return false;
         desc.Name="M11 screenshot staging"; desc.Usage=USAGE_STAGING; desc.BindFlags=BIND_NONE;
         desc.CPUAccessFlags=CPU_ACCESS_READ; desc.MiscFlags=MISC_TEXTURE_FLAG_NONE;
-        RefCntAutoPtr<ITexture> staging; s.device->CreateTexture(desc,nullptr,&staging);
+        RefCntAutoPtr<ITexture> staging; { MapLoadTrace::Scope p0lCreate("GPU resources","CreateTexture","gpu-api"); MapLoadTrace::Count("CreateTexture","",0,true); s.device->CreateTexture(desc,nullptr,&staging); }
         if(!staging) return false;
         CopyTextureAttribs copy; copy.pSrcTexture=source; copy.pDstTexture=staging;
         copy.SrcTextureTransitionMode=copy.DstTextureTransitionMode=RESOURCE_STATE_TRANSITION_MODE_TRANSITION;
-        s.context->CopyTexture(copy); s.context->WaitForIdle();
+        s.context->CopyTexture(copy); { MapLoadTrace::Scope p0lWait("Synchronization","screenshot WaitForIdle","wait"); s.context->WaitForIdle(); }
         pixels.resize(size_t(desc.Width)*desc.Height*3);
         MappedTextureSubresource mapped;
         s.context->MapTextureSubresource(staging,0,0,MAP_READ,MAP_FLAG_NONE,nullptr,mapped);
@@ -154,7 +155,8 @@ void DiligentD3D11Backend::Present()
     {
         const auto start=skinningBenchmarkEnabled ? PrototypeClock::now() : PrototypeClock::time_point{};
         AssetRuntime::AnimationStallAudit::WorkScope stallPresentWait(AssetRuntime::AnimationStallAudit::Work::PresentWait);
-        m_impl->swapChain->Present(1);
+        { MapLoadTrace::Scope p0lPresent("Synchronization","Present vsync","wait"); m_impl->swapChain->Present(1); }
+        MapLoadTrace::Presented();
         if(awaitingWorldPresent){awaitingWorldPresent=false;LogClientLifecycle("WorldPresented");}
         stallPresentWait.Stop();
         if (AssetRuntime::AnimationStallAudit::enabled) ++AssetRuntime::AnimationStallAudit::swapchainPresents;

@@ -1,5 +1,7 @@
 #pragma once
+#include "EterBase/MapLoadTrace.h"
 #include "Diagnostics.h"
+#include "ShaderLoadAuditContext.h"
 #include <chrono>
 
 namespace Renderer
@@ -11,13 +13,16 @@ inline bool awaitingWorldPresent{};
 // events; they must not be summed with those child events.
 class FirstUseAudit
 {
+    ShaderLoadAudit::Domain domain_;
+    MapLoadTrace::Scope p0lScope_;
     const char* category_;
     const char* name_;
     bool enabled_;
     std::chrono::steady_clock::time_point start_;
 public:
     FirstUseAudit(const char* category,const char* name,bool enabled=true):
-        category_(category),name_(name),enabled_(enabled&&verboseDiagnostics),
+        domain_(std::string_view(category)=="fx-total"?name:ShaderLoadAudit::domain),
+        p0lScope_("Shaders / PSOs",name,category,enabled), category_(category),name_(name),enabled_(enabled&&verboseDiagnostics),
         start_(enabled_?std::chrono::steady_clock::now():std::chrono::steady_clock::time_point{}) {}
     ~FirstUseAudit() noexcept {
         if(!enabled_)return;

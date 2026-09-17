@@ -1,4 +1,5 @@
 #include "VegetationRenderer.h"
+#include "EterBase/MapLoadTrace.h"
 #include <algorithm>
 #include <cmath>
 #include <cstring>
@@ -7,6 +8,9 @@
 
 namespace Vegetation {
 std::shared_ptr<const RenderAsset> Prepare(AssetPtr asset,::Renderer::IStaticObjectRenderer&renderer,const TextureResolver&texture,std::string&error,bool optional){
+    MapLoadTrace::Scope p0lScope("Vegetation","geometry material preparation","cpu");
+    MapLoadTrace::Count("vegetation-render-prepare");
+
     try{
         if(!asset)throw std::runtime_error("missing vegetation asset");auto result=std::make_shared<RenderAsset>();result->asset=asset;
         const auto model=asset->geometry.Model(0);result->textures.resize(model.Get()->materials.size());result->materials.resize(model.Get()->materials.size());

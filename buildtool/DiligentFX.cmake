@@ -35,6 +35,7 @@ add_library(M2DiligentFX STATIC
 target_include_directories(M2DiligentFX PUBLIC "${m2_fx_dir}"
     "${diligentcore_SOURCE_DIR}/Common/interface" PRIVATE
     "${diligentcore_SOURCE_DIR}"
+    "${PROJECT_SOURCE_DIR}/src"
     "${diligentcore_SOURCE_DIR}/Common/interface"
     "${diligentcore_SOURCE_DIR}/Graphics/GraphicsAccessories/interface"
     "${m2_fx_dir}/Components/interface"

@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "EterBase/MapLoadTrace.h"
 #include "TextureSet.h"
 
 CTextureSet::CTextureSet()
@@ -24,6 +25,8 @@ void CTextureSet::Create()
 
 bool CTextureSet::Load(const char * c_szTextureSetFileName, float fTerrainTexCoordBase)
 {
+    MapLoadTrace::Scope p0lScope("Materials","terrain material setup","cpu");
+
 	NANOBEGIN
 	Clear();
 

@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "EterBase/MapLoadTrace.h"
 #include "Material.h"
 #include "Mesh.h"
 #include "Eterbase/Filename.h"
@@ -220,6 +221,8 @@ CGraphicImage* CGrannyMaterial::__GetImagePointer(const char* fileName)
 
 bool CGrannyMaterial::CreateFromAsset(const AssetRuntime::MaterialAsset& material)
 {
+    MapLoadTrace::Scope p0lScope("Materials","material creation","cpu");
+
     m_modernMaterial.reset();m_modernUploader.reset();
     for(auto& image:m_modernImages) image=nullptr;
     if (material.explicitRenderState) {
@@ -286,6 +289,8 @@ void CGrannyMaterial::Initialize()
 
 std::shared_ptr<const Renderer::MaterialRuntimeData> CGrannyMaterial::GetModernMaterial(Renderer::ITextureUploader& uploader) const
 {
+    MapLoadTrace::Scope p0lScope("Materials","modern material lookup","cpu");
+
     if(m_modernMaterial && m_modernUploader.lock()==uploader.TextureCacheLifetime().lock()) return m_modernMaterial;
     auto result=std::make_shared<Renderer::MaterialRuntimeData>();
     result->baseColor=m_asset.baseColorFactor;result->emissive=m_asset.emissiveColor;

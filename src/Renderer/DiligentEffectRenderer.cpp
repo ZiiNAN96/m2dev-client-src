@@ -1,4 +1,6 @@
+#include "ShaderLoadAudit.h"
 // ZiiNAN: Diligent effect rendering integration; original CPU vertices and deterministic material binds.
+#include "EterBase/MapLoadTrace.h"
 #include "DiligentEffectRenderer.h"
 #include "DiligentD3D11BackendInternal.h"
 #include "Diagnostics.h"
@@ -195,16 +197,16 @@ bool DiligentEffectRenderer::Initialize()
     try {
         BufferDesc desc; desc.Name="Native effect material and transforms"; desc.Size=sizeof(Constants);
         desc.Usage=USAGE_DYNAMIC; desc.BindFlags=BIND_UNIFORM_BUFFER; desc.CPUAccessFlags=CPU_ACCESS_WRITE;
-        s.backend.m_impl->device->CreateBuffer(desc,nullptr,&s.constants);
+        { MapLoadTrace::Scope p0lCreate("GPU resources","CreateBuffer","gpu-api"); MapLoadTrace::Count("CreateBuffer","",0,true); s.backend.m_impl->device->CreateBuffer(desc,nullptr,&s.constants); }
         ShaderCreateInfo shader; shader.SourceLanguage=SHADER_SOURCE_LANGUAGE_HLSL; shader.Source=source;
         shader.Desc.Name="Native CPU effect vertices"; shader.Desc.ShaderType=SHADER_TYPE_VERTEX; shader.EntryPoint="VS";
-        {FirstUseAudit timing("shader","effect");s.backend.m_impl->device->CreateShader(shader,&s.vs);}
+        {FirstUseAudit timing("shader","effect");{ MapLoadTrace::Scope p0lCreate("Shaders / PSOs","CreateShader","cpu"); MapLoadTrace::Count("CreateShader","",0,true); s.backend.m_impl->device->CreateShader(shader,&s.vs); }}
         shader.Desc.Name="Native effect texture factor alpha fog"; shader.Desc.ShaderType=SHADER_TYPE_PIXEL; shader.EntryPoint="PS";
         for(unsigned variant=0;variant<8;++variant) {
             ShaderMacroHelper macros;macros.Add("EFFECT_TEXTURE",bool(variant&1));macros.Add("SECONDARY_TEXTURE",bool(variant&2));
             macros.Add("EFFECT_HDR",bool(variant&4));
             shader.pShaderSourceStreamFactory=&DiligentFXShaderSourceStreamFactory::GetInstance();
-            shader.Macros=macros;{FirstUseAudit timing("shader","effect");s.backend.m_impl->device->CreateShader(shader,&s.ps[variant]);}
+            shader.Macros=macros;{FirstUseAudit timing("shader","effect");{ MapLoadTrace::Scope p0lCreate("Shaders / PSOs","CreateShader","cpu"); MapLoadTrace::Count("CreateShader","",0,true); s.backend.m_impl->device->CreateShader(shader,&s.ps[variant]); }}
             if(!s.ps[variant])return false;
         }
         return s.constants && s.vs;
@@ -240,7 +242,7 @@ TerrainTexturePtr DiligentEffectRenderer::UploadTexture(const TerrainTextureData
         TextureDesc desc; desc.Name="Original effect image"; desc.Type=RESOURCE_DIM_TEX_2D;
         desc.Width=data.width; desc.Height=data.height; desc.MipLevels=uint32_t(mips.size());
         desc.Format=format; desc.Usage=USAGE_IMMUTABLE; desc.BindFlags=BIND_SHADER_RESOURCE;
-        TextureData initial{mips.data(),desc.MipLevels}; s.backend.m_impl->device->CreateTexture(desc,&initial,&texture->image);
+        TextureData initial{mips.data(),desc.MipLevels}; { MapLoadTrace::Scope p0lCreate("GPU resources","CreateTexture","gpu-api"); MapLoadTrace::Count("CreateTexture","",0,true); s.backend.m_impl->device->CreateTexture(desc,&initial,&texture->image); }
         if(!texture->image) return fail(__LINE__); texture->counts=s.counts; ++s.counts->textures; return texture;
     } catch(...) { return fail(__LINE__); }
 }
@@ -303,9 +305,9 @@ void DiligentEffectRenderer::Draw(const EffectVertex* vertices,uint32_t count,co
             blend.BlendOp=blend.BlendOpAlpha=BLEND_OPERATION(d.blendOp);
             LayoutElement layout[]={{0,0,3,VT_FLOAT32,False,0,32},{1,0,4,VT_UINT8,True,12,32},{2,0,2,VT_FLOAT32,False,16,32},{3,0,2,VT_FLOAT32,False,24,32}};
             g.InputLayout.LayoutElements=layout; g.InputLayout.NumElements=4; info.pVS=s.vs; info.pPS=s.ps[unsigned(d.textured)|unsigned(bool(secondary))<<1|unsigned(hdr)<<2];
-            {FirstUseAudit timing("pso","effect");b.device->CreateGraphicsPipelineState(info,&p.state);} if(!p.state) { s.Fail("effect pipeline creation failed", __LINE__); return; }
+            {FirstUseAudit timing("pso","effect");{ MapLoadTrace::Scope p0lCreate("Shaders / PSOs","CreateGraphicsPipelineState","gpu-api"); MapLoadTrace::Count("CreateGraphicsPipelineState","",0,true); b.device->CreateGraphicsPipelineState(info,&p.state); }} if(!p.state) { s.Fail("effect pipeline creation failed", __LINE__); return; }
             for(auto stage:{SHADER_TYPE_VERTEX,SHADER_TYPE_PIXEL}) if(auto* v=p.state->GetStaticVariableByName(stage,"EffectConstants")) v->Set(s.constants);
-            p.state->CreateShaderResourceBinding(&p.bindings,true); if(!p.bindings) { s.Fail("effect shader resource binding creation failed", __LINE__); return; }
+            ShaderLoadAudit::CreateSRB(p.state,&p.bindings,true); if(!p.bindings) { s.Fail("effect shader resource binding creation failed", __LINE__); return; }
         }
         const auto getSampler=[&](const EffectSampler& sampling) -> ISampler* {
         auto& sampler=s.samplers[sampling];
@@ -330,7 +332,7 @@ void DiligentEffectRenderer::Draw(const EffectVertex* vertices,uint32_t count,co
             s.vertices.Release(); s.capacity=std::max<uint64_t>(4096,bytes);
             BufferDesc desc; desc.Name="CPU effect DISCARD upload"; desc.Size=s.capacity; desc.Usage=USAGE_DYNAMIC;
             desc.BindFlags=BIND_VERTEX_BUFFER; desc.CPUAccessFlags=CPU_ACCESS_WRITE;
-            b.device->CreateBuffer(desc,nullptr,&s.vertices); if(!s.vertices) { s.capacity=0; s.Fail("effect vertex buffer creation failed", __LINE__); return; }
+            { MapLoadTrace::Scope p0lCreate("GPU resources","CreateBuffer","gpu-api"); MapLoadTrace::Count("CreateBuffer","",0,true); b.device->CreateBuffer(desc,nullptr,&s.vertices); } if(!s.vertices) { s.capacity=0; s.Fail("effect vertex buffer creation failed", __LINE__); return; }
         }
         { MapHelper<UploadVertex> mapped(b.context,s.vertices,MAP_WRITE,MAP_FLAG_DISCARD);
           if(!mapped) { s.Fail("effect vertex buffer map failed", __LINE__); return; }

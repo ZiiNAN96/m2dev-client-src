@@ -159,6 +159,11 @@ for relative in files:
         marker = "    CreateInfo    m_Settings;"
         assert text.count(marker) == 1
         text = text.replace(marker, marker + "\n    bool m_PSOsReady = false;")
+    if relative.endswith("PostFXRenderTechnique.cpp"):
+        text = text.replace('#include "RenderStateCache.hpp"', '#include "RenderStateCache.hpp"\n#include "Renderer/ShaderLoadAudit.h"')
+        marker = "PSO->CreateShaderResourceBinding(&SRB, InitStaticResources);"
+        assert text.count(marker) == 1
+        text = text.replace(marker, "ShaderLoadAudit::CreateSRB(PSO, &SRB, InitStaticResources);")
     output = destination / relative
     output.parent.mkdir(parents=True, exist_ok=True)
     if not output.exists() or output.read_text(encoding="utf-8") != text:

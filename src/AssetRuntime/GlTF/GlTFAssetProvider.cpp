@@ -1,4 +1,5 @@
 #include "GlTFAssetProvider.h"
+#include "EterBase/MapLoadTrace.h"
 #include "GlTFJsonValidation.h"
 #include "cgltf.h"
 #include "AssetRuntime/RuntimeAnimationInstance.h"
@@ -1004,6 +1005,9 @@ class Provider final : public AssetProvider
 public:
     LoadResult Load(AssetId id,std::span<const std::byte> bytes) override
     {
+    MapLoadTrace::Scope p0lScope("Assets","GLB parse","cpu");
+    MapLoadTrace::Count("glb-parse",id,bytes.size(),true);
+
         try {
             Supported(std::endian::native==std::endian::little, "Big-endian GLB import is not enabled");
             ValidateContainer(bytes);

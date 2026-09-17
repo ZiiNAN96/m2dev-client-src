@@ -1,4 +1,5 @@
 #include "GR2Reader.h"
+#include "EterBase/MapLoadTrace.h"
 #include "GR2AssetProvider.h"
 #include "AssetRuntime/AnimationStallAudit.h"
 #include <algorithm>
@@ -111,6 +112,8 @@ template<std::size_t N> AnimationRuntime::Track<std::array<float,N>> ConvertCurv
 }
 AnimationData ReadAnimation(Types& t,Object source,AnimationAsset& metadata,Contents& contents)
 {
+    MapLoadTrace::Scope p0lScope("Actors","GR2 animation curves","cpu");
+
     metadata.name=t.Text(source,"Name"); metadata.duration=t.Real(source,"Duration"); metadata.timeStep=t.Real(source,"TimeStep");
     Require(metadata.duration>=0 && metadata.duration<=600 && metadata.timeStep>0,"invalid animation time range");
     AnimationData result;

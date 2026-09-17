@@ -1,4 +1,6 @@
+#include "ShaderLoadAudit.h"
 #include "DiligentAtmosphere.h"
+#include "EterBase/MapLoadTrace.h"
 #include "FirstUseAudit.h"
 #include "Graphics/AtmosphereConfig.h"
 #include "Graphics/GraphicsEngine/interface/RenderDevice.h"
@@ -108,13 +110,13 @@ struct DiligentAtmosphere::Impl
         ci.SourceLanguage=SHADER_SOURCE_LANGUAGE_HLSL;ci.Macros=macros;
         ci.CompileFlags=SHADER_COMPILE_FLAG_PACK_MATRIX_ROW_MAJOR;
         ci.pShaderSourceStreamFactory=&DiligentFXShaderSourceStreamFactory::GetInstance();
-        RefCntAutoPtr<IShader> result;device->CreateShader(ci,&result);Require(bool(result),entry);return result;
+        RefCntAutoPtr<IShader> result;{ MapLoadTrace::Scope p0lCreate("Shaders / PSOs","CreateShader","cpu"); MapLoadTrace::Count("CreateShader","",0,true); device->CreateShader(ci,&result); }Require(bool(result),entry);return result;
     }
     RefCntAutoPtr<ITexture> Texture(const char* name,TEXTURE_FORMAT format,unsigned width,unsigned height,unsigned depth=1) {
         TextureDesc desc;desc.Name=name;desc.Type=depth==1?RESOURCE_DIM_TEX_2D:RESOURCE_DIM_TEX_3D;
         desc.Width=width;desc.Height=height;desc.Depth=depth;desc.Format=format;
         desc.BindFlags=BIND_SHADER_RESOURCE|(depth==1?BIND_RENDER_TARGET:BIND_UNORDERED_ACCESS);
-        RefCntAutoPtr<ITexture> result;device->CreateTexture(desc,nullptr,&result);Require(bool(result),name);return result;
+        RefCntAutoPtr<ITexture> result;{ MapLoadTrace::Scope p0lCreate("GPU resources","CreateTexture","gpu-api"); MapLoadTrace::Count("CreateTexture","",0,true); device->CreateTexture(desc,nullptr,&result); }Require(bool(result),name);return result;
     }
     static void Set(IShaderResourceBinding* srb,SHADER_TYPE stage,const char* name,IDeviceObject* resource) {
         auto* variable=srb->GetVariableByName(stage,name);Require(variable!=nullptr,name);variable->Set(resource);
@@ -128,7 +130,7 @@ struct DiligentAtmosphere::Impl
         ci.GraphicsPipeline.PrimitiveTopology=PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
         ci.GraphicsPipeline.RasterizerDesc.CullMode=CULL_MODE_NONE;ci.GraphicsPipeline.DepthStencilDesc.DepthEnable=False;
         ci.pVS=vs;ci.pPS=ps;RefCntAutoPtr<IPipelineState> result;
-        {FirstUseAudit timing("pso",name);device->CreateGraphicsPipelineState(ci,&result);}Require(bool(result),name);return result;
+        {FirstUseAudit timing("pso",name);{ MapLoadTrace::Scope p0lCreate("Shaders / PSOs","CreateGraphicsPipelineState","gpu-api"); MapLoadTrace::Count("CreateGraphicsPipelineState","",0,true); device->CreateGraphicsPipelineState(ci,&result); }}Require(bool(result),name);return result;
     }
     void Draw(IPipelineState* pso,IShaderResourceBinding* srb,ITexture* texture) {
         auto* target=texture->GetDefaultView(TEXTURE_VIEW_RENDER_TARGET);
@@ -149,10 +151,10 @@ struct DiligentAtmosphere::Impl
         G56Atmosphere::InitializeAtmosphereCoefficients(coefficients,settings);
         BufferDesc desc;desc.Name="G56 FX physical media";desc.Size=sizeof(coefficients);
         desc.BindFlags=BIND_UNIFORM_BUFFER;desc.Usage=USAGE_IMMUTABLE;
-        BufferData data{&coefficients,sizeof(coefficients)};device->CreateBuffer(desc,&data,&media);
+        BufferData data{&coefficients,sizeof(coefficients)};{ MapLoadTrace::Scope p0lCreate("GPU resources","CreateBuffer","gpu-api"); MapLoadTrace::Count("CreateBuffer","",0,true); device->CreateBuffer(desc,&data,&media); }
         Require(bool(media),"G56 atmosphere media");
         desc.Name="G8 shared sun sky inputs";desc.Size=64;desc.Usage=USAGE_DEFAULT;
-        device->CreateBuffer(desc,nullptr,&inputs);Require(bool(inputs),"G56 atmosphere inputs");
+        { MapLoadTrace::Scope p0lCreate("GPU resources","CreateBuffer","gpu-api"); MapLoadTrace::Count("CreateBuffer","",0,true); device->CreateBuffer(desc,nullptr,&inputs); }Require(bool(inputs),"G56 atmosphere inputs");
         SamplerDesc sampling;sampling.AddressU=sampling.AddressV=sampling.AddressW=TEXTURE_ADDRESS_CLAMP;
         device->CreateSampler(sampling,&sampler);Require(bool(sampler),"G56 atmosphere sampler");
         density=Texture("G56 FX optical depth",TEX_FORMAT_RG32_FLOAT,256,256);
@@ -160,14 +162,14 @@ struct DiligentAtmosphere::Impl
         sky[0]=Texture("G56 sky low",TEX_FORMAT_RGBA16_FLOAT,128,64);
         sky[1]=Texture("G8 sky high",TEX_FORMAT_RGBA16_FLOAT,512,256);
         auto opticalPSO=Fullscreen("G56 FX optical depth precompute","#include \"PrecomputeNetDensityToAtmTop.fx\"","PrecomputeNetDensityToAtmTopPS",TEX_FORMAT_RG32_FLOAT);
-        RefCntAutoPtr<IShaderResourceBinding> opticalSRB;opticalPSO->CreateShaderResourceBinding(&opticalSRB,true);
+        RefCntAutoPtr<IShaderResourceBinding> opticalSRB;ShaderLoadAudit::CreateSRB(opticalPSO,&opticalSRB,true);
         Set(opticalSRB,SHADER_TYPE_PIXEL,"cbParticipatingMediaScatteringParams",media);
         Draw(opticalPSO,opticalSRB,density);
         ComputePipelineStateCreateInfo ci;ci.PSODesc.Name="G56 FX single scattering precompute";
         ci.PSODesc.PipelineType=PIPELINE_TYPE_COMPUTE;ci.PSODesc.ResourceLayout.DefaultVariableType=SHADER_RESOURCE_VARIABLE_TYPE_DYNAMIC;
         auto compute=Shader("#include \"PrecomputeSingleScattering.fx\"","PrecomputeSingleScatteringCS",SHADER_TYPE_COMPUTE);ci.pCS=compute;
         RefCntAutoPtr<IPipelineState> pso;device->CreateComputePipelineState(ci,&pso);Require(bool(pso),ci.PSODesc.Name);
-        RefCntAutoPtr<IShaderResourceBinding> srb;pso->CreateShaderResourceBinding(&srb,true);
+        RefCntAutoPtr<IShaderResourceBinding> srb;ShaderLoadAudit::CreateSRB(pso,&srb,true);
         Set(srb,SHADER_TYPE_COMPUTE,"cbParticipatingMediaScatteringParams",media);
         Set(srb,SHADER_TYPE_COMPUTE,"g_tex2DOccludedNetDensityToAtmTop",density->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE));
         Set(srb,SHADER_TYPE_COMPUTE,"g_tex2DOccludedNetDensityToAtmTop_sampler",sampler);
@@ -175,7 +177,7 @@ struct DiligentAtmosphere::Impl
         context->SetPipelineState(pso);context->CommitShaderResources(srb,RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
         context->DispatchCompute(DispatchComputeAttribs{1,8,512});
         skyPSO=Fullscreen("G56 FX atmosphere sky lookup",skyShader,"SkyPS",TEX_FORMAT_RGBA16_FLOAT);
-        skyPSO->CreateShaderResourceBinding(&skySRB,true);
+        ShaderLoadAudit::CreateSRB(skyPSO,&skySRB,true);
         Set(skySRB,SHADER_TYPE_PIXEL,"cbParticipatingMediaScatteringParams",media);
         Set(skySRB,SHADER_TYPE_PIXEL,"SkyInputs",inputs);
         Set(skySRB,SHADER_TYPE_PIXEL,"Scattering",scattering->GetDefaultView(TEXTURE_VIEW_SHADER_RESOURCE));
@@ -183,13 +185,13 @@ struct DiligentAtmosphere::Impl
         // Reuse the existing FX diffuse convolution and GGX prefilter. The only
         // shader adaptation is the game's Z-up sky-atlas coordinate mapping.
         desc.Name="G56 FX environment filter constants";desc.Size=sizeof(FilterConstants);
-        device->CreateBuffer(desc,nullptr,&filterCB);Require(bool(filterCB),desc.Name);
+        { MapLoadTrace::Scope p0lCreate("GPU resources","CreateBuffer","gpu-api"); MapLoadTrace::Count("CreateBuffer","",0,true); device->CreateBuffer(desc,nullptr,&filterCB); }Require(bool(filterCB),desc.Name);
         auto cubeVS=Shader("#include \"CubemapFace.vsh\"","main",SHADER_TYPE_VERTEX);
         for(unsigned kind=0;kind<2;++kind) {
             TextureDesc cube;cube.Name=kind?"G56 sky specular cube":"G56 sky irradiance cube";
             cube.Type=RESOURCE_DIM_TEX_CUBE;cube.ArraySize=6;cube.Width=cube.Height=kind?32:16;
             cube.MipLevels=kind?6:1;cube.Format=TEX_FORMAT_RGBA16_FLOAT;cube.BindFlags=BIND_RENDER_TARGET|BIND_SHADER_RESOURCE;
-            device->CreateTexture(cube,nullptr,&cubes[kind]);Require(bool(cubes[kind]),cube.Name);
+            { MapLoadTrace::Scope p0lCreate("GPU resources","CreateTexture","gpu-api"); MapLoadTrace::Count("CreateTexture","",0,true); device->CreateTexture(cube,nullptr,&cubes[kind]); }Require(bool(cubes[kind]),cube.Name);
             for(unsigned mip=0;mip<cube.MipLevels;++mip)for(unsigned face=0;face<6;++face) {
                 TextureViewDesc view;view.ViewType=TEXTURE_VIEW_RENDER_TARGET;view.TextureDim=RESOURCE_DIM_TEX_2D_ARRAY;
                 view.MostDetailedMip=mip;view.NumMipLevels=1;view.FirstArraySlice=face;view.NumArraySlices=1;
@@ -214,8 +216,8 @@ float2 G56SkyUV(float3 d){return float2(atan2(d.y,d.x)/(2*3.14159265359)+.5,1-sa
             pipeline.GraphicsPipeline.PrimitiveTopology=PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
             pipeline.GraphicsPipeline.RasterizerDesc.CullMode=CULL_MODE_NONE;
             pipeline.GraphicsPipeline.DepthStencilDesc.DepthEnable=False;pipeline.pVS=cubeVS;pipeline.pPS=ps;
-            device->CreateGraphicsPipelineState(pipeline,&filterPSOs[kind]);Require(bool(filterPSOs[kind]),cube.Name);
-            filterPSOs[kind]->CreateShaderResourceBinding(&filterSRBs[kind],true);
+            { MapLoadTrace::Scope p0lCreate("Shaders / PSOs","CreateGraphicsPipelineState","gpu-api"); MapLoadTrace::Count("CreateGraphicsPipelineState","",0,true); device->CreateGraphicsPipelineState(pipeline,&filterPSOs[kind]); }Require(bool(filterPSOs[kind]),cube.Name);
+            ShaderLoadAudit::CreateSRB(filterPSOs[kind],&filterSRBs[kind],true);
             Set(filterSRBs[kind],SHADER_TYPE_VERTEX,"cbTransform",filterCB);
             Set(filterSRBs[kind],SHADER_TYPE_PIXEL,"FilterAttribs",filterCB);
             Set(filterSRBs[kind],SHADER_TYPE_PIXEL,"g_EnvironmentMap_sampler",sampler);
@@ -244,6 +246,8 @@ float2 G56SkyUV(float3 d){return float2(atan2(d.y,d.x)/(2*3.14159265359)+.5,1-sa
 DiligentAtmosphere::DiligentAtmosphere(IRenderDevice* d,IDeviceContext* c):impl_(std::make_unique<Impl>(d,c)){}
 DiligentAtmosphere::~DiligentAtmosphere()=default;
 void DiligentAtmosphere::Prepare(const Graphics::SceneLighting& lighting,bool highQuality) {
+    MapLoadTrace::Scope p0lScope("Sky atmosphere HDR","atmosphere preparation","cpu");
+
     auto& s=*impl_;const auto light=Graphics::ValidateSceneLighting(lighting);
     static const auto epoch=std::chrono::steady_clock::now();
     const double seconds=Graphics::developmentSkySeconds>=0?Graphics::developmentSkySeconds:

@@ -3,6 +3,7 @@
 // LICENSE-Boost.txt. ZiiNAN changes: checked spans, explicit little-endian
 // parameters, offset-based output, bounded models and malformed-stream errors.
 #include "GR2File.h"
+#include "EterBase/MapLoadTrace.h"
 #include "AssetRuntime/AnimationStallAudit.h"
 #include <algorithm>
 #include <numeric>
@@ -49,6 +50,9 @@ struct Decoder
 struct Window
 {
     std::vector<std::uint32_t> ranges{0,16384}, values{0}, weights{4};
+    // Coarse inverse CDF, refreshed only with ranges. Small models keep their
+    // original search; larger models search only the exact enclosing interval.
+    std::array<std::uint16_t,65> search{};
     std::uint32_t total=4, increase=4, rebuild=8, weightLimit{}, increaseLimit{}, capacity{};
     Window(std::uint32_t maximum, std::uint32_t count) : capacity(count+1)
     {
@@ -74,6 +78,13 @@ struct Window
         std::uint32_t start=0;
         for(std::size_t i=0;i<weights.size();++i) { ranges[i]=start; start+=weights[i]*factor/8; }
         Require(start<=16384, "Oodle1 model range overflow"); ranges.back()=16384;
+        if(ranges.size()>=16) {
+            std::size_t cursor=0;
+            for(unsigned bucket=0;bucket<search.size();++bucket) {
+                while(cursor<ranges.size() && ranges[cursor]<=bucket*256u) ++cursor;
+                search[bucket]=static_cast<std::uint16_t>(cursor);
+            }
+        }
         if(increase>increaseLimit/2) rebuild=total+increaseLimit;
         else { increase*=2; rebuild=total+increase; }
     }
@@ -81,7 +92,10 @@ struct Window
     {
         if(total>=rebuild) { if(rebuild>=weightLimit) Rescale(); Rebuild(); }
         const auto value=decoder.Decode(16384);
-        const auto upper=std::upper_bound(ranges.begin(),ranges.end(),value);
+        const auto bucket=value>>8;
+        const auto first=ranges.size()>=16?ranges.begin()+search[bucket]:ranges.begin();
+        const auto last=ranges.size()>=16?ranges.begin()+search[bucket+1]:ranges.end();
+        const auto upper=std::upper_bound(first,last,value);
         Require(upper!=ranges.begin() && upper!=ranges.end(), "invalid Oodle1 model range");
         const auto index=static_cast<std::size_t>(upper-ranges.begin()-1);
         Require(index<weights.size(), "invalid Oodle1 symbol index");
@@ -140,6 +154,8 @@ void DecodeBlock(std::span<const std::byte> header, Decoder& decoder,
 }
 std::vector<std::byte> Decompress(const Section& section, std::span<const std::byte> bytes)
 {
+    MapLoadTrace::Scope p0lScope("Assets","GR2 section decompression","cpu");
+
     AnimationStallAudit::WorkScope audit(AnimationStallAudit::Work::Decompress,section.compression!=0 && section.expanded!=0);
     if(section.compression!=0 && section.compression!=2)
         throw Error(Failure::UnsupportedCompression,"unsupported compression "+std::to_string(section.compression));

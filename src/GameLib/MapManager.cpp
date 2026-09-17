@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "EterBase/MapLoadTrace.h"
 #include "Renderer/GraphicsConfig.h"
 #include "EterLib/DrawStateView.h"
 #include "EterLib/DrawState.h"
@@ -55,6 +56,8 @@ void CMapManager::ReserveSoftwareTilingEnable(bool isEnable)
 
 void CMapManager::Initialize()
 {
+    MapLoadTrace::Scope p0lScope("Metadata","map index","cpu");
+
 	mc_pcurEnvironmentData = NULL;
 	__LoadMapInfoVector();
 }
@@ -78,6 +81,8 @@ void CMapManager::Create()
 
 void CMapManager::Destroy()
 {
+    MapLoadTrace::Scope p0lScope("Metadata","map teardown","cpu");
+
 	stl_wipe_second(m_EnvironmentDataMap);
 
 	if (m_pkMap)
@@ -104,6 +109,8 @@ CMapBase * CMapManager::AllocMap()
 //////////////////////////////////////////////////////////////////////////
 void CMapManager::LoadProperty()
 {
+    MapLoadTrace::Scope p0lScope("Metadata","property registry","cpu");
+
 	CPropertyLoader PropertyLoader;
 	PropertyLoader.SetPropertyManager(&m_PropertyManager);
 	PropertyLoader.Create("*.*", "Property");
@@ -111,6 +118,8 @@ void CMapManager::LoadProperty()
 
 bool CMapManager::LoadMap(const std::string & c_rstrMapName, float x, float y, float z)
 {
+    MapLoadTrace::Scope p0lScope("Metadata","map load orchestration","cpu");
+
 	CMapOutdoor& rkMap = GetMapOutdoorRef();
 
 	rkMap.Leave();

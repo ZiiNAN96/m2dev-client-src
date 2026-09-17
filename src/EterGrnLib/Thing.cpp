@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "EterBase/MapLoadTrace.h"
 #include "Eterbase/Debug.h"
 #include "Thing.h"
 #include "ThingInstance.h"
@@ -93,6 +94,9 @@ int CGraphicThing::GetMotionCount() const
 
 bool CGraphicThing::OnLoad(int size, const void* bytes)
 {
+    MapLoadTrace::Scope p0lScope("Assets","model adapters","cpu");
+    MapLoadTrace::Count("model-adapter",GetFileName());
+
     if (!bytes || size <= 0) return false;
     auto loaded = AssetRuntime::LoadModel(GetFileNameString(),
         {static_cast<const std::byte*>(bytes), static_cast<size_t>(size)});

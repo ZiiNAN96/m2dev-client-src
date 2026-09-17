@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "EterBase/MapLoadTrace.h"
 #include "ImageDecoder.h"
 #include "EterImageLib/DDSImageData.h"
 #include <stb_image.h>
@@ -65,6 +66,8 @@ bool CImageDecoder::DecodeDDS(const void* pData, size_t dataSize, TDecodedImageD
 
 bool CImageDecoder::DecodeSTB(const void* pData, size_t dataSize, TDecodedImageData& outImage)
 {
+    MapLoadTrace::Scope p0lScope("Textures","PNG TGA JPG decode","cpu");
+
 	if (!pData || dataSize > size_t((std::numeric_limits<int>::max)())) return false;
 	int width = 0, height = 0, channels = 0;
 	if (!stbi_info_from_memory(static_cast<const stbi_uc*>(pData), static_cast<int>(dataSize), &width, &height, &channels) ||

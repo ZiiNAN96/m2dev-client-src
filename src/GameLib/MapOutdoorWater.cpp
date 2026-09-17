@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "EterBase/MapLoadTrace.h"
 #include "Renderer/GraphicsConfig.h"
 #include "EterLib/DrawState.h"
 #include "EterLib/ResourceManager.h"
@@ -9,6 +10,8 @@
 
 void CMapOutdoor::LoadWaterTexture()
 {
+    MapLoadTrace::Scope p0lScope("Water","water texture setup","cpu");
+
 	UnloadWaterTexture();
 	char buf[256];
 	for (int i = 0; i < 30; ++i)
