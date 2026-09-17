@@ -5,6 +5,7 @@
 #include "RaceData.h"
 #include "RaceMotionData.h"
 #include "EterBase/Filename.h"
+#include "EterBase/MapLoadTrace.h"
 
 CDynamicPool<CRaceData> CRaceData::ms_kPool;
 CDynamicPool<CRaceData::TMotionModeData> CRaceData::ms_MotionModeDataPool;
@@ -294,6 +295,8 @@ void CRaceData::RegisterMotionMode(WORD wMotionModeIndex)
 
 CGraphicThing* CRaceData::NEW_RegisterMotion(CRaceMotionData* pkMotionData, WORD wMotionModeIndex, WORD wMotionIndex, const char * c_szFileName, BYTE byPercentage)
 {	
+	if (MapLoadTrace::state.active)
+		MapLoadTrace::Count("animation-registration", std::string(c_szFileName)+"|"+std::to_string(m_dwRaceIndex)+"|"+std::to_string(wMotionModeIndex)+"|"+std::to_string(wMotionIndex));
 	CGraphicThing * pMotionThing = (CGraphicThing *)CResourceManager::Instance().GetResourcePointer(c_szFileName);
 
 	TMotionModeData * pMotionModeData;

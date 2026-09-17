@@ -3,6 +3,73 @@
 #include "PythonBackground.h"
 #include "InstanceBase.h"
 #include "GameLib/RaceManager.h"
+#include "EterLib/GameThreadPool.h"
+#include "EterLib/ResourceManager.h"
+#include "PackLib/PackManager.h"
+#include "AssetRuntime/GR2/GR2Preparation.h"
+
+namespace {
+// Explicit synchronous Python loading boundary. Registration stays ordered on
+// the owner; only independent GR2 File/Read work enters the existing pool.
+class MotionCacheBatch {
+    std::vector<std::string> paths_;
+    MotionCacheBatch* previous_;
+public:
+    static thread_local MotionCacheBatch* current;
+    MotionCacheBatch() : previous_(current) { current=this; }
+    ~MotionCacheBatch() { current=previous_; }
+    void Add(const char* path) {
+        paths_.emplace_back(path);
+        if(paths_.size()>=32) Flush();
+    }
+    void Flush() {
+        if(paths_.empty()) return;
+        auto paths=std::move(paths_); paths_.clear();
+        auto& resources=CResourceManager::Instance();
+        AssetRuntime::GR2::Preparation preparation(true);
+        auto* pool=CGameThreadPool::InstancePtr();
+        if(preparation.Enabled() && pool && pool->IsInitialized()) {
+            for(const auto& path:paths) {
+                if(resources.IsResourceLoaded(path.c_str())) continue;
+                preparation.Add(path,[&] {
+                    TPackFile file;
+                    if(!CPackManager::Instance().GetFile(path,file)) return std::vector<std::byte>{};
+                    const auto* first=reinterpret_cast<const std::byte*>(file.data());
+                    return std::vector<std::byte>(first,first+file.size());
+                });
+            }
+            preparation.Run(static_cast<unsigned>(pool->GetWorkerCount()),[pool](std::function<void()> work) {
+                return pool->Enqueue(std::move(work));
+            },[]() -> std::uint64_t {
+                FILETIME created{},exited{},kernel{},user{};
+                if(!GetThreadTimes(GetCurrentThread(),&created,&exited,&kernel,&user)) return 0;
+                return (((std::uint64_t(kernel.dwHighDateTime)<<32)|kernel.dwLowDateTime)+
+                        ((std::uint64_t(user.dwHighDateTime)<<32)|user.dwLowDateTime))*100;
+            });
+        }
+        // The cache remains authoritative, including duplicate paths. Publish
+        // in the original request order, before the loading callback returns.
+        for(const auto& path:paths) resources.LoadStaticCache(path.c_str());
+    }
+};
+thread_local MotionCacheBatch* MotionCacheBatch::current{};
+
+PyObject* chrmgrLoadMotionDataBatch(PyObject*,PyObject* args) {
+    PyObject* callback{};
+    if(!PyArg_ParseTuple(args,"O:LoadMotionDataBatch",&callback)) return nullptr;
+    if(!PyCallable_Check(callback)) return PyErr_Format(PyExc_TypeError,"motion loader must be callable");
+    // A nested loading callback shares the outer synchronous boundary.
+    if(MotionCacheBatch::current) return PyObject_CallNoArgs(callback);
+    MotionCacheBatch batch;
+    PyObject* result=PyObject_CallNoArgs(callback);
+    try { batch.Flush(); }
+    catch(const std::exception& error) {
+        Py_XDECREF(result);
+        return PyErr_Format(PyExc_RuntimeError,"motion preparation failed: %s",error.what());
+    }
+    return result;
+}
+}
 
 static PyObject* chrmgrPrewarmVisibleActors(PyObject*,PyObject* args)
 {
@@ -428,8 +495,14 @@ PyObject * chrmgrRegisterCacheMotionData(PyObject* poSelf, PyObject* poArgs)
 	const char * c_szFullFileName = CRaceManager::Instance().GetFullPathFileName(szFileName);
 	CGraphicThing* pkMotionThing=pRaceData->RegisterMotionData(iMode, iMotion, c_szFullFileName, iWeight);
 
-	if (pkMotionThing)
-		CResourceManager::Instance().LoadStaticCache(pkMotionThing->GetFileName());
+	if (pkMotionThing) {
+        try {
+            if(MotionCacheBatch::current) MotionCacheBatch::current->Add(pkMotionThing->GetFileName());
+            else CResourceManager::Instance().LoadStaticCache(pkMotionThing->GetFileName());
+        } catch(const std::exception& error) {
+            return PyErr_Format(PyExc_RuntimeError,"motion preparation failed: %s",error.what());
+        }
+    }
 
 	return Py_BuildNone();
 }
@@ -759,6 +832,7 @@ void initchrmgr()
 		{ "RegisterRaceName",			chrmgrRegisterRaceName,					METH_VARARGS },
 		{ "RegisterRaceSrcName",		chrmgrRegisterRaceSrcName,					METH_VARARGS },
 		{ "RegisterCacheMotionData",	chrmgrRegisterCacheMotionData,			METH_VARARGS },
+        { "LoadMotionDataBatch", chrmgrLoadMotionDataBatch, METH_VARARGS },
 
 		// ETC
 		{ "SetAffect",					chrmgrSetAffect,						METH_VARARGS },

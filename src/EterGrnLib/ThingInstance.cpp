@@ -2,6 +2,7 @@
 #include "Eterbase/Debug.h"
 #include "Eterlib/Camera.h"
 #include "EterBase/Timer.h"
+#include "EterBase/MapLoadTrace.h"
 #include "ThingInstance.h"
 #include "Thing.h"
 #include "ModelInstance.h"
@@ -222,6 +223,7 @@ bool CGraphicThingInstance::CheckModelThingIndex(int iModelThing)
 
 bool CGraphicThingInstance::CheckMotionThingIndex(DWORD dwMotionKey)
 {
+    MapLoadTrace::FirstUseScope trace("actor animation cache lookup");
 	std::map<DWORD, CGraphicThing::TRef *>::iterator itor = m_roMotionThingMap.find(dwMotionKey);
 
 	if (m_roMotionThingMap.end() == itor)

@@ -1,4 +1,4 @@
-param([Parameter(Mandatory=$true)][string]$Name, [switch]$ShaderLifecycle, [switch]$A1Only)
+param([Parameter(Mandatory=$true)][string]$Name, [switch]$ShaderLifecycle, [switch]$A1Only, [switch]$AnimationSmoke, [switch]$AnimationFirstUse, [switch]$LoadPrewarm, [switch]$RuntimePreparationDetails, [switch]$SerialAnimationLoading)
 $ErrorActionPreference='Stop'
 $source=(Resolve-Path -LiteralPath "$PSScriptRoot/../..").Path
 $original=(Resolve-Path -LiteralPath "$source/../m2dev-client").Path
@@ -6,10 +6,29 @@ if($Name -notmatch '^[a-zA-Z0-9_-]+$'){throw 'Invalid evidence name'}
 $target=Join-Path $source "build-p0l/$Name"
 if(Test-Path -LiteralPath $target){throw 'Fresh evidence directory required'}
 New-Item -ItemType Directory -Path "$target/test-root","$target/pack","$target/log","$target/mark","$target/upload" | Out-Null
+if($RuntimePreparationDetails){New-Item -ItemType File -Path "$target/animation-preparation-trace.enabled" | Out-Null}
 Copy-Item -LiteralPath "$source/build-h2x/msvc/bin/Release/Metin2_Release.exe" -Destination "$target/Metin2_Release.exe"
 Copy-Item -LiteralPath "$original/config" -Destination "$target/config" -Recurse
 Copy-Item -LiteralPath "$original/assets/root" -Destination "$target/test-root/root" -Recurse
+if($SerialAnimationLoading){
+    # Paired serial control: keep the complete L7C readiness policy and disable
+    # only the L7 batch call in this private Python source, never in production.
+    $motionPath="$target/test-root/root/playersettingmodule.py"
+    $motionSource=[IO.File]::ReadAllText($motionPath)
+    if(-not $motionSource.Contains('chrmgr.LoadMotionDataBatch(load)')){throw 'Expected L7 loading boundary'}
+    [IO.File]::WriteAllText($motionPath,$motionSource.Replace('chrmgr.LoadMotionDataBatch(load)','load()'),[Text.UTF8Encoding]::new($false))
+}
 $entry=[IO.File]::ReadAllText("$PSScriptRoot/map_load_probe.py")
+if($AnimationSmoke){
+    $smoke=[IO.File]::ReadAllText("$PSScriptRoot/animation_smoke.py")
+    $entry=$entry.Replace('window = World()', $smoke+"`nwindow = AnimationWorld()")
+}
+if($AnimationFirstUse){
+    if($AnimationSmoke){throw 'Choose one animation probe'}
+    $smoke=[IO.File]::ReadAllText("$PSScriptRoot/animation_first_use.py")
+    if($LoadPrewarm){$smoke=$smoke.Replace('LOAD_PREWARM = False','LOAD_PREWARM = True')}
+    $entry=$entry.Replace('window = World()', $smoke+"`nwindow = FirstUseWorld()")
+}
 if($A1Only -and $ShaderLifecycle){throw 'Choose A1Only or ShaderLifecycle'}
 if($A1Only){
     $entry=[regex]::Replace($entry, '(?s)VIEWS = \[.*?\]', "VIEWS = [('A1-cold', 'metin2_map_a1', 13000, 9500)]", 1)

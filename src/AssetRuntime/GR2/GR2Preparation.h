@@ -12,7 +12,7 @@ public:
     using Executor = std::function<std::future<void>(std::function<void()>)>;
     using Loader = std::function<std::vector<std::byte>()>;
     struct Result { Contents contents; std::exception_ptr error; };
-    Preparation();
+    explicit Preparation(bool animationBatch=false);
     ~Preparation();
     Preparation(const Preparation&) = delete;
     Preparation& operator=(const Preparation&) = delete;

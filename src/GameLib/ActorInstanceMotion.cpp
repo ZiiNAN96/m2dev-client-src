@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "EterBase/MapLoadTrace.h"
 #include "ActorInstance.h"
 #include "RaceData.h"
 #include "FlyHandler.h"
@@ -639,6 +640,8 @@ void CActorInstance::__ClearMotion()
 
 DWORD CActorInstance::__SetMotion(const SSetMotionData& c_rkSetMotData, DWORD dwRandMotKey)
 {
+	if (MapLoadTrace::state.active)
+		MapLoadTrace::Count("animation-active-mode", std::to_string(m_eRace)+"|"+std::to_string(GetMotionMode()));
 	DWORD dwMotKey = dwRandMotKey;
 
 	if (dwMotKey == 0)

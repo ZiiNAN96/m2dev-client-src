@@ -34,6 +34,7 @@ struct State {
     Cost* gr2ReferencesTotal{};
     // Opt-in CPU decode intervals, used to measure their union across workers.
     std::vector<std::pair<Clock::time_point,Clock::time_point>> gr2DecodeIntervals;
+    std::vector<std::pair<Clock::time_point,Clock::time_point>> animationParseIntervals;
 };
 // Background threads deliberately do not contribute to main-thread attribution.
 inline thread_local State state;
@@ -62,6 +63,7 @@ public:
         const auto end=Clock::now();
         const auto elapsed=Ms(end-f.start);
         if(f.key=="Assets\tcpu\tGR2 section decompression") state.gr2DecodeIntervals.emplace_back(f.start,end);
+        if(f.key=="Actors\tcpu\tGR2 animation curves") state.animationParseIntervals.emplace_back(f.start,end);
         auto& c=state.costs[f.key]; c.inclusive+=elapsed; c.exclusive+=elapsed-f.children; ++c.calls;
         if(elapsed>c.maximum)c.maximum=elapsed;
         if(!state.gr2Path.empty()) {
@@ -72,6 +74,12 @@ public:
         if(!state.stack.empty())state.stack.back().children+=elapsed;
     }
     ~Scope(){Stop();}
+};
+// P0-L7C uses the existing opt-in trace only during its bounded playback windows.
+inline bool FirstUseActive() { return state.active && state.label.compare(0,10,"first-use-")==0; }
+class FirstUseScope : public Scope {
+public:
+    explicit FirstUseScope(std::string_view name) : Scope("Animation first use",name,"cpu",FirstUseActive()) {}
 };
 // A non-GR2 resource temporarily suspends attribution (e.g. a model's texture).
 class GR2Context {

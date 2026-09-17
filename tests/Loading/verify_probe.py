@@ -33,6 +33,10 @@ assert (directory/'static-object-adapter.log').read_text().strip().endswith('liv
 failure=(directory/'renderer-failure.log').read_text()
 assert failure.strip()=='Renderer failure diagnostics enabled',failure
 loads=read(directory/'map-load-trace.tsv')
+if '--animation-smoke' in sys.argv:
+    loads=[load for load in loads if not load['label'].startswith('animation-smoke-')]
+if '--animation-first-use' in sys.argv:
+    loads=[load for load in loads if not load['label'].startswith('first-use-')]
 assert len(loads)==expected_loads+1
 for load in loads[1:]:
     assert load['endpoint']=='stable-present',load['label']

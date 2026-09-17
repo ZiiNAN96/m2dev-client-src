@@ -1,5 +1,6 @@
 #include "GR2Fixtures.h"
 #include "GR2Golden.h"
+#include "GR2AnimationPreparationReference.h"
 #include "AssetRuntime/GR2/GR2Preparation.h"
 #include "AssetRuntime/GR2/GR2AssetProvider.h"
 #include "AssetRuntime/AnimationStallAudit.h"
@@ -172,10 +173,89 @@ void Corpus(const char* listPath) {
     Check(!paths.empty(),"empty corpus");
     std::cout<<"CORPUS files="<<paths.size()<<" sections="<<sections<<" bytes="<<outputBytes<<" models="<<models<<" meshes="<<meshes<<" materials="<<materials<<" skeletons="<<skeletons<<" bones="<<bones<<" animations="<<animations<<" truncatedRejected="<<rejected<<'\n';
 }
+void AnimationPairs(const char* listPath) {
+    std::ifstream list(listPath); Check(bool(list),"animation pair list");
+    std::string line; unsigned pairs=0,poses=0,referencePoses=0;
+    while(std::getline(list,line)) {
+        if(!line.empty() && line.back()=='\r') line.pop_back();
+        const auto split=line.find('|'); Check(split!=std::string::npos,"model|animation pair");
+        const std::array<std::string,2> ids{line.substr(0,split),line.substr(split+1)};
+        const std::array inputs{GR2Golden::Bytes(std::filesystem::u8path(ids[0])),GR2Golden::Bytes(std::filesystem::u8path(ids[1]))};
+        const std::array serial{GR2::Read(GR2::File(inputs[0])),GR2::Read(GR2::File(inputs[1]))};
+        auto serialModel=GetGR2AssetProvider().Load(ids[0],inputs[0]);
+        auto serialAnimation=GetGR2AssetProvider().Load(ids[1],inputs[1]);
+        Check(bool(serialModel)&&bool(serialAnimation),"serial documents");
+        std::unique_ptr<GR2::Preparation::Result> model,animation;
+        {
+            GR2::Preparation batch(true);
+            for(unsigned i=0;i<2;++i) batch.Add(ids[i],[&,i]{return inputs[i];});
+            batch.Run(4,Execute);
+            model=GR2::Preparation::Take(ids[0]); animation=GR2::Preparation::Take(ids[1]);
+        }
+        // Check every runtime key and bone target, including loop boundaries.
+        Check(model && animation && !model->error && !animation->error,"prepared pair");
+        for(unsigned boundary:{0u,1u,2u,3u}) {
+            std::string aError,bError;
+            auto a=GR2::PreparationReference::BindAnimation(serial[1].animations.at(0),serial[1].animationData.at(0),*serial[0].modelData.at(0).skeleton,aError,boundary,serial[0].models.at(0).name);
+            auto b=GR2::BindAnimation(animation->contents.animations.at(0),animation->contents.animationData.at(0),*model->contents.modelData.at(0).skeleton,bError,boundary,model->contents.models.at(0).name);
+            Check(a&&b,"bound real animation: "+aError+" "+bError);
+            auto snapshot=[](const auto& clip) {
+                Snapshot out(GR2::Contents{});
+                out.Value(clip.Name()); out.Value(clip.Duration()); out.Value(clip.BindingId()); out.Value(clip.Looping()); out.Value(clip.Tracks().size());
+                auto channel=[&](const auto& c) { out.Value(c.interpolation);out.Value(c.keys.size());for(const auto& k:c.keys) {out.Value(k.time);out.Value(k.value);} };
+                for(const auto& track:clip.Tracks()) {out.Value(track.targetBone);channel(track.translation);channel(track.rotation);channel(track.scaleShear);}
+                return out.bytes;
+            };
+            Check(snapshot(*a)==snapshot(*b),"runtime keyframes and IDs bit identical");
+            const auto& skeleton=*serial[0].modelData.at(0).skeleton;
+            AnimationRuntime::AnimationPose oldPose,newPose;
+            oldPose.Prepare(skeleton.Bones().size()); newPose.Prepare(skeleton.Bones().size());
+            std::vector<AnimationRuntime::Matrix> oldWorld(skeleton.Bones().size()),newWorld(oldWorld.size()),oldPalette(oldWorld.size()),newPalette(oldWorld.size());
+            for(unsigned step=0;step<=8;++step) {
+                const double time=a->Duration()*step/8;
+                Check(AnimationRuntime::Sample(skeleton,*a,time,AnimationRuntime::TimeMode::Clamp,oldPose) &&
+                      AnimationRuntime::Sample(skeleton,*b,time,AnimationRuntime::TimeMode::Clamp,newPose),"old/new sampler");
+                Check(AnimationRuntime::Evaluate(skeleton,oldPose,oldWorld) && AnimationRuntime::Evaluate(skeleton,newPose,newWorld) &&
+                      AnimationRuntime::BuildPalette(skeleton,oldWorld,oldPalette) && AnimationRuntime::BuildPalette(skeleton,newWorld,newPalette),"old/new transforms");
+                Check(oldWorld==newWorld && oldPalette==newPalette,"frozen pre-L8 poses and palettes identical"); ++referencePoses;
+            }
+        }
+        // Re-run prepared inputs through the real owner-side provider publish.
+        GR2::Preparation publish(true);
+        for(unsigned i=0;i<2;++i) publish.Add(ids[i],[&,i]{return inputs[i];});
+        publish.Run(4,Execute);
+        const auto reads=GR2::nativeFileReads.load();
+        auto preparedModel=GetGR2AssetProvider().Load(ids[0],inputs[0]);
+        auto preparedAnimation=GetGR2AssetProvider().Load(ids[1],inputs[1]);
+        Check(bool(preparedModel)&&bool(preparedAnimation) && GR2::nativeFileReads.load()==reads,"owner publish does not parse again");
+        Check(serialModel.asset.Model(0).Index()==preparedModel.asset.Model(0).Index() &&
+              serialAnimation.asset.Animation(0).Index()==preparedAnimation.asset.Animation(0).Index() &&
+              serialAnimation.asset.Get()->Id()==preparedAnimation.asset.Get()->Id(),"stable asset handles");
+        for(int loops:{0,1}) {
+            auto a=serialModel.asset.Get()->CreateAnimationInstance(serialModel.asset.Model(0));
+            auto b=preparedModel.asset.Get()->CreateAnimationInstance(preparedModel.asset.Model(0));
+            Check(a&&b,"real runtime instances");
+            Check(a->SetMotion(serialAnimation.asset.Animation(0),0,0,loops,1)==AssetError::None,"serial runtime motion binding");
+            Check(PrepareGR2Animation(preparedModel.asset.Model(0),preparedAnimation.asset.Animation(0),loops==1?1u:8u)==AssetError::None,"prepare exact runtime boundary without playback");
+            const auto readyDecodes=GR2::nativeAnimationDecodes.load();
+            Check(b->SetMotion(preparedAnimation.asset.Animation(0),0,0,loops,1)==AssetError::None &&
+                  GR2::nativeAnimationDecodes.load()==readyDecodes,"first playback uses prepared immutable keys without conversion");
+            for(unsigned step=0;step<=8;++step) {
+                const auto time=static_cast<float>(serialAnimation.asset.Animation(0).Get()->duration*step/8);
+                a->SetClock(time); b->SetClock(time);
+                const auto left=a->Evaluate({}),right=b->Evaluate({});
+                Check(left.pose.Valid()&&right.pose.Valid()&&std::equal(left.pose.values.begin(),left.pose.values.end(),right.pose.values.begin(),right.pose.values.end()),"runtime pose equality"); ++poses;
+            }
+        }
+        ++pairs;
+    }
+    Check(pairs>0,"nonempty animation pairs");
+    std::cout<<"ANIMATION pairs="<<pairs<<" runtimePoses="<<poses<<" frozenReferencePoses="<<referencePoses<<" allKeysAndBindings=identical\n";
+}
 }
 int main(int argc,char** argv) {
     try {
-        Safety(); if(argc==2) Corpus(argv[1]);
+        Safety(); if(argc>=2) Corpus(argv[1]); if(argc==3) AnimationPairs(argv[2]);
         Check(!GR2::liveReaderDocuments && !liveDocuments && !AnimationRuntime::GetLifetimeCounts().skeletons,"final resources");
         std::cout<<"PASS parallel GR2 preparation; repeats=4 invalid/truncated=reject single-flight=pass resources=0\n";
     }

@@ -30,12 +30,13 @@ struct Preparation::Impl {
         std::uint64_t cpuNs{};
     };
     Preparation* previous{};
-    bool enabled{}, ran{}, tracing{};
+    bool enabled{}, ran{}, tracing{}, animationBatch{};
     std::size_t bytes{}, joins{};
     std::vector<Item> items;
     std::map<std::string,std::size_t> index;
 };
-Preparation::Preparation() : impl_(std::make_unique<Impl>()) {
+Preparation::Preparation(bool animationBatch) : impl_(std::make_unique<Impl>()) {
+    impl_->animationBatch=animationBatch;
     impl_->previous=current;
     // The optional animation audit is owner-thread state. Keep its established
     // serial path instead of accessing its counters from worker threads.
@@ -115,16 +116,20 @@ void Preparation::Run(unsigned workers,const Executor& execute,const std::functi
     const auto elapsed=MapLoadTrace::Ms(MapLoadTrace::Clock::now()-start);
     if(impl_->tracing) {
         double busy=0;
-        double workerCost=0,decodeCpu=0;
+        double workerCost=0,decodeCpu=0,parseCpu=0;
         std::uint64_t cpuNs=0;
         std::vector<std::pair<MapLoadTrace::Clock::time_point,MapLoadTrace::Clock::time_point>> intervals;
+        decltype(intervals) parseIntervals;
         for(auto& item:impl_->items) {
             busy+=MapLoadTrace::Ms(item.end-item.start);
             cpuNs+=item.cpuNs;
             intervals.insert(intervals.end(),item.trace.gr2DecodeIntervals.begin(),item.trace.gr2DecodeIntervals.end());
+            parseIntervals.insert(parseIntervals.end(),item.trace.animationParseIntervals.begin(),item.trace.animationParseIntervals.end());
             for(const auto& [key,cost]:item.trace.costs) workerCost+=cost.exclusive;
             const auto decode=item.trace.costs.find("Assets\tcpu\tGR2 section decompression");
             if(decode!=item.trace.costs.end()) decodeCpu+=decode->second.inclusive;
+            const auto parse=item.trace.costs.find("Actors\tcpu\tGR2 animation curves");
+            if(parse!=item.trace.costs.end()) parseCpu+=parse->second.inclusive;
             for(const auto& [key,event]:item.trace.events) {
                 auto& target=MapLoadTrace::state.events[key]; target.count+=event.count; target.bytes+=event.bytes;
             }
@@ -157,6 +162,28 @@ void Preparation::Run(unsigned workers,const Executor& execute,const std::functi
         MapLoadTrace::Count("gr2-worker-decode-cumulative-ns",{},static_cast<std::uint64_t>(decodeCpu*1e6));
         MapLoadTrace::Count("gr2-worker-decode-wall-ns",{},static_cast<std::uint64_t>(decodeWall*1e6));
         MapLoadTrace::Count("gr2-single-flight-joins",{},impl_->joins);
+        if(impl_->animationBatch) {
+            std::sort(parseIntervals.begin(),parseIntervals.end());
+            double parseWall=0;
+            if(!parseIntervals.empty()) {
+                auto [begin,end]=parseIntervals.front();
+                for(const auto& interval:parseIntervals) {
+                    if(interval.first>end) { parseWall+=MapLoadTrace::Ms(end-begin); begin=interval.first; }
+                    end=std::max(end,interval.second);
+                }
+                parseWall+=MapLoadTrace::Ms(end-begin);
+            }
+            MapLoadTrace::Count("animation-jobs",{},impl_->items.size());
+            MapLoadTrace::Count("animation-worker-peak",std::to_string(peak.load()));
+            MapLoadTrace::Count("animation-worker-busy-ns",{},static_cast<std::uint64_t>(busy*1e6));
+            MapLoadTrace::Count("animation-worker-wall-ns",{},static_cast<std::uint64_t>(elapsed*1e6));
+            MapLoadTrace::Count("animation-worker-cpu-ns",{},cpuNs);
+            MapLoadTrace::Count("animation-worker-decode-cumulative-ns",{},static_cast<std::uint64_t>(decodeCpu*1e6));
+            MapLoadTrace::Count("animation-worker-decode-wall-ns",{},static_cast<std::uint64_t>(decodeWall*1e6));
+            MapLoadTrace::Count("animation-worker-parse-cumulative-ns",{},static_cast<std::uint64_t>(parseCpu*1e6));
+            MapLoadTrace::Count("animation-worker-parse-wall-ns",{},static_cast<std::uint64_t>(parseWall*1e6));
+            MapLoadTrace::Count("animation-single-flight-joins",{},impl_->joins);
+        }
     }
 }
 std::span<const std::byte> Preparation::Payload(std::string_view id) {

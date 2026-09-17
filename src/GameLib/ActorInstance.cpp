@@ -41,6 +41,10 @@ bool CActorInstance::PrewarmMotions(std::size_t decodeStart,DWORD deadline,bool 
             const auto index=GET_MOTION_INDEX(key);
             const bool minimal=index==CRaceMotionData::NAME_WAIT || index==CRaceMotionData::NAME_WALK ||
                 index==CRaceMotionData::NAME_RUN || index==normalAttack ||
+                // These common reactions need the same immutable spline/key
+                // binding as attacks. Prepare their resolved mode (including
+                // GENERAL fallback) while the loading window is still open.
+                index==CRaceMotionData::NAME_DAMAGE || index==CRaceMotionData::NAME_DEAD ||
                 (combo && std::find(combo->ComboIndexVector.begin(),combo->ComboIndexVector.end(),index)!=combo->ComboIndexVector.end());
             const bool common=localPlayer ? minimal : (index>=CRaceMotionData::NAME_WAIT && index<=CRaceMotionData::NAME_COMBO_ATTACK_8) ||
                 index==CRaceMotionData::NAME_SPAWN || index==CRaceMotionData::NAME_STOP ||

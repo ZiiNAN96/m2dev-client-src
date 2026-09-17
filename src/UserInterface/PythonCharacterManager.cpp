@@ -9,6 +9,7 @@
 
 #include "EterLib/Camera.h"
 #include "AssetRuntime/GR2/GR2AssetProvider.h"
+#include "AssetRuntime/GR2/GR2RuntimeTrace.h"
 #include "AssetRuntime/GR2ReaderMode.h"
 #include "AssetRuntime/AnimationStallAudit.h"
 #include <set>
@@ -18,6 +19,7 @@ bool CPythonCharacterManager::PrewarmVisibleActors(bool prepareLocalPlayer)
 {
     using namespace AssetRuntime;
     if(startupGR2Reader!=GR2ReaderMode::ZiiNAN || !nativeGR2Prewarm) return true;
+    GR2::RuntimeTrace::PrewarmScope preparationTrace;
     if(AnimationStallAudit::fullCapture && !AnimationStallAudit::explicitPhase) AnimationStallAudit::capturePhase=0;
     AnimationStallAudit::WorkScope audit(AnimationStallAudit::Work::Prewarm);
     const auto decodeStart=GR2::nativeAnimationDecodes.load();
