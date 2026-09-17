@@ -10,7 +10,7 @@ exit_info=json.loads((directory/'exit.json').read_text(encoding='utf-8-sig'))
 assert exit_info['ExitCode']==0,exit_info
 assert not (directory/'p0l-failure.log').exists()
 assert (directory/'log/syserr.txt').stat().st_size==0
-expected_loads=3 if '--shader-lifecycle' in sys.argv else 4
+expected_loads=1 if '--a1-only' in sys.argv else (3 if '--shader-lifecycle' in sys.argv else 4)
 assert f'completed={expected_loads}' in (directory/'p0l-smoke.log').read_text()
 audit=(directory/'source-resource-audit.log').read_text()
 zero_keys=('DiligentErrors DiligentFatals AllCPUDeformationCalls AllCPUDeformationVertices GPUFallbacks '

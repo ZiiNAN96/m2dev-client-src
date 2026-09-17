@@ -1,4 +1,4 @@
-param([Parameter(Mandatory=$true)][string]$Name)
+param([Parameter(Mandatory=$true)][string]$Name, [string]$ShaderCacheDirectory)
 $ErrorActionPreference='Stop'
 if($Name -notmatch '^[a-zA-Z0-9_-]+$'){throw 'Invalid evidence name'}
 $source=(Resolve-Path -LiteralPath "$PSScriptRoot/../..").Path
@@ -6,7 +6,12 @@ $target=(Resolve-Path -LiteralPath "$source/build-p0l/$Name").Path
 if(Test-Path -LiteralPath "$target/exit.json"){throw 'Fresh run required'}
 $env:M2_MAP_LOAD_TRACE='1'
 $watch=[Diagnostics.Stopwatch]::StartNew()
-$process=Start-Process -FilePath "$target/Metin2_Release.exe" -WorkingDirectory $target -ArgumentList '--renderer-diagnostics' -WindowStyle Hidden -PassThru
+$launchArguments='--renderer-diagnostics'
+if($ShaderCacheDirectory){
+    if(-not [IO.Path]::IsPathFullyQualified($ShaderCacheDirectory) -or $ShaderCacheDirectory.Contains('"')){throw 'Absolute cache path required'}
+    $launchArguments+=' --shader-cache-dir="'+$ShaderCacheDirectory+'"'
+}
+$process=Start-Process -FilePath "$target/Metin2_Release.exe" -WorkingDirectory $target -ArgumentList $launchArguments -WindowStyle Hidden -PassThru
 $process.Id | Set-Content -LiteralPath "$target/process-id.txt"
 while(-not $process.WaitForExit(1000)){
     if($watch.Elapsed.TotalSeconds -gt 240){$process.Kill();throw 'Owned probe timeout'}

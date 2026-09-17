@@ -1,5 +1,14 @@
 link_libraries(M2FirstPartyArchitectureChecks)
 
+if(M2_BUILD_WINDOWS_CLIENT)
+    add_executable(ShaderBytecodeCacheTest ../Loading/shader_cache_test.cpp)
+    get_target_property(shader_cache_test_includes M2RendererDiligent INCLUDE_DIRECTORIES)
+    target_include_directories(ShaderBytecodeCacheTest PRIVATE "${PROJECT_SOURCE_DIR}/src" ${shader_cache_test_includes})
+    target_link_libraries(ShaderBytecodeCacheTest PRIVATE Diligent-GraphicsEngineD3DBase Diligent-GraphicsTools)
+    add_test(NAME Renderer.ShaderBytecodeCache COMMAND ShaderBytecodeCacheTest "${CMAKE_CURRENT_BINARY_DIR}/shader-cache-test")
+    set_tests_properties(Renderer.ShaderBytecodeCache PROPERTIES TIMEOUT 30)
+endif()
+
 add_executable(RendererStartupOptionsTest StartupOptionsTest.cpp)
 target_link_libraries(RendererStartupOptionsTest PRIVATE M2RendererInterface)
 add_test(NAME Renderer.StartupOptions COMMAND RendererStartupOptionsTest)
