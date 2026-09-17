@@ -339,6 +339,8 @@ CResource * CResourceManager::GetTypeResourcePointer(const char * c_szFileName, 
 
 CResource * CResourceManager::GetResourcePointer(const char * c_szFileName)
 {
+    MapLoadTrace::GR2Context gr2Context(c_szFileName?c_szFileName:"");
+    if(!MapLoadTrace::state.gr2Path.empty())MapLoadTrace::Count("gr2-request",MapLoadTrace::state.gr2Path);
     MapLoadTrace::Scope p0lScope("Assets","shared resource lookup","cpu");
 
 	if (!c_szFileName || !*c_szFileName)
@@ -350,6 +352,8 @@ CResource * CResourceManager::GetResourcePointer(const char * c_szFileName)
 	const char * c_pszFile;
 	DWORD dwFileCRC = __GetFileCRC(c_szFileName, &c_pszFile);
 	CResource * pResource = FindResourcePointer(dwFileCRC);
+    if(!MapLoadTrace::state.gr2Path.empty())MapLoadTrace::Count(pResource?"gr2-lookup-hit":"gr2-lookup-miss",MapLoadTrace::state.gr2Path);
+
 
 	if (pResource)	// 이미 리소스가 있으면 리턴 한다.
 		return pResource;

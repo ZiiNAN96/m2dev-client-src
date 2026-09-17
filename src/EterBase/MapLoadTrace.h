@@ -27,6 +27,11 @@ struct State {
     std::vector<Frame> stack;
     std::map<std::string, Cost> costs;
     std::map<std::string, Event> events;
+    // GR2-only detail is a second view of costs, never added to LOAD totals.
+    std::string gr2Path;
+    std::map<std::string, Cost> gr2Costs;
+    Cost* gr2References{};
+    Cost* gr2ReferencesTotal{};
 };
 // Background threads deliberately do not contribute to main-thread attribution.
 inline thread_local State state;
@@ -55,9 +60,49 @@ public:
         const auto elapsed=Ms(Clock::now()-f.start);
         auto& c=state.costs[f.key]; c.inclusive+=elapsed; c.exclusive+=elapsed-f.children; ++c.calls;
         if(elapsed>c.maximum)c.maximum=elapsed;
+        if(!state.gr2Path.empty()) {
+            auto& detail=state.gr2Costs[state.gr2Path+"\t"+f.key];
+            detail.inclusive+=elapsed; detail.exclusive+=elapsed-f.children; ++detail.calls;
+            if(elapsed>detail.maximum)detail.maximum=elapsed;
+        }
         if(!state.stack.empty())state.stack.back().children+=elapsed;
     }
     ~Scope(){Stop();}
+};
+// A non-GR2 resource temporarily suspends attribution (e.g. a model's texture).
+class GR2Context {
+    bool active_{};
+    std::string previous_;
+    Cost *references_{}, *total_{};
+public:
+    explicit GR2Context(std::string_view path) : active_(state.active) {
+        if(!active_)return;
+        previous_=std::move(state.gr2Path); references_=state.gr2References; total_=state.gr2ReferencesTotal;
+        state.gr2Path=Clean(path);
+        for(auto& c:state.gr2Path)if(c>='A'&&c<='Z')c+=('a'-'A');
+        if(state.gr2Path.size()<4 || state.gr2Path.compare(state.gr2Path.size()-4,4,".gr2")!=0)state.gr2Path.clear();
+        state.gr2References=state.gr2Path.empty()?nullptr:&state.gr2Costs[state.gr2Path+"\tAssets\tcpu\tGR2 reference resolution"];
+        state.gr2ReferencesTotal=state.gr2Path.empty()?nullptr:&state.costs["Assets\tcpu\tGR2 reference resolution"];
+    }
+    GR2Context(const GR2Context&)=delete;
+    ~GR2Context() {
+        if(active_) { state.gr2Path=std::move(previous_); state.gr2References=references_; state.gr2ReferencesTotal=total_; }
+    }
+};
+// Avoid string/map work per pointer. Clock overhead remains in this opt-in measurement.
+class GR2ReferenceScope {
+    Cost* detail_=state.gr2References;
+    Clock::time_point start_;
+public:
+    GR2ReferenceScope() { if(detail_)start_=Clock::now(); }
+    ~GR2ReferenceScope() {
+        if(!detail_)return;
+        const auto elapsed=Ms(Clock::now()-start_);
+        for(auto* cost:{detail_,state.gr2ReferencesTotal}) {
+            cost->inclusive+=elapsed;cost->exclusive+=elapsed;++cost->calls;
+        }
+        if(!state.stack.empty())state.stack.back().children+=elapsed;
+    }
 };
 inline bool Begin(std::string_view label) {
     if(!Enabled()||state.active)return false;
@@ -72,6 +117,7 @@ inline bool End(std::string_view reason) {
     for(const auto& [key,c]:state.costs){out<<"COST\t"<<key<<"\t"<<c.inclusive<<"\t"<<c.exclusive<<"\t"<<c.calls<<"\t"<<c.maximum<<'\n';accounted+=c.exclusive;}
     out<<"COST\tOther\tunknown\tunattributed / frame pacing\t"<<total-accounted<<"\t"<<total-accounted<<"\t1\n";
     for(const auto& [key,e]:state.events)out<<"EVENT\t"<<key<<"\t"<<e.count<<"\t"<<e.bytes<<'\n';
+    for(const auto& [key,c]:state.gr2Costs)out<<"GR2COST\t"<<key<<"\t"<<c.inclusive<<"\t"<<c.exclusive<<"\t"<<c.calls<<'\n';
     out<<"END\n"; return bool(out);
 }
 inline void WorldRendered() { if(state.active)state.world=true; }

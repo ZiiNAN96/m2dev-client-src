@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "EterBase/MapLoadTrace.h"
 #include "Model.h"
 #include "Mesh.h"
 #include "SkinningDataAdapter.h"
@@ -108,6 +109,7 @@ void CGrannyModel::UnlockVertices() const
 
 bool CGrannyModel::LoadPNTVertices()
 {
+    MapLoadTrace::Scope gr2Detail("Assets","GR2 GPU preparation");
 	if (m_rigidVtxCount <= 0)
 		return true;
 
@@ -134,6 +136,7 @@ bool CGrannyModel::LoadPNTVertices()
 
 bool CGrannyModel::LoadIndices()
 {
+    MapLoadTrace::Scope gr2Detail("Assets","GR2 GPU preparation");
 	//assert(m_idxCount > 0);
 	if (m_idxCount <= 0)
 		return true;
@@ -257,7 +260,10 @@ bool CGrannyModel::CreateFromAsset(AssetRuntime::ModelHandle asset)
     if (!IsEmpty() || !asset || !asset.Get()->renderable) return false;
     m_asset = std::move(asset);
     if (!LoadAssetMeshes() || !__LoadVertices() || !LoadIndices()) { Destroy(); return false; }
-    m_skinningData = SkinningDataAdapter::Extract(m_asset);
+    {
+        MapLoadTrace::Scope gr2Detail("Assets","GR2 GPU preparation");
+        m_skinningData = SkinningDataAdapter::Extract(m_asset);
+    }
     if (!m_skinningData) { Destroy(); return false; }
     for (std::size_t mesh = 0; mesh < m_skinningData->status.size(); ++mesh) {
         const auto status = m_skinningData->status[mesh];
@@ -329,6 +335,7 @@ void CGrannyModel::Destroy()
 
 bool CGrannyModel::__LoadVertices()
 {
+    MapLoadTrace::Scope gr2Detail("Assets","GR2 GPU preparation");
 	if (m_rigidVtxCount <= 0)
 		return true;
 	
@@ -384,6 +391,7 @@ void CGrannyModel::Initialize()
 
 bool CGrannyModel::CaptureStaticObjectSource()
 {
+    MapLoadTrace::Scope gr2Detail("Assets","GR2 GPU preparation");
     if (!Renderer::staticObjectLoadDepth || m_deformVtxCount || m_bHaveBlendThing ||
         m_vertexLayout != (Renderer::VertexPosition | Renderer::VertexNormal | Renderer::VertexTex1) ||
         m_rigidVtxCount <= 0 || m_idxCount <= 0) return true;
@@ -414,6 +422,7 @@ bool CGrannyModel::CaptureStaticObjectSource()
 // ZiiNAN: Original deform indices plus local PNT for rigid pieces inside the same body.
 bool CGrannyModel::CaptureActorSource(bool attachment)
 {
+    MapLoadTrace::Scope gr2Detail("Assets","GR2 GPU preparation");
     // ZiiNAN: Diligent actor attachment rendering
     if(!Renderer::actorRenderer || m_vtxCount<=0 || m_idxCount<=0 ||
        m_vertexLayout!=(Renderer::VertexPosition|Renderer::VertexNormal|Renderer::VertexTex1)) return true;

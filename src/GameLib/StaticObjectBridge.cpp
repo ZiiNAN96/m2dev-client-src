@@ -1,3 +1,4 @@
+#include "EterBase/MapLoadTrace.h"
 #include "StdAfx.h"
 #include "EterLib/DrawStateView.h"
 #include "StaticObjectBridge.h"
@@ -324,6 +325,8 @@ void SubmitStaticMapObject(CGraphicThingInstance& thing, StaticMapObjectPass pas
         auto* instance=thing.GetLODControllerPointer(i)->GetModelInstance();
         auto* model=instance->GetModel(); auto& resource=object.models[model];
         if(!resource.geometry) {
+            MapLoadTrace::GR2Context gr2Context(model->GetAssetHandle().GetDocument()->Id());
+            MapLoadTrace::Scope gr2Upload("Assets","GR2 GPU submission");
             if(model->GetStaticObjectSource()) resource.geometry=renderer->UploadGeometry(*model->GetStaticObjectSource());
             else {
                 // ZiiNAN: An equipped weapon may already be cached; reuse its existing rigid CPU snapshot.
@@ -422,7 +425,11 @@ void SubmitSpecialThing(void* context,const void* native,const Renderer::ActorNa
     Math::MatrixTranspose(&normal,&normal); memcpy(draw.normalTransform.data(),&normal,64);
     draw.baseVertex=group.baseVertex+(group.rigid ? source->deformVertexCount : 0);
     draw.vertexCount=group.vertexCount; draw.firstIndex=group.firstIndex; draw.indexCount=group.indexCount;
-    if(!data.geometry) data.geometry=actorRenderer->CreateGeometry(*source,ActorPart::Body,ActorCategory::Special);
+    if(!data.geometry) {
+        MapLoadTrace::GR2Context gr2Context(instance->GetModel()->GetAssetHandle().GetDocument()->Id());
+        MapLoadTrace::Scope gr2Upload("Assets","GR2 GPU submission");
+        data.geometry=actorRenderer->CreateGeometry(*source,ActorPart::Body,ActorCategory::Special);
+    }
     if(!data.geometry) { fail("ERROR: special thing geometry"); return; }
     if(!source->IsRigid() && data.uploadedRevision!=data.revision) {
         if(!actorRenderer->UpdateVertices(data.geometry,data.vertices,source->deformVertexCount,ActorCategory::Special)) { fail("ERROR: special thing pose upload"); return; }

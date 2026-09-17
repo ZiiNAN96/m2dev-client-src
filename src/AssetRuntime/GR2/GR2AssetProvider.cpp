@@ -87,6 +87,8 @@ public:
     std::shared_ptr<const AR::RuntimeAnimationClip> BoundClip(std::size_t index,const AR::RuntimeSkeleton& skeleton,
         std::string_view modelName,unsigned boundary,std::string& error) const
     {
+        MapLoadTrace::GR2Context gr2Context(Id());
+        MapLoadTrace::Scope preparationTrace("Assets","GR2 animation preparation");
         if(index>=clips_.size() || boundary>3) { error="invalid animation binding"; return {}; }
         const auto& groups=clips_[index].groups;
         const auto group=std::find_if(groups.begin(),groups.end(),[&](const auto& item){return item.name==modelName;});
@@ -112,6 +114,8 @@ public:
     }
     AssetError CopyVertices(std::size_t model,std::size_t mesh,VertexLayout layout,std::span<std::byte> destination) const override
     {
+        MapLoadTrace::Scope copyTrace("Assets","GR2 CopyVertices");
+        MapLoadTrace::Count("gr2-CopyVertices",Id(),destination.size());
         if(model>=data_.size() || mesh>=data_[model].meshes.size()) return AssetError::InvalidHandle;
         if(released_) return AssetError::UploadDataReleased;
         const auto stride=VertexStride(layout); if(!stride) return AssetError::UnsupportedLayout;
@@ -128,6 +132,8 @@ public:
     }
     AssetError CopyIndices(std::size_t model,std::size_t mesh,IndexWidth width,std::span<std::byte> destination) const override
     {
+        MapLoadTrace::Scope copyTrace("Assets","GR2 CopyIndices");
+        MapLoadTrace::Count("gr2-CopyIndices",Id(),destination.size());
         if(model>=data_.size() || mesh>=data_[model].meshes.size()) return AssetError::InvalidHandle;
         if(released_) return AssetError::UploadDataReleased;
         if(width!=IndexWidth::UInt16 && width!=IndexWidth::UInt32) return AssetError::InvalidIndexWidth;
@@ -211,6 +217,7 @@ public:
             GR2::File file(bytes); containerTrace.Stop(); containerAudit.Stop();
             AnimationStallAudit::WorkScope parseAudit(AnimationStallAudit::Work::Parse);
             auto content=GR2::Read(file); parseAudit.Stop();
+            MapLoadTrace::Scope convertTrace("Assets","GR2 document conversion");
             return {AssetHandle(std::make_shared<Document>(std::move(id),std::move(content))),AssetError::None};
         } catch(const std::exception& error) { return {{},AssetError::InvalidAsset,"GR2 reader: "+std::string(error.what())}; }
     }

@@ -53,6 +53,7 @@ Contents Read(const File& f)
         if(auto skeleton=t.Child(source,"Skeleton")) {
             AnimationStallAudit::WorkScope skeletonAudit(AnimationStallAudit::Work::Skeleton);
             model.skeleton=ReadSkeleton(t,skeleton);
+            MapLoadTrace::Scope runtimeTrace("Assets","GR2 runtime skeleton");
             std::vector<AnimationRuntime::SkeletonBone> bones;
             for(const auto& b:model.skeleton->bones) bones.push_back({b.name,b.parentIndex,RuntimeTransform(b.localBind),b.inverseBind});
             if(!bones.empty()) {
@@ -83,6 +84,12 @@ Contents Read(const File& f)
     for(auto source:animations) {
         AnimationAsset metadata; auto data=ReadAnimation(t,source,metadata,result);
         result.animations.push_back(std::move(metadata)); result.animationData.push_back(std::move(data));
+    }
+    MapLoadTrace::Count("gr2-models",MapLoadTrace::state.gr2Path,result.models.size());
+    MapLoadTrace::Count("gr2-animations",MapLoadTrace::state.gr2Path,result.animations.size());
+    for(const auto& model:result.models) {
+        MapLoadTrace::Count("gr2-meshes",MapLoadTrace::state.gr2Path,model.meshes.size());
+        if(model.skeleton)MapLoadTrace::Count("gr2-skeletons",MapLoadTrace::state.gr2Path,model.skeleton->bones.size());
     }
     return result;
 }

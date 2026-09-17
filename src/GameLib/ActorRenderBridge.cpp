@@ -1,3 +1,4 @@
+#include "EterBase/MapLoadTrace.h"
 #include "StdAfx.h"
 #include "EterLib/DrawStateView.h"
 #include "ActorRenderBridge.h"
@@ -143,7 +144,11 @@ void Submit(void* context, const void* nativeInstance, ActorPart part, const Act
     Math::MatrixTranspose(&normal,&normal); memcpy(draw.normalTransform.data(),&normal,64);
     draw.baseVertex=native.baseVertex+(native.rigid ? source->deformVertexCount : 0);
     draw.vertexCount=mesh.vertexCount; draw.firstIndex=native.firstIndex; draw.indexCount=native.indexCount;
-    if(!data.geometry) data.geometry=actorRenderer->CreateGeometry(*source,part,category);
+    if(!data.geometry) {
+        MapLoadTrace::GR2Context gr2Context(instance->GetModel()->GetAssetHandle().GetDocument()->Id());
+        MapLoadTrace::Scope gr2Upload("Assets","GR2 GPU submission");
+        data.geometry=actorRenderer->CreateGeometry(*source,part,category);
+    }
     if(!data.geometry) { Report(actor,*instance,"ERROR: actor geometry upload"); return; }
     if(!data.gpuPrototype && !source->IsRigid() && data.uploadedRevision!=data.revision) {
         if(!actorRenderer->UpdateVertices(data.geometry,data.vertices,source->deformVertexCount,category)) {
@@ -175,7 +180,11 @@ bool PrepareAnimatedActorResources(CActorInstance& actor)
         if(!data.ready || !source) return false;
         if(startupSkinningMode==PrototypeSkinningMode::GPUPrototype && source->deformVertexCount && !data.gpuPrototype)
             return false;
-        if(!data.geometry) data.geometry=actorRenderer->CreateGeometry(*source,part,parts.category);
+        if(!data.geometry) {
+        MapLoadTrace::GR2Context gr2Context(instance->GetModel()->GetAssetHandle().GetDocument()->Id());
+        MapLoadTrace::Scope gr2Upload("Assets","GR2 GPU submission");
+        data.geometry=actorRenderer->CreateGeometry(*source,part,parts.category);
+    }
         if(!data.geometry) return false;
         auto& palette=instance->GetStaticObjectMaterialPalette();
         for(uint32_t materialIndex=0;materialIndex<palette.GetMaterialCount();++materialIndex) {

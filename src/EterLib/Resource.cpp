@@ -11,6 +11,27 @@
 
 #include <limits>
 
+namespace {
+class GR2ThreadTime {
+    std::string path_;
+    ULONGLONG start_{};
+    static ULONGLONG Cpu() {
+        FILETIME creation{},exit{},kernel{},user{};
+        if(!GetThreadTimes(GetCurrentThread(),&creation,&exit,&kernel,&user))return 0;
+        return (ULONGLONG(kernel.dwHighDateTime)<<32)+kernel.dwLowDateTime+
+               (ULONGLONG(user.dwHighDateTime)<<32)+user.dwLowDateTime;
+    }
+public:
+    GR2ThreadTime() {
+        if(MapLoadTrace::state.active && !MapLoadTrace::state.gr2Path.empty()) {
+            path_=MapLoadTrace::state.gr2Path;start_=Cpu();
+            MapLoadTrace::Count("gr2-thread",std::to_string(GetCurrentThreadId()));
+        }
+    }
+    ~GR2ThreadTime() { if(!path_.empty())MapLoadTrace::Count("gr2-thread-cpu-100ns",path_,Cpu()-start_); }
+};
+}
+
 bool CResource::ms_bDeleteImmediately = false;
 
 CResource::CResource(const char* c_szFileName) : me_state(STATE_EMPTY)
@@ -42,6 +63,8 @@ void CResource::OnSelfDestruct()
 
 void CResource::Load()
 {
+    MapLoadTrace::GR2Context gr2Context(GetFileName());
+    GR2ThreadTime gr2Cpu;
     MapLoadTrace::Scope p0lScope("Assets","resource load","cpu");
     MapLoadTrace::Count("resource-load-request",GetFileName());
     MapLoadTrace::Count(me_state==STATE_EMPTY?"resource-miss":"resource-hit",GetFileName());

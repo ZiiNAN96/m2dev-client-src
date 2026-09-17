@@ -63,6 +63,7 @@ MeshData ReadMesh(Types& t,Object source,MeshAsset& mesh,ModelAsset& model,std::
     mesh.deformation=weighted&&mesh.skin.boneNames.size()>1?Deformation::Skinned:Deformation::Rigid;
     if(mesh.deformation==Deformation::Skinned) Require(mesh.skin.validRemap,"invalid skin remap");
     if(weighted) { mesh.skin.influencesPerVertex=4; mesh.skin.weightOffset=12; mesh.skin.indexOffset=16; mesh.skin.normalizedByteWeights=mesh.skin.byteBoneIndices=true; }
+    MapLoadTrace::Scope vertexTrace("Assets","GR2 vertex processing");
     data.vertices.reserve(vertices.size());
     for(auto sourceVertex:vertices) {
         Vertex vertex; vertex.position=Floats<3>(t,sourceVertex,"Position"); vertex.normal=Floats<3>(t,sourceVertex,"Normal");
@@ -77,6 +78,8 @@ MeshData ReadMesh(Types& t,Object source,MeshAsset& mesh,ModelAsset& model,std::
         else for(unsigned i=0;i<3;++i) { mesh.bounds.min[i]=std::min(mesh.bounds.min[i],vertex.position[i]); mesh.bounds.max[i]=std::max(mesh.bounds.max[i],vertex.position[i]); }
         data.vertices.push_back(vertex);
     }
+    vertexTrace.Stop();
+    MapLoadTrace::Scope indexTrace("Assets","GR2 index processing");
     const auto topology=t.Child(source,"PrimaryTopology");
     Require(bool(topology),"missing primary topology");
     const auto wide=t.Array(topology,"Indices"), narrow=t.Array(topology,"Indices16");
@@ -91,6 +94,7 @@ MeshData ReadMesh(Types& t,Object source,MeshAsset& mesh,ModelAsset& model,std::
         else value=t.file.Uint(index.data);
         Require(value<mesh.vertexCount,"mesh index out of range"); data.indices.push_back(value);
     }
+    indexTrace.Stop();
     for(auto group:t.Array(topology,"Groups")) {
         const auto material=t.Integer(group,"MaterialIndex"), first=t.Integer(group,"TriFirst"), count=t.Integer(group,"TriCount");
         Require(first>=0 && count>=0,"negative triangle group");
