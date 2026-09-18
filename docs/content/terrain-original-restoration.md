@@ -1,5 +1,12 @@
 # Originale Bodentexturen wiederhergestellt
 
+> Historischer Nachweis vom 16.09.2026. Der damalige Testclient und die alten
+> Arbeitsverzeichnisse wurden inzwischen entfernt. [Erhaltene Textbelege](evidence/content-tx-p0.zip)
+> und [abschließendes Prüfergebnis](evidence/content-tx-p0/terrain-test-v4/original-terrain-v10/result.json)
+> wurden bei der [Strukturbereinigung](../maintenance/repository-root-structure-cleanup.md)
+> gesichert. Angaben zu Programmen, Backups und Arbeitsständen im folgenden Text
+> beschreiben den damaligen Zustand.
+
 Stand: 16.09.2026. Auf ausdrücklichen Benutzerwunsch sind im Originalclient und im normalen Testclient **alle Bodentexturen wieder original**. Der zuvor begonnene Transfer neuer Katalogtexturen ist damit aufgehoben. Neues Gras, Waldboden, Sand, Erde, Lava und Vulkanmaterialien sind nicht mehr aktiv.
 
 ## Aktiver Stand
@@ -22,7 +29,7 @@ Nach der Rücksetzung wurden am 16.09.2026 alle gesicherten Ersatz-Bodentexturen
 - Vergleichsbilder, Katalogvorschauen, Prüfnachweise und Herkunftsangaben bleiben als Dokumentation erhalten. Historische Ersatztextur-Prüfläufe können ohne erneuten Materialbezug nicht mehr wiederholt werden.
 - Die ältere Release-EXE-Sicherung in `terrain-test-v4/production-deployment-v9/backup` bleibt erhalten.
 
-Löschinventar mit Dateipfaden und SHA256: `C:/Users/ZiiNAN/Documents/GitHub/m2dev-client-src/build-content-tx-p0/replacement-texture-cleanup/deletion-plan.json`. Ergebnis: `docs/terrain-replacement-cleanup.json` im Originalclient. Der bereits geprüfte Originaltextur-Stand bleibt aktiv; für das Löschen inaktiver Dateien war kein neuer Spieltest nötig.
+Löschinventar mit Dateipfaden und SHA256: `replacement-texture-cleanup/deletion-plan.json` im [Belegarchiv](evidence/content-tx-p0.zip). Ergebnis: `docs/terrain-replacement-cleanup.json` im Originalclient. Der bereits geprüfte Originaltextur-Stand bleibt aktiv; für das Löschen inaktiver Dateien war kein neuer Spieltest nötig.
 
 ## Prüfung
 
@@ -36,7 +43,7 @@ Löschinventar mit Dateipfaden und SHA256: `C:/Users/ZiiNAN/Documents/GitHub/m2d
 - 439 Paket-, Konfigurations-, Root-Quelldateien und die Debug-Datei hashgleich; zusätzlich 12200 zuvor geschützte Karten-/TextureSet-, Quell- und Build-Dateien unverändert.
 - Original `pack/root.pck` unverändert: SHA256 `0c1c6f47e6dce89d912363882789d76b3cfe1395cad0290e2b59a7d434092994`.
 
-Prüfartefakte: `C:\Users\ZiiNAN\Documents\GitHub\m2dev-client-src\build-content-tx-p0\terrain-test-v4\original-terrain-v10\runtime-proof`. Maschinenlesbares Ergebnis: `C:\Users\ZiiNAN\Documents\GitHub\m2dev-client-src\build-content-tx-p0\terrain-test-v4\original-terrain-v10\result.json`; Kopie im Originalclient: `docs/terrain-original-restoration.json`.
+Der frühere private Runtime-Prüfordner wurde entfernt. [Maschinenlesbares Ergebnis](evidence/content-tx-p0/terrain-test-v4/original-terrain-v10/result.json); damalige Kopie im Originalclient: `docs/terrain-original-restoration.json`.
 
 Ein normaler Netzwerklogin und eine neue Benutzer-Sichtabnahme wurden in diesem Rücksetzungsauftrag nicht durchgeführt. Dieser begrenzte Nachweis ist keine vollständige Abnahme aller Maps oder anderer Renderer-Meilensteine.
 

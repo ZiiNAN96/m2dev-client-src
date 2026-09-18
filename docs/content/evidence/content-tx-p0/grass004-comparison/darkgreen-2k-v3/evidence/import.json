@@ -1,0 +1,38 @@
+{
+  "source": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\grass004-comparison\\darkgreen-2k-v3\\source\\Grass004_2K-PNG_Color.png",
+  "sourceHash": "7f0d9b3f8049410f072c689aabd0e8552d1b229fecd7e761794d80cb99570494",
+  "output": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\grass004-comparison\\darkgreen-2k-v3\\imported\\slot-005.dds",
+  "outputHash": "9ee540d95f216ef1d8404ede81d101b721c5be36a508ccc10c9e2bcaa221c782",
+  "resolution": [
+    2048,
+    2048
+  ],
+  "mips": 12,
+  "format": "RGBA8 DDS, authored sRGB; shader decodes sRGB",
+  "filter": "linear-light BOX for every mip from original",
+  "colorAdjustments": {
+    "exposureEV": -0.8,
+    "linearRGBTint": [
+      0.8,
+      1.0,
+      1.0
+    ],
+    "combinedLinearRGBMultiplier": [
+      0.45947934199881396,
+      0.5743491774985174,
+      0.5743491774985174
+    ]
+  },
+  "sourcePage": "https://ambientcg.com/view?id=Grass004",
+  "license": "CC0",
+  "mapsUsed": [
+    "Color"
+  ],
+  "otherMapsUsed": false,
+  "tiling": "Unchanged A1 slot 005: scale 9, world period approximately 3.56 m",
+  "authoredMaterialDimensionsMeters": [
+    1.4,
+    1.4
+  ],
+  "scope": "Modern A1 slot 005 in isolated proof and testclient only"
+}

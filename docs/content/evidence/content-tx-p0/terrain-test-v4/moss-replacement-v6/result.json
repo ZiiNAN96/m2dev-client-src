@@ -1,0 +1,21 @@
+{
+  "version": "moss-replacement-v6",
+  "changedSlots": 15,
+  "changedMaps": 15,
+  "otherSlotsUnchanged": 451,
+  "material": "forrest_ground_01",
+  "resolution": [
+    2048,
+    2048
+  ],
+  "mips": 12,
+  "nativeViews": 3,
+  "nativeMaps": [
+    "metin2_map_a1",
+    "metin2_map_b1",
+    "metin2_map_c1"
+  ],
+  "exitCode": 0,
+  "protectedFilesUnchanged": 12201,
+  "userVisualAcceptance": "Pending"
+}

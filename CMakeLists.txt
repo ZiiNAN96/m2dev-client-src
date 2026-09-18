@@ -15,7 +15,7 @@ option(M2_BUILD_ASSET_TOOL "Build the separate offline Assimp/meshoptimizer asse
 option(ZIINAN_BUILD_LEGACY_SPT_CONVERTER "Build the optional Windows offline SPT migration tools" OFF)
 
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
-    message(FATAL_ERROR "Use a separate build directory, e.g. cmake -S . -B build-windows -A x64.")
+    message(FATAL_ERROR "Use a separate build directory, e.g. cmake -S . -B build -A x64.")
 endif()
 if(NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
     message(FATAL_ERROR "A 64-bit target ABI is required (Windows x64 or Android arm64-v8a).")

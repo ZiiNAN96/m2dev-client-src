@@ -1,13 +1,18 @@
-param([Parameter(Mandatory=$true)][string]$Name, [switch]$ShaderLifecycle, [switch]$A1Only, [switch]$AnimationSmoke, [switch]$AnimationFirstUse, [switch]$LoadPrewarm, [switch]$RuntimePreparationDetails, [switch]$SerialAnimationLoading)
+param([Parameter(Mandatory=$true)][string]$Name, [switch]$ShaderLifecycle, [switch]$A1Only, [switch]$AnimationSmoke, [switch]$AnimationFirstUse, [switch]$LoadPrewarm, [switch]$RuntimePreparationDetails, [switch]$SerialAnimationLoading, [string]$BuildDirectory='build')
 $ErrorActionPreference='Stop'
 $source=(Resolve-Path -LiteralPath "$PSScriptRoot/../..").Path
 $original=(Resolve-Path -LiteralPath "$source/../m2dev-client").Path
+if(-not [IO.Path]::IsPathFullyQualified($BuildDirectory)){$BuildDirectory=Join-Path $source $BuildDirectory}
+$build=(Resolve-Path -LiteralPath $BuildDirectory).Path
+foreach($binary in @('Metin2_Release.exe','PackMaker.exe')){
+    if(-not (Test-Path -LiteralPath "$build/bin/Release/$binary")){throw "Build Release target UserInterface and PackMaker first: $build/bin/Release/$binary"}
+}
 if($Name -notmatch '^[a-zA-Z0-9_-]+$'){throw 'Invalid evidence name'}
-$target=Join-Path $source "build-p0l/$Name"
+$target=Join-Path $source "build/loading/$Name"
 if(Test-Path -LiteralPath $target){throw 'Fresh evidence directory required'}
 New-Item -ItemType Directory -Path "$target/test-root","$target/pack","$target/log","$target/mark","$target/upload" | Out-Null
 if($RuntimePreparationDetails){New-Item -ItemType File -Path "$target/animation-preparation-trace.enabled" | Out-Null}
-Copy-Item -LiteralPath "$source/build-h2x/msvc/bin/Release/Metin2_Release.exe" -Destination "$target/Metin2_Release.exe"
+Copy-Item -LiteralPath "$build/bin/Release/Metin2_Release.exe" -Destination "$target/Metin2_Release.exe"
 Copy-Item -LiteralPath "$original/config" -Destination "$target/config" -Recurse
 Copy-Item -LiteralPath "$original/assets/root" -Destination "$target/test-root/root" -Recurse
 if($SerialAnimationLoading){
@@ -44,7 +49,7 @@ foreach($package in Get-ChildItem -LiteralPath "$original/pack" -File){
     if($package.Name -ne 'root.pck'){New-Item -ItemType HardLink -Path "$target/pack/$($package.Name)" -Target $package.FullName | Out-Null}
 }
 New-Item -ItemType Junction -Path "$target/bgm" -Target "$original/bgm" | Out-Null
-& "$source/build-h2x/msvc/bin/Release/PackMaker.exe" --input "$target/test-root/root" --output "$target/pack" *> "$target/package.log"
+& "$build/bin/Release/PackMaker.exe" --input "$target/test-root/root" --output "$target/pack" *> "$target/package.log"
 if($LASTEXITCODE -ne 0){throw 'Private probe packaging failed'}
 Get-FileHash -LiteralPath "$target/Metin2_Release.exe","$target/pack/root.pck" | ConvertTo-Json | Set-Content -LiteralPath "$target/hashes.json"
 Write-Output $target

@@ -1,0 +1,679 @@
+[
+  {
+    "id": "Grass001",
+    "file": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\terrain-test-v4\\sources\\Grass001-color-2k.png",
+    "sha256": "a798a39e2df2ef3f8be2502ff0c9b02f3858547d9ecfe5ec8f722f2fef8a9e5f",
+    "resolution": [
+      2048,
+      2048
+    ],
+    "sourcePage": "https://ambientcg.com/a/Grass001",
+    "license": "CC0",
+    "url": "https://ambientcg.com/get?file=Grass001_2K-PNG.zip",
+    "archiveSha256": "d6fd8aad96d39e582f234b4a3d668f5dc9f660fa0cf7b7e7e62f8cfdd623418f",
+    "dds": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\terrain-test-v4\\payload\\Grass001.dds",
+    "ddsSha256": "1553079a1525454854ca12e0920039e80d193906a28735da2e4c1b41d91abf5e",
+    "mips": 12,
+    "format": "RGBA8 sRGB",
+    "filter": "linear-light BOX",
+    "colorAdjustments": {
+      "exposureEV": 0,
+      "linearRGBTint": [
+        1,
+        1,
+        1
+      ]
+    }
+  },
+  {
+    "id": "Grass002",
+    "file": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\terrain-test-v4\\sources\\Grass002-color-2k.png",
+    "sha256": "86e3c9176ec695d6639249e6f22a2552aba1a95c0095639026bebc7e3b64775f",
+    "resolution": [
+      2048,
+      2048
+    ],
+    "sourcePage": "https://ambientcg.com/a/Grass002",
+    "license": "CC0",
+    "url": "https://ambientcg.com/get?file=Grass002_2K-PNG.zip",
+    "archiveSha256": "e8a702886d109dc459438a0b41621a0ae8563a23dd93be44732af2faf792497d",
+    "dds": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\terrain-test-v4\\payload\\Grass002.dds",
+    "ddsSha256": "9e88011928d2070937df693875507b111cf64223fc58f1452ef607c8916dba84",
+    "mips": 12,
+    "format": "RGBA8 sRGB",
+    "filter": "linear-light BOX",
+    "colorAdjustments": {
+      "exposureEV": 0,
+      "linearRGBTint": [
+        1,
+        1,
+        1
+      ]
+    }
+  },
+  {
+    "id": "Grass003",
+    "file": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\terrain-test-v4\\sources\\Grass003-color-2k.png",
+    "sha256": "66dd45988413b30ba2b18690e5ae5be939d4cb4e87321837b68d487b68ea58af",
+    "resolution": [
+      2048,
+      2048
+    ],
+    "sourcePage": "https://ambientcg.com/a/Grass003",
+    "license": "CC0",
+    "url": "https://ambientcg.com/get?file=Grass003_2K-PNG.zip",
+    "archiveSha256": "82a1db5a546134d06b99c564ef20836828239cd9264dc6995f33cb81242d938f",
+    "dds": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\terrain-test-v4\\payload\\Grass003.dds",
+    "ddsSha256": "ce4acc0d6fcb00e9d0c1c6cdc080bb014a9634c91598de042dea591c352922ab",
+    "mips": 12,
+    "format": "RGBA8 sRGB",
+    "filter": "linear-light BOX",
+    "colorAdjustments": {
+      "exposureEV": 0,
+      "linearRGBTint": [
+        1,
+        1,
+        1
+      ]
+    }
+  },
+  {
+    "id": "Grass004",
+    "file": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\terrain-test-v4\\sources\\Grass004-color-2k.png",
+    "sha256": "7f0d9b3f8049410f072c689aabd0e8552d1b229fecd7e761794d80cb99570494",
+    "resolution": [
+      2048,
+      2048
+    ],
+    "sourcePage": "https://ambientcg.com/a/Grass004",
+    "license": "CC0",
+    "url": "https://ambientcg.com/get?file=Grass004_2K-PNG.zip",
+    "reused": true,
+    "dds": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\terrain-test-v4\\payload\\Grass004.dds",
+    "ddsSha256": "9ee540d95f216ef1d8404ede81d101b721c5be36a508ccc10c9e2bcaa221c782",
+    "mips": 12,
+    "format": "RGBA8 sRGB",
+    "filter": "linear-light BOX",
+    "colorAdjustments": {
+      "exposureEV": -0.8,
+      "linearRGBTint": [
+        0.8,
+        1,
+        1
+      ],
+      "previouslyApproved": true
+    }
+  },
+  {
+    "id": "Gravel040",
+    "file": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\terrain-test-v4\\sources\\Gravel040-color-2k.png",
+    "sha256": "4ad7b792e3aebb081879c5b9f453b94281dc8b703104a054188f71f80ff56fcf",
+    "resolution": [
+      2048,
+      2048
+    ],
+    "sourcePage": "https://ambientcg.com/a/Gravel040",
+    "license": "CC0",
+    "url": "https://ambientcg.com/get?file=Gravel040_2K-PNG.zip",
+    "archiveSha256": "8c806ccf832a3d4a3140c986e0a5b75a8edbfa12d49c1630c78ab7310c02b273",
+    "dds": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\terrain-test-v4\\payload\\Gravel040.dds",
+    "ddsSha256": "b019adbc108c86e5caddfe18c0fc14555e01aa0820a00b386d2cd4e1358ad0de",
+    "mips": 12,
+    "format": "RGBA8 sRGB",
+    "filter": "linear-light BOX",
+    "colorAdjustments": {
+      "exposureEV": 0,
+      "linearRGBTint": [
+        1,
+        1,
+        1
+      ]
+    }
+  },
+  {
+    "id": "Ground067",
+    "file": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\terrain-test-v4\\sources\\Ground067-color-2k.png",
+    "sha256": "d0916f1f0613eca0227e6bb9168366988b3f5c8271c6bb11f986fe19b3eb6464",
+    "resolution": [
+      2048,
+      2048
+    ],
+    "sourcePage": "https://ambientcg.com/a/Ground067",
+    "license": "CC0",
+    "url": "https://ambientcg.com/get?file=Ground067_2K-PNG.zip",
+    "archiveSha256": "0fee6212ea095112df2cb44a36af6733832b86c36534df54b447a5029eeacb99",
+    "dds": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\terrain-test-v4\\payload\\Ground067.dds",
+    "ddsSha256": "5c13ccd7e0c791187e5520d608244652f97d87e8df8547a764ff8d3312340635",
+    "mips": 12,
+    "format": "RGBA8 sRGB",
+    "filter": "linear-light BOX",
+    "colorAdjustments": {
+      "exposureEV": 0,
+      "linearRGBTint": [
+        1,
+        1,
+        1
+      ]
+    }
+  },
+  {
+    "id": "Ground079L",
+    "file": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\terrain-test-v4\\sources\\Ground079L-color-2k.png",
+    "sha256": "28c638d8c89431077487a2393f7e58a9f1059aa8645c31e88d58f609ff8ffc1b",
+    "resolution": [
+      2048,
+      2048
+    ],
+    "sourcePage": "https://ambientcg.com/a/Ground079L",
+    "license": "CC0",
+    "url": "https://ambientcg.com/get?file=Ground079L_2K-PNG.zip",
+    "archiveSha256": "b322ae5a7399e5e24a22e0e015d9b74ca5073cae64bedeab96e3af967890200d",
+    "dds": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\terrain-test-v4\\payload\\Ground079L.dds",
+    "ddsSha256": "af86ed38417afeeefe9d3059650d00d3863e702f9e390578742359b2de0f4045",
+    "mips": 12,
+    "format": "RGBA8 sRGB",
+    "filter": "linear-light BOX",
+    "colorAdjustments": {
+      "exposureEV": 0,
+      "linearRGBTint": [
+        1,
+        1,
+        1
+      ]
+    }
+  },
+  {
+    "id": "Ground079S",
+    "file": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\terrain-test-v4\\sources\\Ground079S-color-2k.png",
+    "sha256": "30be3d216384ed5e667d56db36876e4c3a1f6d190f7659e3379eb7966ecdce70",
+    "resolution": [
+      2048,
+      2048
+    ],
+    "sourcePage": "https://ambientcg.com/a/Ground079S",
+    "license": "CC0",
+    "url": "https://ambientcg.com/get?file=Ground079S_2K-PNG.zip",
+    "archiveSha256": "b15389f12e17055c425bbfdcfce575ba293445f26115a19a78925ea9dff18cb6",
+    "dds": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\terrain-test-v4\\payload\\Ground079S.dds",
+    "ddsSha256": "10b27f45cd40bdf326c8dcfa565eae9d4018df7f48d54dce8799a51a224baf36",
+    "mips": 12,
+    "format": "RGBA8 sRGB",
+    "filter": "linear-light BOX",
+    "colorAdjustments": {
+      "exposureEV": 0,
+      "linearRGBTint": [
+        1,
+        1,
+        1
+      ]
+    }
+  },
+  {
+    "id": "Ground085",
+    "file": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\terrain-test-v4\\sources\\Ground085-color-2k.png",
+    "sha256": "0becc4a1caaadf46e1c11c91f37c96a5fe6d7e936e36be71010de3647ec77311",
+    "resolution": [
+      2048,
+      2048
+    ],
+    "sourcePage": "https://ambientcg.com/a/Ground085",
+    "license": "CC0",
+    "url": "https://ambientcg.com/get?file=Ground085_2K-PNG.zip",
+    "archiveSha256": "93a8dafe9852af12d7d830381cecb8474da22e268700f9ae18154e1f819036b3",
+    "dds": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\terrain-test-v4\\payload\\Ground085.dds",
+    "ddsSha256": "258568fe1951572374d351ea511e89abf1d909da43b8391ba2e33fb7d51b2e89",
+    "mips": 12,
+    "format": "RGBA8 sRGB",
+    "filter": "linear-light BOX",
+    "colorAdjustments": {
+      "exposureEV": 0,
+      "linearRGBTint": [
+        1,
+        1,
+        1
+      ]
+    }
+  },
+  {
+    "id": "Ground087",
+    "file": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\terrain-test-v4\\sources\\Ground087-color-2k.png",
+    "sha256": "20769cab1d388763f0b50e474f5b35918237001e97696efb60e7f8b559254a09",
+    "resolution": [
+      2048,
+      2048
+    ],
+    "sourcePage": "https://ambientcg.com/a/Ground087",
+    "license": "CC0",
+    "url": "https://ambientcg.com/get?file=Ground087_2K-PNG.zip",
+    "archiveSha256": "7a8588f261e38f7510d843df78b557e0b72bd1bfa530e89e0a876055fe2e9ee7",
+    "dds": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\terrain-test-v4\\payload\\Ground087.dds",
+    "ddsSha256": "e2f3af6b7387cf4e37ac4f1b3f8d5a1d2f6df92540893e8a0d1daedfd5730ed3",
+    "mips": 12,
+    "format": "RGBA8 sRGB",
+    "filter": "linear-light BOX",
+    "colorAdjustments": {
+      "exposureEV": 0,
+      "linearRGBTint": [
+        1,
+        1,
+        1
+      ]
+    }
+  },
+  {
+    "id": "Ground093A",
+    "file": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\terrain-test-v4\\sources\\Ground093A-color-2k.png",
+    "sha256": "ec76b3c92d6b2a59ede2117e04a1133aa31d30b4372d56d1432c2681c54ebeb8",
+    "resolution": [
+      2048,
+      2048
+    ],
+    "sourcePage": "https://ambientcg.com/a/Ground093A",
+    "license": "CC0",
+    "url": "https://ambientcg.com/get?file=Ground093A_2K-PNG.zip",
+    "archiveSha256": "b3628b3e54f22c21086a36096b411a551cd46ea152a7cc44b3327b5405103431",
+    "dds": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\terrain-test-v4\\payload\\Ground093A.dds",
+    "ddsSha256": "8e546eeb56f9f4083ae36e5ccd80a4210fd924a84c1db690bbd11240b95964eb",
+    "mips": 12,
+    "format": "RGBA8 sRGB",
+    "filter": "linear-light BOX",
+    "colorAdjustments": {
+      "exposureEV": 0,
+      "linearRGBTint": [
+        1,
+        1,
+        1
+      ]
+    }
+  },
+  {
+    "id": "Ground103",
+    "file": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\terrain-test-v4\\sources\\Ground103-color-2k.png",
+    "sha256": "f4f97aff4b06c4d6ac7d1837a313fb73cf54ce54c4c059a3a017257654a7af06",
+    "resolution": [
+      2048,
+      2048
+    ],
+    "sourcePage": "https://ambientcg.com/a/Ground103",
+    "license": "CC0",
+    "url": "https://ambientcg.com/get?file=Ground103_2K-PNG.zip",
+    "archiveSha256": "91dee59d83707a47d5c641ef193eac2473cffb7952df45bc2916aff63306acf3",
+    "dds": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\terrain-test-v4\\payload\\Ground103.dds",
+    "ddsSha256": "3a653a462d725929a196c04e96394b52d0568ca26eb3c246aa2bea214a4735fc",
+    "mips": 12,
+    "format": "RGBA8 sRGB",
+    "filter": "linear-light BOX",
+    "colorAdjustments": {
+      "exposureEV": 0,
+      "linearRGBTint": [
+        1,
+        1,
+        1
+      ]
+    }
+  },
+  {
+    "id": "Ground106",
+    "file": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\terrain-test-v4\\sources\\Ground106-color-2k.png",
+    "sha256": "c97b0f8d1f58ed7919f035125fc9bcf8c8064994a4331a9d6da266e810214376",
+    "resolution": [
+      2048,
+      2048
+    ],
+    "sourcePage": "https://ambientcg.com/a/Ground106",
+    "license": "CC0",
+    "url": "https://ambientcg.com/get?file=Ground106_2K-PNG.zip",
+    "archiveSha256": "c1348fef865ce6860b86be4539cd7f3c0d574fc22372ca7b2ef5d362036b57b2",
+    "dds": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\terrain-test-v4\\payload\\Ground106.dds",
+    "ddsSha256": "f44091e54f8c6736a825a8263c4e353c6775d3810edd7aec55b7e6ab63951545",
+    "mips": 12,
+    "format": "RGBA8 sRGB",
+    "filter": "linear-light BOX",
+    "colorAdjustments": {
+      "exposureEV": 0,
+      "linearRGBTint": [
+        1,
+        1,
+        1
+      ]
+    }
+  },
+  {
+    "id": "Lava001",
+    "file": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\terrain-test-v4\\sources\\Lava001-color-2k.png",
+    "sha256": "f0ffc890c4d87ec2ed9525350ee2e5f4b86ec8236a43b4e96e1fdf81c9f320cf",
+    "resolution": [
+      2048,
+      2048
+    ],
+    "sourcePage": "https://ambientcg.com/a/Lava001",
+    "license": "CC0",
+    "url": "https://ambientcg.com/get?file=Lava001_2K-PNG.zip",
+    "archiveSha256": "3b8d66e633b8b69468e4206f0824e45bdd2b4509847d53691c44c3e719863e5c",
+    "dds": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\terrain-test-v4\\payload\\Lava001.dds",
+    "ddsSha256": "19a615f148c173da68d4e8d61e3b1fe4e19d832ba0133128a106e04a86addd3f",
+    "mips": 12,
+    "format": "RGBA8 sRGB",
+    "filter": "linear-light BOX",
+    "colorAdjustments": {
+      "exposureEV": 0,
+      "linearRGBTint": [
+        1,
+        1,
+        1
+      ]
+    }
+  },
+  {
+    "id": "Lava002",
+    "file": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\terrain-test-v4\\sources\\Lava002-color-2k.png",
+    "sha256": "695e4003c2ba4263e9bcb346d6534249e9c6c2dba847a97efcf66883b9bbe2c8",
+    "resolution": [
+      2048,
+      2048
+    ],
+    "sourcePage": "https://ambientcg.com/a/Lava002",
+    "license": "CC0",
+    "url": "https://ambientcg.com/get?file=Lava002_2K-PNG.zip",
+    "archiveSha256": "1e5f511b82f2430e165ee88e9d5782e3f57a1fa068a5887f046946ad938effa2",
+    "dds": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\terrain-test-v4\\payload\\Lava002.dds",
+    "ddsSha256": "6426b522f816d4b4a5535a966ab98b223fa4c6dfdf5c08c204b0af96d5231da1",
+    "mips": 12,
+    "format": "RGBA8 sRGB",
+    "filter": "linear-light BOX",
+    "colorAdjustments": {
+      "exposureEV": 0,
+      "linearRGBTint": [
+        1,
+        1,
+        1
+      ]
+    }
+  },
+  {
+    "id": "Lava004",
+    "file": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\terrain-test-v4\\sources\\Lava004-color-2k.png",
+    "sha256": "c7898a3b7881307a2d8c926bfc0c0ece74b98e3cc402101317c6da3d3535890b",
+    "resolution": [
+      2048,
+      2048
+    ],
+    "sourcePage": "https://ambientcg.com/a/Lava004",
+    "license": "CC0",
+    "url": "https://ambientcg.com/get?file=Lava004_2K-PNG.zip",
+    "archiveSha256": "031082bbd95acb39e929a34f6abb2e501975d797ff8e1446970542d39edaa2ed",
+    "dds": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\terrain-test-v4\\payload\\Lava004.dds",
+    "ddsSha256": "6cf4ac5f558b95d2e8b76ccf06edc2ec9b244640c730f74814ea08fdd838e6af",
+    "mips": 12,
+    "format": "RGBA8 sRGB",
+    "filter": "linear-light BOX",
+    "colorAdjustments": {
+      "exposureEV": 0,
+      "linearRGBTint": [
+        1,
+        1,
+        1
+      ]
+    }
+  },
+  {
+    "id": "Rock031",
+    "file": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\terrain-test-v4\\sources\\Rock031-color-2k.png",
+    "sha256": "1ff08b77c0c9ea09459b8b6e339178a1a8aa21d0b99d9a92388ece994d2a7eb5",
+    "resolution": [
+      2048,
+      2048
+    ],
+    "sourcePage": "https://ambientcg.com/a/Rock031",
+    "license": "CC0",
+    "url": "https://ambientcg.com/get?file=Rock031_2K-PNG.zip",
+    "archiveSha256": "a256725ee09485b812bf6f4a39f93440716c07a56d3f35c38474a5076a4317ad",
+    "dds": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\terrain-test-v4\\payload\\Rock031.dds",
+    "ddsSha256": "063fbd41e946dbe211b4b5082ded7cf83a10fb0afb4d66d8f84e9c8a0b4b2fe3",
+    "mips": 12,
+    "format": "RGBA8 sRGB",
+    "filter": "linear-light BOX",
+    "colorAdjustments": {
+      "exposureEV": 0,
+      "linearRGBTint": [
+        1,
+        1,
+        1
+      ]
+    }
+  },
+  {
+    "id": "forest_ground_04",
+    "file": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\terrain-test-v4\\sources\\forest_ground_04-color-2k.png",
+    "sha256": "e8c273851a153e751a3664891ba5cbb28713f0cf98aca442291ab7b27b79900e",
+    "resolution": [
+      2048,
+      2048
+    ],
+    "sourcePage": "https://polyhaven.com/a/forest_ground_04",
+    "license": "CC0",
+    "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/forest_ground_04/forest_ground_04_diff_2k.png",
+    "publishedMD5": "93972c83249ae015111c8da714e6162c",
+    "dds": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\terrain-test-v4\\payload\\forest_ground_04.dds",
+    "ddsSha256": "fe693acc364cafdc68169ee6ca5fc29708d9b85da83c20da1b4efd5d8ed1ce0d",
+    "mips": 12,
+    "format": "RGBA8 sRGB",
+    "filter": "linear-light BOX",
+    "colorAdjustments": {
+      "exposureEV": 0,
+      "linearRGBTint": [
+        1,
+        1,
+        1
+      ]
+    }
+  },
+  {
+    "id": "forest_ground_06",
+    "file": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\terrain-test-v4\\sources\\forest_ground_06-color-2k.png",
+    "sha256": "453311543d952b75116f6f40f92d229173ea7df0b74240ad1a44d3f83ee8a87b",
+    "resolution": [
+      2048,
+      2048
+    ],
+    "sourcePage": "https://polyhaven.com/a/forest_ground_06",
+    "license": "CC0",
+    "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/forest_ground_06/forest_ground_06_diff_2k.png",
+    "publishedMD5": "0804bbc4eff8d3f8ebfb587b55e31cd7",
+    "dds": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\terrain-test-v4\\payload\\forest_ground_06.dds",
+    "ddsSha256": "e86854ed152e017e5ff2da58d35162a10d467184ec304202f18e810f085402ae",
+    "mips": 12,
+    "format": "RGBA8 sRGB",
+    "filter": "linear-light BOX",
+    "colorAdjustments": {
+      "exposureEV": 0,
+      "linearRGBTint": [
+        1,
+        1,
+        1
+      ]
+    }
+  },
+  {
+    "id": "forrest_ground_01",
+    "file": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\terrain-test-v4\\sources\\forrest_ground_01-color-2k.png",
+    "sha256": "06a7c3c4a3916fd96821c4f4d21b4a38c333e931bfc66856e19dab720a22ffa5",
+    "resolution": [
+      2048,
+      2048
+    ],
+    "sourcePage": "https://polyhaven.com/a/forrest_ground_01",
+    "license": "CC0",
+    "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/forrest_ground_01/forrest_ground_01_diff_2k.png",
+    "publishedMD5": "cda857d84802f75a7c4e9e4868ead076",
+    "dds": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\terrain-test-v4\\payload\\forrest_ground_01.dds",
+    "ddsSha256": "35c9bbb3d2d9687ac521886582635eb8bb8d69d1c02745f9c21f5626fb78daf7",
+    "mips": 12,
+    "format": "RGBA8 sRGB",
+    "filter": "linear-light BOX",
+    "colorAdjustments": {
+      "exposureEV": 0,
+      "linearRGBTint": [
+        1,
+        1,
+        1
+      ]
+    }
+  },
+  {
+    "id": "forrest_ground_03",
+    "file": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\terrain-test-v4\\sources\\forrest_ground_03-color-2k.png",
+    "sha256": "b2da848aaa6aa27068fd8a068613d3e3f9d968e75c0a64f3e9bbf94693642d74",
+    "resolution": [
+      2048,
+      2048
+    ],
+    "sourcePage": "https://polyhaven.com/a/forrest_ground_03",
+    "license": "CC0",
+    "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/forrest_ground_03/forrest_ground_03_diff_2k.png",
+    "publishedMD5": "15d6236c6e7f46592ba549e0d142e8ea",
+    "dds": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\terrain-test-v4\\payload\\forrest_ground_03.dds",
+    "ddsSha256": "f4f0f09c11037448dd4c0d5399e650ee0d5dafe15e5a8ae9752d6304952bf196",
+    "mips": 12,
+    "format": "RGBA8 sRGB",
+    "filter": "linear-light BOX",
+    "colorAdjustments": {
+      "exposureEV": 0,
+      "linearRGBTint": [
+        1,
+        1,
+        1
+      ]
+    }
+  },
+  {
+    "id": "leafy_grass",
+    "file": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\terrain-test-v4\\sources\\leafy_grass-color-2k.png",
+    "sha256": "9ae7994a36a7aedf5fe65dac49d5e096e9a8ff1d8a8e8ccb28df0c9c3a7a2d34",
+    "resolution": [
+      2048,
+      2048
+    ],
+    "sourcePage": "https://polyhaven.com/a/leafy_grass",
+    "license": "CC0",
+    "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/leafy_grass/leafy_grass_diff_2k.png",
+    "publishedMD5": "91c82271318a5bbe69182404c6dff730",
+    "dds": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\terrain-test-v4\\payload\\leafy_grass.dds",
+    "ddsSha256": "987cc9b85c1aed48b47fd2afe510d8b5c919549e9de29cda4a3cf53278ee8002",
+    "mips": 12,
+    "format": "RGBA8 sRGB",
+    "filter": "linear-light BOX",
+    "colorAdjustments": {
+      "exposureEV": 0,
+      "linearRGBTint": [
+        1,
+        1,
+        1
+      ]
+    }
+  },
+  {
+    "id": "mossy_rock",
+    "file": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\terrain-test-v4\\sources\\mossy_rock-color-2k.png",
+    "sha256": "7a5cf7886fb46f71ff76d822939b0eb4169f7d29ef504918fe7526f948511302",
+    "resolution": [
+      2048,
+      2048
+    ],
+    "sourcePage": "https://polyhaven.com/a/mossy_rock",
+    "license": "CC0",
+    "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/mossy_rock/mossy_rock_diff_2k.png",
+    "publishedMD5": "8df6ca9f9ca64ab7279c52618a5ebc04",
+    "dds": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\terrain-test-v4\\payload\\mossy_rock.dds",
+    "ddsSha256": "75e506aba17b202d38bb5962bf7476deda1dd15e96442c5bf81dd62802cfc33a",
+    "mips": 12,
+    "format": "RGBA8 sRGB",
+    "filter": "linear-light BOX",
+    "colorAdjustments": {
+      "exposureEV": 0,
+      "linearRGBTint": [
+        1,
+        1,
+        1
+      ]
+    }
+  },
+  {
+    "id": "mud_cracked_dry_riverbed_002",
+    "file": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\terrain-test-v4\\sources\\mud_cracked_dry_riverbed_002-color-2k.png",
+    "sha256": "7c10b938bcc65daca01ac95ed984eb0205b770ec5f91e34d58e05f97d1cabe02",
+    "resolution": [
+      2048,
+      2048
+    ],
+    "sourcePage": "https://polyhaven.com/a/mud_cracked_dry_riverbed_002",
+    "license": "CC0",
+    "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/mud_cracked_dry_riverbed_002/mud_cracked_dry_riverbed_002_diff_2k.png",
+    "publishedMD5": "09de14d68373f218a7288994cc48d46e",
+    "dds": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\terrain-test-v4\\payload\\mud_cracked_dry_riverbed_002.dds",
+    "ddsSha256": "d05a4f028bd3d7b22293093b6ba45e1f5c71862a9a228f1fe70fb7de59d2234e",
+    "mips": 12,
+    "format": "RGBA8 sRGB",
+    "filter": "linear-light BOX",
+    "colorAdjustments": {
+      "exposureEV": 0,
+      "linearRGBTint": [
+        1,
+        1,
+        1
+      ]
+    }
+  },
+  {
+    "id": "sparse_grass",
+    "file": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\terrain-test-v4\\sources\\sparse_grass-color-2k.png",
+    "sha256": "d24a836c12689f4fda41358251f30ddb865bbad41ccac63bf276b13559d55167",
+    "resolution": [
+      2048,
+      2048
+    ],
+    "sourcePage": "https://polyhaven.com/a/sparse_grass",
+    "license": "CC0",
+    "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/sparse_grass/sparse_grass_diff_2k.png",
+    "publishedMD5": "7de88637c54d5fa32953e89b9a31af67",
+    "dds": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\terrain-test-v4\\payload\\sparse_grass.dds",
+    "ddsSha256": "a7764de3f59c1fe3a945e2e187e385256568db11b3e7a5333c2e88a1ee9fe15e",
+    "mips": 12,
+    "format": "RGBA8 sRGB",
+    "filter": "linear-light BOX",
+    "colorAdjustments": {
+      "exposureEV": 0,
+      "linearRGBTint": [
+        1,
+        1,
+        1
+      ]
+    }
+  },
+  {
+    "id": "withered_grass",
+    "file": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\terrain-test-v4\\sources\\withered_grass-color-2k.png",
+    "sha256": "ca1600e92cb82ba4c579d54f9b02a36c5fd1d55174c5732c6031ba5885f8323f",
+    "resolution": [
+      2048,
+      2048
+    ],
+    "sourcePage": "https://polyhaven.com/a/withered_grass",
+    "license": "CC0",
+    "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/withered_grass/withered_grass_diff_2k.png",
+    "publishedMD5": "38a66a21db92da34acdd78a1e6c70b3a",
+    "dds": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\terrain-test-v4\\payload\\withered_grass.dds",
+    "ddsSha256": "1245c6029cb756ed5d2088341704e99e0c7ced1f32fe661e9f4f29ab849b0995",
+    "mips": 12,
+    "format": "RGBA8 sRGB",
+    "filter": "linear-light BOX",
+    "colorAdjustments": {
+      "exposureEV": 0,
+      "linearRGBTint": [
+        1,
+        1,
+        1
+      ]
+    }
+  }
+]

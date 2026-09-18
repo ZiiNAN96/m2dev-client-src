@@ -62,14 +62,14 @@ The manual renderer/skin benchmark helpers remain available because their
 scenario coverage still has value. CLEAN-X parses their scripts and preserves
 their exact input templates; it does not rerun every historical manual scenario.
 
-## Dependency cache
+## Dependency sources
 
-`build-deps/` is an ignored local cache of the exact existing DiligentCore,
-DiligentFX, Assimp and meshoptimizer pins. Fresh build directories use explicit
-`FETCHCONTENT_SOURCE_DIR_*` arguments pointing there. This avoids retaining old
-build caches just to retain dependency sources. A normal online configure can
-fetch the pins declared in the existing CMake files. Vendor sources and pins
-are unchanged; upstream Zstd fuzzers/benchmarks are disabled in our build.
+The existing DiligentCore, DiligentFX, Assimp and meshoptimizer pins are tracked
+as submodules under `external/`; see [initialization](../external/README.md).
+CMake selects them automatically, with dependency outputs under `build/deps/`
+for the standard `-B build` configuration. Explicit `FETCHCONTENT_SOURCE_DIR_*`
+overrides remain available. Vendor versions are unchanged; upstream Zstd
+fuzzers/benchmarks are disabled in our build.
 
 The completed C-LIB-X comparison tools were removed. Their conclusions and
 versioned evidence remain under `docs/core/`; their implementation remains in

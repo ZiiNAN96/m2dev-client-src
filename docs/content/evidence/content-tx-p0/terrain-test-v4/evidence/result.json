@@ -1,0 +1,317 @@
+{
+  "uniqueMaterials": 26,
+  "legacyReferences": 118,
+  "affectedMaps": 84,
+  "usedMaps": 78,
+  "installedSlots": 466,
+  "resolution": [
+    2048,
+    2048
+  ],
+  "mips": 12,
+  "nativeViews": 11,
+  "nativeMaps": 7,
+  "exitCode": 0,
+  "loadedMaterials": [
+    "Grass001",
+    "Grass002",
+    "Grass003",
+    "Grass004",
+    "Gravel040",
+    "Ground079S",
+    "Ground085",
+    "Ground093A",
+    "Ground103",
+    "Lava002",
+    "Lava004",
+    "Rock031",
+    "forest_ground_04",
+    "forrest_ground_01",
+    "forrest_ground_03",
+    "mud_cracked_dry_riverbed_002"
+  ],
+  "loadedBindings": [
+    {
+      "map": "metin2_map_a1",
+      "slot": 1,
+      "material": "Ground103"
+    },
+    {
+      "map": "metin2_map_a1",
+      "slot": 4,
+      "material": "Ground103"
+    },
+    {
+      "map": "metin2_map_a1",
+      "slot": 5,
+      "material": "Grass004"
+    },
+    {
+      "map": "metin2_map_a1",
+      "slot": 6,
+      "material": "Grass001"
+    },
+    {
+      "map": "metin2_map_b1",
+      "slot": 5,
+      "material": "Grass004"
+    },
+    {
+      "map": "metin2_map_b1",
+      "slot": 4,
+      "material": "Ground103"
+    },
+    {
+      "map": "metin2_map_b1",
+      "slot": 6,
+      "material": "Grass001"
+    },
+    {
+      "map": "metin2_map_b1",
+      "slot": 7,
+      "material": "Grass002"
+    },
+    {
+      "map": "metin2_map_c1",
+      "slot": 1,
+      "material": "Ground103"
+    },
+    {
+      "map": "metin2_map_c1",
+      "slot": 4,
+      "material": "Ground103"
+    },
+    {
+      "map": "metin2_map_c1",
+      "slot": 5,
+      "material": "Grass004"
+    },
+    {
+      "map": "metin2_map_c1",
+      "slot": 6,
+      "material": "Grass001"
+    },
+    {
+      "map": "metin2_map_a1",
+      "slot": 1,
+      "material": "Ground103"
+    },
+    {
+      "map": "metin2_map_a1",
+      "slot": 4,
+      "material": "Ground103"
+    },
+    {
+      "map": "metin2_map_a1",
+      "slot": 5,
+      "material": "Grass004"
+    },
+    {
+      "map": "metin2_map_a1",
+      "slot": 6,
+      "material": "Grass001"
+    },
+    {
+      "map": "metin2_map_trent",
+      "slot": 1,
+      "material": "forrest_ground_03"
+    },
+    {
+      "map": "metin2_map_trent",
+      "slot": 2,
+      "material": "forrest_ground_01"
+    },
+    {
+      "map": "metin2_map_trent",
+      "slot": 4,
+      "material": "Grass003"
+    },
+    {
+      "map": "metin2_map_trent",
+      "slot": 3,
+      "material": "forest_ground_04"
+    },
+    {
+      "map": "metin2_map_trent",
+      "slot": 6,
+      "material": "Grass002"
+    },
+    {
+      "map": "metin2_map_trent02",
+      "slot": 3,
+      "material": "forest_ground_04"
+    },
+    {
+      "map": "metin2_map_trent02",
+      "slot": 4,
+      "material": "Grass003"
+    },
+    {
+      "map": "metin2_map_trent02",
+      "slot": 6,
+      "material": "Grass002"
+    },
+    {
+      "map": "metin2_map_trent02",
+      "slot": 5,
+      "material": "Grass001"
+    },
+    {
+      "map": "metin2_map_n_desert_01",
+      "slot": 1,
+      "material": "Ground093A"
+    },
+    {
+      "map": "metin2_map_n_desert_01",
+      "slot": 4,
+      "material": "Ground085"
+    },
+    {
+      "map": "metin2_map_n_desert_01",
+      "slot": 2,
+      "material": "mud_cracked_dry_riverbed_002"
+    },
+    {
+      "map": "metin2_map_n_desert_01",
+      "slot": 3,
+      "material": "Ground079S"
+    },
+    {
+      "map": "metin2_map_n_desert_01",
+      "slot": 10,
+      "material": "Grass003"
+    },
+    {
+      "map": "metin2_map_n_desert_01",
+      "slot": 11,
+      "material": "Grass004"
+    },
+    {
+      "map": "metin2_map_n_flame_01",
+      "slot": 1,
+      "material": "Rock031"
+    },
+    {
+      "map": "metin2_map_n_flame_01",
+      "slot": 3,
+      "material": "Gravel040"
+    },
+    {
+      "map": "metin2_map_n_flame_01",
+      "slot": 7,
+      "material": "Rock031"
+    },
+    {
+      "map": "metin2_map_n_flame_01",
+      "slot": 4,
+      "material": "Lava002"
+    },
+    {
+      "map": "metin2_map_n_flame_01",
+      "slot": 5,
+      "material": "Lava004"
+    },
+    {
+      "map": "metin2_map_n_flame_01",
+      "slot": 2,
+      "material": "Rock031"
+    },
+    {
+      "map": "metin2_map_n_flame_01",
+      "slot": 1,
+      "material": "Rock031"
+    },
+    {
+      "map": "metin2_map_n_flame_01",
+      "slot": 3,
+      "material": "Gravel040"
+    },
+    {
+      "map": "metin2_map_n_flame_01",
+      "slot": 4,
+      "material": "Lava002"
+    },
+    {
+      "map": "metin2_map_n_flame_01",
+      "slot": 7,
+      "material": "Rock031"
+    },
+    {
+      "map": "metin2_map_n_flame_01",
+      "slot": 5,
+      "material": "Lava004"
+    },
+    {
+      "map": "metin2_map_n_flame_01",
+      "slot": 2,
+      "material": "Rock031"
+    },
+    {
+      "map": "metin2_map_a1",
+      "slot": 1,
+      "material": "Ground103"
+    },
+    {
+      "map": "metin2_map_a1",
+      "slot": 4,
+      "material": "Ground103"
+    },
+    {
+      "map": "metin2_map_a1",
+      "slot": 5,
+      "material": "Grass004"
+    },
+    {
+      "map": "metin2_map_a1",
+      "slot": 6,
+      "material": "Grass001"
+    },
+    {
+      "map": "metin2_map_a1",
+      "slot": 1,
+      "material": "Ground103"
+    },
+    {
+      "map": "metin2_map_a1",
+      "slot": 4,
+      "material": "Ground103"
+    },
+    {
+      "map": "metin2_map_a1",
+      "slot": 5,
+      "material": "Grass004"
+    },
+    {
+      "map": "metin2_map_a1",
+      "slot": 6,
+      "material": "Grass001"
+    }
+  ],
+  "shutdown": {
+    "SourceTextures": 0,
+    "SourceBuffers": 0,
+    "VegetationAssets": 0,
+    "VegetationInstances": 0,
+    "VegetationRenderAssets": 0,
+    "VegetationGeometry": 0,
+    "VegetationInstanceBuffers": 0,
+    "VegetationInstanceBytes": 0,
+    "VegetationFailures": 0,
+    "DiligentErrors": 0,
+    "DiligentFatals": 0,
+    "RuntimeSkeletons": 0,
+    "RuntimeAnimationClips": 0,
+    "GR2ReaderResources": 0
+  },
+  "protectedFilesUnchanged": 12201,
+  "productionDeployment": false,
+  "manualVisualAcceptance": "Pending user review",
+  "scope": "Isolated Modern test client. Color maps only; masks and UV unchanged. Classic originals retained.",
+  "excluded": [
+    {
+      "id": 111,
+      "reason": "Spinnweben-Detail ben\u00f6tigt eigene Variante; Original bleibt erhalten."
+    }
+  ],
+  "knownIssue": "Flame dungeon fails native rendering with both original and replaced terrain; failed_world=1, failed_terrain=0. Not visually validated."
+}

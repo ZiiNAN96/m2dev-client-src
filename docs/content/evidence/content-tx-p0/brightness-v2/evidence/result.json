@@ -1,0 +1,43 @@
+{
+  "revision": "C brightness v2",
+  "exposureEV": -0.8,
+  "linearRGBMultiplier": 0.5743491774985174,
+  "sourceCodeChanged": false,
+  "classicVsReference": {
+    "exactPixels": false,
+    "maxChannelDelta": 3,
+    "meanChannelDelta": 9.974175951717735e-05,
+    "differentPixels": 81
+  },
+  "protectedFilesUnchanged": 317,
+  "shutdown": {
+    "SourceTextures": 0,
+    "SourceBuffers": 0,
+    "VegetationAssets": 0,
+    "VegetationInstances": 0,
+    "VegetationRenderAssets": 0,
+    "VegetationGeometry": 0,
+    "VegetationInstanceBuffers": 0,
+    "VegetationInstanceBytes": 0,
+    "VegetationFailures": 0,
+    "DiligentErrors": 0,
+    "DiligentFatals": 0,
+    "RuntimeSkeletons": 0,
+    "RuntimeAnimationClips": 0,
+    "GR2ReaderResources": 0
+  },
+  "nativeSmoke": "PASS 3 views, exit 0",
+  "newTextureSha256": "a89f70ced42c7c9595a1962b6b1bed4e0d5fbf8b992c11b0ae4aa955e280a28b",
+  "previousTextureSha256": "1abddd68b18bc45e446e4464de9ec83cddcfebe47f7fa37fa9df379f10820fa4",
+  "image": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\gallery\\C-darkened.jpg",
+  "imageSha256": "b6e2f2a2b15f7fd5029a030ba47d898e095c4f8f97f69c96cd31d383941d5b90",
+  "manualRuntimeUpdated": true,
+  "liveReload": "Map reload required if A1 already resident",
+  "userApproval": {
+    "remove3DGrass": true,
+    "newTexture": "approved",
+    "productionDeployment": false,
+    "quote": "ja sieht gut aus",
+    "context": "After clarification that proof texture is limited to A1"
+  }
+}

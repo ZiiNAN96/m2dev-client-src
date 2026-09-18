@@ -1,14 +1,16 @@
 # 2K-Auswahl für alle Terrain-Bodenarten
 
+> Archiviert am 18.09.2026: vorhandene Berichte und Prüfaufnahmen wurden nach `evidence/` übernommen. Alte Testclients, Materialvorschauen und Buildausgaben wurden entfernt. [Vollständige erhaltene Textbelege](evidence/content-tx-p0.zip).
+
 Stand: 16.09.2026, Gras/Waldboden v3. Aktueller Auftrag: **Sand und Erde sowie Lava/Vulkan aus dem Katalog übernehmen; bessere Gras-/Waldbodenquellen finden.** Die Materialauswahl für die genannten Bodenarten ist festgehalten. Die Suche und Galerie betreffen **218 Terrain-Referenzen** aus 37 TextureSets in **85 vorhandenen Maps**. Es erfolgte noch kein neuer Einbau dieser Materialien.
 
 **Zwölf unterschiedliche Gras-/Waldboden-Basen** sind jetzt auf **57 Referenzen** verteilt. Statt 34 reinen Grasreferenzen dieselbe Grass004-Textur zuzuordnen, bleiben dichte, blättrige, olivgrüne, trockene und lückige Grasflächen sowie Moos-, Wurzel-, Nadel- und steinige Waldböden unterscheidbar. Grass004 bleibt gezielt für zwei passende Referenzen vorgesehen. Die neuen Vorschläge sind noch nicht vom Nutzer visuell freigegeben.
 
-- [Interaktive Materialübersicht mit Alt/Neu-Vergleich](../../build-content-tx-p0/terrain-2k-catalog/Boden-2K-Auswahl.html)
-- [Materialliste mit Quellen und direkten 2K-Downloads](../../build-content-tx-p0/terrain-2k-catalog/Auswahl.md)
-- [Alle Zuordnungen als CSV](../../build-content-tx-p0/terrain-2k-catalog/alt-neu-zuordnung.csv)
-- [Strukturierte Zuordnung und offizielle Download-Metadaten](../../build-content-tx-p0/terrain-2k-catalog/catalog.json)
-- [Gesicherte Auswahlentscheidungen](../../build-content-tx-p0/terrain-2k-catalog/selection-decisions.json)
+- Interaktive Materialübersicht mit Alt/Neu-Vergleich (historischer, entfernter Arbeitsstand)
+- [Materialliste mit Quellen und direkten 2K-Downloads](evidence/content-tx-p0/terrain-2k-catalog/Auswahl.md)
+- [Alle Zuordnungen als CSV](evidence/content-tx-p0/terrain-2k-catalog/alt-neu-zuordnung.csv)
+- [Strukturierte Zuordnung und offizielle Download-Metadaten](evidence/content-tx-p0/terrain-2k-catalog/catalog.json)
+- [Gesicherte Auswahlentscheidungen](evidence/content-tx-p0/terrain-2k-catalog/selection-decisions.json)
 
 Bestätigte Quellen: Sand `Ground079L`, `Ground079S`, `Ground093A`; Erde `Ground085`, `Ground103`, `Ground106`, `Ground067`, `Ground087`, `mud_cracked_dry_riverbed_002`; Lava/Vulkan `Lava004`, `Lava002`, `Lava001`, `Rock031`. `Gravel040` ist für den Vulkan-Geröll-Layer 192 ausgewählt. Flusskiesel wurden nicht pauschal mit freigegeben. Bestätigte Quellen, Download-URLs und die 161 Zuordnungen außerhalb der Gras-/Waldbodenüberarbeitung sind unverändert. Die Galerie zeigt den jeweiligen Auswahlstatus und bietet einen Filter für bestätigte Materialien.
 

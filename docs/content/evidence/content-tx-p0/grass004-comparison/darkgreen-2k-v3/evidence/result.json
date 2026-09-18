@@ -1,0 +1,89 @@
+{
+  "revision": "Grass004 darkgreen 2K v3",
+  "resolution": [
+    2048,
+    2048
+  ],
+  "mips": 12,
+  "originalSourceResolution": [
+    2048,
+    2048
+  ],
+  "upscaled": false,
+  "colorAdjustments": {
+    "exposureEV": -0.8,
+    "linearRGBTint": [
+      0.8,
+      1.0,
+      1.0
+    ],
+    "combinedLinearRGBMultiplier": [
+      0.45947934199881396,
+      0.5743491774985174,
+      0.5743491774985174
+    ]
+  },
+  "colorAdjustmentMatchesApproved1K": true,
+  "sourceCodeChanged": false,
+  "textureSha256": "9ee540d95f216ef1d8404ede81d101b721c5be36a508ccc10c9e2bcaa221c782",
+  "ddsBytes": 22369748,
+  "nativeSmoke": "PASS 3 views; exit 0",
+  "classicVsReference": {
+    "exactPixels": true,
+    "maxChannelDelta": 0,
+    "meanChannelDelta": 0.0,
+    "differentPixels": 0
+  },
+  "shutdown": {
+    "SourceTextures": 0,
+    "SourceBuffers": 0,
+    "VegetationAssets": 0,
+    "VegetationInstances": 0,
+    "VegetationRenderAssets": 0,
+    "VegetationGeometry": 0,
+    "VegetationInstanceBuffers": 0,
+    "VegetationInstanceBytes": 0,
+    "VegetationFailures": 0,
+    "DiligentErrors": 0,
+    "DiligentFatals": 0,
+    "RuntimeSkeletons": 0,
+    "RuntimeAnimationClips": 0,
+    "GR2ReaderResources": 0
+  },
+  "protectedFilesUnchanged": 317,
+  "productionBinaryUnchanged": true,
+  "grassCounters": [
+    {
+      "grassPlacements": 0,
+      "grassCells": 0,
+      "grassTiles": 0,
+      "grassExpectedTiles": 0,
+      "grassBytes": 0,
+      "grassLoadMs": 0.0
+    },
+    {
+      "grassPlacements": 0,
+      "grassCells": 0,
+      "grassTiles": 0,
+      "grassExpectedTiles": 0,
+      "grassBytes": 0,
+      "grassLoadMs": 0.0
+    },
+    {
+      "grassPlacements": 0,
+      "grassCells": 0,
+      "grassTiles": 0,
+      "grassExpectedTiles": 0,
+      "grassBytes": 0,
+      "grassLoadMs": 0.0
+    }
+  ],
+  "manualRuntimeUpdated": true,
+  "liveReload": "Running normal client requires restart to load new texture",
+  "userApproval": {
+    "materialAndColor": "approved in 1K",
+    "resolutionRequest": "mindestens 2k einbauen",
+    "manual2KVisualAcceptance": "not yet recorded",
+    "productionDeployment": false
+  }
+}

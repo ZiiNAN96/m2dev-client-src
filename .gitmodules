@@ -1,0 +1,12 @@
+[submodule "external/DiligentCore"]
+	path = external/DiligentCore
+	url = https://github.com/DiligentGraphics/DiligentCore.git
+[submodule "external/DiligentFX"]
+	path = external/DiligentFX
+	url = https://github.com/DiligentGraphics/DiligentFX.git
+[submodule "external/assimp"]
+	path = external/assimp
+	url = https://github.com/assimp/assimp.git
+[submodule "external/meshoptimizer"]
+	path = external/meshoptimizer
+	url = https://github.com/zeux/meshoptimizer.git

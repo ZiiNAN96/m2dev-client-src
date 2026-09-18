@@ -1,0 +1,40 @@
+{
+  "version": "darkgreen-v5",
+  "materials": [
+    "Grass001",
+    "Grass002",
+    "Grass003",
+    "Grass004",
+    "leafy_grass",
+    "sparse_grass"
+  ],
+  "changedSlots": 128,
+  "changedMaps": 50,
+  "resolution": [
+    2048,
+    2048
+  ],
+  "mips": 12,
+  "nativeViews": 5,
+  "exitCode": 0,
+  "originalFilesUnchanged": 12201,
+  "unmodifiedV4AssetsVerified": 26,
+  "sameCameraGrassLinearLuminanceRatio": 0.4022420170027704,
+  "shutdown": {
+    "SourceTextures": 0,
+    "SourceBuffers": 0,
+    "VegetationAssets": 0,
+    "VegetationInstances": 0,
+    "VegetationRenderAssets": 0,
+    "VegetationGeometry": 0,
+    "VegetationInstanceBuffers": 0,
+    "VegetationInstanceBytes": 0,
+    "VegetationFailures": 0,
+    "DiligentErrors": 0,
+    "DiligentFatals": 0,
+    "RuntimeSkeletons": 0,
+    "RuntimeAnimationClips": 0,
+    "GR2ReaderResources": 0
+  },
+  "userVisualAcceptance": "Pending"
+}

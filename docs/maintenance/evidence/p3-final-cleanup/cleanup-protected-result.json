@@ -1,0 +1,10 @@
+{
+  "status": "PASS",
+  "protectedRuntime": 54706,
+  "protectedSource": 11916,
+  "userconfigs": "byte-identical",
+  "localRegressionInputs": 426,
+  "classicGoldens": 12,
+  "productionExe": "unchanged",
+  "productionRootPack": "unchanged"
+}

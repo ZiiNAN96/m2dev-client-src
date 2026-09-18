@@ -1,5 +1,8 @@
 # ZiiNAN: Offline asset pipeline dependencies are reachable only from this opt-in target.
 include(FetchContent)
+include(ExternalDependency)
+m2_use_external_dependency(ziinan_assimp assimp)
+m2_use_external_dependency(ziinan_meshoptimizer meshoptimizer)
 if(POLICY CMP0135)
     cmake_policy(SET CMP0135 NEW)
 endif()
@@ -21,6 +24,7 @@ set(ASSIMP_BUILD_STL_IMPORTER ON CACHE BOOL "" FORCE)
 set(ASSIMP_BUILD_3DS_IMPORTER OFF CACHE BOOL "" FORCE)
 set(USE_STATIC_CRT ON CACHE BOOL "" FORCE)
 FetchContent_Declare(ziinan_assimp
+    BINARY_DIR "${CMAKE_BINARY_DIR}/deps/assimp"
     URL https://codeload.github.com/assimp/assimp/tar.gz/refs/tags/v6.0.2
     URL_HASH SHA256=d1822d9a19c9205d6e8bc533bf897174ddb360ce504680f294170cc1d6319751)
 set(MESHOPT_BUILD_DEMO OFF CACHE BOOL "" FORCE)
@@ -28,6 +32,7 @@ set(MESHOPT_BUILD_GLTFPACK OFF CACHE BOOL "" FORCE)
 set(MESHOPT_BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 set(MESHOPT_INSTALL OFF CACHE BOOL "" FORCE)
 FetchContent_Declare(ziinan_meshoptimizer
+    BINARY_DIR "${CMAKE_BINARY_DIR}/deps/meshoptimizer"
     URL https://codeload.github.com/zeux/meshoptimizer/tar.gz/refs/tags/v0.25
     URL_HASH SHA256=68b2fef4e4eaad98e00c657c1e7f8982a7176e61dd7efdeaec67a025b8519be9)
 get_directory_property(ziinan_tool_compile_options COMPILE_OPTIONS)

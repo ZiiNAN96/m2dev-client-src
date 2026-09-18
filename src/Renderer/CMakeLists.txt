@@ -17,6 +17,8 @@ if(M2_BUILD_WINDOWS_CLIENT)
     target_sources(M2RendererDiligent PRIVATE DiligentEffectRenderer.cpp)
     target_sources(M2RendererDiligent PRIVATE DiligentModernRenderer.cpp DiligentAtmosphere.cpp DiligentWater.cpp)
     target_link_libraries(M2RendererDiligent PRIVATE M2DiligentFX)
+    # The backend's present timing uses Platform::Time::MonotonicNanoseconds.
+    target_link_libraries(M2RendererDiligent PRIVATE M2Platform)
     target_include_directories(M2RendererDiligent PRIVATE "${diligentcore_SOURCE_DIR}")
     target_link_libraries(M2RendererDiligent PUBLIC M2RendererInterface PRIVATE Diligent-GraphicsEngineD3D11-static M2FirstPartyArchitectureChecks)
     target_link_libraries(M2RendererBootstrap PRIVATE M2RendererDiligent)

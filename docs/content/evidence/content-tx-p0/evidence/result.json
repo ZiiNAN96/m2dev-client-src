@@ -1,0 +1,279 @@
+{
+  "protectedFiles": 317,
+  "protectedChanges": [],
+  "images": {
+    "A": {
+      "path": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\gallery\\A.jpg",
+      "sha256": "60fc17836e02357d1e1ead369d612069cb4d09fe201ee001f19820278d33fb70"
+    },
+    "B": {
+      "path": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\gallery\\B.jpg",
+      "sha256": "a573c12dfa6a892f1378bb0e1c860d6153bbce36d16df48b6ab5ecef67aa9b6d"
+    },
+    "C": {
+      "path": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\gallery\\C-darkened.jpg",
+      "sha256": "b6e2f2a2b15f7fd5029a030ba47d898e095c4f8f97f69c96cd31d383941d5b90"
+    }
+  },
+  "sourceHead": "def26747425ba6cc3fcfc85dda534b8b1fdc7111",
+  "currentBinarySha256": "6f35b7f16d7ccafea526495b920e7777fcce5d3e276e13ce74f15938a7217376",
+  "baselineBinarySha256": "959d03d5ff6e560a2043e300688811852ff56784d14236aea541a0ab003964cd",
+  "comparison": {
+    "A": {
+      "mapLoadMs": 153.36729999398813,
+      "preload": {
+        "visible": 0,
+        "culled": 0,
+        "draws": 0,
+        "triangles": 0,
+        "uploads": 0,
+        "instanceBytes": 0,
+        "cpuMs": 0.0,
+        "instances": 88,
+        "grassPlacements": 625189,
+        "grassCells": 33397,
+        "grassTiles": 20,
+        "grassExpectedTiles": 20,
+        "grassBytes": 20006048,
+        "grassSerial": 1,
+        "grassLoadMs": 78.427
+      },
+      "firstCapture": {
+        "visible": 3861976,
+        "culled": 5087793,
+        "draws": 16610,
+        "triangles": 15389618,
+        "uploads": 657,
+        "instanceBytes": 1059600,
+        "cpuMs": 1100.702799999993,
+        "instances": 91,
+        "grassPlacements": 625189,
+        "grassCells": 33397,
+        "grassTiles": 20,
+        "grassExpectedTiles": 20,
+        "grassBytes": 20006048,
+        "grassSerial": 1,
+        "grassLoadMs": 78.427
+      },
+      "stage0Frames": 361,
+      "vegetationDrawsStage0": 19855,
+      "vegetationDrawsPerFrame": 55.0,
+      "sampledFrames": 180,
+      "meanMs": {
+        "process_cpu_us": 4.076246666666667,
+        "world_cpu_us": 3.932995,
+        "gpu_frame_us": 0.5617936
+      }
+    },
+    "B": {
+      "mapLoadMs": 71.65379999787547,
+      "preload": {
+        "visible": 0,
+        "culled": 0,
+        "draws": 0,
+        "triangles": 0,
+        "uploads": 0,
+        "instanceBytes": 0,
+        "cpuMs": 0.0,
+        "instances": 88,
+        "grassPlacements": 0,
+        "grassCells": 0,
+        "grassTiles": 0,
+        "grassExpectedTiles": 0,
+        "grassBytes": 0,
+        "grassSerial": 0,
+        "grassLoadMs": 0.0
+      },
+      "firstCapture": {
+        "visible": 5757,
+        "culled": 47873,
+        "draws": 14847,
+        "triangles": 5041617,
+        "uploads": 653,
+        "instanceBytes": 5280,
+        "cpuMs": 223.2472000000009,
+        "instances": 91,
+        "grassPlacements": 0,
+        "grassCells": 0,
+        "grassTiles": 0,
+        "grassExpectedTiles": 0,
+        "grassBytes": 0,
+        "grassSerial": 0,
+        "grassLoadMs": 0.0
+      },
+      "stage0Frames": 362,
+      "vegetationDrawsStage0": 17738,
+      "vegetationDrawsPerFrame": 49.0,
+      "sampledFrames": 180,
+      "meanMs": {
+        "process_cpu_us": 0.6479872222222222,
+        "world_cpu_us": 0.49327944444444444,
+        "gpu_frame_us": 0.49127040000000005
+      },
+      "classicVsOldBinary": {
+        "exactPixels": true,
+        "maxChannelDelta": 0,
+        "meanChannelDelta": 0.0,
+        "differentPixels": 0
+      }
+    },
+    "C": {
+      "mapLoadMs": 76.56000000133645,
+      "preload": {
+        "visible": 0,
+        "culled": 0,
+        "draws": 0,
+        "triangles": 0,
+        "uploads": 0,
+        "instanceBytes": 0,
+        "cpuMs": 0.0,
+        "instances": 88,
+        "grassPlacements": 0,
+        "grassCells": 0,
+        "grassTiles": 0,
+        "grassExpectedTiles": 0,
+        "grassBytes": 0,
+        "grassSerial": 0,
+        "grassLoadMs": 0.0
+      },
+      "firstCapture": {
+        "visible": 5776,
+        "culled": 48031,
+        "draws": 14896,
+        "triangles": 5058256,
+        "uploads": 655,
+        "instanceBytes": 5280,
+        "cpuMs": 220.527699999998,
+        "instances": 91,
+        "grassPlacements": 0,
+        "grassCells": 0,
+        "grassTiles": 0,
+        "grassExpectedTiles": 0,
+        "grassBytes": 0,
+        "grassSerial": 0,
+        "grassLoadMs": 0.0
+      },
+      "stage0Frames": 364,
+      "vegetationDrawsStage0": 17836,
+      "vegetationDrawsPerFrame": 49.0,
+      "sampledFrames": 180,
+      "meanMs": {
+        "process_cpu_us": 0.63364,
+        "world_cpu_us": 0.47931888888888885,
+        "gpu_frame_us": 0.4899237333333333
+      },
+      "classicVsOldBinary": {
+        "exactPixels": true,
+        "maxChannelDelta": 0,
+        "meanChannelDelta": 0.0,
+        "differentPixels": 0
+      }
+    }
+  },
+  "artDirection": "GO - user visually approved darkened A1 texture and grass removal",
+  "productionGO": "Technical and visual proof gates met; production deployment not requested or performed",
+  "sourceHashes": {
+    "src/GameLib/AreaTerrain.h": "703d469acf4b7313608cea51e5833a47cb0b8ade756b3a33d25b1a7dd2c0c421",
+    "src/GameLib/MapOutdoor.cpp": "95f51c0cc63f3264208afeb7db797369ef2053a4216340b240a6a2162f233235",
+    "src/GameLib/MapOutdoor.h": "7d57eae712b031a08a5e72cac1af3f94ad9b9e93cd0a71c3c969ca75dffd7046",
+    "src/GameLib/MapOutdoorLoad.cpp": "44f63a7382590cd729e7023c758d9ddcc6fd490b0997f61af3de8c916b4d0d90",
+    "src/GameLib/MapOutdoorRender.cpp": "1536eb2c7bc4eb2242f070cd14dd35ca0302b0dd3088bd9302c9f51f3c8054e4",
+    "src/GameLib/MapOutdoorSplat.cpp": "1a8fd2b25ba31e85e5a5fd4a9f8872eb5bb75b5f880d43b3a8aed8b13775f9bb",
+    "src/GameLib/TerrainAlphaImage.cpp": "bfa98f20132d00c35b377d76f6d97d6c5db4419167e5ff2422b7c3159f7f1c87",
+    "src/GameLib/TerrainAlphaImage.h": "53ea99f8853e12aa24b756d7bda205a9e147f6c4e18ad1a2bd44e83259a42cd1",
+    "src/GameLib/WorldTree.cpp": "96306f2cdefa201187cdb8a8fb602c1def3db71932e3e1f6c7802666a4c13411",
+    "src/GameLib/WorldTree.h": "e8e39fa297b58e7be5ba789c9b524bd39d652174ac41bfdb631c9d6e467d2141"
+  },
+  "shutdown": {
+    "a": {
+      "SourceTextures": 0,
+      "SourceBuffers": 0,
+      "VegetationAssets": 0,
+      "VegetationInstances": 0,
+      "VegetationRenderAssets": 0,
+      "VegetationGeometry": 0,
+      "VegetationInstanceBuffers": 0,
+      "VegetationInstanceBytes": 0,
+      "VegetationFailures": 0,
+      "DiligentErrors": 0,
+      "DiligentFatals": 0,
+      "RuntimeSkeletons": 0,
+      "RuntimeAnimationClips": 0,
+      "GR2ReaderResources": 0
+    },
+    "b": {
+      "SourceTextures": 0,
+      "SourceBuffers": 0,
+      "VegetationAssets": 0,
+      "VegetationInstances": 0,
+      "VegetationRenderAssets": 0,
+      "VegetationGeometry": 0,
+      "VegetationInstanceBuffers": 0,
+      "VegetationInstanceBytes": 0,
+      "VegetationFailures": 0,
+      "DiligentErrors": 0,
+      "DiligentFatals": 0,
+      "RuntimeSkeletons": 0,
+      "RuntimeAnimationClips": 0,
+      "GR2ReaderResources": 0
+    },
+    "c": {
+      "SourceTextures": 0,
+      "SourceBuffers": 0,
+      "VegetationAssets": 0,
+      "VegetationInstances": 0,
+      "VegetationRenderAssets": 0,
+      "VegetationGeometry": 0,
+      "VegetationInstanceBuffers": 0,
+      "VegetationInstanceBytes": 0,
+      "VegetationFailures": 0,
+      "DiligentErrors": 0,
+      "DiligentFatals": 0,
+      "RuntimeSkeletons": 0,
+      "RuntimeAnimationClips": 0,
+      "GR2ReaderResources": 0
+    },
+    "classic-reference": {
+      "SourceTextures": 0,
+      "SourceBuffers": 0,
+      "VegetationAssets": 0,
+      "VegetationInstances": 0,
+      "VegetationRenderAssets": 0,
+      "VegetationGeometry": 0,
+      "VegetationInstanceBuffers": 0,
+      "VegetationInstanceBytes": 0,
+      "VegetationFailures": 0,
+      "DiligentErrors": 0,
+      "DiligentFatals": 0,
+      "RuntimeSkeletons": 0,
+      "RuntimeAnimationClips": 0,
+      "GR2ReaderResources": 0
+    }
+  },
+  "documentationSha256": "14ed1abce046edfbb2270db23ff2d7e4e8743d7405f7bb7f855eaabfd4dbc601",
+  "technicalGO": "PASS (bounded CONTENT-TX-P0 scope)",
+  "targetedRelease": {
+    "tests": 6,
+    "failures": 0,
+    "seconds": 14.02
+  },
+  "manualClient": {
+    "pid": 37212,
+    "window": "METIN2",
+    "windowObserved": true,
+    "entrypoint": "original prototype.py",
+    "arguments": "--renderer-diagnostics",
+    "style": "Modern",
+    "preset": "High",
+    "path": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\runtime-manual\\Metin2_Release.exe",
+    "shutdown": "left open for user; shutdown validated separately in native A/B/C and Classic-reference",
+    "originalEntryPointHash": "8b05bac65d0a4368ec3332708a3b04d74e8bd5bd10fbb269d66fe1cf9e13a1b1"
+  },
+  "latestRevision": {
+    "path": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\brightness-v2\\evidence\\result.json",
+    "stateC": "brightness-v2",
+    "initialComparison": "evidence/comparison.json remains the original run",
+    "artDirection": "GO - user approved"
+  },
+  "milestone": "CONTENT-TX-P0 complete; STOP"
+}

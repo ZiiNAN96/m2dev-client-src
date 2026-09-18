@@ -18,3 +18,5 @@ endfunction()
 m2_shader_audit_source(Diligent-GraphicsEngineD3DBase ShaderD3DBase.cpp)
 m2_shader_audit_source(Diligent-GraphicsEngineD3D11-static RenderDeviceD3D11Impl.cpp)
 m2_shader_audit_source(Diligent-GraphicsEngineD3D11-static ShaderD3D11Impl.cpp)
+# ShaderLoadAudit.h uses XXH128State from GraphicsTools in the instrumented source.
+target_link_libraries(Diligent-GraphicsEngineD3D11-static PRIVATE Diligent-GraphicsTools)

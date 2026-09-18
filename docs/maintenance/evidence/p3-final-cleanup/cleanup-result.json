@@ -1,0 +1,12 @@
+{
+  "status": "PASS",
+  "sourceFiles": 94382,
+  "runtimeFiles": 3,
+  "sourceLogicalBytes": 188226127159,
+  "runtimeBytes": 552,
+  "removedLinks": 140,
+  "removedDirectories": 9021,
+  "retainedUnexpectedFiles": [],
+  "completed": "2026-09-18T14:55:49",
+  "method": "Explicit inventoried file unlink; junction unlink; empty-directory rmdir only"
+}

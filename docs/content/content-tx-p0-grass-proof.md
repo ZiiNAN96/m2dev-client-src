@@ -1,4 +1,6 @@
-> Aktueller Stand 16.09.2026: Alle Bodentexturen sind wieder original; sämtliche Katalog-Ersetzungen sind deaktiviert. Großflächiges 3D-Gras bleibt im Release-Client abgeschaltet. [Rücksetzung und Prüfung](C:/Users/ZiiNAN/Documents/GitHub/m2dev-client-src/docs/content/terrain-original-restoration.md). Der folgende Bericht ist historisch.
+> Aktueller Stand 16.09.2026: Alle Bodentexturen sind wieder original; sämtliche Katalog-Ersetzungen sind deaktiviert. Großflächiges 3D-Gras bleibt im Release-Client abgeschaltet. [Rücksetzung und Prüfung](terrain-original-restoration.md). Der folgende Bericht ist historisch.
+
+> Archiviert am 18.09.2026: vorhandene Berichte und Prüfaufnahmen wurden nach `evidence/` übernommen. Alte Testclients, Materialvorschauen und Buildausgaben wurden entfernt. [Vollständige erhaltene Textbelege](evidence/content-tx-p0.zip).
 
 # CONTENT-TX-P0 – Grass-Terrain-Proof
 
@@ -12,7 +14,7 @@ Ein kurzer nativer Lauf bestand mit **neun Ansichten auf sieben repräsentativen
 
 Der laufende normale Testclient wurde während der anschließenden Texturrecherche nicht unterbrochen. **Bereits geladene Maps benötigen einen Neustart**, um alle neuen Dateien sicher zu laden. Der Original-/Produktionsclient bleibt unverändert. Kein Commit oder Push.
 
-[Map- und Slotzuordnung](../../build-content-tx-p0/all-maps/Map-Zuordnung.md) · [Prüfnachweis](../../build-content-tx-p0/all-maps/evidence/result.json) · [Kartenansichten](../../build-content-tx-p0/all-maps/evidence/map-proof.jpg).
+[Map- und Slotzuordnung](evidence/content-tx-p0/all-maps/Map-Zuordnung.md) · [Prüfnachweis](evidence/content-tx-p0/all-maps/evidence/result.json) · [Kartenansichten](evidence/content-tx-p0/all-maps/evidence/map-proof.jpg).
 
 Betriebshinweis: Der verworfene erste Inventurstart in `all-maps/runtime-audit` blieb als fensterloser Prüfprozess (PID 37848, Start 16.09.2026 18:43:14) aktiv. Windows verweigerte das gezielte Beenden mit „Access denied“, auch im erhöhten Werkzeugaufruf. Keine Sicherheitsumgehung versucht. Die anschließend erfolgreich verwendeten Inventur- und Grafikprüfungen `runtime-audit-v2` und `runtime-proof` endeten regulär mit Exit 0. Dieser alte Hilfsprozess ist kein erfolgreich abgeschlossener Shutdown-Nachweis.
 
@@ -22,7 +24,7 @@ Auf Wunsch „mindestens 2k einbauen“ enthält der normale isolierte Testclien
 
 Die 2K-DDS wurde zunächst in `build-content-tx-p0/runtime-manual/terrain/modern/metin2_map_a1/slot-005.dds` installiert; die spätere Erweiterung auf weitere Maps ist oben dokumentiert. Der vorhandene Terrainloader reicht Auflösung und alle Mipstufen direkt an den GPU-Uploader weiter. Der kurze native A1-Lauf mit Modern → Classic → Modern bestand: drei Aufnahmen, Exit 0, Classic-Weltbild in diesem Lauf pixelgleich zur Originalreferenz, alle Grass- und Shutdown-Zähler sowie Diligent ERROR/FATAL 0. Alle 317 damals geschützten Dateien sowie die Produktquellen und Binärdateien waren unverändert.
 
-[Aktuelle 2K-Aufnahme](../../build-content-tx-p0/grass004-comparison/darkgreen-2k-v3/gallery/Grass004-darkgreen-2k.jpg) · [2K-Import](../../build-content-tx-p0/grass004-comparison/darkgreen-2k-v3/evidence/import.json) · [2K-Prüfnachweis](../../build-content-tx-p0/grass004-comparison/darkgreen-2k-v3/evidence/result.json). Material und Farbe wurden zuvor in 1K freigegeben; eine gesonderte manuelle 2K-Sichtabnahme wird nicht aus dem automatisierten Test abgeleitet. Die folgenden Abschnitte dokumentieren die bisherigen Varianten.
+[Aktuelle 2K-Aufnahme](evidence/content-tx-p0/grass004-comparison/darkgreen-2k-v3/gallery/Grass004-darkgreen-2k.jpg) · [2K-Import](evidence/content-tx-p0/grass004-comparison/darkgreen-2k-v3/evidence/import.json) · [2K-Prüfnachweis](evidence/content-tx-p0/grass004-comparison/darkgreen-2k-v3/evidence/result.json). Material und Farbe wurden zuvor in 1K freigegeben; eine gesonderte manuelle 2K-Sichtabnahme wird nicht aus dem automatisierten Test abgeleitet. Die folgenden Abschnitte dokumentieren die bisherigen Varianten.
 
 ## Angeforderter Gegenvergleich: D Grass004
 
@@ -30,13 +32,13 @@ Nach Freigabe von C wurde auf Nutzerwunsch **Grass004** als weitere Vergleichsva
 
 Darkgreen v2 reduziert die Helligkeit um **−0,8 EV** und den Rotanteil im linearen Licht zusätzlich auf **80 %**, um den Gelbstich zu reduzieren. Kombinierte RGB-Faktoren: `(0,45948; 0,57435; 0,57435)`. Struktur, UV-Skalierung und Quelldatei bleiben erhalten; alle elf Mipstufen werden aus der korrigierten Quelle in linearem Licht erzeugt. Nur die DDS von A1-Slot 005 im Testclient wurde ersetzt. Der normale Testclient wurde anschließend zum sicheren Neuladen neu gestartet.
 
-[Grass004 vorher/jetzt](../../build-content-tx-p0/grass004-comparison/darkgreen-v2/gallery/Grass004-before-after.jpg) · [aktuelle dunkelgrüne Version](../../build-content-tx-p0/grass004-comparison/darkgreen-v2/gallery/Grass004-darkgreen.jpg) · [aktueller Prüfnachweis](../../build-content-tx-p0/grass004-comparison/darkgreen-v2/evidence/result.json).
+[Grass004 vorher/jetzt](evidence/content-tx-p0/grass004-comparison/darkgreen-v2/gallery/Grass004-before-after.jpg) · [aktuelle dunkelgrüne Version](evidence/content-tx-p0/grass004-comparison/darkgreen-v2/gallery/Grass004-darkgreen.jpg) · [aktueller Prüfnachweis](evidence/content-tx-p0/grass004-comparison/darkgreen-v2/evidence/result.json).
 
 Auch darkgreen v2 wurde mit derselben A1-Kamera und Modern → Classic → Modern geprüft: **PASS**, drei Aufnahmen, Exit 0, Grass-Zähler und Shutdown-Ressourcen 0, Diligent ERROR/FATAL 0. Classic behält dieselbe dokumentierte minimale Abweichung (81 Pixel, maximal 3/255) zur ursprünglichen Referenz. Alle 317 geschützten Dateien, Produktquellen und Binärdateien sind unverändert. Die folgenden Angaben beschreiben den ursprünglichen unkorrigierten Grass004-Import.
 
 Die angehängte `Grass004.png` ist ein Kugel-Vorschaubild. Verwendet wird die echte flache `Grass004_1K-PNG_Color.png` aus dem offiziellen [ambientCG-Material Grass 004](https://ambientcg.com/view?id=Grass004), Lizenz CC0. Import: 1024² RGBA8 DDS, elf in linearem Licht gefilterte Mipstufen, keine Farb- oder Helligkeitskorrektur. Normal/AO/Height/Roughness bleiben ungebunden. A1-Slot 005 und seine bisherige Kachelung bleiben unverändert; die vom Autor angegebene Materialgröße von 1,4 m wird für diesen direkten Vergleich nicht als neue UV-Skalierung übernommen.
 
-[C gegen Grass004](../../build-content-tx-p0/grass004-comparison/gallery/C-vs-Grass004.jpg) · [Grass004 einzeln](../../build-content-tx-p0/grass004-comparison/gallery/D-Grass004.jpg) · [Import und Quellenhash](../../build-content-tx-p0/grass004-comparison/evidence/import.json) · [Prüfnachweis](../../build-content-tx-p0/grass004-comparison/evidence/result.json).
+C gegen Grass004 (historischer, entfernter Arbeitsstand) · Grass004 einzeln (historischer, entfernter Arbeitsstand) · [Import und Quellenhash](evidence/content-tx-p0/grass004-comparison/evidence/import.json) · [Prüfnachweis](evidence/content-tx-p0/grass004-comparison/evidence/result.json).
 
 Identische A1-Kamera, Modern/High, Sonne und festgehaltene Umgebungszeit. Kurzer nativer Lauf mit Modern → Classic → Modern: **PASS**, drei Aufnahmen, Exit 0. A1/Slot 005 als einziger Override protokolliert; alle Grass-Zähler, Shutdown-Ressourcen und Diligent ERROR/FATAL jeweils 0. Classic gegen ursprüngliche Referenz: dieselben 81 geringfügig abweichenden Pixel wie bei der abgedunkelten C-Revision, maximal 3/255 Kanalstufen. Alle 317 geschützten Dateien sowie Source- und Binärhashes unverändert. Kein erneuter Build oder Gesamttest für diesen reinen Assetvergleich.
 
@@ -48,7 +50,7 @@ Erste Nutzerrückmeldung: **Ohne 3D-Gras sieht es besser aus; die neue Textur is
 
 Nur die importierte BaseColor von A1-Slot 005 wurde offline um **−0,8 EV** abgedunkelt: linearer RGB-Faktor **0,57435**, ohne separate Farbton-/Sättigungsänderung. Quelle, Details, Scale, Masken und Rendererbeleuchtung bleiben unverändert; alle elf Mipstufen wurden erneut in linearem Licht erzeugt. Die folgenden ursprünglichen Messwerte dokumentieren weiterhin den ersten A/B/C-Lauf; die Galerie zeigt jetzt das abgedunkelte C.
 
-[C vorher/jetzt](../../build-content-tx-p0/gallery/C-brightness-comparison.jpg) · [aktuelles C](../../build-content-tx-p0/gallery/C-darkened.jpg) · [Prüfnachweis der Korrektur](../../build-content-tx-p0/brightness-v2/evidence/result.json).
+C vorher/jetzt (historischer, entfernter Arbeitsstand) · aktuelles C (historischer, entfernter Arbeitsstand) · [Prüfnachweis der Korrektur](evidence/content-tx-p0/brightness-v2/evidence/result.json).
 
 Kurzer A1-Lauf mit identischer Kamera und Modern → Classic → Modern: **PASS**, Exit 0, Grass-Zähler 0, Diligent ERROR/FATAL 0, Shutdown-Ressourcen 0. Alle 317 geschützten Quelldateien unverändert. Kein Sourcecode geändert, daher kein erneuter Build oder vollständiger Testlauf. Die neue Classic-JPEG-Aufnahme ist visuell unverändert, aber im Gegensatz zum ersten Lauf nicht exakt pixelgleich: 81 Pixel im Weltbild weichen um höchstens 3/255 Kanalstufen ab. Diese kleine Abweichung wird dokumentiert und nicht als exakte Gleichheit ausgegeben.
 
@@ -70,7 +72,7 @@ Unverändert bleiben ZiiNAN Vegetation Runtime, Registry, Legacy-Asset-Fallback,
 
 ## Material und Import
 
-[Vollständiges Inventar aller 68 Dateien](../../build-content-tx-p0/evidence/texture-inventory.md), [Hashes, Formate und Kanalwerte](../../build-content-tx-p0/evidence/source-inventory.json).
+[Vollständiges Inventar aller 68 Dateien](evidence/content-tx-p0/evidence/texture-inventory.md), [Hashes, Formate und Kanalwerte](evidence/content-tx-p0/evidence/source-inventory.json).
 
 Sechs Varianten liegen als rohe Texturen sowie als Unreal/glTF-Materialexport vor. Vorhanden sind BaseColor, Normal, AO, Height, Metallic und Roughness; die Materialexporte enthalten zusätzlich bei Varianten 2 und 5 gepacktes Metallic/Roughness. Die `.gltf`/`.bin`-Dateien beschreiben Material und Vorschaumesh und werden nicht in die Spielwelt importiert.
 
@@ -112,11 +114,11 @@ Gleiche A1-Kamera, Modern/High, gleiche Umgebung und Sonne, festgehaltene Wind-/
 | CPU-Framearbeit Mittel, ms | 4,076 | 0,648 | 0,634 |
 | GPU-Framezeit Mittel, ms | 0,562 | 0,491 | 0,490 |
 
-Das kleine Fenster zeigt keine relevante Regression; die Grass-Arbeit entfällt eindeutig. Ladezeiten hängen auch von Cache und Systemlast ab und sind keine garantierte allgemeine FPS-/Ladezeitverbesserung. [Rohwerte und Auswertung](../../build-content-tx-p0/evidence/comparison.json).
+Das kleine Fenster zeigt keine relevante Regression; die Grass-Arbeit entfällt eindeutig. Ladezeiten hängen auch von Cache und Systemlast ab und sind keine garantierte allgemeine FPS-/Ladezeitverbesserung. [Rohwerte und Auswertung](evidence/content-tx-p0/evidence/comparison.json).
 
 ## A/B/C und Prüfungen
 
-[Interaktive Galerie](../../build-content-tx-p0/gallery/index.html) · [alle drei nebeneinander](../../build-content-tx-p0/gallery/ABC.jpg).
+Interaktive Galerie (historischer, entfernter Arbeitsstand) · alle drei nebeneinander (historischer, entfernter Arbeitsstand).
 
 - **A:** Original Terrain + bisheriges 3D-Gras, unveränderte alte Release-EXE.
 - **B:** Original Terrain, ohne flächiges 3D-Gras.
@@ -140,7 +142,7 @@ Kamera: A1 `(13000, 9500, 17668.5)`, Distanz/Pitch/Rotation `(4500, 25, 0)`, 102
 
 Beim ersten Build-/Startversuch blockierte die eingeschränkte Umgebung Windows-SDK bzw. Clientinitialisierung. Die erlaubten Wiederholungen außerhalb dieser Umgebung bestanden. Der gemeinsame Modern-Teststarter erwartet auch bei einem Classic-only Lauf eine Modern-Logdatei; die Classic-Referenz wurde daher anschließend direkt anhand Exit 0, Aufnahme, leerem Game-Errorlog und Null-Ressourcenzählern validiert. Es wurde keine fehlende Modern-Datei als echte Renderstörung gewertet.
 
-[Gebündelter Nachweis mit Binär-/Sourcehashes](../../build-content-tx-p0/evidence/result.json), [gezieltes Testprotokoll](../../build-content-tx-p0/evidence/targeted-release.log), [Importparameter](../../build-content-tx-p0/evidence/import.json).
+[Gebündelter Nachweis mit Binär-/Sourcehashes](evidence/content-tx-p0/evidence/result.json), [Importparameter](evidence/content-tx-p0/evidence/import.json). Das rohe Testprotokoll bleibt lokal unter `build/root-cleanup/final-gate/uncommitted-evidence/` erhalten und ist kein Commit-Inhalt.
 
 ## Sichtabnahme / STOP
 

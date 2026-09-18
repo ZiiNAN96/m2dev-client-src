@@ -1,9 +1,12 @@
 include(FetchContent)
+include(ExternalDependency)
+m2_use_external_dependency(M2DiligentFXSource DiligentFX)
 find_package(Python3 COMPONENTS Interpreter REQUIRED)
 
 # Engine v2.5.6 release set, compatible with the existing Core pin.
 # Populate only: upstream's aggregate target also links glTF/USD/Imgui.
 FetchContent_Declare(M2DiligentFXSource
+    BINARY_DIR "${CMAKE_BINARY_DIR}/deps/DiligentFX"
     URL https://codeload.github.com/DiligentGraphics/DiligentFX/tar.gz/cb380ac52100672b5762f595acfb6609e0ecc248
     URL_HASH SHA256=7117a1d0067ef0c36315900647904116234cf55cadc11682f6f6e70064658236
 )

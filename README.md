@@ -14,8 +14,8 @@ or runtime backend switching. Selection and exit status are in `renderer-startup
 Requirements: Visual Studio 2022 C++/ATL, a current Windows SDK (including the
 header-only DirectXMath), CMake and the existing project dependencies.
 No DirectX 9 SDK, D3D9 headers, D3D9/D3DX9 libraries or optional renderer build flag
-are required. Diligent is pinned; the first configure needs network access or
-a populated FetchContent source. DirectInput and DirectShow remain independent
+are required. Initialize the pinned dependency submodules as described in
+[external/README.md](external/README.md). DirectInput and DirectShow remain independent
 Windows input/video dependencies.
 
 Diligent currently requires `WINDOWED 1`; dynamic shadows remain unsupported.

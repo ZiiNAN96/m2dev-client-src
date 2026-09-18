@@ -1,0 +1,152 @@
+{
+  "A": {
+    "mapLoadMs": 153.36729999398813,
+    "preload": {
+      "visible": 0,
+      "culled": 0,
+      "draws": 0,
+      "triangles": 0,
+      "uploads": 0,
+      "instanceBytes": 0,
+      "cpuMs": 0.0,
+      "instances": 88,
+      "grassPlacements": 625189,
+      "grassCells": 33397,
+      "grassTiles": 20,
+      "grassExpectedTiles": 20,
+      "grassBytes": 20006048,
+      "grassSerial": 1,
+      "grassLoadMs": 78.427
+    },
+    "firstCapture": {
+      "visible": 3861976,
+      "culled": 5087793,
+      "draws": 16610,
+      "triangles": 15389618,
+      "uploads": 657,
+      "instanceBytes": 1059600,
+      "cpuMs": 1100.702799999993,
+      "instances": 91,
+      "grassPlacements": 625189,
+      "grassCells": 33397,
+      "grassTiles": 20,
+      "grassExpectedTiles": 20,
+      "grassBytes": 20006048,
+      "grassSerial": 1,
+      "grassLoadMs": 78.427
+    },
+    "stage0Frames": 361,
+    "vegetationDrawsStage0": 19855,
+    "vegetationDrawsPerFrame": 55.0,
+    "sampledFrames": 180,
+    "meanMs": {
+      "process_cpu_us": 4.076246666666667,
+      "world_cpu_us": 3.932995,
+      "gpu_frame_us": 0.5617936
+    }
+  },
+  "B": {
+    "mapLoadMs": 71.65379999787547,
+    "preload": {
+      "visible": 0,
+      "culled": 0,
+      "draws": 0,
+      "triangles": 0,
+      "uploads": 0,
+      "instanceBytes": 0,
+      "cpuMs": 0.0,
+      "instances": 88,
+      "grassPlacements": 0,
+      "grassCells": 0,
+      "grassTiles": 0,
+      "grassExpectedTiles": 0,
+      "grassBytes": 0,
+      "grassSerial": 0,
+      "grassLoadMs": 0.0
+    },
+    "firstCapture": {
+      "visible": 5757,
+      "culled": 47873,
+      "draws": 14847,
+      "triangles": 5041617,
+      "uploads": 653,
+      "instanceBytes": 5280,
+      "cpuMs": 223.2472000000009,
+      "instances": 91,
+      "grassPlacements": 0,
+      "grassCells": 0,
+      "grassTiles": 0,
+      "grassExpectedTiles": 0,
+      "grassBytes": 0,
+      "grassSerial": 0,
+      "grassLoadMs": 0.0
+    },
+    "stage0Frames": 362,
+    "vegetationDrawsStage0": 17738,
+    "vegetationDrawsPerFrame": 49.0,
+    "sampledFrames": 180,
+    "meanMs": {
+      "process_cpu_us": 0.6479872222222222,
+      "world_cpu_us": 0.49327944444444444,
+      "gpu_frame_us": 0.49127040000000005
+    },
+    "classicVsOldBinary": {
+      "exactPixels": true,
+      "maxChannelDelta": 0,
+      "meanChannelDelta": 0.0,
+      "differentPixels": 0
+    }
+  },
+  "C": {
+    "mapLoadMs": 76.56000000133645,
+    "preload": {
+      "visible": 0,
+      "culled": 0,
+      "draws": 0,
+      "triangles": 0,
+      "uploads": 0,
+      "instanceBytes": 0,
+      "cpuMs": 0.0,
+      "instances": 88,
+      "grassPlacements": 0,
+      "grassCells": 0,
+      "grassTiles": 0,
+      "grassExpectedTiles": 0,
+      "grassBytes": 0,
+      "grassSerial": 0,
+      "grassLoadMs": 0.0
+    },
+    "firstCapture": {
+      "visible": 5776,
+      "culled": 48031,
+      "draws": 14896,
+      "triangles": 5058256,
+      "uploads": 655,
+      "instanceBytes": 5280,
+      "cpuMs": 220.527699999998,
+      "instances": 91,
+      "grassPlacements": 0,
+      "grassCells": 0,
+      "grassTiles": 0,
+      "grassExpectedTiles": 0,
+      "grassBytes": 0,
+      "grassSerial": 0,
+      "grassLoadMs": 0.0
+    },
+    "stage0Frames": 364,
+    "vegetationDrawsStage0": 17836,
+    "vegetationDrawsPerFrame": 49.0,
+    "sampledFrames": 180,
+    "meanMs": {
+      "process_cpu_us": 0.63364,
+      "world_cpu_us": 0.47931888888888885,
+      "gpu_frame_us": 0.4899237333333333
+    },
+    "classicVsOldBinary": {
+      "exactPixels": true,
+      "maxChannelDelta": 0,
+      "meanChannelDelta": 0.0,
+      "differentPixels": 0
+    }
+  }
+}

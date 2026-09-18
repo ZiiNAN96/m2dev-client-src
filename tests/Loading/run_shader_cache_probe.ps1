@@ -1,12 +1,13 @@
 param([Parameter(Mandatory=$true)][string]$Name,
       [Parameter(Mandatory=$true)][string]$CacheDirectory,
-      [switch]$ShaderLifecycle)
+      [switch]$ShaderLifecycle,
+      [string]$BuildDirectory='build')
 $ErrorActionPreference='Stop'
 if(-not [IO.Path]::IsPathFullyQualified($CacheDirectory)){throw 'Absolute isolated cache directory required'}
 $source=(Resolve-Path -LiteralPath "$PSScriptRoot/../..").Path
-& "$PSScriptRoot/prepare_probe.ps1" -Name $Name -ShaderLifecycle:$ShaderLifecycle -A1Only:(!$ShaderLifecycle)
+& "$PSScriptRoot/prepare_probe.ps1" -Name $Name -BuildDirectory $BuildDirectory -ShaderLifecycle:$ShaderLifecycle -A1Only:(!$ShaderLifecycle)
 if($LASTEXITCODE -ne 0){throw 'Probe preparation failed'}
-$target=Join-Path $source "build-p0l/$Name"
+$target=Join-Path $source "build/loading/$Name"
 $previous=$env:M2_SHADER_CACHE_DIR
 try {
     $env:M2_SHADER_CACHE_DIR=$CacheDirectory

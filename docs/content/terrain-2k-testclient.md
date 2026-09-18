@@ -1,6 +1,8 @@
-> Aktueller Stand 16.09.2026: Alle Bodentexturen sind wieder original; sämtliche Katalog-Ersetzungen sind deaktiviert. Großflächiges 3D-Gras bleibt im Release-Client abgeschaltet. [Rücksetzung und Prüfung](C:/Users/ZiiNAN/Documents/GitHub/m2dev-client-src/docs/content/terrain-original-restoration.md). Der folgende Bericht ist historisch.
+> Aktueller Stand 16.09.2026: Alle Bodentexturen sind wieder original; sämtliche Katalog-Ersetzungen sind deaktiviert. Großflächiges 3D-Gras bleibt im Release-Client abgeschaltet. [Rücksetzung und Prüfung](terrain-original-restoration.md). Der folgende Bericht ist historisch.
 
-> Aktueller Testclient: [Alle Originalgräser v9](C:/Users/ZiiNAN/Documents/GitHub/m2dev-client-src/build-content-tx-p0/terrain-test-v4/all-original-grass-v9/README.md). Sämtliche Gras-Ersetzungen entfernt. Die folgenden Angaben dokumentieren den Basiseinbau v4.
+> Archiviert am 18.09.2026: vorhandene Berichte und Prüfaufnahmen wurden nach `evidence/` übernommen. Alte Testclients, Materialvorschauen und Buildausgaben wurden entfernt. [Vollständige erhaltene Textbelege](evidence/content-tx-p0.zip).
+
+> Aktueller Testclient: [Alle Originalgräser v9](evidence/content-tx-p0/terrain-test-v4/all-original-grass-v9/README.md). Sämtliche Gras-Ersetzungen entfernt. Die folgenden Angaben dokumentieren den Basiseinbau v4.
 
 # Boden-2K-Testclient
 
@@ -8,7 +10,7 @@ Stand: 16.09.2026
 
 26 echte 2048 × 2048-Materialien ersetzen 118 ausgewählte Alttexturen über 466 Layer-Zuordnungen in 84 vorhandenen Maps. 78 dieser Maps benutzen mindestens einen dieser Layer in ihren Bodenmasken; sechs referenzieren sie nur im TextureSet.
 
-Testclient: [runtime-manual/Metin2_Release.exe](C:/Users/ZiiNAN/Documents/GitHub/m2dev-client-src/build-content-tx-p0/terrain-test-v4/runtime-manual/Metin2_Release.exe)
+Testclient: runtime-manual/Metin2_Release.exe (historischer, entfernter Arbeitsstand)
 
 Start im Ordner runtime-manual. Grafikstil Modern ist voreingestellt. Der normale Client und das frühere Gras-Testverzeichnis bleiben unverändert.
 
@@ -35,11 +37,11 @@ Der zusätzliche Flammen-Dungeon metin2_map_n_flame_dungeon_01 beendet den nativ
 
 ## Nachweise
 
-- [Spielansichten](C:/Users/ZiiNAN/Documents/GitHub/m2dev-client-src/build-content-tx-p0/terrain-test-v4/evidence/native-proof.jpg)
-- [Materialübersicht](C:/Users/ZiiNAN/Documents/GitHub/m2dev-client-src/build-content-tx-p0/terrain-test-v4/evidence/installed-materials.jpg)
-- [Prüfergebnis](C:/Users/ZiiNAN/Documents/GitHub/m2dev-client-src/build-content-tx-p0/terrain-test-v4/evidence/result.json)
-- [Map-/Layer-Zuordnung](C:/Users/ZiiNAN/Documents/GitHub/m2dev-client-src/build-content-tx-p0/terrain-test-v4/manifest.json)
-- [Quellen, Lizenzen und Prüfsummen](C:/Users/ZiiNAN/Documents/GitHub/m2dev-client-src/build-content-tx-p0/terrain-test-v4/imports.json)
+- [Spielansichten](evidence/content-tx-p0/terrain-test-v4/evidence/native-proof.jpg)
+- [Materialübersicht](evidence/content-tx-p0/terrain-test-v4/evidence/installed-materials.jpg)
+- [Prüfergebnis](evidence/content-tx-p0/terrain-test-v4/evidence/result.json)
+- [Map-/Layer-Zuordnung](evidence/content-tx-p0/terrain-test-v4/manifest.json)
+- [Quellen, Lizenzen und Prüfsummen](evidence/content-tx-p0/terrain-test-v4/imports.json)
 
 ## Materialquellen
 

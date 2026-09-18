@@ -1,4 +1,6 @@
-> Aktueller Stand 16.09.2026: Alle Bodentexturen sind wieder original; sämtliche Katalog-Ersetzungen sind deaktiviert. Großflächiges 3D-Gras bleibt im Release-Client abgeschaltet. [Rücksetzung und Prüfung](C:/Users/ZiiNAN/Documents/GitHub/m2dev-client-src/docs/content/terrain-original-restoration.md). Der folgende Bericht ist historisch.
+> Aktueller Stand 16.09.2026: Alle Bodentexturen sind wieder original; sämtliche Katalog-Ersetzungen sind deaktiviert. Großflächiges 3D-Gras bleibt im Release-Client abgeschaltet. [Rücksetzung und Prüfung](terrain-original-restoration.md). Der folgende Bericht ist historisch.
+
+> Archiviert am 18.09.2026: vorhandene Berichte und Prüfaufnahmen wurden nach `evidence/` übernommen. Alte Testclients, Materialvorschauen und Buildausgaben wurden entfernt. [Vollständige erhaltene Textbelege](evidence/content-tx-p0.zip).
 
 # Alle ursprünglichen Grastexturen wieder aktiv
 
@@ -10,6 +12,6 @@ PASS: sechs native Ansichten auf A1/B1/C1, Wald, Kap und Wüste; Exit 0, leeres 
 
 Die Laufzeitprüfung des unveränderten Pack-Bestands findet 36 der 40 zurückgesetzten Originalreferenzen. Drei alte Dateien für season1/metin2_map_empirewar_a01 fehlen und werden dort von Bodenmasken verwendet: empirewar/field03.dds, grass01.dds und grass02.dds. Zusätzlich fehlt g/field/grass 01.dds; dessen Referenz in metin2_map_t2 hat keine verwendeten Maskeneinträge. Diese alten Datenlücken wurden durch die Rücksetzung wieder sichtbar und nicht durch neue Ersatztexturen verdeckt. Die Empirewar-Map ist nicht visuell freigegeben.
 
-[Spielansichten](C:/Users/ZiiNAN/Documents/GitHub/m2dev-client-src/build-content-tx-p0/terrain-test-v4/all-original-grass-v9/native-proof.jpg)
+[Spielansichten](evidence/content-tx-p0/terrain-test-v4/all-original-grass-v9/native-proof.jpg)
 
-[Prüfergebnis und fehlende Originalreferenzen](C:/Users/ZiiNAN/Documents/GitHub/m2dev-client-src/build-content-tx-p0/terrain-test-v4/all-original-grass-v9/result.json)
+[Prüfergebnis und fehlende Originalreferenzen](evidence/content-tx-p0/terrain-test-v4/all-original-grass-v9/result.json)

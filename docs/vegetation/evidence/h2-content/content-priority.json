@@ -1,0 +1,6002 @@
+{
+  "input_sha256": "1ceb2cff655480cc3f605b32c87cb8b196cce97e340ff40567765822bdfda73f",
+  "important_maps": [
+    "metin2_map_a1",
+    "metin2_map_b1",
+    "metin2_map_trent"
+  ],
+  "registry_types": 118,
+  "referenced_types": 85,
+  "placed_types": 81,
+  "unsupported": [],
+  "non_placement_references": [
+    "d:/ymir work/tree/b2_japanesemaple_rt_fall.spt",
+    "d:/ymir work/tree/christmastree1.spt",
+    "d:/ymir work/tree/christmastree2.spt",
+    "d:/ymir work/tree/christmastree3.spt"
+  ],
+  "placements": 12819,
+  "vegetation": [
+    {
+      "type": "d:/ymir work/tree/b1_beech_rt4.spt",
+      "maps": {
+        "map_a2": 59,
+        "metin2_map_a1": 40,
+        "metin2_map_a3": 1,
+        "metin2_map_b1": 28,
+        "metin2_map_b3": 1,
+        "metin2_map_c1": 23,
+        "metin2_map_c3": 38,
+        "metin2_map_capedragonhead": 82,
+        "metin2_map_dawnmistwood": 18,
+        "metin2_map_duel": 1,
+        "metin2_map_guild_01": 9,
+        "metin2_map_guild_02": 5,
+        "metin2_map_guild_03": 10,
+        "metin2_map_milgyo": 33,
+        "metin2_map_t1": 5,
+        "metin2_map_t2": 2,
+        "metin2_map_trent": 11,
+        "metin2_map_trent02": 37,
+        "metin2_map_wedding_01": 4,
+        "season1/metin2_map_empirewar_a01": 2,
+        "season1/metin2_map_ew02": 1,
+        "season1/metin2_map_oxevent": 2,
+        "season1/metin2_map_shinsutest_01": 2,
+        "season1/metin2_map_siege_01": 2,
+        "season1/metin2_map_siege_02": 2,
+        "season1/metin2_map_siege_03": 2,
+        "season1/metin2_map_sungzi_desert_hill_01": 1,
+        "season1/metin2_map_sungzi_desert_hill_02": 1,
+        "season1/metin2_map_sungzi_desert_hill_03": 1,
+        "season1/metin2_map_sungzi_milgyo_pass_01": 1,
+        "season1/metin2_map_sungzi_milgyo_pass_02": 1,
+        "season1/metin2_map_sungzi_milgyo_pass_03": 1,
+        "season1/metin2_map_wl_01": 4,
+        "season2/metin2_map_a2_1": 56,
+        "season2/metin2_map_milgyo_a": 33,
+        "season2/metin2_map_trent02_a": 37,
+        "season2/metin2_map_trent_a": 11
+      },
+      "instances": 567,
+      "important_instances": 79,
+      "supported": true,
+      "positions": [
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000000",
+          "position": "12328.591797 -7030.543457 17762.445313"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000000",
+          "position": "21655.718750 -13146.373047 17875.500000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000000",
+          "position": "18603.716797 -10250.156250 17883.000000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000001",
+          "position": "11731.278320 -35159.808594 16800.099609"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000001",
+          "position": "15687.632813 -28768.515625 16565.373047"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000002",
+          "position": "15132.312500 -63238.199219 15335.044922"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000003",
+          "position": "11365.682617 -76874.453125 13318.782227"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001000",
+          "position": "50298.898438 -17027.517578 18765.917969"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001000",
+          "position": "41620.417969 -24363.562500 17269.318359"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001001",
+          "position": "46121.773438 -42989.382813 17114.154297"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001001",
+          "position": "42023.933594 -37519.585938 17430.589844"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001001",
+          "position": "50370.695313 -34780.285156 17009.949219"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001001",
+          "position": "31430.000000 -49260.000000 16013.424805"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001002",
+          "position": "36601.550781 -66827.250000 14148.514648"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001002",
+          "position": "48761.660156 -72686.843750 16373.995117"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001002",
+          "position": "31050.000000 -55680.000000 16130.875000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001003",
+          "position": "46080.925781 -82399.859375 14723.092773"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001003",
+          "position": "47164.687500 -86407.585938 14764.627930"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001003",
+          "position": "38204.546875 -93794.187500 12988.014648"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001004",
+          "position": "28539.013672 -106923.257813 12610.657227"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001004",
+          "position": "27023.037109 -115002.781250 11958.697266"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002000",
+          "position": "62838.312500 -14725.320313 19413.777344"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002001",
+          "position": "62610.132813 -40446.898438 19862.884766"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002001",
+          "position": "73330.000000 -50770.000000 20357.500000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002002",
+          "position": "67226.937500 -68441.664063 19985.687500"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002002",
+          "position": "69436.750000 -53151.539063 20073.134766"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002002",
+          "position": "60536.046875 -52645.226563 19868.500000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002003",
+          "position": "74047.664063 -81751.156250 20394.050781"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002003",
+          "position": "57833.015625 -91382.929688 14857.584961"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002003",
+          "position": "75358.421875 -88783.546875 20579.939453"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002003",
+          "position": "52790.460938 -83936.406250 15532.849609"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002004",
+          "position": "58376.585938 -105193.851563 13429.815430"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002004",
+          "position": "66831.218750 -109811.718750 13856.957031"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002004",
+          "position": "53543.140625 -105848.523438 14657.662109"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003001",
+          "position": "86303.773438 -34032.753906 21073.000000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003001",
+          "position": "81530.265625 -38882.027344 20351.500000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003001",
+          "position": "92119.343750 -38622.183594 21173.296875"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003001",
+          "position": "92813.015625 -29065.488281 21250.226563"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003002",
+          "position": "88860.484375 -55970.285156 20813.375000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003003",
+          "position": "90825.367188 -81100.335938 20387.812500"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001002",
+          "position": "47955.445313 -68906.062500 19106.710938"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001002",
+          "position": "43028.078125 -51575.375000 18642.412109"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001003",
+          "position": "26590.558594 -87982.789063 16954.009766"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001004",
+          "position": "26658.892578 -111062.773438 17145.644531"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002000",
+          "position": "65280.875000 -17563.009766 19201.636719"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002000",
+          "position": "59770.558594 -13021.488281 19886.000000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002000",
+          "position": "65337.066406 -23304.498047 20153.779297"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002001",
+          "position": "57711.593750 -50142.937500 19904.500000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002001",
+          "position": "52222.441406 -36523.667969 18947.000000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002001",
+          "position": "64297.160156 -27040.582031 19783.929688"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002001",
+          "position": "67253.539063 -37963.636719 18963.820313"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002001",
+          "position": "57417.882813 -28366.101563 18954.744141"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002002",
+          "position": "52667.492188 -54900.207031 20031.195313"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002002",
+          "position": "68900.617188 -58901.867188 19267.000000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002002",
+          "position": "62832.007813 -67810.500000 19277.394531"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002003",
+          "position": "68057.023438 -89565.398438 18000.765625"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002004",
+          "position": "61131.914063 -114288.960938 20086.482422"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002004",
+          "position": "60541.226563 -106869.257813 19153.292969"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003000",
+          "position": "86900.000000 -15100.000000 19779.500000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003000",
+          "position": "84403.656250 -21536.582031 19737.000000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003001",
+          "position": "84376.304688 -44831.867188 19258.500000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003001",
+          "position": "78999.171875 -28288.906250 19690.720703"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003002",
+          "position": "83617.234375 -51604.636719 18713.287109"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003002",
+          "position": "80193.421875 -61723.519531 18828.783203"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003003",
+          "position": "85951.046875 -85620.046875 18934.500000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003003",
+          "position": "91400.484375 -82578.507813 18941.500000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003003",
+          "position": "83168.367188 -96920.656250 18104.880859"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003004",
+          "position": "92802.531250 -111151.265625 19036.224609"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000000",
+          "position": "11433.023438 -6543.763184 14287.477539"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000001",
+          "position": "18470.941406 -36721.082031 16920.269531"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000001",
+          "position": "13029.552734 -32767.542969 17634.287109"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000001",
+          "position": "5756.574219 -39289.300781 14913.459961"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000001",
+          "position": "13387.701172 -36735.210938 14426.997070"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001000",
+          "position": "41378.246094 -4107.274414 14306.500000"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001000",
+          "position": "42610.812500 -21565.527344 16385.775391"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001000",
+          "position": "28845.048828 -20005.992188 14184.562500"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001001",
+          "position": "43281.871094 -41675.585938 15040.355469"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001001",
+          "position": "37944.703125 -29098.810547 15085.799805"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001001",
+          "position": "26805.777344 -43512.417969 18520.886719"
+        }
+      ]
+    },
+    {
+      "type": "d:/ymir work/tree/b3_beech_rt3.spt",
+      "maps": {
+        "map_a2": 37,
+        "metin2_map_a1": 38,
+        "metin2_map_a3": 25,
+        "metin2_map_b1": 24,
+        "metin2_map_b3": 30,
+        "metin2_map_c1": 23,
+        "metin2_map_c3": 28,
+        "metin2_map_capedragonhead": 60,
+        "metin2_map_dawnmistwood": 10,
+        "metin2_map_duel": 1,
+        "metin2_map_guild_01": 10,
+        "metin2_map_guild_02": 5,
+        "metin2_map_guild_03": 3,
+        "metin2_map_milgyo": 23,
+        "metin2_map_mt_thunder": 12,
+        "metin2_map_t1": 2,
+        "metin2_map_t2": 2,
+        "metin2_map_trent": 16,
+        "metin2_map_trent02": 37,
+        "season1/metin2_map_empirewar_a01": 4,
+        "season1/metin2_map_oxevent": 1,
+        "season1/metin2_map_wl_01": 4,
+        "season2/metin2_map_a2_1": 34,
+        "season2/metin2_map_milgyo_a": 23,
+        "season2/metin2_map_trent02_a": 37,
+        "season2/metin2_map_trent_a": 16
+      },
+      "instances": 505,
+      "important_instances": 78,
+      "supported": true,
+      "positions": [
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000000",
+          "position": "19355.726563 -8847.877930 17883.000000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000001",
+          "position": "23114.445313 -43566.789063 16034.500000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000001",
+          "position": "23771.341797 -46299.910156 16034.500000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000001",
+          "position": "11926.434570 -38614.113281 16307.459961"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000002",
+          "position": "19759.486328 -71610.125000 13516.150391"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000002",
+          "position": "8301.425781 -68265.960938 13762.150391"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000002",
+          "position": "14281.274414 -64109.906250 14788.285156"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000002",
+          "position": "11575.341797 -54440.492188 15479.599609"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000002",
+          "position": "8522.916016 -69846.820313 13508.584961"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000003",
+          "position": "14456.211914 -82117.140625 12928.754883"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001000",
+          "position": "39363.546875 -23256.605469 17242.585938"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001000",
+          "position": "41324.886719 -17548.125000 17543.779297"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001000",
+          "position": "45407.398438 -13816.921875 17751.500000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001000",
+          "position": "49798.128906 -25541.421875 17194.255859"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001000",
+          "position": "43529.640625 -5551.115234 18478.445313"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001001",
+          "position": "31160.000000 -46840.000000 15796.400391"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001002",
+          "position": "35720.000000 -66980.000000 13857.700195"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001002",
+          "position": "30460.000000 -54600.000000 16132.000000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001002",
+          "position": "43956.117188 -70252.562500 14184.500000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001003",
+          "position": "37783.339844 -95246.546875 12946.424805"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001004",
+          "position": "36179.148438 -102715.117188 12660.450195"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001004",
+          "position": "46912.328125 -108891.117188 12175.997070"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002000",
+          "position": "59189.046875 -17537.701172 19197.873047"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002002",
+          "position": "70247.945313 -54327.625000 20078.056641"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002002",
+          "position": "53071.375000 -61633.371094 19847.500000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002002",
+          "position": "69477.679688 -63958.105469 19985.820313"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002002",
+          "position": "68647.703125 -68687.257813 20237.277344"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002003",
+          "position": "55825.929688 -82755.062500 15876.537109"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002003",
+          "position": "55241.136719 -81666.835938 16143.212891"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002003",
+          "position": "69881.554688 -87708.445313 17456.662109"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002003",
+          "position": "62089.187500 -101350.070313 14182.134766"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002004",
+          "position": "54365.488281 -108741.476563 12042.179688"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003001",
+          "position": "86790.000000 -49970.000000 20749.525391"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003001",
+          "position": "88487.695313 -26847.582031 21032.880859"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003001",
+          "position": "80712.726563 -39096.253906 20352.000000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003002",
+          "position": "88809.203125 -67898.703125 20652.039063"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003002",
+          "position": "88617.125000 -54375.718750 20793.437500"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003003",
+          "position": "85803.140625 -91417.859375 20336.500000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001001",
+          "position": "28378.933594 -27531.697266 17835.500000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001001",
+          "position": "42615.875000 -44226.437500 18559.695313"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001002",
+          "position": "33730.945313 -67142.671875 17325.005859"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001002",
+          "position": "30115.253906 -54697.621094 17136.000000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001002",
+          "position": "47175.847656 -60938.980469 19027.902344"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001003",
+          "position": "34131.074219 -97864.164063 18218.884766"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001003",
+          "position": "38242.179688 -80787.156250 17746.814453"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001003",
+          "position": "36512.859375 -101919.796875 17905.089844"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001004",
+          "position": "28662.767578 -115685.250000 17401.000000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001004",
+          "position": "40758.554688 -116536.195313 18655.865234"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001004",
+          "position": "31542.421875 -110791.523438 17480.314453"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002000",
+          "position": "72376.593750 -12603.046875 20445.796875"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002000",
+          "position": "56311.796875 -16514.451172 19026.214844"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002001",
+          "position": "63515.730469 -40135.566406 19045.037109"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002001",
+          "position": "71782.960938 -37835.195313 19566.160156"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002002",
+          "position": "60754.640625 -61526.546875 19193.554688"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002003",
+          "position": "67056.109375 -95290.039063 18284.220703"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002004",
+          "position": "68657.531250 -115372.476563 20147.697266"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003000",
+          "position": "87577.898438 -19289.177734 19824.574219"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003000",
+          "position": "77943.804688 -21417.794922 20323.931641"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003001",
+          "position": "90775.093750 -45304.945313 19258.500000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003002",
+          "position": "85168.109375 -65646.500000 18741.000000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003003",
+          "position": "89114.687500 -86725.398438 18933.000000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003004",
+          "position": "93163.179688 -105222.046875 19144.365234"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000000",
+          "position": "9760.875000 -4612.264160 14407.030273"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000000",
+          "position": "14759.371094 -18525.716797 14749.575195"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000000",
+          "position": "24600.783203 -22833.105469 14596.669922"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000000",
+          "position": "14270.531250 -9963.177734 13488.544922"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000000",
+          "position": "20470.500000 -15033.794922 14008.522461"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000001",
+          "position": "7253.507813 -35212.800781 18872.609375"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000001",
+          "position": "16836.152344 -29209.675781 16045.644531"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000001",
+          "position": "21820.451172 -42724.808594 18071.289063"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001000",
+          "position": "33367.214844 -10423.748047 16280.687500"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001000",
+          "position": "36475.894531 -23464.277344 14452.764648"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001000",
+          "position": "42967.257813 -7327.668457 14337.000000"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001000",
+          "position": "31629.138672 -23601.066406 16360.717773"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001001",
+          "position": "44239.515625 -29811.447266 16264.207031"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001001",
+          "position": "32561.988281 -46050.929688 14453.577148"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001001",
+          "position": "39797.003906 -45931.988281 13922.802734"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001001",
+          "position": "48056.890625 -26342.197266 14867.830078"
+        }
+      ]
+    },
+    {
+      "type": "d:/ymir work/tree/b1_pagodatree_rt.spt",
+      "maps": {
+        "map_a2": 31,
+        "map_b_fielddungeon": 18,
+        "metin2_guild_village": 14,
+        "metin2_map_a1": 30,
+        "metin2_map_a3": 2,
+        "metin2_map_b1": 32,
+        "metin2_map_b3": 2,
+        "metin2_map_bayblacksand": 57,
+        "metin2_map_c1": 22,
+        "metin2_map_c3": 22,
+        "metin2_map_capedragonhead": 89,
+        "metin2_map_dawnmistwood": 77,
+        "metin2_map_guild_01": 9,
+        "metin2_map_guild_02": 1,
+        "metin2_map_milgyo": 34,
+        "metin2_map_mt_thunder": 8,
+        "metin2_map_t1": 1,
+        "metin2_map_t2": 1,
+        "metin2_map_trent": 15,
+        "metin2_map_trent02": 29,
+        "metin2_map_wedding_01": 1,
+        "season1/metin2_map_ew02": 2,
+        "season1/metin2_map_oxevent": 10,
+        "season1/metin2_map_shinsutest_01": 6,
+        "season1/metin2_map_siege_01": 6,
+        "season1/metin2_map_siege_02": 6,
+        "season1/metin2_map_siege_03": 6,
+        "season1/metin2_map_sungzi_desert_01": 2,
+        "season1/metin2_map_sungzi_desert_hill_01": 2,
+        "season1/metin2_map_sungzi_desert_hill_02": 2,
+        "season1/metin2_map_sungzi_desert_hill_03": 2,
+        "season1/metin2_map_sungzi_milgyo": 4,
+        "season1/metin2_map_sungzi_milgyo_pass_01": 2,
+        "season1/metin2_map_sungzi_milgyo_pass_02": 2,
+        "season1/metin2_map_sungzi_milgyo_pass_03": 2,
+        "season1/metin2_map_wl_01": 1,
+        "season2/metin2_map_a2_1": 29,
+        "season2/metin2_map_empirewar02": 11,
+        "season2/metin2_map_milgyo_a": 34,
+        "season2/metin2_map_trent02_a": 29,
+        "season2/metin2_map_trent_a": 15
+      },
+      "instances": 668,
+      "important_instances": 77,
+      "supported": true,
+      "positions": [
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000000",
+          "position": "20801.746094 -13522.107422 17875.500000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000001",
+          "position": "15574.561523 -27335.308594 17047.259766"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000001",
+          "position": "11217.586914 -41233.054688 15921.509766"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000001",
+          "position": "24404.160156 -44929.703125 16034.500000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000002",
+          "position": "15428.784180 -56409.339844 15648.922852"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001000",
+          "position": "30498.470703 -9142.074219 17868.500000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001001",
+          "position": "27631.777344 -28752.529297 17160.500000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001002",
+          "position": "41192.699219 -64251.847656 15812.092773"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001003",
+          "position": "38755.093750 -97788.375000 12794.087891"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001004",
+          "position": "27708.978516 -105431.867188 12781.844727"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002000",
+          "position": "55078.753906 -8313.991211 19401.601563"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002000",
+          "position": "57125.921875 -23782.232422 18569.457031"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002000",
+          "position": "72914.914063 -9457.875000 20064.822266"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002001",
+          "position": "74229.789063 -45165.183594 20357.324219"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002001",
+          "position": "61586.054688 -41304.035156 19862.500000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002002",
+          "position": "68103.843750 -67636.671875 20038.257813"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002002",
+          "position": "56279.304688 -68248.414063 18447.312500"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002002",
+          "position": "59932.273438 -64615.742188 19852.123047"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002002",
+          "position": "69172.570313 -62632.898438 19942.359375"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002003",
+          "position": "76126.617188 -85319.914063 20489.410156"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002004",
+          "position": "60466.882813 -111098.953125 12513.334961"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002004",
+          "position": "76045.578125 -110365.195313 13716.000000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002004",
+          "position": "52692.398438 -105700.078125 14649.000000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002004",
+          "position": "54974.015625 -105290.492188 14640.570313"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003000",
+          "position": "81054.679688 -9892.050781 20757.500000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003000",
+          "position": "80003.273438 -15204.910156 21138.000000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003001",
+          "position": "91502.101563 -38148.535156 21172.255859"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003001",
+          "position": "93231.585938 -32929.847656 21526.644531"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003002",
+          "position": "78010.000000 -56400.000000 20334.500000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003003",
+          "position": "79242.468750 -100920.921875 16495.710938"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/000004",
+          "position": "24257.958984 -113415.320313 17405.357422"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001001",
+          "position": "45350.390625 -44934.078125 19059.865234"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001001",
+          "position": "42040.027344 -28091.652344 17979.439453"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001001",
+          "position": "47435.386719 -40783.289063 18874.292969"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001002",
+          "position": "45244.839844 -68352.117188 18939.169922"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001002",
+          "position": "31438.173828 -62453.968750 17286.630859"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001003",
+          "position": "45918.636719 -97658.390625 18453.500000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001004",
+          "position": "46900.863281 -110725.703125 19771.875000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001004",
+          "position": "36344.023438 -106218.421875 17851.515625"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002000",
+          "position": "58093.648438 -25367.718750 18936.380859"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002000",
+          "position": "52681.191406 -23343.726563 18574.203125"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002000",
+          "position": "61599.617188 -16350.416016 19171.804688"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002001",
+          "position": "70544.031250 -36213.867188 19600.232422"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002001",
+          "position": "74132.960938 -39997.992188 19071.982422"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002001",
+          "position": "62419.578125 -45058.730469 18988.000000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002001",
+          "position": "72654.218750 -27841.392578 20187.000000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002001",
+          "position": "63374.976563 -25891.316406 19793.250000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002002",
+          "position": "68384.546875 -70939.718750 19401.759766"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002002",
+          "position": "71030.375000 -52195.757813 19137.025391"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002002",
+          "position": "60917.988281 -71798.296875 19433.500000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002003",
+          "position": "60713.203125 -92533.906250 17979.130859"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002004",
+          "position": "53995.312500 -106041.796875 19332.703125"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002004",
+          "position": "71354.390625 -107396.921875 19787.300781"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003000",
+          "position": "84018.039063 -19446.111328 19742.269531"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003000",
+          "position": "89900.000000 -6100.000000 20143.500000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003001",
+          "position": "83293.914063 -50383.402344 18726.042969"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003001",
+          "position": "79046.539063 -36150.125000 20327.869141"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003002",
+          "position": "94154.859375 -63227.781250 19135.380859"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003002",
+          "position": "80940.445313 -60768.128906 18808.800781"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003003",
+          "position": "93078.007813 -94966.718750 18946.919922"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003003",
+          "position": "88938.320313 -90603.531250 18929.654297"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003003",
+          "position": "80057.554688 -89389.125000 18258.814453"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000000",
+          "position": "21767.273438 -3249.129883 17105.070313"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000000",
+          "position": "8691.531250 -22594.320313 16624.699219"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000000",
+          "position": "14834.756836 -9310.973633 13551.894531"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000001",
+          "position": "6576.820801 -47278.054688 15005.615234"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000001",
+          "position": "23139.312500 -27220.427734 16361.452148"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000001",
+          "position": "4100.272461 -34026.761719 18647.730469"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001000",
+          "position": "44228.574219 -16806.593750 14829.330078"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001000",
+          "position": "35057.910156 -17758.400391 14247.307617"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001000",
+          "position": "28900.718750 -4161.482910 16553.453125"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001000",
+          "position": "32653.078125 -15902.420898 15721.532227"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001000",
+          "position": "47312.773438 -6532.060547 14479.849609"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001001",
+          "position": "39355.710938 -29382.548828 15084.302734"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001001",
+          "position": "45085.074219 -46469.355469 13850.922852"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001001",
+          "position": "33436.875000 -46029.882813 14499.669922"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001001",
+          "position": "35041.316406 -33416.382813 14420.075195"
+        }
+      ]
+    },
+    {
+      "type": "d:/ymir work/tree/b1_beech_rt2.spt",
+      "maps": {
+        "map_a2": 25,
+        "metin2_map_a1": 29,
+        "metin2_map_a3": 1,
+        "metin2_map_b1": 28,
+        "metin2_map_b3": 2,
+        "metin2_map_c1": 25,
+        "metin2_map_c3": 19,
+        "metin2_map_capedragonhead": 108,
+        "metin2_map_dawnmistwood": 27,
+        "metin2_map_duel": 2,
+        "metin2_map_guild_01": 9,
+        "metin2_map_guild_02": 2,
+        "metin2_map_guild_03": 6,
+        "metin2_map_milgyo": 25,
+        "metin2_map_mt_thunder": 6,
+        "metin2_map_t1": 7,
+        "metin2_map_t2": 2,
+        "metin2_map_trent": 15,
+        "metin2_map_trent02": 18,
+        "metin2_map_wedding_01": 2,
+        "season1/metin2_map_empirewar_a01": 7,
+        "season1/metin2_map_oxevent": 5,
+        "season1/metin2_map_shinsutest_01": 13,
+        "season1/metin2_map_siege_01": 14,
+        "season1/metin2_map_siege_02": 14,
+        "season1/metin2_map_siege_03": 14,
+        "season1/metin2_map_sungzi_desert_01": 2,
+        "season1/metin2_map_sungzi_milgyo": 1,
+        "season1/metin2_map_sungzi_milgyo_pass_01": 3,
+        "season1/metin2_map_sungzi_milgyo_pass_02": 3,
+        "season1/metin2_map_sungzi_milgyo_pass_03": 3,
+        "season1/metin2_map_wl_01": 5,
+        "season2/metin2_map_a2_1": 22,
+        "season2/metin2_map_milgyo_a": 25,
+        "season2/metin2_map_trent02_a": 18,
+        "season2/metin2_map_trent_a": 15
+      },
+      "instances": 522,
+      "important_instances": 72,
+      "supported": true,
+      "positions": [
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000000",
+          "position": "8751.289063 -6674.288086 17865.873047"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000000",
+          "position": "8435.605469 -7618.199219 17844.328125"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000000",
+          "position": "8087.669922 -10526.645508 17788.964844"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000001",
+          "position": "11687.284180 -33014.941406 16806.974609"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000001",
+          "position": "13290.445313 -38930.453125 15984.450195"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000001",
+          "position": "10897.584961 -30764.062500 17370.408203"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000002",
+          "position": "23163.501953 -54007.273438 16001.447266"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000002",
+          "position": "7023.297852 -69204.093750 13557.587891"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000002",
+          "position": "12149.169922 -53490.976563 15573.057617"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000003",
+          "position": "8426.265625 -98296.789063 12797.105469"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001000",
+          "position": "49550.121094 -24404.898438 17297.460938"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001000",
+          "position": "30255.587891 -7819.244141 17868.500000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001000",
+          "position": "40983.242188 -18355.367188 17510.431641"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001000",
+          "position": "47587.210938 -15148.624023 17772.431641"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001001",
+          "position": "37027.347656 -25785.226563 15956.919922"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001001",
+          "position": "28417.613281 -29053.738281 17160.500000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001002",
+          "position": "40900.593750 -62348.660156 16108.160156"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001003",
+          "position": "34581.683594 -85060.828125 13611.254883"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001003",
+          "position": "40095.570313 -92526.335938 13113.504883"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001004",
+          "position": "33370.000000 -113870.000000 12274.000000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002001",
+          "position": "54940.570313 -36718.089844 17553.500000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002002",
+          "position": "74649.234375 -70434.031250 20410.744141"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002003",
+          "position": "51434.304688 -97336.203125 14992.500000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002004",
+          "position": "73327.328125 -104883.000000 16538.000000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003001",
+          "position": "92636.875000 -34308.996094 21303.640625"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003002",
+          "position": "78122.421875 -61387.433594 20357.902344"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003003",
+          "position": "90326.601563 -82480.953125 20507.140625"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003003",
+          "position": "79202.296875 -101498.312500 16496.500000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003004",
+          "position": "91707.187500 -112172.601563 13714.872070"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001000",
+          "position": "29735.378906 -22383.980469 17990.917969"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001001",
+          "position": "26976.070313 -46056.968750 17025.580078"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001001",
+          "position": "44663.507813 -47956.871094 18373.443359"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001001",
+          "position": "30898.896484 -43205.000000 17191.419922"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001001",
+          "position": "46262.960938 -37531.292969 18903.535156"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001002",
+          "position": "44507.808594 -66227.437500 18866.914063"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001002",
+          "position": "28058.300781 -71588.296875 17230.724609"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001003",
+          "position": "34523.515625 -96100.921875 18835.886719"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001003",
+          "position": "28994.972656 -90705.632813 16907.154297"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001003",
+          "position": "38670.503906 -85703.062500 17801.412109"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001004",
+          "position": "45323.355469 -114947.523438 19644.435547"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001004",
+          "position": "26568.722656 -106685.148438 17016.607422"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002000",
+          "position": "56675.250000 -14015.371094 19868.787109"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002001",
+          "position": "71543.031250 -35267.843750 19541.835938"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002001",
+          "position": "62229.929688 -36664.050781 19206.685547"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002002",
+          "position": "52435.777344 -58109.101563 19364.126953"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002002",
+          "position": "65800.218750 -60336.097656 19189.779297"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002003",
+          "position": "61336.203125 -95982.242188 18272.535156"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002003",
+          "position": "73819.304688 -97937.093750 19106.654297"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002004",
+          "position": "72144.960938 -111481.882813 20389.812500"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002004",
+          "position": "55413.691406 -105853.898438 19280.027344"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003000",
+          "position": "81071.359375 -23645.230469 19902.759766"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003001",
+          "position": "86477.085938 -28340.851563 20037.242188"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003002",
+          "position": "95572.460938 -52439.476563 19251.000000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003002",
+          "position": "82646.320313 -76591.859375 18850.623047"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003002",
+          "position": "83384.140625 -60553.562500 18807.000000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003003",
+          "position": "89512.132813 -77799.320313 18941.283203"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003003",
+          "position": "92810.382813 -100479.476563 18802.900391"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000000",
+          "position": "4514.244141 -4492.268555 14386.434570"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000000",
+          "position": "8338.125000 -17770.167969 16266.865234"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000000",
+          "position": "16597.722656 -24009.382813 15772.762695"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000001",
+          "position": "9125.664063 -45704.437500 14612.054688"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000001",
+          "position": "24652.863281 -46128.054688 14278.519531"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000001",
+          "position": "2618.868164 -33210.800781 18477.675781"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000001",
+          "position": "22586.814453 -30794.119141 15219.799805"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000001",
+          "position": "16192.525391 -40876.503906 14497.799805"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001000",
+          "position": "26348.640625 -7718.419922 13963.844727"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001000",
+          "position": "33317.781250 -3111.797852 16394.892578"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001000",
+          "position": "46721.863281 -18484.343750 14895.727539"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001000",
+          "position": "42088.398438 -10795.521484 14241.495117"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001001",
+          "position": "48189.972656 -39717.078125 14048.602539"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001001",
+          "position": "25636.738281 -39790.910156 17824.369141"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001001",
+          "position": "29651.593750 -31629.193359 16324.495117"
+        }
+      ]
+    },
+    {
+      "type": "d:/ymir work/tree/b1_pagodatree_rt2.spt",
+      "maps": {
+        "gm_guild_build": 1,
+        "map_a2": 42,
+        "metin2_guild_village": 19,
+        "metin2_map_a1": 30,
+        "metin2_map_b1": 24,
+        "metin2_map_b3": 2,
+        "metin2_map_bayblacksand": 77,
+        "metin2_map_c1": 22,
+        "metin2_map_c3": 26,
+        "metin2_map_capedragonhead": 80,
+        "metin2_map_dawnmistwood": 63,
+        "metin2_map_guild_01": 9,
+        "metin2_map_guild_02": 2,
+        "metin2_map_guild_03": 1,
+        "metin2_map_milgyo": 26,
+        "metin2_map_mt_thunder": 2,
+        "metin2_map_t2": 3,
+        "metin2_map_trent": 17,
+        "metin2_map_trent02": 38,
+        "metin2_map_wedding_01": 1,
+        "season1/metin2_map_ew02": 2,
+        "season1/metin2_map_oxevent": 6,
+        "season1/metin2_map_shinsutest_01": 6,
+        "season1/metin2_map_siege_01": 4,
+        "season1/metin2_map_siege_02": 4,
+        "season1/metin2_map_siege_03": 4,
+        "season1/metin2_map_sungzi_milgyo": 3,
+        "season1/metin2_map_sungzi_milgyo_pass_01": 1,
+        "season1/metin2_map_sungzi_milgyo_pass_02": 1,
+        "season1/metin2_map_sungzi_milgyo_pass_03": 1,
+        "season1/metin2_map_wl_01": 1,
+        "season2/metin2_map_a2_1": 37,
+        "season2/metin2_map_empirewar02": 5,
+        "season2/metin2_map_milgyo_a": 26,
+        "season2/metin2_map_trent02_a": 38,
+        "season2/metin2_map_trent_a": 17
+      },
+      "instances": 641,
+      "important_instances": 71,
+      "supported": true,
+      "positions": [
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000002",
+          "position": "15099.099609 -64611.222656 14969.542969"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000003",
+          "position": "14604.973633 -90272.539063 12785.450195"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000003",
+          "position": "9222.557617 -96935.328125 12942.362305"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001000",
+          "position": "37066.769531 -6827.209473 18477.949219"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001000",
+          "position": "31672.423828 -14354.832031 17834.765625"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001001",
+          "position": "45670.273438 -43956.097656 17014.414063"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001002",
+          "position": "42567.437500 -69944.656250 14185.655273"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001002",
+          "position": "31230.000000 -55980.000000 16130.500000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001002",
+          "position": "48388.664063 -71132.007813 16391.210938"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001002",
+          "position": "45637.382813 -67079.398438 15403.705078"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001002",
+          "position": "34716.539063 -67684.765625 13684.309570"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001003",
+          "position": "45932.871094 -83792.773438 14596.049805"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001003",
+          "position": "35024.117188 -102022.085938 12794.500000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001004",
+          "position": "45066.714844 -107485.117188 12202.317383"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002001",
+          "position": "72793.078125 -30235.023438 20646.626953"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002002",
+          "position": "52900.347656 -64254.484375 19847.750000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002003",
+          "position": "74708.335938 -94414.226563 17079.060547"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002003",
+          "position": "52390.910156 -97975.968750 15007.849609"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002003",
+          "position": "62964.917969 -101121.773438 14148.862305"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002003",
+          "position": "68737.390625 -92401.578125 16804.644531"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002003",
+          "position": "56488.750000 -91303.171875 14871.122070"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002004",
+          "position": "52203.718750 -104873.375000 14649.000000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002004",
+          "position": "52543.242188 -109344.265625 12153.629883"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002004",
+          "position": "65494.652344 -109251.992188 14139.322266"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003000",
+          "position": "78980.414063 -10510.975586 20541.824219"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003000",
+          "position": "83941.609375 -9025.949219 20996.226563"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003003",
+          "position": "93437.367188 -93343.187500 20310.484375"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003003",
+          "position": "89277.671875 -80717.953125 20644.572266"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003003",
+          "position": "94214.570313 -96199.156250 19843.439453"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003004",
+          "position": "85677.304688 -103504.312500 18976.431641"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001000",
+          "position": "39715.531250 -19158.962891 18314.462891"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001002",
+          "position": "46331.761719 -57413.007813 18982.585938"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001002",
+          "position": "32706.105469 -66216.664063 17281.699219"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001003",
+          "position": "47603.933594 -98003.617188 18454.500000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001004",
+          "position": "47822.980469 -104020.226563 19249.345703"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001004",
+          "position": "37408.121094 -102933.218750 17727.904297"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001004",
+          "position": "42354.496094 -114390.109375 18777.925781"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002000",
+          "position": "51974.968750 -18880.914063 18375.705078"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002000",
+          "position": "68328.101563 -22456.888672 20187.000000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002000",
+          "position": "58607.070313 -16881.187500 19065.904297"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002001",
+          "position": "61597.082031 -49526.898438 19136.500000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002001",
+          "position": "73158.640625 -39756.800781 19066.039063"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002002",
+          "position": "56999.597656 -73060.515625 19433.500000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002002",
+          "position": "68902.562500 -53126.019531 19135.990234"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002002",
+          "position": "70661.093750 -71086.460938 19410.500000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002003",
+          "position": "62867.093750 -98998.109375 18454.273438"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002004",
+          "position": "70086.781250 -115375.640625 20214.220703"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003000",
+          "position": "80506.546875 -16072.462891 19805.884766"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003000",
+          "position": "91900.000000 -5700.000000 20133.250000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003001",
+          "position": "95585.015625 -50377.042969 19251.000000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003001",
+          "position": "77263.046875 -29516.000000 19599.390625"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003003",
+          "position": "91944.304688 -91106.281250 19004.955078"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003003",
+          "position": "89812.937500 -98565.343750 18877.693359"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003003",
+          "position": "84515.687500 -94446.757813 18104.044922"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000000",
+          "position": "16236.305664 -10980.197266 15542.339844"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000000",
+          "position": "14000.505859 -24982.560547 15532.929688"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000000",
+          "position": "21881.117188 -9425.960938 16361.650391"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000000",
+          "position": "17189.669922 -20046.246094 15129.884766"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000000",
+          "position": "25504.710938 -22213.404297 14461.549805"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000000",
+          "position": "21309.984375 -14542.435547 13928.450195"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000000",
+          "position": "4487.417969 -15174.960938 15270.450195"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000001",
+          "position": "9729.220703 -37409.796875 16235.552734"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001000",
+          "position": "47249.437500 -16627.990234 14888.297852"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001000",
+          "position": "44881.644531 -3922.712891 14340.120117"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001000",
+          "position": "30123.859375 -8986.305664 13512.562500"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001000",
+          "position": "35690.566406 -3890.631348 16421.599609"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001001",
+          "position": "32306.476563 -35912.093750 14415.504883"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001001",
+          "position": "37636.105469 -38775.832031 14273.429688"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001001",
+          "position": "47703.250000 -38153.781250 14187.377930"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001001",
+          "position": "44308.187500 -41263.953125 15078.674805"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001001",
+          "position": "30412.933594 -40389.167969 18432.355469"
+        }
+      ]
+    },
+    {
+      "type": "d:/ymir work/tree/b1_montereycypress_rt3.spt",
+      "maps": {
+        "map_a2": 31,
+        "map_b_fielddungeon": 17,
+        "metin2_guild_village": 2,
+        "metin2_map_a1": 29,
+        "metin2_map_b1": 23,
+        "metin2_map_b3": 1,
+        "metin2_map_bayblacksand": 24,
+        "metin2_map_c1": 22,
+        "metin2_map_c3": 20,
+        "metin2_map_capedragonhead": 5,
+        "metin2_map_dawnmistwood": 44,
+        "metin2_map_guild_01": 9,
+        "metin2_map_guild_02": 1,
+        "metin2_map_guild_03": 4,
+        "metin2_map_milgyo": 14,
+        "metin2_map_mt_thunder": 2,
+        "metin2_map_t2": 4,
+        "metin2_map_trent": 6,
+        "metin2_map_trent02": 3,
+        "season1/metin2_map_oxevent": 5,
+        "season1/metin2_map_shinsutest_01": 4,
+        "season1/metin2_map_siege_01": 3,
+        "season1/metin2_map_siege_02": 3,
+        "season1/metin2_map_siege_03": 3,
+        "season1/metin2_map_sungzi_desert_01": 1,
+        "season1/metin2_map_sungzi_milgyo": 2,
+        "season1/metin2_map_wl_01": 3,
+        "season2/metin2_map_a2_1": 27,
+        "season2/metin2_map_empirewar02": 5,
+        "season2/metin2_map_milgyo_a": 14,
+        "season2/metin2_map_trent02_a": 3,
+        "season2/metin2_map_trent_a": 6
+      },
+      "instances": 340,
+      "important_instances": 58,
+      "supported": true,
+      "positions": [
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000000",
+          "position": "11407.465820 -22685.636719 17426.751953"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000000",
+          "position": "21978.390625 -12109.468750 17875.554688"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000000",
+          "position": "16035.853516 -18030.414063 17310.511719"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000002",
+          "position": "11422.233398 -75476.132813 13229.830078"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000003",
+          "position": "13401.131836 -93186.570313 13086.559570"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001000",
+          "position": "41938.714844 -18341.550781 17439.974609"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001000",
+          "position": "31907.312500 -25415.611328 15919.452148"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001000",
+          "position": "26565.042969 -8859.529297 17868.500000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001000",
+          "position": "31160.494141 -9229.847656 17868.500000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001000",
+          "position": "32198.812500 -13614.540039 17868.500000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001000",
+          "position": "38184.578125 -4898.551758 18633.664063"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001001",
+          "position": "28369.462891 -27784.414063 17160.460938"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001002",
+          "position": "44299.945313 -74601.367188 14192.969727"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001002",
+          "position": "36293.492188 -67799.195313 13942.332031"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001003",
+          "position": "34729.582031 -87558.359375 13491.917969"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001003",
+          "position": "39758.652344 -91422.398438 13109.870117"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001004",
+          "position": "28642.781250 -107591.921875 12564.872070"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001004",
+          "position": "33379.335938 -114703.015625 12299.792969"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002000",
+          "position": "59260.507813 -18178.433594 19118.869141"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002000",
+          "position": "55272.195313 -8935.228516 19269.283203"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002001",
+          "position": "65354.117188 -40620.265625 20366.660156"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002001",
+          "position": "73739.445313 -30788.312500 20486.585938"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002001",
+          "position": "73845.007813 -43427.230469 20356.365234"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002004",
+          "position": "61032.527344 -110511.906250 12681.325195"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002004",
+          "position": "61627.343750 -108587.343750 12976.855469"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003002",
+          "position": "77114.664063 -75959.742188 20293.265625"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003002",
+          "position": "80465.242188 -62759.718750 20358.000000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003002",
+          "position": "77910.000000 -56860.000000 20334.500000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003003",
+          "position": "85699.593750 -91982.195313 20339.322266"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001001",
+          "position": "43124.429688 -47066.394531 18144.775391"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001001",
+          "position": "46162.324219 -39874.476563 18854.675781"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001002",
+          "position": "28017.117188 -69360.226563 17211.943359"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001002",
+          "position": "31269.238281 -68889.101563 17214.500000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001003",
+          "position": "41564.101563 -87828.984375 18062.060547"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001003",
+          "position": "29703.996094 -93725.367188 17275.072266"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001004",
+          "position": "33401.957031 -106182.617188 17676.636719"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001004",
+          "position": "43427.664063 -114349.117188 19068.369141"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001004",
+          "position": "27596.289063 -106101.078125 17236.404297"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002000",
+          "position": "58066.753906 -13408.800781 19900.460938"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002000",
+          "position": "66901.554688 -22697.167969 20187.000000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002002",
+          "position": "68267.804688 -62944.738281 19234.488281"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002003",
+          "position": "68396.148438 -93803.382813 18196.636719"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002003",
+          "position": "72169.828125 -98886.679688 19449.859375"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002004",
+          "position": "64164.828125 -116064.109375 19982.210938"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003000",
+          "position": "87600.000000 -10700.000000 19885.750000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003001",
+          "position": "85347.632813 -27081.269531 19896.929688"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003001",
+          "position": "78867.531250 -34701.792969 20055.144531"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003002",
+          "position": "82362.023438 -67119.687500 18744.203125"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003002",
+          "position": "95242.468750 -54049.050781 19250.929688"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003003",
+          "position": "93132.843750 -101613.382813 18893.681641"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003003",
+          "position": "85948.726563 -94288.203125 18091.509766"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003004",
+          "position": "83303.054688 -114861.382813 18500.466797"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000000",
+          "position": "6967.396484 -4046.948975 14384.500000"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000000",
+          "position": "17106.929688 -6905.652344 13800.900391"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000000",
+          "position": "7925.237305 -10982.891602 14045.030273"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000000",
+          "position": "15176.512695 -17343.923828 14685.259766"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000001",
+          "position": "3580.893066 -42732.492188 14915.580078"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001001",
+          "position": "30513.339844 -30273.416016 16095.507813"
+        }
+      ]
+    },
+    {
+      "type": "d:/ymir work/tree/b1_montereycypress_rt.spt",
+      "maps": {
+        "map_a2": 19,
+        "map_b_fielddungeon": 18,
+        "metin2_map_a1": 23,
+        "metin2_map_a3": 1,
+        "metin2_map_b1": 30,
+        "metin2_map_bayblacksand": 10,
+        "metin2_map_c1": 23,
+        "metin2_map_c3": 7,
+        "metin2_map_capedragonhead": 2,
+        "metin2_map_dawnmistwood": 13,
+        "metin2_map_devilscatacomb": 1,
+        "metin2_map_guild_01": 7,
+        "metin2_map_guild_02": 1,
+        "metin2_map_guild_03": 5,
+        "metin2_map_milgyo": 9,
+        "metin2_map_t1": 4,
+        "metin2_map_t2": 3,
+        "metin2_map_trent": 5,
+        "metin2_map_trent02": 4,
+        "season1/metin2_map_nusluck01": 1,
+        "season1/metin2_map_oxevent": 6,
+        "season1/metin2_map_shinsutest_01": 1,
+        "season1/metin2_map_siege_01": 2,
+        "season1/metin2_map_siege_02": 2,
+        "season1/metin2_map_siege_03": 2,
+        "season1/metin2_map_sungzi_milgyo": 1,
+        "season1/metin2_map_wl_01": 1,
+        "season2/metin2_map_a2_1": 14,
+        "season2/metin2_map_milgyo_a": 9,
+        "season2/metin2_map_trent02_a": 4,
+        "season2/metin2_map_trent_a": 5
+      },
+      "instances": 233,
+      "important_instances": 58,
+      "supported": true,
+      "positions": [
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000000",
+          "position": "17521.849609 -11394.091797 17928.865234"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000000",
+          "position": "9135.607422 -12335.136719 17730.962891"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000001",
+          "position": "15041.580078 -29989.490234 16464.255859"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000001",
+          "position": "11924.045898 -38039.843750 16352.384766"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000001",
+          "position": "11175.656250 -31872.990234 17314.380859"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000003",
+          "position": "12991.406250 -94015.812500 13072.462891"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001000",
+          "position": "30064.113281 -24399.173828 17216.994141"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001000",
+          "position": "39020.750000 -4679.666504 18484.796875"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001000",
+          "position": "40575.855469 -23160.414063 17338.099609"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001001",
+          "position": "29869.835938 -47148.445313 15900.012695"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001002",
+          "position": "43919.445313 -73947.929688 14184.500000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001002",
+          "position": "45535.667969 -66204.304688 15614.235352"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001002",
+          "position": "30750.000000 -56810.000000 16151.750000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002000",
+          "position": "64193.339844 -21498.974609 19419.500000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002002",
+          "position": "53870.000000 -64140.000000 19847.849609"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002002",
+          "position": "74282.335938 -61383.476563 20358.000000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002003",
+          "position": "74873.210938 -84235.218750 20440.367188"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002003",
+          "position": "70123.984375 -89080.296875 17455.570313"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002003",
+          "position": "52050.046875 -82348.523438 16053.834961"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002004",
+          "position": "65894.226563 -109990.257813 14086.209961"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003001",
+          "position": "85891.765625 -37443.941406 20939.273438"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003002",
+          "position": "89038.960938 -65230.218750 20643.970703"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003003",
+          "position": "94553.335938 -95447.085938 20244.437500"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001000",
+          "position": "30403.349609 -19717.070313 18163.623047"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001001",
+          "position": "49242.312500 -35694.500000 18892.494141"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001001",
+          "position": "46067.070313 -43871.835938 19037.533203"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001001",
+          "position": "31987.544922 -43269.218750 17226.533203"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001002",
+          "position": "32511.316406 -67315.101563 17272.189453"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001002",
+          "position": "43665.507813 -62060.984375 18676.675781"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001003",
+          "position": "33115.171875 -96154.671875 18382.787109"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001003",
+          "position": "27171.644531 -84720.773438 17144.654297"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001003",
+          "position": "37221.632813 -81056.632813 17464.601563"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001004",
+          "position": "27332.363281 -110145.234375 17110.812500"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001004",
+          "position": "33600.957031 -104143.109375 17574.011719"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001004",
+          "position": "28311.039063 -114479.109375 17401.000000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001004",
+          "position": "46470.343750 -111971.976563 19792.572266"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002000",
+          "position": "64051.285156 -22858.210938 19887.402344"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002000",
+          "position": "57230.753906 -16765.146484 19026.000000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002001",
+          "position": "55457.027344 -27614.296875 18931.000000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002001",
+          "position": "76075.984375 -28805.867188 19595.875000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002002",
+          "position": "60050.074219 -65136.648438 19252.695313"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002003",
+          "position": "60485.718750 -91204.343750 17974.675781"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002003",
+          "position": "76499.414063 -99976.125000 19100.582031"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002004",
+          "position": "72352.156250 -108444.101563 20239.169922"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002004",
+          "position": "56113.679688 -103275.140625 19204.550781"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003000",
+          "position": "86767.679688 -18529.867188 19883.849609"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003000",
+          "position": "88900.000000 -13200.000000 19829.500000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003001",
+          "position": "83095.007813 -44789.187500 19258.500000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003002",
+          "position": "84636.695313 -75905.015625 18876.750000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003003",
+          "position": "89146.242188 -85167.148438 18940.500000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003003",
+          "position": "85918.601563 -100727.945313 18394.910156"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003003",
+          "position": "91441.109375 -78861.546875 18944.500000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003004",
+          "position": "92303.843750 -112114.296875 18964.027344"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000000",
+          "position": "13749.574219 -15499.867188 15808.372070"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000000",
+          "position": "5377.478027 -19706.947266 13819.867188"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001000",
+          "position": "35334.390625 -19591.220703 16015.884766"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001001",
+          "position": "39209.804688 -27628.175781 14398.777344"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001001",
+          "position": "44579.035156 -30857.414063 16106.809570"
+        }
+      ]
+    },
+    {
+      "type": "d:/ymir work/tree/b1_pagodatree_rt3.spt",
+      "maps": {
+        "map_a2": 31,
+        "map_b_fielddungeon": 10,
+        "metin2_guild_village": 13,
+        "metin2_map_a1": 21,
+        "metin2_map_a3": 1,
+        "metin2_map_b1": 23,
+        "metin2_map_b3": 3,
+        "metin2_map_bayblacksand": 65,
+        "metin2_map_c1": 22,
+        "metin2_map_c3": 28,
+        "metin2_map_capedragonhead": 71,
+        "metin2_map_dawnmistwood": 80,
+        "metin2_map_guild_01": 5,
+        "metin2_map_guild_03": 2,
+        "metin2_map_milgyo": 29,
+        "metin2_map_mt_thunder": 2,
+        "metin2_map_t2": 2,
+        "metin2_map_trent": 10,
+        "metin2_map_trent02": 33,
+        "metin2_map_wedding_01": 2,
+        "season1/metin2_map_ew02": 2,
+        "season1/metin2_map_nusluck01": 1,
+        "season1/metin2_map_oxevent": 16,
+        "season1/metin2_map_siege_01": 2,
+        "season1/metin2_map_siege_02": 2,
+        "season1/metin2_map_siege_03": 2,
+        "season1/metin2_map_sungzi_milgyo": 5,
+        "season1/metin2_map_sungzi_milgyo_pass_01": 4,
+        "season1/metin2_map_sungzi_milgyo_pass_02": 4,
+        "season1/metin2_map_sungzi_milgyo_pass_03": 4,
+        "season1/metin2_map_wl_01": 1,
+        "season2/metin2_map_a2_1": 25,
+        "season2/metin2_map_empirewar02": 13,
+        "season2/metin2_map_milgyo_a": 29,
+        "season2/metin2_map_trent02_a": 33,
+        "season2/metin2_map_trent_a": 10
+      },
+      "instances": 606,
+      "important_instances": 54,
+      "supported": true,
+      "positions": [
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000002",
+          "position": "8695.880859 -69137.390625 13600.044922"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000003",
+          "position": "9108.241211 -98260.382813 12759.209961"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001000",
+          "position": "51091.410156 -18036.261719 18560.734375"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001000",
+          "position": "26274.955078 -9318.902344 17868.500000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001000",
+          "position": "41989.019531 -4620.906250 18322.255859"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001000",
+          "position": "30802.410156 -13509.330078 17868.500000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001001",
+          "position": "50020.957031 -33768.781250 17007.210938"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001002",
+          "position": "30070.000000 -55660.000000 16131.000000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001003",
+          "position": "46022.859375 -86112.820313 14653.875000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001003",
+          "position": "44681.808594 -82546.906250 14506.282227"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002000",
+          "position": "72904.000000 -16222.074219 20364.500000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002000",
+          "position": "66628.460938 -17455.240234 19398.000000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002000",
+          "position": "69968.367188 -19955.263672 20597.279297"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002003",
+          "position": "58061.546875 -92489.148438 14857.542969"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002003",
+          "position": "70954.515625 -88184.679688 17402.679688"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002004",
+          "position": "65731.593750 -108248.531250 14060.344727"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003000",
+          "position": "82449.195313 -19907.697266 21138.000000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003002",
+          "position": "88861.367188 -57232.355469 20809.341797"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003003",
+          "position": "81208.039063 -78761.296875 20796.943359"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003003",
+          "position": "79871.296875 -98668.507813 16495.492188"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003003",
+          "position": "86615.867188 -91742.195313 20336.462891"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001000",
+          "position": "50702.347656 -22315.593750 18446.783203"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001001",
+          "position": "29768.697266 -47208.242188 17150.000000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001002",
+          "position": "43158.890625 -58968.835938 18913.210938"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001002",
+          "position": "27054.576172 -60609.988281 17131.134766"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001003",
+          "position": "50167.824219 -95569.093750 18454.500000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001004",
+          "position": "35785.117188 -115973.281250 17401.500000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001004",
+          "position": "48051.695313 -106566.132813 19263.132813"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001004",
+          "position": "30295.066406 -116262.429688 17401.000000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002000",
+          "position": "65233.453125 -19133.246094 19202.832031"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002001",
+          "position": "65321.835938 -41626.714844 18993.261719"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002001",
+          "position": "54871.941406 -36819.855469 18947.259766"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002002",
+          "position": "55869.535156 -67482.687500 19433.500000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002002",
+          "position": "74581.273438 -59072.589844 19370.500000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002002",
+          "position": "69313.820313 -74309.734375 19399.500000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002003",
+          "position": "71238.343750 -93270.968750 18142.380859"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002004",
+          "position": "63063.812500 -115713.210938 20064.625000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003000",
+          "position": "79323.578125 -22244.970703 20184.000000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003001",
+          "position": "90027.406250 -46385.343750 18978.105469"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003001",
+          "position": "79910.609375 -33913.414063 19927.585938"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003002",
+          "position": "84805.171875 -61597.203125 18809.000000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003003",
+          "position": "90431.968750 -84609.492188 18942.626953"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003004",
+          "position": "93358.765625 -107433.953125 18981.019531"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003004",
+          "position": "83591.242188 -113792.343750 18412.814453"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000000",
+          "position": "22986.083984 -18017.142578 14662.442383"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000001",
+          "position": "10840.423828 -44601.472656 14593.857422"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000001",
+          "position": "20129.794922 -47183.476563 14326.275391"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000001",
+          "position": "11019.033203 -29115.839844 16915.488281"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001000",
+          "position": "43168.632813 -19088.117188 14689.500000"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001000",
+          "position": "39136.636719 -21132.390625 16198.660156"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001000",
+          "position": "41297.015625 -5194.324219 14305.440430"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001000",
+          "position": "41382.468750 -12788.410156 14211.000000"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001001",
+          "position": "36020.679688 -30900.835938 15191.549805"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001001",
+          "position": "48628.097656 -32394.056641 14573.000000"
+        }
+      ]
+    },
+    {
+      "type": "d:/ymir work/tree/b1_sassafras_rt_fall.spt",
+      "maps": {
+        "map_a2": 61,
+        "map_b_fielddungeon": 3,
+        "metin2_map_a1": 33,
+        "metin2_map_b1": 20,
+        "metin2_map_c1": 10,
+        "metin2_map_c3": 24,
+        "metin2_map_milgyo": 1,
+        "season1/metin2_map_oxevent": 1,
+        "season1/metin2_map_sungzi_desert_hill_01": 3,
+        "season1/metin2_map_sungzi_desert_hill_02": 3,
+        "season1/metin2_map_sungzi_desert_hill_03": 3,
+        "season1/metin2_map_sungzi_milgyo": 2,
+        "season1/metin2_map_sungzi_milgyo_pass_01": 4,
+        "season1/metin2_map_sungzi_milgyo_pass_02": 4,
+        "season1/metin2_map_sungzi_milgyo_pass_03": 4,
+        "season1/metin2_map_wl_01": 2,
+        "season2/metin2_map_a2_1": 61,
+        "season2/metin2_map_milgyo_a": 1
+      },
+      "instances": 240,
+      "important_instances": 53,
+      "supported": true,
+      "positions": [
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000000",
+          "position": "9419.359375 -8744.961914 17777.250000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000000",
+          "position": "16871.000000 -17671.972656 17236.080078"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000001",
+          "position": "16593.074219 -28397.623047 16558.675781"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000001",
+          "position": "23414.658203 -44625.738281 16034.500000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000002",
+          "position": "13750.386719 -52240.726563 15750.525391"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000002",
+          "position": "17157.460938 -57249.945313 15721.209961"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000003",
+          "position": "14764.882813 -89621.562500 12975.467773"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000003",
+          "position": "14397.730469 -79854.601563 12589.134766"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000003",
+          "position": "8870.101563 -99498.625000 12721.860352"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001000",
+          "position": "39977.046875 -4376.755371 18476.609375"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001000",
+          "position": "46691.503906 -14206.160156 17748.279297"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001000",
+          "position": "29200.000000 -24200.000000 17174.000000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001000",
+          "position": "27537.070313 -8770.856445 17868.500000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001001",
+          "position": "44629.902344 -43904.742188 17089.990234"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001002",
+          "position": "46532.003906 -66826.578125 15404.275391"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001002",
+          "position": "44942.828125 -71360.812500 14184.500000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001002",
+          "position": "49215.851563 -58930.488281 18136.175781"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001003",
+          "position": "38071.000000 -96500.210938 12833.464844"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001004",
+          "position": "27768.093750 -106468.679688 12766.469727"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002000",
+          "position": "67196.687500 -17059.214844 19397.851563"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002001",
+          "position": "74177.812500 -44259.695313 20368.742188"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002001",
+          "position": "56453.460938 -43354.156250 17610.132813"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002001",
+          "position": "55914.527344 -37122.007813 17568.820313"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002001",
+          "position": "73068.070313 -32122.021484 20395.724609"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002001",
+          "position": "71213.773438 -47456.328125 20356.500000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002002",
+          "position": "70350.875000 -62840.558594 20096.025391"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002002",
+          "position": "72637.195313 -56787.886719 20260.292969"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002003",
+          "position": "69482.554688 -93652.914063 16444.500000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002003",
+          "position": "51423.976563 -98801.375000 14943.087891"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002004",
+          "position": "60757.210938 -109955.304688 12791.627930"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003002",
+          "position": "87343.734375 -51332.507813 20552.294922"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003002",
+          "position": "88420.234375 -67102.648438 20651.570313"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003003",
+          "position": "93665.328125 -95319.015625 20032.767578"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001001",
+          "position": "47866.949219 -36154.968750 18894.414063"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001001",
+          "position": "45010.195313 -42720.746094 19060.949219"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001002",
+          "position": "31671.677734 -67392.750000 17220.339844"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001003",
+          "position": "28991.173828 -92633.101563 16995.158203"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001003",
+          "position": "43221.753906 -83905.812500 18297.910156"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001004",
+          "position": "32284.765625 -105126.390625 17619.929688"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001004",
+          "position": "46844.882813 -114046.101563 19750.785156"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001004",
+          "position": "26662.816406 -115183.851563 17401.000000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002000",
+          "position": "58453.464844 -15246.925781 19731.935547"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002001",
+          "position": "58956.324219 -26361.501953 18974.744141"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002002",
+          "position": "75124.796875 -57558.511719 19343.265625"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002002",
+          "position": "56153.582031 -71884.664063 19433.500000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002003",
+          "position": "69041.726563 -95706.554688 18350.033203"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002004",
+          "position": "72186.671875 -113334.765625 20239.255859"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002004",
+          "position": "54249.359375 -103544.476563 19302.339844"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003000",
+          "position": "83943.218750 -12712.115234 20273.919922"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003000",
+          "position": "93500.000000 -7300.000000 20086.000000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003001",
+          "position": "92001.164063 -47460.546875 19044.445313"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003001",
+          "position": "84351.421875 -43049.945313 19522.589844"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003004",
+          "position": "93197.085938 -103603.203125 19101.400391"
+        }
+      ]
+    },
+    {
+      "type": "d:/ymir work/tree/b1_beech_rt.spt",
+      "maps": {
+        "map_a2": 21,
+        "map_b_fielddungeon": 18,
+        "metin2_map_a1": 20,
+        "metin2_map_b1": 25,
+        "metin2_map_b3": 1,
+        "metin2_map_c1": 23,
+        "metin2_map_c3": 7,
+        "metin2_map_capedragonhead": 50,
+        "metin2_map_dawnmistwood": 30,
+        "metin2_map_duel": 2,
+        "metin2_map_guild_01": 11,
+        "metin2_map_guild_02": 2,
+        "metin2_map_guild_03": 3,
+        "metin2_map_milgyo": 12,
+        "metin2_map_mt_thunder": 5,
+        "metin2_map_t1": 1,
+        "metin2_map_trent": 7,
+        "metin2_map_trent02": 16,
+        "metin2_map_wedding_01": 2,
+        "season1/metin2_map_empirewar_a01": 1,
+        "season1/metin2_map_oxevent": 1,
+        "season1/metin2_map_shinsutest_01": 4,
+        "season1/metin2_map_siege_01": 8,
+        "season1/metin2_map_siege_02": 8,
+        "season1/metin2_map_siege_03": 8,
+        "season1/metin2_map_wl_01": 7,
+        "season2/metin2_map_a2_1": 18,
+        "season2/metin2_map_milgyo_a": 12,
+        "season2/metin2_map_trent02_a": 16,
+        "season2/metin2_map_trent_a": 7
+      },
+      "instances": 346,
+      "important_instances": 52,
+      "supported": true,
+      "positions": [
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000002",
+          "position": "11851.434570 -74514.789063 13229.570313"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000002",
+          "position": "17890.000000 -68190.000000 14063.525391"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000003",
+          "position": "24867.080078 -97735.093750 12821.907227"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001000",
+          "position": "31762.277344 -12704.335938 17868.500000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001004",
+          "position": "47666.566406 -109783.687500 11997.042969"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002000",
+          "position": "70937.679688 -17388.042969 20364.619141"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002000",
+          "position": "55209.656250 -24304.359375 18557.974609"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002000",
+          "position": "72426.367188 -8632.822266 19977.150391"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002002",
+          "position": "64369.585938 -51530.800781 19918.375000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002003",
+          "position": "74181.296875 -93030.968750 16836.587891"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002003",
+          "position": "66351.414063 -78939.554688 18011.500000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002003",
+          "position": "55242.328125 -80281.609375 16482.857422"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002003",
+          "position": "62592.179688 -98956.851563 14570.820313"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002004",
+          "position": "72284.515625 -103857.117188 16538.000000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003001",
+          "position": "85106.593750 -36550.843750 20999.490234"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003001",
+          "position": "78904.203125 -48596.003906 20334.500000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003002",
+          "position": "88190.671875 -65664.898438 20645.900391"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003003",
+          "position": "79594.328125 -97465.726563 16495.500000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003003",
+          "position": "77530.757813 -87214.617188 20878.779297"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003004",
+          "position": "77123.570313 -110879.984375 13716.000000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001000",
+          "position": "29383.279297 -19168.904297 18220.261719"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001001",
+          "position": "47611.625000 -44069.539063 18960.832031"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001002",
+          "position": "44968.859375 -62102.921875 18736.564453"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001002",
+          "position": "30351.917969 -51905.359375 17123.500000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001002",
+          "position": "31729.216797 -73710.820313 17356.769531"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001003",
+          "position": "32347.121094 -95193.882813 18046.966797"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001003",
+          "position": "29153.667969 -87159.312500 17077.851563"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001003",
+          "position": "43261.222656 -85688.046875 18174.921875"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001004",
+          "position": "27704.716797 -108838.765625 17012.164063"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001004",
+          "position": "48230.980469 -112186.250000 19804.275391"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001004",
+          "position": "35079.968750 -104852.757813 17578.822266"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002000",
+          "position": "54226.046875 -17001.841797 19026.000000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002001",
+          "position": "64692.855469 -35110.511719 18990.740234"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002001",
+          "position": "73189.296875 -36530.222656 19653.921875"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002002",
+          "position": "67990.554688 -65051.785156 19175.000000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002003",
+          "position": "59093.843750 -91341.945313 18016.042969"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002004",
+          "position": "71204.742188 -105496.484375 19836.640625"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003000",
+          "position": "88037.546875 -22953.435547 20072.179688"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003000",
+          "position": "76976.492188 -19608.203125 20016.560547"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003002",
+          "position": "95158.671875 -60676.742188 19251.000000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003002",
+          "position": "81217.593750 -66117.617188 18716.033203"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003003",
+          "position": "93981.000000 -95990.992188 19038.376953"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003003",
+          "position": "78702.375000 -99849.000000 19014.474609"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003003",
+          "position": "86061.539063 -95546.234375 18084.056641"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003003",
+          "position": "88005.257813 -88118.406250 18933.000000"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000000",
+          "position": "13114.668945 -16234.971680 15840.974609"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000000",
+          "position": "4680.614258 -6963.487793 14382.500000"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000000",
+          "position": "17065.066406 -5887.273438 13943.790039"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001000",
+          "position": "27996.189453 -4070.541992 16644.000000"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001000",
+          "position": "26451.236328 -16700.414063 14247.127930"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001001",
+          "position": "27767.632813 -31857.134766 14616.512695"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001001",
+          "position": "33737.773438 -33344.835938 14400.337891"
+        }
+      ]
+    },
+    {
+      "type": "d:/ymir work/tree/b1_montereycypress_rt2.spt",
+      "maps": {
+        "map_a2": 26,
+        "map_b_fielddungeon": 10,
+        "metin2_map_a1": 23,
+        "metin2_map_b1": 19,
+        "metin2_map_b3": 1,
+        "metin2_map_bayblacksand": 9,
+        "metin2_map_c1": 25,
+        "metin2_map_c3": 10,
+        "metin2_map_capedragonhead": 3,
+        "metin2_map_dawnmistwood": 14,
+        "metin2_map_guild_01": 4,
+        "metin2_map_guild_02": 1,
+        "metin2_map_guild_03": 4,
+        "metin2_map_milgyo": 10,
+        "metin2_map_mt_thunder": 3,
+        "metin2_map_t1": 1,
+        "metin2_map_trent": 1,
+        "metin2_map_trent02": 4,
+        "season1/metin2_map_shinsutest_01": 2,
+        "season1/metin2_map_siege_01": 3,
+        "season1/metin2_map_siege_02": 3,
+        "season1/metin2_map_siege_03": 3,
+        "season1/metin2_map_sungzi_milgyo": 1,
+        "season1/metin2_map_wl_01": 1,
+        "season2/metin2_map_a2_1": 26,
+        "season2/metin2_map_milgyo_a": 10,
+        "season2/metin2_map_trent02_a": 4,
+        "season2/metin2_map_trent_a": 1
+      },
+      "instances": 222,
+      "important_instances": 43,
+      "supported": true,
+      "positions": [
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000002",
+          "position": "7440.687500 -69420.515625 13550.299805"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000004",
+          "position": "17078.076172 -107819.093750 12774.000000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001000",
+          "position": "42238.511719 -24476.167969 17299.335938"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001000",
+          "position": "31165.568359 -23200.578125 17249.537109"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001001",
+          "position": "51047.109375 -35865.570313 17050.314453"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001001",
+          "position": "45188.593750 -43329.542969 17154.175781"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001003",
+          "position": "34377.929688 -86768.093750 13538.919922"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001003",
+          "position": "33230.976563 -97048.281250 12853.275391"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002000",
+          "position": "72746.734375 -23584.224609 20536.970703"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002000",
+          "position": "56937.535156 -21920.726563 18187.511719"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002000",
+          "position": "68421.625000 -15993.936523 19398.000000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002001",
+          "position": "70377.750000 -48356.734375 20305.609375"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002001",
+          "position": "56263.359375 -39020.765625 17581.320313"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002001",
+          "position": "74205.835938 -31701.173828 20399.500000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002002",
+          "position": "72803.906250 -57628.199219 20262.050781"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002003",
+          "position": "74227.726563 -94217.085938 17116.207031"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002003",
+          "position": "65427.492188 -77857.265625 18011.500000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002004",
+          "position": "56442.523438 -104538.414063 14495.910156"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002004",
+          "position": "71214.273438 -102779.265625 16624.408203"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003001",
+          "position": "79937.476563 -48365.367188 20334.500000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003001",
+          "position": "79202.085938 -51113.812500 20334.500000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003001",
+          "position": "79883.554688 -40622.773438 20338.171875"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003003",
+          "position": "79020.734375 -82627.953125 20353.500000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001001",
+          "position": "48802.789063 -46460.640625 18964.099609"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001002",
+          "position": "41829.539063 -67290.406250 18857.207031"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001002",
+          "position": "31797.291016 -71797.218750 17253.609375"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001004",
+          "position": "49115.828125 -104807.500000 19313.556641"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001004",
+          "position": "31415.958984 -111606.875000 17415.792969"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002000",
+          "position": "64273.539063 -23854.935547 20016.474609"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002000",
+          "position": "55422.527344 -17723.158203 19026.000000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002001",
+          "position": "65771.882813 -39924.558594 18989.500000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002001",
+          "position": "73485.898438 -28229.746094 20185.912109"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002002",
+          "position": "62453.183594 -60203.507813 19175.044922"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002003",
+          "position": "63981.242188 -97259.289063 18394.431641"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002004",
+          "position": "69645.742188 -111663.484375 20036.832031"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003000",
+          "position": "86980.742188 -23954.876953 19921.384766"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003000",
+          "position": "88200.000000 -8000.000000 20107.500000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003000",
+          "position": "85800.000000 -11800.000000 20220.000000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003001",
+          "position": "91036.742188 -46317.058594 19025.773438"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003002",
+          "position": "86237.257813 -64169.851563 18829.796875"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003003",
+          "position": "79674.117188 -99769.328125 19002.501953"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003004",
+          "position": "92676.335938 -106175.281250 18956.689453"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001000",
+          "position": "32229.207031 -23174.580078 16271.852539"
+        }
+      ]
+    },
+    {
+      "type": "d:/ymir work/tree/b1_montereycypress_rt4.spt",
+      "maps": {
+        "map_a2": 39,
+        "map_b_fielddungeon": 13,
+        "metin2_guild_village": 3,
+        "metin2_map_a1": 18,
+        "metin2_map_b1": 16,
+        "metin2_map_bayblacksand": 15,
+        "metin2_map_c1": 22,
+        "metin2_map_c3": 23,
+        "metin2_map_capedragonhead": 2,
+        "metin2_map_dawnmistwood": 30,
+        "metin2_map_guild_01": 5,
+        "metin2_map_guild_02": 1,
+        "metin2_map_guild_03": 4,
+        "metin2_map_milgyo": 14,
+        "metin2_map_mt_thunder": 1,
+        "metin2_map_t1": 2,
+        "metin2_map_t2": 5,
+        "metin2_map_trent": 6,
+        "metin2_map_trent02": 4,
+        "season1/metin2_map_nusluck01": 3,
+        "season1/metin2_map_oxevent": 6,
+        "season1/metin2_map_shinsutest_01": 1,
+        "season1/metin2_map_siege_01": 3,
+        "season1/metin2_map_siege_02": 3,
+        "season1/metin2_map_siege_03": 3,
+        "season1/metin2_map_sungzi_desert_01": 1,
+        "season1/metin2_map_sungzi_desert_hill_01": 1,
+        "season1/metin2_map_sungzi_desert_hill_02": 1,
+        "season1/metin2_map_sungzi_desert_hill_03": 1,
+        "season1/metin2_map_sungzi_milgyo_pass_01": 1,
+        "season1/metin2_map_sungzi_milgyo_pass_02": 1,
+        "season1/metin2_map_sungzi_milgyo_pass_03": 1,
+        "season2/metin2_map_a2_1": 37,
+        "season2/metin2_map_milgyo_a": 14,
+        "season2/metin2_map_trent02_a": 4,
+        "season2/metin2_map_trent_a": 6
+      },
+      "instances": 310,
+      "important_instances": 40,
+      "supported": true,
+      "positions": [
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000000",
+          "position": "20096.203125 -9810.566406 17883.000000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000001",
+          "position": "12966.404297 -49835.378906 15784.792969"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000003",
+          "position": "24354.917969 -98216.171875 12828.879883"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000003",
+          "position": "14386.916016 -80545.085938 12618.302734"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001000",
+          "position": "40261.933594 -18773.312500 17519.011719"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002001",
+          "position": "56693.757813 -41749.968750 17609.626953"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002001",
+          "position": "66013.437500 -50726.851563 19967.480469"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002002",
+          "position": "53630.019531 -63735.343750 19847.500000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002003",
+          "position": "52706.351563 -82951.171875 15877.222656"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002003",
+          "position": "65330.195313 -79661.007813 18011.500000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002003",
+          "position": "68804.156250 -93973.070313 16185.605469"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002004",
+          "position": "74156.914063 -103969.359375 16547.945313"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003000",
+          "position": "79713.671875 -9813.539063 20755.500000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003001",
+          "position": "78798.609375 -50350.816406 20334.500000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003001",
+          "position": "79776.476563 -40030.007813 20348.400391"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003002",
+          "position": "79104.031250 -74020.031250 20360.189453"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003002",
+          "position": "79445.937500 -57338.949219 20362.552734"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003003",
+          "position": "85113.242188 -90010.671875 20337.152344"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001000",
+          "position": "39195.421875 -18740.609375 18222.062500"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001001",
+          "position": "43312.191406 -45251.558594 18406.082031"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001002",
+          "position": "27523.175781 -61916.539063 17158.302734"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001003",
+          "position": "41526.957031 -84284.617188 17872.949219"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001004",
+          "position": "29976.103516 -114840.601563 17401.000000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002000",
+          "position": "60661.812500 -16104.896484 19170.605469"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002001",
+          "position": "72182.257813 -26849.224609 20187.000000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002002",
+          "position": "66456.382813 -67117.015625 19176.189453"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002003",
+          "position": "71091.601563 -89984.500000 17948.890625"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002004",
+          "position": "62184.468750 -112630.250000 19555.205078"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003000",
+          "position": "84052.359375 -14040.213867 19923.839844"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003000",
+          "position": "83603.734375 -18275.207031 19743.500000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003002",
+          "position": "94027.718750 -61718.015625 18931.980469"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003003",
+          "position": "94267.500000 -94141.765625 19134.837891"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003003",
+          "position": "87361.382813 -85237.289063 18940.500000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003004",
+          "position": "82587.015625 -112484.210938 18440.318359"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000000",
+          "position": "10943.060547 -25271.597656 14842.427734"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000000",
+          "position": "1639.757324 -15309.479492 15862.962891"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000000",
+          "position": "3103.501465 -24418.734375 16950.554688"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000001",
+          "position": "4322.657227 -28646.097656 17337.464844"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001000",
+          "position": "26354.414063 -24554.144531 16552.365234"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/001001",
+          "position": "28159.107422 -30219.449219 14640.252930"
+        }
+      ]
+    },
+    {
+      "type": "d:/ymir work/tree/b1_montereycypress_rt5.spt",
+      "maps": {
+        "map_a2": 34,
+        "metin2_map_a1": 15,
+        "metin2_map_a3": 1,
+        "metin2_map_b1": 13,
+        "metin2_map_b3": 1,
+        "metin2_map_bayblacksand": 5,
+        "metin2_map_c1": 22,
+        "metin2_map_c3": 15,
+        "metin2_map_capedragonhead": 1,
+        "metin2_map_dawnmistwood": 21,
+        "metin2_map_guild_01": 3,
+        "metin2_map_guild_03": 4,
+        "metin2_map_milgyo": 10,
+        "metin2_map_mt_thunder": 2,
+        "metin2_map_t1": 2,
+        "metin2_map_t2": 2,
+        "metin2_map_trent": 2,
+        "metin2_map_trent02": 2,
+        "season1/metin2_map_nusluck01": 1,
+        "season1/metin2_map_oxevent": 3,
+        "season1/metin2_map_shinsutest_01": 1,
+        "season1/metin2_map_siege_01": 1,
+        "season1/metin2_map_siege_02": 1,
+        "season1/metin2_map_siege_03": 1,
+        "season1/metin2_map_sungzi_milgyo": 2,
+        "season1/metin2_map_sungzi_milgyo_pass_01": 1,
+        "season1/metin2_map_sungzi_milgyo_pass_02": 1,
+        "season1/metin2_map_sungzi_milgyo_pass_03": 1,
+        "season1/metin2_map_wl_01": 1,
+        "season2/metin2_map_a2_1": 28,
+        "season2/metin2_map_milgyo_a": 10,
+        "season2/metin2_map_trent02_a": 2,
+        "season2/metin2_map_trent_a": 2
+      },
+      "instances": 211,
+      "important_instances": 30,
+      "supported": true,
+      "positions": [
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000000",
+          "position": "10301.969727 -9729.589844 17727.529297"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000001",
+          "position": "12203.482422 -39632.625000 15884.615234"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000002",
+          "position": "10664.587891 -54002.386719 15456.990234"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000002",
+          "position": "16777.316406 -56393.210938 15730.955078"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000003",
+          "position": "11696.439453 -85824.257813 13126.200195"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001000",
+          "position": "41237.945313 -4483.021484 18361.974609"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001002",
+          "position": "50049.363281 -59713.976563 18122.972656"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001002",
+          "position": "44396.281250 -72909.140625 14184.500000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001002",
+          "position": "31070.000000 -54350.000000 16132.000000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003000",
+          "position": "79292.218750 -17861.830078 21138.000000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003001",
+          "position": "93666.835938 -28079.890625 21238.947266"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003002",
+          "position": "90043.367188 -56068.000000 20815.859375"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003003",
+          "position": "78632.312500 -82546.914063 20353.000000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003003",
+          "position": "94330.578125 -94728.710938 20301.095703"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003003",
+          "position": "79098.351563 -96975.007813 16495.500000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001001",
+          "position": "42087.140625 -26933.019531 17906.785156"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001001",
+          "position": "27567.107422 -42845.335938 17132.345703"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001001",
+          "position": "42088.992188 -50623.691406 18519.955078"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001003",
+          "position": "26622.503906 -92895.445313 16841.726563"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001004",
+          "position": "34958.445313 -110508.507813 17636.574219"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001004",
+          "position": "39621.894531 -115372.296875 18289.984375"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002001",
+          "position": "65609.726563 -27639.398438 19687.095703"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002003",
+          "position": "69879.960938 -102048.750000 19811.613281"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002003",
+          "position": "59901.000000 -87973.812500 18020.230469"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003000",
+          "position": "92900.000000 -10900.000000 20105.500000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003002",
+          "position": "90938.492188 -67769.703125 19251.000000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003003",
+          "position": "92168.656250 -90271.640625 19193.470703"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003003",
+          "position": "77212.656250 -98597.445313 18950.806641"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000000",
+          "position": "5274.424805 -23696.246094 14353.700195"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000001",
+          "position": "9790.377930 -39985.527344 14473.062500"
+        }
+      ]
+    },
+    {
+      "type": "d:/ymir work/tree/b1_sassafras_rt_fall2.spt",
+      "maps": {
+        "map_a2": 29,
+        "map_b_fielddungeon": 7,
+        "metin2_map_a1": 19,
+        "metin2_map_b1": 11,
+        "metin2_map_c1": 10,
+        "metin2_map_c3": 24,
+        "metin2_map_milgyo": 4,
+        "season1/metin2_map_shinsutest_01": 1,
+        "season1/metin2_map_siege_01": 1,
+        "season1/metin2_map_siege_02": 1,
+        "season1/metin2_map_siege_03": 1,
+        "season2/metin2_map_a2_1": 29,
+        "season2/metin2_map_milgyo_a": 4
+      },
+      "instances": 141,
+      "important_instances": 30,
+      "supported": true,
+      "positions": [
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000001",
+          "position": "12358.760742 -40352.468750 15829.990234"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/000002",
+          "position": "11250.227539 -51354.687500 15756.625000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001000",
+          "position": "40513.789063 -24051.515625 17336.529297"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001002",
+          "position": "29040.000000 -55710.000000 16130.500000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001002",
+          "position": "41052.316406 -63392.742188 16013.459961"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001003",
+          "position": "31753.226563 -96973.335938 12839.219727"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001003",
+          "position": "34498.828125 -102035.726563 12794.500000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001003",
+          "position": "39579.332031 -93044.539063 13060.507813"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/001003",
+          "position": "44940.546875 -83719.937500 14474.424805"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002002",
+          "position": "56800.222656 -70350.796875 17987.375000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002003",
+          "position": "66250.234375 -80426.976563 18011.759766"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002003",
+          "position": "57051.859375 -92797.484375 14849.452148"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/002003",
+          "position": "62340.425781 -100310.210938 14353.775391"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003000",
+          "position": "79819.828125 -17132.048828 21138.000000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003001",
+          "position": "82154.781250 -39621.871094 20362.730469"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003001",
+          "position": "86502.328125 -32920.285156 21101.724609"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003002",
+          "position": "78459.578125 -75590.328125 20413.748047"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003002",
+          "position": "79639.000000 -62209.183594 20358.000000"
+        },
+        {
+          "map": "metin2_map_a1",
+          "tile": "metin2_map_a1/003003",
+          "position": "90722.523438 -79276.546875 20467.904297"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001001",
+          "position": "41157.343750 -31626.044922 17993.669922"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/001002",
+          "position": "29237.169922 -53435.343750 17141.162109"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002001",
+          "position": "73545.921875 -38781.242188 19247.375000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002003",
+          "position": "57557.125000 -93365.921875 18296.626953"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002004",
+          "position": "60667.847656 -115883.609375 20218.703125"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002004",
+          "position": "71686.070313 -108426.625000 20109.839844"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003000",
+          "position": "82151.968750 -24821.236328 19731.027344"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003002",
+          "position": "88509.765625 -75840.101563 18944.500000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003002",
+          "position": "95749.421875 -58018.882813 19237.351563"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003003",
+          "position": "91112.265625 -89452.429688 19224.750000"
+        },
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/003004",
+          "position": "82574.195313 -113931.882813 18636.113281"
+        }
+      ]
+    },
+    {
+      "type": "d:/ymir work/tree/b3_beech_rt2.spt",
+      "maps": {
+        "gm_guild_build": 4,
+        "metin2_map_a3": 27,
+        "metin2_map_b3": 36,
+        "metin2_map_capedragonhead": 4,
+        "metin2_map_mt_thunder": 1,
+        "metin2_map_trent": 2,
+        "metin2_map_trent02": 4,
+        "season1/metin2_map_empirewar_a01": 10,
+        "season1/metin2_map_shinsutest_01": 2,
+        "season1/metin2_map_sungzi_desert_hill_01": 1,
+        "season1/metin2_map_sungzi_desert_hill_02": 1,
+        "season1/metin2_map_sungzi_desert_hill_03": 1,
+        "season1/metin2_map_wl_01": 11,
+        "season2/metin2_map_trent02_a": 4
+      },
+      "instances": 108,
+      "important_instances": 2,
+      "supported": true,
+      "positions": [
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000001",
+          "position": "5617.934570 -45350.718750 14780.282227"
+        },
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000001",
+          "position": "4219.394043 -43567.195313 14895.474609"
+        }
+      ]
+    },
+    {
+      "type": "d:/ymir work/tree/b3_umbrellathorn_rt_flowers4.spt",
+      "maps": {
+        "metin2_map_a3": 21,
+        "metin2_map_b3": 47,
+        "metin2_map_t3": 1,
+        "metin2_map_t4": 2,
+        "metin2_map_trent": 1,
+        "metin2_map_trent02": 5,
+        "season1/metin2_map_oxevent": 1,
+        "season1/metin2_map_sungzi_desert_hill_01": 6,
+        "season1/metin2_map_sungzi_desert_hill_02": 6,
+        "season1/metin2_map_sungzi_desert_hill_03": 6,
+        "season1/metin2_map_sungzi_milgyo_pass_01": 7,
+        "season1/metin2_map_sungzi_milgyo_pass_02": 7,
+        "season1/metin2_map_sungzi_milgyo_pass_03": 7,
+        "season1/metin2_map_wl_01": 1,
+        "season2/metin2_map_trent02_a": 5,
+        "season2/metin2_map_trent_a": 1
+      },
+      "instances": 124,
+      "important_instances": 1,
+      "supported": true,
+      "positions": [
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000001",
+          "position": "11864.169922 -38382.902344 14368.200195"
+        }
+      ]
+    },
+    {
+      "type": "d:/ymir work/tree/b3_shingleoak_rt5.spt",
+      "maps": {
+        "metin2_map_a3": 14,
+        "metin2_map_b3": 17,
+        "metin2_map_mt_thunder": 1,
+        "metin2_map_trent": 1,
+        "season1/metin2_map_oxevent": 1
+      },
+      "instances": 34,
+      "important_instances": 1,
+      "supported": true,
+      "positions": [
+        {
+          "map": "metin2_map_trent",
+          "tile": "metin2_map_trent/000001",
+          "position": "6034.921387 -44691.996094 14727.794922"
+        }
+      ]
+    },
+    {
+      "type": "d:/ymir work/tree/b1_baobab_rt2.spt",
+      "maps": {
+        "map_a2": 2,
+        "metin2_map_b1": 1,
+        "metin2_map_c1": 1,
+        "season2/metin2_map_a2_1": 2
+      },
+      "instances": 6,
+      "important_instances": 1,
+      "supported": true,
+      "positions": [
+        {
+          "map": "metin2_map_b1",
+          "tile": "metin2_map_b1/002001",
+          "position": "53641.839844 -49968.574219 21556.193359"
+        }
+      ]
+    },
+    {
+      "type": "d:/ymir work/tree/n2_cinnamonfern_rt_01.spt",
+      "maps": {
+        "metin2_map_capedragonhead": 16,
+        "metin2_map_guild_03": 17,
+        "metin2_map_mt_thunder": 2,
+        "metin2_map_n_desert_01": 92,
+        "season1/metin2_map_nusluck01": 60,
+        "season1/metin2_map_sungzi_desert_hill_01": 8,
+        "season1/metin2_map_sungzi_desert_hill_02": 8,
+        "season1/metin2_map_sungzi_desert_hill_03": 8,
+        "season1/metin2_map_wl_01": 210,
+        "season2/metin2_map_n_desert_02": 92
+      },
+      "instances": 513,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/n2_cinnamonfern_rt_02.spt",
+      "maps": {
+        "metin2_map_capedragonhead": 27,
+        "metin2_map_guild_03": 64,
+        "metin2_map_mt_thunder": 6,
+        "metin2_map_n_desert_01": 92,
+        "season1/metin2_map_nusluck01": 58,
+        "season1/metin2_map_sungzi_desert_01": 35,
+        "season1/metin2_map_wl_01": 59,
+        "season2/metin2_map_n_desert_02": 92
+      },
+      "instances": 433,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/n2_aloevera_rt_flowers_02.spt",
+      "maps": {
+        "metin2_map_guild_03": 10,
+        "metin2_map_mt_thunder": 45,
+        "metin2_map_n_desert_01": 174,
+        "season1/metin2_map_wl_01": 13,
+        "season2/metin2_map_n_desert_02": 174
+      },
+      "instances": 416,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/n1_coloradobluespruce_rt_01.spt",
+      "maps": {
+        "map_n_snowm_01": 151,
+        "season1/metin2_map_sungzi_snow": 10,
+        "season1/metin2_map_sungzi_snow_pass01": 16,
+        "season1/metin2_map_sungzi_snow_pass02": 16,
+        "season1/metin2_map_sungzi_snow_pass03": 16,
+        "season2/map_n_snowm_02": 117
+      },
+      "instances": 326,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/n1_beech_rt_winter.spt",
+      "maps": {
+        "map_n_snowm_01": 138,
+        "season1/metin2_map_sungzi_snow": 2,
+        "season1/metin2_map_sungzi_snow_pass01": 11,
+        "season1/metin2_map_sungzi_snow_pass02": 11,
+        "season1/metin2_map_sungzi_snow_pass03": 11,
+        "season2/map_n_snowm_02": 142
+      },
+      "instances": 315,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/n2_joshuatree_rt_03.spt",
+      "maps": {
+        "metin2_map_guild_02": 2,
+        "metin2_map_guild_03": 4,
+        "metin2_map_mt_thunder": 151,
+        "metin2_map_n_desert_01": 50,
+        "season1/metin2_map_nusluck01": 5,
+        "season1/metin2_map_wl_01": 18,
+        "season2/metin2_map_empirewar03": 14,
+        "season2/metin2_map_n_desert_02": 50
+      },
+      "instances": 294,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/n2_aloevera_rt_flowers_01.spt",
+      "maps": {
+        "metin2_map_guild_03": 9,
+        "metin2_map_mt_thunder": 28,
+        "metin2_map_n_desert_01": 102,
+        "season1/metin2_map_nusluck01": 5,
+        "season1/metin2_map_wl_01": 10,
+        "season2/metin2_map_n_desert_02": 102
+      },
+      "instances": 256,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/n2_joshuatree_rt_01.spt",
+      "maps": {
+        "metin2_map_guild_02": 3,
+        "metin2_map_guild_03": 5,
+        "metin2_map_mt_thunder": 81,
+        "metin2_map_n_desert_01": 81,
+        "season1/metin2_map_wl_01": 3,
+        "season2/metin2_map_n_desert_02": 81
+      },
+      "instances": 254,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/n1_beech_rt_winter02.spt",
+      "maps": {
+        "map_n_snowm_01": 115,
+        "season1/metin2_map_sungzi_snow": 3,
+        "season1/metin2_map_sungzi_snow_pass01": 4,
+        "season1/metin2_map_sungzi_snow_pass02": 4,
+        "season1/metin2_map_sungzi_snow_pass03": 4,
+        "season2/map_n_snowm_02": 116
+      },
+      "instances": 246,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/b2_ivyspy_rt_winter2.spt",
+      "maps": {
+        "metin2_map_devilscatacomb": 43,
+        "metin2_map_guild_02": 6,
+        "metin2_map_mt_thunder": 5,
+        "metin2_map_n_flame_01": 174,
+        "season1/metin2_map_wl_01": 2
+      },
+      "instances": 230,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/n2_joshuatree_rt_02.spt",
+      "maps": {
+        "metin2_map_guild_02": 1,
+        "metin2_map_guild_03": 7,
+        "metin2_map_mt_thunder": 93,
+        "metin2_map_n_desert_01": 53,
+        "season1/metin2_map_nusluck01": 5,
+        "season1/metin2_map_wl_01": 9,
+        "season2/metin2_map_n_desert_02": 53
+      },
+      "instances": 221,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/n1_coloradobluespruce_rt_02.spt",
+      "maps": {
+        "map_n_snowm_01": 106,
+        "season1/metin2_map_sungzi_snow": 10,
+        "season1/metin2_map_sungzi_snow_pass01": 8,
+        "season1/metin2_map_sungzi_snow_pass02": 8,
+        "season1/metin2_map_sungzi_snow_pass03": 8,
+        "season2/map_n_snowm_02": 80
+      },
+      "instances": 220,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/n2_cinnamonfern_rt_03.spt",
+      "maps": {
+        "metin2_map_capedragonhead": 13,
+        "metin2_map_guild_03": 24,
+        "metin2_map_mt_thunder": 2,
+        "metin2_map_n_desert_01": 65,
+        "season1/metin2_map_wl_01": 39,
+        "season2/metin2_map_n_desert_02": 65
+      },
+      "instances": 208,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/n1_coloradobluespruce_rt_03.spt",
+      "maps": {
+        "map_n_snowm_01": 80,
+        "season1/metin2_map_sungzi_snow": 7,
+        "season1/metin2_map_sungzi_snow_pass01": 6,
+        "season1/metin2_map_sungzi_snow_pass02": 6,
+        "season1/metin2_map_sungzi_snow_pass03": 6,
+        "season2/map_n_snowm_02": 69
+      },
+      "instances": 174,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/b2_ivyspy_rt_winter.spt",
+      "maps": {
+        "metin2_map_devilscatacomb": 48,
+        "metin2_map_guild_02": 7,
+        "metin2_map_mt_thunder": 2,
+        "metin2_map_n_flame_01": 112,
+        "season1/metin2_map_wl_01": 3
+      },
+      "instances": 172,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/n1_beech_rt_winter03.spt",
+      "maps": {
+        "map_n_snowm_01": 78,
+        "season1/metin2_map_sungzi_snow": 2,
+        "season1/metin2_map_sungzi_snow_pass01": 2,
+        "season1/metin2_map_sungzi_snow_pass02": 2,
+        "season1/metin2_map_sungzi_snow_pass03": 2,
+        "season2/map_n_snowm_02": 78,
+        "season2/metin2_map_empirewar01": 2
+      },
+      "instances": 166,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/n2_curlypalm_rt_03.spt",
+      "maps": {
+        "metin2_map_guild_02": 1,
+        "metin2_map_guild_03": 1,
+        "metin2_map_n_desert_01": 73,
+        "season2/metin2_map_empirewar03": 1,
+        "season2/metin2_map_n_desert_02": 73
+      },
+      "instances": 149,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/b3_beech_rt_fall.spt",
+      "maps": {
+        "gm_guild_build": 2,
+        "metin2_map_a3": 22,
+        "metin2_map_b3": 18,
+        "metin2_map_mt_thunder": 1,
+        "season1/metin2_map_empirewar_a01": 6,
+        "season1/metin2_map_shinsutest_01": 11,
+        "season1/metin2_map_siege_01": 11,
+        "season1/metin2_map_siege_02": 11,
+        "season1/metin2_map_siege_03": 11,
+        "season1/metin2_map_sungzi_desert_01": 1,
+        "season1/metin2_map_sungzi_desert_hill_01": 4,
+        "season1/metin2_map_sungzi_desert_hill_02": 4,
+        "season1/metin2_map_sungzi_desert_hill_03": 4,
+        "season1/metin2_map_sungzi_milgyo": 2,
+        "season1/metin2_map_sungzi_milgyo_pass_01": 3,
+        "season1/metin2_map_sungzi_milgyo_pass_02": 3,
+        "season1/metin2_map_sungzi_milgyo_pass_03": 3,
+        "season1/metin2_map_wl_01": 15
+      },
+      "instances": 132,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/n1_commonolive_rt_winter.spt",
+      "maps": {
+        "map_n_snowm_01": 56,
+        "metin2_map_mt_thunder": 1,
+        "season2/map_n_snowm_02": 56,
+        "season2/metin2_map_empirewar01": 7
+      },
+      "instances": 120,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/n1_montereycypress_rt_winter_01.spt",
+      "maps": {
+        "map_n_snowm_01": 50,
+        "season1/metin2_map_sungzi_snow": 3,
+        "season2/map_n_snowm_02": 50,
+        "season2/metin2_map_empirewar01": 5
+      },
+      "instances": 108,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/n2_datepalm_rt_02.spt",
+      "maps": {
+        "metin2_map_guild_02": 3,
+        "metin2_map_guild_03": 1,
+        "metin2_map_n_desert_01": 52,
+        "season2/metin2_map_n_desert_02": 52
+      },
+      "instances": 108,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/n1_whitepine_rt_low_02.spt",
+      "maps": {
+        "season1/metin2_map_sungzi_snow": 13,
+        "season1/metin2_map_sungzi_snow_pass01": 18,
+        "season1/metin2_map_sungzi_snow_pass02": 18,
+        "season1/metin2_map_sungzi_snow_pass03": 18,
+        "season2/map_n_snowm_02": 31,
+        "season2/metin2_map_empirewar01": 2
+      },
+      "instances": 100,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/n1_montereycypress_rt_winter_02.spt",
+      "maps": {
+        "map_n_snowm_01": 42,
+        "season1/metin2_map_sungzi_snow_pass01": 1,
+        "season1/metin2_map_sungzi_snow_pass02": 1,
+        "season1/metin2_map_sungzi_snow_pass03": 1,
+        "season2/map_n_snowm_02": 42,
+        "season2/metin2_map_empirewar01": 8
+      },
+      "instances": 95,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/b3_beech_rt.spt",
+      "maps": {
+        "gm_guild_build": 3,
+        "metin2_map_a3": 24,
+        "metin2_map_b3": 36,
+        "metin2_map_capedragonhead": 1,
+        "metin2_map_trent02": 3,
+        "season1/metin2_map_empirewar_a01": 2,
+        "season1/metin2_map_shinsutest_01": 4,
+        "season1/metin2_map_siege_01": 3,
+        "season1/metin2_map_siege_02": 3,
+        "season1/metin2_map_siege_03": 3,
+        "season1/metin2_map_sungzi_milgyo": 1,
+        "season1/metin2_map_wl_01": 8,
+        "season2/metin2_map_trent02_a": 3
+      },
+      "instances": 94,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/n2_datepalm_rt_01.spt",
+      "maps": {
+        "metin2_map_n_desert_01": 47,
+        "season2/metin2_map_n_desert_02": 47
+      },
+      "instances": 94,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/b3_umbrellathorn_rt_flowers3.spt",
+      "maps": {
+        "metin2_map_a3": 37,
+        "metin2_map_b3": 38,
+        "metin2_map_mt_thunder": 2,
+        "metin2_map_t4": 1,
+        "metin2_map_trent02": 3,
+        "season1/metin2_map_oxevent": 1,
+        "season1/metin2_map_sungzi_desert_hill_01": 1,
+        "season1/metin2_map_sungzi_desert_hill_02": 1,
+        "season1/metin2_map_sungzi_desert_hill_03": 1,
+        "season1/metin2_map_sungzi_milgyo": 2,
+        "season1/metin2_map_sungzi_milgyo_pass_01": 1,
+        "season1/metin2_map_sungzi_milgyo_pass_02": 1,
+        "season1/metin2_map_sungzi_milgyo_pass_03": 1,
+        "season2/metin2_map_trent02_a": 3
+      },
+      "instances": 93,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/b3_umbrellathorn_rt_flowers.spt",
+      "maps": {
+        "metin2_map_a3": 34,
+        "metin2_map_b3": 37,
+        "metin2_map_t3": 1,
+        "metin2_map_t4": 1,
+        "metin2_map_trent02": 2,
+        "season1/metin2_map_sungzi_milgyo_pass_01": 2,
+        "season1/metin2_map_sungzi_milgyo_pass_02": 2,
+        "season1/metin2_map_sungzi_milgyo_pass_03": 2,
+        "season2/metin2_map_trent02_a": 2
+      },
+      "instances": 83,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/b3_umbrellathorn_rt_flowers2.spt",
+      "maps": {
+        "metin2_map_a3": 25,
+        "metin2_map_b3": 37,
+        "metin2_map_mt_thunder": 2,
+        "metin2_map_t3": 1,
+        "metin2_map_trent02": 1,
+        "season1/metin2_map_sungzi_desert_hill_01": 2,
+        "season1/metin2_map_sungzi_desert_hill_02": 2,
+        "season1/metin2_map_sungzi_desert_hill_03": 2,
+        "season1/metin2_map_sungzi_milgyo_pass_01": 2,
+        "season1/metin2_map_sungzi_milgyo_pass_02": 2,
+        "season1/metin2_map_sungzi_milgyo_pass_03": 2,
+        "season2/metin2_map_trent02_a": 1
+      },
+      "instances": 79,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/b3_beech_rt_fall2.spt",
+      "maps": {
+        "gm_guild_build": 2,
+        "metin2_map_a3": 35,
+        "metin2_map_b3": 19,
+        "season1/metin2_map_empirewar_a01": 2,
+        "season1/metin2_map_shinsutest_01": 1,
+        "season1/metin2_map_siege_01": 1,
+        "season1/metin2_map_siege_02": 1,
+        "season1/metin2_map_siege_03": 1,
+        "season1/metin2_map_sungzi_desert_hill_01": 1,
+        "season1/metin2_map_sungzi_desert_hill_02": 1,
+        "season1/metin2_map_sungzi_desert_hill_03": 1,
+        "season1/metin2_map_sungzi_milgyo": 1,
+        "season1/metin2_map_sungzi_milgyo_pass_01": 2,
+        "season1/metin2_map_sungzi_milgyo_pass_02": 2,
+        "season1/metin2_map_sungzi_milgyo_pass_03": 2,
+        "season1/metin2_map_wl_01": 6
+      },
+      "instances": 78,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/n2_coconutpalm_rt_02.spt",
+      "maps": {
+        "metin2_map_guild_02": 3,
+        "metin2_map_guild_03": 4,
+        "metin2_map_n_desert_01": 30,
+        "season2/metin2_map_empirewar03": 9,
+        "season2/metin2_map_n_desert_02": 30
+      },
+      "instances": 76,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/n2_curlypalm_rt_01.spt",
+      "maps": {
+        "metin2_map_guild_03": 2,
+        "metin2_map_n_desert_01": 36,
+        "season2/metin2_map_n_desert_02": 36
+      },
+      "instances": 74,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/n2_coconutpalm_rt_01.spt",
+      "maps": {
+        "metin2_map_guild_02": 4,
+        "metin2_map_guild_03": 1,
+        "metin2_map_n_desert_01": 33,
+        "season2/metin2_map_empirewar03": 2,
+        "season2/metin2_map_n_desert_02": 33
+      },
+      "instances": 73,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/n2_coconutpalm_rt_03.spt",
+      "maps": {
+        "metin2_map_guild_02": 4,
+        "metin2_map_guild_03": 4,
+        "metin2_map_n_desert_01": 28,
+        "season2/metin2_map_empirewar03": 3,
+        "season2/metin2_map_n_desert_02": 28
+      },
+      "instances": 67,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/n1_whitepine_rt_low_01.spt",
+      "maps": {
+        "season1/metin2_map_sungzi_snow": 6,
+        "season1/metin2_map_sungzi_snow_pass01": 5,
+        "season1/metin2_map_sungzi_snow_pass02": 5,
+        "season1/metin2_map_sungzi_snow_pass03": 5,
+        "season2/map_n_snowm_02": 40,
+        "season2/metin2_map_empirewar01": 2
+      },
+      "instances": 63,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/n2_curlypalm_rt_02.spt",
+      "maps": {
+        "metin2_map_guild_02": 2,
+        "metin2_map_guild_03": 1,
+        "metin2_map_n_desert_01": 29,
+        "season2/metin2_map_n_desert_02": 29
+      },
+      "instances": 61,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/n2_datepalm_rt_03.spt",
+      "maps": {
+        "metin2_map_n_desert_01": 30,
+        "season2/metin2_map_n_desert_02": 30
+      },
+      "instances": 60,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/b3_pagodatree_rt_winter.spt",
+      "maps": {
+        "metin2_map_a3": 22,
+        "metin2_map_b3": 16,
+        "metin2_map_devilscatacomb": 10,
+        "season1/metin2_map_nusluck01": 1,
+        "season1/metin2_map_sungzi_desert_01": 1,
+        "season1/metin2_map_sungzi_desert_hill_01": 2,
+        "season1/metin2_map_sungzi_desert_hill_02": 2,
+        "season1/metin2_map_sungzi_desert_hill_03": 2,
+        "season1/metin2_map_wl_01": 1
+      },
+      "instances": 57,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/b2_cedaroflebanon_rt.spt",
+      "maps": {
+        "metin2_map_dawnmistwood": 20,
+        "metin2_map_devilscatacomb": 17,
+        "metin2_map_mt_thunder": 11,
+        "season1/metin2_map_oxevent": 1
+      },
+      "instances": 49,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/n2_bananatree_rt_02.spt",
+      "maps": {
+        "metin2_map_guild_03": 3,
+        "metin2_map_n_desert_01": 23,
+        "season2/metin2_map_n_desert_02": 23
+      },
+      "instances": 49,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/n2_bananatree_rt_01.spt",
+      "maps": {
+        "metin2_map_guild_03": 2,
+        "metin2_map_n_desert_01": 23,
+        "season2/metin2_map_n_desert_02": 23
+      },
+      "instances": 48,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/b3_pagodatree_rt_winter2.spt",
+      "maps": {
+        "metin2_map_a3": 19,
+        "metin2_map_b3": 15,
+        "metin2_map_devilscatacomb": 3,
+        "season1/metin2_map_nusluck01": 2,
+        "season1/metin2_map_sungzi_desert_01": 2,
+        "season1/metin2_map_sungzi_desert_hill_01": 1,
+        "season1/metin2_map_sungzi_desert_hill_02": 1,
+        "season1/metin2_map_sungzi_desert_hill_03": 1,
+        "season1/metin2_map_wl_01": 1
+      },
+      "instances": 45,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/n1_montereycypress_rt_winter_03.spt",
+      "maps": {
+        "map_n_snowm_01": 16,
+        "season1/metin2_map_sungzi_snow_pass01": 2,
+        "season1/metin2_map_sungzi_snow_pass02": 2,
+        "season1/metin2_map_sungzi_snow_pass03": 2,
+        "season2/map_n_snowm_02": 16,
+        "season2/metin2_map_empirewar01": 7
+      },
+      "instances": 45,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/b3_shingleoak_rt.spt",
+      "maps": {
+        "gm_guild_build": 6,
+        "metin2_map_a3": 13,
+        "metin2_map_b3": 21,
+        "metin2_map_mt_thunder": 1,
+        "season1/metin2_map_empirewar_a01": 1,
+        "season1/metin2_map_oxevent": 1
+      },
+      "instances": 43,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/b3_shingleoak_rt3.spt",
+      "maps": {
+        "metin2_map_a3": 22,
+        "metin2_map_b3": 16,
+        "metin2_map_mt_thunder": 4,
+        "season1/metin2_map_empirewar_a01": 1
+      },
+      "instances": 43,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/n1_tulip_rt_winter_01.spt",
+      "maps": {
+        "map_n_snowm_01": 21,
+        "season2/map_n_snowm_02": 21,
+        "season2/metin2_map_empirewar01": 1
+      },
+      "instances": 43,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/b3_shingleoak_rt2.spt",
+      "maps": {
+        "metin2_map_a3": 24,
+        "metin2_map_b3": 17
+      },
+      "instances": 41,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/b2_cedaroflebanon_rt3.spt",
+      "maps": {
+        "metin2_map_dawnmistwood": 24,
+        "metin2_map_devilscatacomb": 9,
+        "metin2_map_guild_02": 3,
+        "metin2_map_mt_thunder": 4
+      },
+      "instances": 40,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/n2_palmetto_rt_01.spt",
+      "maps": {
+        "metin2_map_n_desert_01": 19,
+        "season2/metin2_map_n_desert_02": 19
+      },
+      "instances": 38,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/b3_shingleoak_rt4.spt",
+      "maps": {
+        "metin2_map_a3": 18,
+        "metin2_map_b3": 17,
+        "season1/metin2_map_wl_01": 1
+      },
+      "instances": 36,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/n2_palmetto_rt_02.spt",
+      "maps": {
+        "metin2_map_n_desert_01": 11,
+        "season2/metin2_map_empirewar03": 3,
+        "season2/metin2_map_n_desert_02": 11
+      },
+      "instances": 25,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/n2_palmetto_rt_03.spt",
+      "maps": {
+        "metin2_map_n_desert_01": 6,
+        "season2/metin2_map_empirewar03": 13,
+        "season2/metin2_map_n_desert_02": 6
+      },
+      "instances": 25,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/b2_cedaroflebanon_rt2.spt",
+      "maps": {
+        "metin2_map_dawnmistwood": 4,
+        "metin2_map_devilscatacomb": 7,
+        "metin2_map_guild_02": 1,
+        "metin2_map_mt_thunder": 5
+      },
+      "instances": 17,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/b2_redoak_rt2.spt",
+      "maps": {
+        "gm_guild_build": 1,
+        "metin2_map_devilscatacomb": 6,
+        "metin2_map_mt_thunder": 1,
+        "season1/metin2_map_oxevent": 3,
+        "season1/metin2_map_shinsutest_01": 1,
+        "season1/metin2_map_wl_01": 4
+      },
+      "instances": 16,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/b2_redoak_rt4.spt",
+      "maps": {
+        "gm_guild_build": 4,
+        "metin2_map_devilscatacomb": 4,
+        "metin2_map_mt_thunder": 1,
+        "season1/metin2_map_sungzi_milgyo_pass_01": 1,
+        "season1/metin2_map_sungzi_milgyo_pass_02": 1,
+        "season1/metin2_map_sungzi_milgyo_pass_03": 1,
+        "season1/metin2_map_wl_01": 3
+      },
+      "instances": 15,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/b2_redoak_rt.spt",
+      "maps": {
+        "gm_guild_build": 3,
+        "metin2_map_devilscatacomb": 10,
+        "metin2_map_mt_thunder": 1
+      },
+      "instances": 14,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/b2_redoak_rt3.spt",
+      "maps": {
+        "metin2_map_devilscatacomb": 6,
+        "season1/metin2_map_oxevent": 1,
+        "season1/metin2_map_sungzi_milgyo_pass_01": 1,
+        "season1/metin2_map_sungzi_milgyo_pass_02": 1,
+        "season1/metin2_map_sungzi_milgyo_pass_03": 1,
+        "season1/metin2_map_wl_01": 2
+      },
+      "instances": 12,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/b2_ivyspy_rt.spt",
+      "maps": {
+        "gm_guild_build": 7,
+        "metin2_map_devilscatacomb": 1,
+        "metin2_map_mt_thunder": 2
+      },
+      "instances": 10,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/b2_ivyspy_rt5.spt",
+      "maps": {
+        "metin2_map_devilscatacomb": 9,
+        "metin2_map_mt_thunder": 1
+      },
+      "instances": 10,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/b1_baobab_rt.spt",
+      "maps": {
+        "map_a2": 4,
+        "metin2_map_c1": 1,
+        "season2/metin2_map_a2_1": 4
+      },
+      "instances": 9,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/b2_ivyspy_rt2.spt",
+      "maps": {
+        "gm_guild_build": 6,
+        "metin2_map_mt_thunder": 1
+      },
+      "instances": 7,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/b2_ivyspy_rt3.spt",
+      "maps": {
+        "gm_guild_build": 1,
+        "metin2_map_mt_thunder": 2
+      },
+      "instances": 3,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/b2_ivyspy_rt4.spt",
+      "maps": {
+        "gm_guild_build": 1,
+        "metin2_map_mt_thunder": 2
+      },
+      "instances": 3,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    },
+    {
+      "type": "d:/ymir work/tree/b2_japanesemaple_rt_fall2.spt",
+      "maps": {
+        "season1/metin2_map_wl_01": 1
+      },
+      "instances": 1,
+      "important_instances": 0,
+      "supported": true,
+      "positions": []
+    }
+  ],
+  "grass": [
+    {
+      "texture": "d:/ymir work/terrainmaps/b/grass/grass 01.dds",
+      "maps": [
+        "metin2_map_a1",
+        "metin2_map_b1",
+        "metin2_map_c1",
+        "metin2_map_guild_02",
+        "metin2_map_guild_03",
+        "metin2_map_milgyo",
+        "metin2_map_t1",
+        "season1/metin2_map_ew02",
+        "season1/metin2_map_sungzi",
+        "season2/metin2_map_milgyo_a"
+      ],
+      "tiles": 108,
+      "samples": 1089100,
+      "important_samples": 582843
+    },
+    {
+      "texture": "d:/ymir work/terrainmaps/b/grass/grass 02.dds",
+      "maps": [
+        "metin2_map_a1",
+        "metin2_map_b1",
+        "metin2_map_c1",
+        "metin2_map_guild_02",
+        "metin2_map_guild_03",
+        "metin2_map_t1",
+        "season1/metin2_map_shinsutest_01",
+        "season1/metin2_map_siege_01",
+        "season1/metin2_map_siege_02",
+        "season1/metin2_map_siege_03",
+        "season1/metin2_map_sungzi"
+      ],
+      "tiles": 98,
+      "samples": 634125,
+      "important_samples": 344156
+    },
+    {
+      "texture": "d:/ymir work/terrainmaps/trent/grass/grass 01.dds",
+      "maps": [
+        "metin2_map_trent",
+        "metin2_map_trent02",
+        "season2/metin2_map_trent02_a",
+        "season2/metin2_map_trent_a"
+      ],
+      "tiles": 30,
+      "samples": 183615,
+      "important_samples": 41599
+    },
+    {
+      "texture": "d:/ymir work/terrainmaps/b/grass/grass 03.dds",
+      "maps": [
+        "metin2_map_a1",
+        "metin2_map_b1",
+        "metin2_map_c1",
+        "metin2_map_duel",
+        "metin2_map_guild_02",
+        "metin2_map_guild_03",
+        "metin2_map_t1",
+        "metin2_map_t2",
+        "season1/metin2_map_ew02",
+        "season1/metin2_map_shinsutest_01",
+        "season1/metin2_map_siege_01",
+        "season1/metin2_map_siege_02",
+        "season1/metin2_map_siege_03",
+        "season1/metin2_map_sungzi"
+      ],
+      "tiles": 85,
+      "samples": 849745,
+      "important_samples": 30753
+    },
+    {
+      "texture": "d:/ymir work/terrainmaps/trent/grass/grass 02.dds",
+      "maps": [
+        "metin2_map_trent",
+        "metin2_map_trent02",
+        "season2/metin2_map_trent02_a",
+        "season2/metin2_map_trent_a"
+      ],
+      "tiles": 21,
+      "samples": 21121,
+      "important_samples": 103
+    },
+    {
+      "texture": "d:/ymir work/terrainmaps/trent/grass/grass 03.dds",
+      "maps": [
+        "metin2_map_trent",
+        "metin2_map_trent02",
+        "season2/metin2_map_trent02_a",
+        "season2/metin2_map_trent_a"
+      ],
+      "tiles": 27,
+      "samples": 517607,
+      "important_samples": 37
+    },
+    {
+      "texture": "d:/ymir work/terrainmaps/dungeon/devilcave/dc_grass_00.dds",
+      "maps": [
+        "metin2_map_devilscatacomb",
+        "metin2_map_milgyo",
+        "season2/metin2_map_milgyo_a"
+      ],
+      "tiles": 57,
+      "samples": 1895121,
+      "important_samples": 0
+    },
+    {
+      "texture": "d:/ymir work/terrainmaps/b/grass/grass 01_01.dds",
+      "maps": [
+        "gm_guild_build",
+        "metin2_map_a3",
+        "metin2_map_b3",
+        "metin2_map_c3",
+        "metin2_map_wedding_01"
+      ],
+      "tiles": 50,
+      "samples": 974386,
+      "important_samples": 0
+    },
+    {
+      "texture": "d:/ymir work/terrainmaps/a/grass/grass 01.dds",
+      "maps": [
+        "map_a2",
+        "metin2_map_guild_01",
+        "season2/metin2_map_a2_1"
+      ],
+      "tiles": 76,
+      "samples": 777343,
+      "important_samples": 0
+    },
+    {
+      "texture": "d:/ymir work/terrainmaps/a/grass/grass 02.dds",
+      "maps": [
+        "map_a2",
+        "metin2_map_guild_01",
+        "season1/metin2_map_nusluck01",
+        "season1/metin2_map_oxevent",
+        "season1/metin2_map_wl_01",
+        "season2/metin2_map_a2_1"
+      ],
+      "tiles": 96,
+      "samples": 623384,
+      "important_samples": 0
+    },
+    {
+      "texture": "d:/ymir work/terrainmaps/b/grass/grass 02_01.dds",
+      "maps": [
+        "gm_guild_build",
+        "metin2_map_a3",
+        "metin2_map_b3",
+        "metin2_map_c3",
+        "metin2_map_wedding_01",
+        "season1/metin2_map_nusluck01",
+        "season1/metin2_map_wl_01"
+      ],
+      "tiles": 56,
+      "samples": 567047,
+      "important_samples": 0
+    },
+    {
+      "texture": "d:/ymir work/terrainmaps/dawnmistwood/dawnmistwood_grass002.dds",
+      "maps": [
+        "metin2_map_dawnmistwood"
+      ],
+      "tiles": 25,
+      "samples": 347430,
+      "important_samples": 0
+    },
+    {
+      "texture": "d:/ymir work/terrainmaps/capedragonhead/capedragon_grass002.dds",
+      "maps": [
+        "metin2_map_capedragonhead"
+      ],
+      "tiles": 36,
+      "samples": 342689,
+      "important_samples": 0
+    },
+    {
+      "texture": "d:/ymir work/terrainmaps/dawnmistwood/dawnmistwood_grass001.dds",
+      "maps": [
+        "metin2_map_dawnmistwood"
+      ],
+      "tiles": 20,
+      "samples": 209799,
+      "important_samples": 0
+    },
+    {
+      "texture": "d:/ymir work/terrainmaps/bayblacksand/bayblacksand_grass.dds",
+      "maps": [
+        "metin2_map_bayblacksand"
+      ],
+      "tiles": 18,
+      "samples": 209168,
+      "important_samples": 0
+    },
+    {
+      "texture": "d:/ymir work/terrainmaps/capedragonhead/capedragon_grass003.dds",
+      "maps": [
+        "metin2_map_bayblacksand",
+        "metin2_map_capedragonhead"
+      ],
+      "tiles": 26,
+      "samples": 188226,
+      "important_samples": 0
+    },
+    {
+      "texture": "d:/ymir work/terrainmaps/b/grass/grass 01_02.dds",
+      "maps": [
+        "metin2_map_milgyo",
+        "season1/metin2_map_sungzi_milgyo",
+        "season1/metin2_map_sungzi_milgyo_pass_01",
+        "season1/metin2_map_sungzi_milgyo_pass_02",
+        "season1/metin2_map_sungzi_milgyo_pass_03",
+        "season2/metin2_map_milgyo_a"
+      ],
+      "tiles": 59,
+      "samples": 167063,
+      "important_samples": 0
+    },
+    {
+      "texture": "d:/ymir work/terrainmaps/b/grass/grass 03_05.dds",
+      "maps": [
+        "metin2_map_milgyo",
+        "season1/metin2_map_sungzi_milgyo",
+        "season1/metin2_map_sungzi_milgyo_pass_01",
+        "season1/metin2_map_sungzi_milgyo_pass_02",
+        "season1/metin2_map_sungzi_milgyo_pass_03",
+        "season2/metin2_map_milgyo_a"
+      ],
+      "tiles": 57,
+      "samples": 159684,
+      "important_samples": 0
+    },
+    {
+      "texture": "d:/ymir work/terrainmaps/a/grass/grass 03.dds",
+      "maps": [
+        "season1/metin2_map_nusluck01",
+        "season1/metin2_map_oxevent",
+        "season1/metin2_map_wl_01"
+      ],
+      "tiles": 12,
+      "samples": 149665,
+      "important_samples": 0
+    },
+    {
+      "texture": "d:/ymir work/terrainmaps/mtthunder/mtthunder_grass03.dds",
+      "maps": [
+        "metin2_map_mt_thunder"
+      ],
+      "tiles": 15,
+      "samples": 105295,
+      "important_samples": 0
+    },
+    {
+      "texture": "d:/ymir work/terrainmaps/guild_village/guild_village_grass002.dds",
+      "maps": [
+        "metin2_guild_village"
+      ],
+      "tiles": 4,
+      "samples": 83609,
+      "important_samples": 0
+    },
+    {
+      "texture": "d:/ymir work/terrainmaps/n/desert/grass/grass 02.dds",
+      "maps": [
+        "metin2_map_n_desert_01",
+        "season2/metin2_map_n_desert_02"
+      ],
+      "tiles": 24,
+      "samples": 66006,
+      "important_samples": 0
+    },
+    {
+      "texture": "d:/ymir work/terrainmaps/mtthunder/mtthunder_grass02.dds",
+      "maps": [
+        "metin2_map_mt_thunder"
+      ],
+      "tiles": 13,
+      "samples": 61869,
+      "important_samples": 0
+    },
+    {
+      "texture": "d:/ymir work/terrainmaps/bayblacksand/bayblacksand_grass_00.dds",
+      "maps": [
+        "metin2_map_bayblacksand",
+        "metin2_map_dawnmistwood"
+      ],
+      "tiles": 25,
+      "samples": 49436,
+      "important_samples": 0
+    },
+    {
+      "texture": "d:/ymir work/terrainmaps/empirewar/grass01.dds",
+      "maps": [
+        "season1/metin2_map_empirewar_a01"
+      ],
+      "tiles": 4,
+      "samples": 45682,
+      "important_samples": 0
+    },
+    {
+      "texture": "d:/ymir work/terrainmaps/capedragonhead/capedragon_grass001.dds",
+      "maps": [
+        "metin2_map_capedragonhead"
+      ],
+      "tiles": 13,
+      "samples": 44716,
+      "important_samples": 0
+    },
+    {
+      "texture": "d:/ymir work/terrainmaps/dawnmistwood/dawnmistwood_grass003.dds",
+      "maps": [
+        "metin2_map_dawnmistwood"
+      ],
+      "tiles": 7,
+      "samples": 37647,
+      "important_samples": 0
+    },
+    {
+      "texture": "d:/ymir work/terrainmaps/n/desert/grass/grass 03.dds",
+      "maps": [
+        "metin2_map_n_desert_01",
+        "season1/metin2_map_sungzi_desert_01",
+        "season1/metin2_map_sungzi_desert_hill_01",
+        "season1/metin2_map_sungzi_desert_hill_02",
+        "season1/metin2_map_sungzi_desert_hill_03",
+        "season2/metin2_map_n_desert_02"
+      ],
+      "tiles": 31,
+      "samples": 28807,
+      "important_samples": 0
+    },
+    {
+      "texture": "d:/ymir work/terrainmaps/empirewar/summer/grass01.dds",
+      "maps": [
+        "season2/metin2_map_empirewar02"
+      ],
+      "tiles": 4,
+      "samples": 24452,
+      "important_samples": 0
+    },
+    {
+      "texture": "d:/ymir work/terrainmaps/b/grass/grass 03_01.dds",
+      "maps": [
+        "gm_guild_build",
+        "metin2_map_a3",
+        "metin2_map_b3",
+        "metin2_map_wedding_01"
+      ],
+      "tiles": 6,
+      "samples": 20602,
+      "important_samples": 0
+    },
+    {
+      "texture": "d:/ymir work/terrainmaps/empirewar/snow/grass01.dds",
+      "maps": [
+        "season2/metin2_map_empirewar01"
+      ],
+      "tiles": 4,
+      "samples": 19860,
+      "important_samples": 0
+    },
+    {
+      "texture": "d:/ymir work/terrainmaps/bayblacksand/bayblacksand_seagrass.dds",
+      "maps": [
+        "metin2_map_bayblacksand"
+      ],
+      "tiles": 9,
+      "samples": 15544,
+      "important_samples": 0
+    },
+    {
+      "texture": "d:/ymir work/terrainmaps/n/desert/grass/grass 01.dds",
+      "maps": [
+        "metin2_map_n_desert_01",
+        "season2/metin2_map_n_desert_02"
+      ],
+      "tiles": 18,
+      "samples": 10230,
+      "important_samples": 0
+    },
+    {
+      "texture": "d:/ymir work/terrainmaps/empirewar/grass02.dds",
+      "maps": [
+        "season1/metin2_map_empirewar_a01"
+      ],
+      "tiles": 2,
+      "samples": 3681,
+      "important_samples": 0
+    },
+    {
+      "texture": "d:/ymir work/terrainmaps/empirewar/desert/grass02.dds",
+      "maps": [
+        "season2/metin2_map_empirewar03"
+      ],
+      "tiles": 3,
+      "samples": 2565,
+      "important_samples": 0
+    },
+    {
+      "texture": "d:/ymir work/terrainmaps/empirewar/snow/grass02.dds",
+      "maps": [
+        "season2/metin2_map_empirewar01"
+      ],
+      "tiles": 1,
+      "samples": 18,
+      "important_samples": 0
+    }
+  ],
+  "missing_packs": []
+}

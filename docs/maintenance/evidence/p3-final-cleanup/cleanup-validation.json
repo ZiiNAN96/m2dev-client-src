@@ -1,0 +1,11 @@
+{
+  "status": "PASS",
+  "releaseBuild": "PASS",
+  "targetedTests": "10/10",
+  "normalClientA1": "PASS",
+  "settings": "PASS",
+  "exit": 0,
+  "fastGate": "PASS",
+  "userconfigs": "byte-identical",
+  "exeAndRoot": "unchanged"
+}

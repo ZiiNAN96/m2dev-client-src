@@ -1,0 +1,3793 @@
+{
+  "catalogSha256": "01a8530d163a0a306229beeeaa89eee57ac5c1546dadcccfde9c9ad5fdeff806",
+  "selectedLegacyMaterials": 118,
+  "uniqueMaterials": 26,
+  "affectedMaps": 84,
+  "usedMaps": 78,
+  "slots": 466,
+  "maps": [
+    {
+      "map": "gm_guild_build",
+      "textureset": "textureset/metin2_a3.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 01_01.dds",
+          "mappingId": 54,
+          "material": "Ground085",
+          "maskSamples": 5
+        },
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 02_01.dds",
+          "mappingId": 56,
+          "material": "Ground103",
+          "maskSamples": 31
+        },
+        {
+          "slot": 3,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 03_01.dds",
+          "mappingId": 58,
+          "material": "Ground106",
+          "maskSamples": 0
+        },
+        {
+          "slot": 4,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 04.dds",
+          "mappingId": 59,
+          "material": "Ground103",
+          "maskSamples": 12981
+        },
+        {
+          "slot": 5,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 01_01.dds",
+          "mappingId": 4,
+          "material": "Grass003",
+          "maskSamples": 4659
+        },
+        {
+          "slot": 6,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 02_01.dds",
+          "mappingId": 7,
+          "material": "sparse_grass",
+          "maskSamples": 7424
+        },
+        {
+          "slot": 7,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 03_01.dds",
+          "mappingId": 9,
+          "material": "sparse_grass",
+          "maskSamples": 4257
+        }
+      ]
+    },
+    {
+      "map": "map_a2",
+      "textureset": "textureset/metin2_a2.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/a/field/field 01.dds",
+          "mappingId": 42,
+          "material": "Ground085",
+          "maskSamples": 204845
+        },
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/a/field/field 02.dds",
+          "mappingId": 43,
+          "material": "Ground103",
+          "maskSamples": 6188
+        },
+        {
+          "slot": 3,
+          "oldPath": "d:/ymir work/terrainmaps/a/grass/grass 01.dds",
+          "mappingId": 0,
+          "material": "Grass003",
+          "maskSamples": 373695
+        },
+        {
+          "slot": 4,
+          "oldPath": "d:/ymir work/terrainmaps/a/grass/grass 02.dds",
+          "mappingId": 1,
+          "material": "Grass001",
+          "maskSamples": 200108
+        },
+        {
+          "slot": 9,
+          "oldPath": "d:/ymir work/terrainmaps/a/beach/beach sand 01.dds",
+          "mappingId": 39,
+          "material": "Ground079L",
+          "maskSamples": 0
+        },
+        {
+          "slot": 10,
+          "oldPath": "d:/ymir work/terrainmaps/a/beach/beach sand 02.dds",
+          "mappingId": 40,
+          "material": "Ground079S",
+          "maskSamples": 0
+        }
+      ]
+    },
+    {
+      "map": "map_b_fielddungeon",
+      "textureset": "textureset/metin2_b_fielddungeon.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 01.dds",
+          "mappingId": 53,
+          "material": "Ground103",
+          "maskSamples": 0
+        },
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 02.dds",
+          "mappingId": 55,
+          "material": "Ground106",
+          "maskSamples": 0
+        },
+        {
+          "slot": 3,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 03.dds",
+          "mappingId": 57,
+          "material": "Ground085",
+          "maskSamples": 0
+        },
+        {
+          "slot": 4,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 04.dds",
+          "mappingId": 59,
+          "material": "Ground103",
+          "maskSamples": 16530
+        },
+        {
+          "slot": 5,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 01.dds",
+          "mappingId": 3,
+          "material": "Grass004",
+          "maskSamples": 0
+        },
+        {
+          "slot": 6,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 02.dds",
+          "mappingId": 6,
+          "material": "Grass001",
+          "maskSamples": 0
+        },
+        {
+          "slot": 7,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 03.dds",
+          "mappingId": 8,
+          "material": "Grass002",
+          "maskSamples": 0
+        },
+        {
+          "slot": 14,
+          "oldPath": "d:/ymir work/terrainmaps/b/beach/beach sand 01.dds",
+          "mappingId": 50,
+          "material": "Ground079L",
+          "maskSamples": 0
+        },
+        {
+          "slot": 15,
+          "oldPath": "d:/ymir work/terrainmaps/b/beach/beach sand 02.dds",
+          "mappingId": 51,
+          "material": "Ground079S",
+          "maskSamples": 0
+        },
+        {
+          "slot": 16,
+          "oldPath": "d:/ymir work/terrainmaps/b/beach/beach sand 03.dds",
+          "mappingId": 52,
+          "material": "Ground079L",
+          "maskSamples": 0
+        }
+      ]
+    },
+    {
+      "map": "map_n_snowm_01",
+      "textureset": "textureset/metin2_n_snowm.txt",
+      "slots": [
+        {
+          "slot": 5,
+          "oldPath": "d:/ymir work/terrainmaps/n/snow.m/field 02.dds",
+          "mappingId": 198,
+          "material": "Ground085",
+          "maskSamples": 0
+        },
+        {
+          "slot": 6,
+          "oldPath": "d:/ymir work/terrainmaps/n/snow.m/field 03.dds",
+          "mappingId": 199,
+          "material": "Ground103",
+          "maskSamples": 0
+        }
+      ]
+    },
+    {
+      "map": "metin2_guild_village",
+      "textureset": "textureset/metin2_guild_village.txt",
+      "slots": [
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/guild_village/guild_village_grass002.dds",
+          "mappingId": 30,
+          "material": "leafy_grass",
+          "maskSamples": 83609
+        },
+        {
+          "slot": 3,
+          "oldPath": "d:/ymir work/terrainmaps/guild_village/guild_village_field001.dds",
+          "mappingId": 169,
+          "material": "Ground103",
+          "maskSamples": 29925
+        },
+        {
+          "slot": 5,
+          "oldPath": "d:/ymir work/terrainmaps/guild_village/guild_village_field003.dds",
+          "mappingId": 170,
+          "material": "leafy_grass",
+          "maskSamples": 6693
+        }
+      ]
+    },
+    {
+      "map": "metin2_map_a1",
+      "textureset": "textureset/metin2_a1.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 01.dds",
+          "mappingId": 53,
+          "material": "Ground103",
+          "maskSamples": 100081
+        },
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 02.dds",
+          "mappingId": 55,
+          "material": "Ground106",
+          "maskSamples": 858
+        },
+        {
+          "slot": 3,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 03.dds",
+          "mappingId": 57,
+          "material": "Ground085",
+          "maskSamples": 246
+        },
+        {
+          "slot": 4,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 04.dds",
+          "mappingId": 59,
+          "material": "Ground103",
+          "maskSamples": 124447
+        },
+        {
+          "slot": 5,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 01.dds",
+          "mappingId": 3,
+          "material": "Grass004",
+          "maskSamples": 315247
+        },
+        {
+          "slot": 6,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 02.dds",
+          "mappingId": 6,
+          "material": "Grass001",
+          "maskSamples": 165682
+        },
+        {
+          "slot": 7,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 03.dds",
+          "mappingId": 8,
+          "material": "Grass002",
+          "maskSamples": 7723
+        },
+        {
+          "slot": 14,
+          "oldPath": "d:/ymir work/terrainmaps/b/beach/beach sand 01.dds",
+          "mappingId": 50,
+          "material": "Ground079L",
+          "maskSamples": 143078
+        },
+        {
+          "slot": 15,
+          "oldPath": "d:/ymir work/terrainmaps/b/beach/beach sand 02.dds",
+          "mappingId": 51,
+          "material": "Ground079S",
+          "maskSamples": 837
+        },
+        {
+          "slot": 16,
+          "oldPath": "d:/ymir work/terrainmaps/b/beach/beach sand 03.dds",
+          "mappingId": 52,
+          "material": "Ground079L",
+          "maskSamples": 32673
+        }
+      ]
+    },
+    {
+      "map": "metin2_map_a3",
+      "textureset": "textureset/metin2_a3.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 01_01.dds",
+          "mappingId": 54,
+          "material": "Ground085",
+          "maskSamples": 59793
+        },
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 02_01.dds",
+          "mappingId": 56,
+          "material": "Ground103",
+          "maskSamples": 0
+        },
+        {
+          "slot": 3,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 03_01.dds",
+          "mappingId": 58,
+          "material": "Ground106",
+          "maskSamples": 780
+        },
+        {
+          "slot": 4,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 04.dds",
+          "mappingId": 59,
+          "material": "Ground103",
+          "maskSamples": 248417
+        },
+        {
+          "slot": 5,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 01_01.dds",
+          "mappingId": 4,
+          "material": "Grass003",
+          "maskSamples": 317641
+        },
+        {
+          "slot": 6,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 02_01.dds",
+          "mappingId": 7,
+          "material": "sparse_grass",
+          "maskSamples": 77925
+        },
+        {
+          "slot": 7,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 03_01.dds",
+          "mappingId": 9,
+          "material": "sparse_grass",
+          "maskSamples": 1305
+        }
+      ]
+    },
+    {
+      "map": "metin2_map_b1",
+      "textureset": "textureset/metin2_b1.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 01.dds",
+          "mappingId": 53,
+          "material": "Ground103",
+          "maskSamples": 47809
+        },
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 02.dds",
+          "mappingId": 55,
+          "material": "Ground106",
+          "maskSamples": 23201
+        },
+        {
+          "slot": 3,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 03.dds",
+          "mappingId": 57,
+          "material": "Ground085",
+          "maskSamples": 632
+        },
+        {
+          "slot": 4,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 04.dds",
+          "mappingId": 59,
+          "material": "Ground103",
+          "maskSamples": 178300
+        },
+        {
+          "slot": 5,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 01.dds",
+          "mappingId": 3,
+          "material": "Grass004",
+          "maskSamples": 267596
+        },
+        {
+          "slot": 6,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 02.dds",
+          "mappingId": 6,
+          "material": "Grass001",
+          "maskSamples": 178474
+        },
+        {
+          "slot": 7,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 03.dds",
+          "mappingId": 8,
+          "material": "Grass002",
+          "maskSamples": 23030
+        },
+        {
+          "slot": 14,
+          "oldPath": "d:/ymir work/terrainmaps/b/beach/beach sand 01.dds",
+          "mappingId": 50,
+          "material": "Ground079L",
+          "maskSamples": 245069
+        },
+        {
+          "slot": 15,
+          "oldPath": "d:/ymir work/terrainmaps/b/beach/beach sand 02.dds",
+          "mappingId": 51,
+          "material": "Ground079S",
+          "maskSamples": 0
+        },
+        {
+          "slot": 16,
+          "oldPath": "d:/ymir work/terrainmaps/b/beach/beach sand 03.dds",
+          "mappingId": 52,
+          "material": "Ground079L",
+          "maskSamples": 0
+        }
+      ]
+    },
+    {
+      "map": "metin2_map_b3",
+      "textureset": "textureset/metin2_b3.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 01_01.dds",
+          "mappingId": 54,
+          "material": "Ground085",
+          "maskSamples": 41796
+        },
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 02_01.dds",
+          "mappingId": 56,
+          "material": "Ground103",
+          "maskSamples": 0
+        },
+        {
+          "slot": 3,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 03_01.dds",
+          "mappingId": 58,
+          "material": "Ground106",
+          "maskSamples": 716
+        },
+        {
+          "slot": 4,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 04.dds",
+          "mappingId": 59,
+          "material": "Ground103",
+          "maskSamples": 163644
+        },
+        {
+          "slot": 5,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 01_01.dds",
+          "mappingId": 4,
+          "material": "Grass003",
+          "maskSamples": 332766
+        },
+        {
+          "slot": 6,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 02_01.dds",
+          "mappingId": 7,
+          "material": "sparse_grass",
+          "maskSamples": 339443
+        },
+        {
+          "slot": 7,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 03_01.dds",
+          "mappingId": 9,
+          "material": "sparse_grass",
+          "maskSamples": 130
+        }
+      ]
+    },
+    {
+      "map": "metin2_map_bayblacksand",
+      "textureset": "textureset/metin2_bayblacksand.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/bayblacksand/bayblacksand_field.dds",
+          "mappingId": 79,
+          "material": "Ground067",
+          "maskSamples": 53428
+        },
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/bayblacksand/bayblacksand_grass.dds",
+          "mappingId": 11,
+          "material": "leafy_grass",
+          "maskSamples": 209168
+        },
+        {
+          "slot": 6,
+          "oldPath": "d:/ymir work/terrainmaps/capedragonhead/capedragon_grass003.dds",
+          "mappingId": 16,
+          "material": "leafy_grass",
+          "maskSamples": 21151
+        },
+        {
+          "slot": 9,
+          "oldPath": "d:/ymir work/terrainmaps/bayblacksand/bayblacksand_grass_00.dds",
+          "mappingId": 12,
+          "material": "forrest_ground_01",
+          "maskSamples": 27427
+        },
+        {
+          "slot": 10,
+          "oldPath": "d:/ymir work/terrainmaps/capedragonhead/capedragon_field001.dds",
+          "mappingId": 88,
+          "material": "Ground103",
+          "maskSamples": 7178
+        },
+        {
+          "slot": 11,
+          "oldPath": "d:/ymir work/terrainmaps/capedragonhead/capedragon_stone001.dds",
+          "mappingId": 91,
+          "material": "Ground106",
+          "maskSamples": 4024
+        }
+      ]
+    },
+    {
+      "map": "metin2_map_c1",
+      "textureset": "textureset/metin2_c1.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 01.dds",
+          "mappingId": 53,
+          "material": "Ground103",
+          "maskSamples": 43167
+        },
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 02.dds",
+          "mappingId": 55,
+          "material": "Ground106",
+          "maskSamples": 0
+        },
+        {
+          "slot": 3,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 03.dds",
+          "mappingId": 57,
+          "material": "Ground085",
+          "maskSamples": 286
+        },
+        {
+          "slot": 4,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 04.dds",
+          "mappingId": 59,
+          "material": "Ground103",
+          "maskSamples": 221597
+        },
+        {
+          "slot": 5,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 01.dds",
+          "mappingId": 3,
+          "material": "Grass004",
+          "maskSamples": 212233
+        },
+        {
+          "slot": 6,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 02.dds",
+          "mappingId": 6,
+          "material": "Grass001",
+          "maskSamples": 167040
+        },
+        {
+          "slot": 7,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 03.dds",
+          "mappingId": 8,
+          "material": "Grass002",
+          "maskSamples": 16629
+        },
+        {
+          "slot": 14,
+          "oldPath": "d:/ymir work/terrainmaps/b/beach/beach sand 01.dds",
+          "mappingId": 50,
+          "material": "Ground079L",
+          "maskSamples": 186854
+        },
+        {
+          "slot": 15,
+          "oldPath": "d:/ymir work/terrainmaps/b/beach/beach sand 02.dds",
+          "mappingId": 51,
+          "material": "Ground079S",
+          "maskSamples": 0
+        },
+        {
+          "slot": 16,
+          "oldPath": "d:/ymir work/terrainmaps/b/beach/beach sand 03.dds",
+          "mappingId": 52,
+          "material": "Ground079L",
+          "maskSamples": 100639
+        }
+      ]
+    },
+    {
+      "map": "metin2_map_c3",
+      "textureset": "textureset/metin2_c3.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 01_01.dds",
+          "mappingId": 54,
+          "material": "Ground085",
+          "maskSamples": 38728
+        },
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 02_01.dds",
+          "mappingId": 56,
+          "material": "Ground103",
+          "maskSamples": 0
+        },
+        {
+          "slot": 3,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 03_01.dds",
+          "mappingId": 58,
+          "material": "Ground106",
+          "maskSamples": 99
+        },
+        {
+          "slot": 4,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 04.dds",
+          "mappingId": 59,
+          "material": "Ground103",
+          "maskSamples": 262465
+        },
+        {
+          "slot": 5,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 01_01.dds",
+          "mappingId": 4,
+          "material": "Grass003",
+          "maskSamples": 312187
+        },
+        {
+          "slot": 6,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 02_01.dds",
+          "mappingId": 7,
+          "material": "sparse_grass",
+          "maskSamples": 135577
+        },
+        {
+          "slot": 7,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 03_01.dds",
+          "mappingId": 9,
+          "material": "sparse_grass",
+          "maskSamples": 0
+        }
+      ]
+    },
+    {
+      "map": "metin2_map_capedragonhead",
+      "textureset": "textureset/metin2_capedragonhead.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/capedragonhead/capedragon_grass001.dds",
+          "mappingId": 14,
+          "material": "leafy_grass",
+          "maskSamples": 44716
+        },
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/capedragonhead/capedragon_grass002.dds",
+          "mappingId": 15,
+          "material": "Grass001",
+          "maskSamples": 342689
+        },
+        {
+          "slot": 3,
+          "oldPath": "d:/ymir work/terrainmaps/capedragonhead/capedragon_field001.dds",
+          "mappingId": 88,
+          "material": "Ground103",
+          "maskSamples": 201882
+        },
+        {
+          "slot": 5,
+          "oldPath": "d:/ymir work/terrainmaps/capedragonhead/capedragon_field003.dds",
+          "mappingId": 89,
+          "material": "leafy_grass",
+          "maskSamples": 7570
+        },
+        {
+          "slot": 6,
+          "oldPath": "d:/ymir work/terrainmaps/capedragonhead/capedragon_sand002.dds",
+          "mappingId": 90,
+          "material": "Ground093A",
+          "maskSamples": 463602
+        },
+        {
+          "slot": 9,
+          "oldPath": "d:/ymir work/terrainmaps/mtthunder/mtthunder_field01.dds",
+          "mappingId": 172,
+          "material": "Ground067",
+          "maskSamples": 7337
+        },
+        {
+          "slot": 10,
+          "oldPath": "d:/ymir work/terrainmaps/capedragonhead/capedragon_stone001.dds",
+          "mappingId": 91,
+          "material": "Ground106",
+          "maskSamples": 81948
+        },
+        {
+          "slot": 11,
+          "oldPath": "d:/ymir work/terrainmaps/capedragonhead/capedragon_grass003.dds",
+          "mappingId": 16,
+          "material": "leafy_grass",
+          "maskSamples": 167075
+        }
+      ]
+    },
+    {
+      "map": "metin2_map_dawnmistwood",
+      "textureset": "textureset/metin2_dawnmistwood.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/dawnmistwood/dawnmistwood_field001.dds",
+          "mappingId": 96,
+          "material": "Ground067",
+          "maskSamples": 42970
+        },
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/dawnmistwood/dawnmistwood_grass001.dds",
+          "mappingId": 17,
+          "material": "Grass002",
+          "maskSamples": 209799
+        },
+        {
+          "slot": 3,
+          "oldPath": "d:/ymir work/terrainmaps/dawnmistwood/dawnmistwood_rock001.dds",
+          "mappingId": 98,
+          "material": "Rock031",
+          "maskSamples": 862658
+        },
+        {
+          "slot": 4,
+          "oldPath": "d:/ymir work/terrainmaps/dawnmistwood/dawnmistwood_feild002.dds",
+          "mappingId": 94,
+          "material": "forest_ground_06",
+          "maskSamples": 24760
+        },
+        {
+          "slot": 5,
+          "oldPath": "d:/ymir work/terrainmaps/dawnmistwood/dawnmistwood_grass002.dds",
+          "mappingId": 18,
+          "material": "forest_ground_06",
+          "maskSamples": 347430
+        },
+        {
+          "slot": 7,
+          "oldPath": "d:/ymir work/terrainmaps/dawnmistwood/dawnmistwood_field003.dds",
+          "mappingId": 97,
+          "material": "forrest_ground_03",
+          "maskSamples": 76297
+        },
+        {
+          "slot": 8,
+          "oldPath": "d:/ymir work/terrainmaps/dawnmistwood/dawnmistwood_field000.dds",
+          "mappingId": 95,
+          "material": "forest_ground_06",
+          "maskSamples": 25287
+        },
+        {
+          "slot": 9,
+          "oldPath": "d:/ymir work/terrainmaps/dawnmistwood/dawnmistwood_sand000.dds",
+          "mappingId": 99,
+          "material": "Ground067",
+          "maskSamples": 19021
+        },
+        {
+          "slot": 11,
+          "oldPath": "d:/ymir work/terrainmaps/dawnmistwood/dawnmistwood_sand001.dds",
+          "mappingId": 100,
+          "material": "Ground103",
+          "maskSamples": 67072
+        },
+        {
+          "slot": 12,
+          "oldPath": "d:/ymir work/terrainmaps/bayblacksand/bayblacksand_grass_00.dds",
+          "mappingId": 12,
+          "material": "forrest_ground_01",
+          "maskSamples": 22009
+        },
+        {
+          "slot": 13,
+          "oldPath": "d:/ymir work/terrainmaps/dawnmistwood/dawnmistwood_grass003.dds",
+          "mappingId": 19,
+          "material": "forest_ground_06",
+          "maskSamples": 37647
+        }
+      ]
+    },
+    {
+      "map": "metin2_map_devilscatacomb",
+      "textureset": "textureset/metin2_map_devilscatacomb.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/dungeon/devilcave/dc_field_00.dds",
+          "mappingId": 104,
+          "material": "forrest_ground_01",
+          "maskSamples": 18244
+        },
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/dungeon/devilcave/dc_rock_00.dds",
+          "mappingId": 109,
+          "material": "Rock031",
+          "maskSamples": 1318746
+        },
+        {
+          "slot": 3,
+          "oldPath": "d:/ymir work/terrainmaps/dungeon/devilcave/dc_field_01.dds",
+          "mappingId": 105,
+          "material": "forrest_ground_03",
+          "maskSamples": 63705
+        },
+        {
+          "slot": 4,
+          "oldPath": "d:/ymir work/terrainmaps/dungeon/devilcave/dc_rock_01.dds",
+          "mappingId": 110,
+          "material": "Rock031",
+          "maskSamples": 93960
+        },
+        {
+          "slot": 5,
+          "oldPath": "d:/ymir work/terrainmaps/dungeon/devilcave/dc_field_02.dds",
+          "mappingId": 106,
+          "material": "Ground067",
+          "maskSamples": 26491
+        },
+        {
+          "slot": 6,
+          "oldPath": "d:/ymir work/terrainmaps/dungeon/devilcave/dc_grass_00.dds",
+          "mappingId": 20,
+          "material": "forest_ground_06",
+          "maskSamples": 1892371
+        },
+        {
+          "slot": 7,
+          "oldPath": "d:/ymir work/terrainmaps/dungeon/devilcave/dc_stone_lava_00.dds",
+          "mappingId": 112,
+          "material": "Lava002",
+          "maskSamples": 64055
+        },
+        {
+          "slot": 8,
+          "oldPath": "d:/ymir work/terrainmaps/dungeon/devilcave/dc_lava_red_00.dds",
+          "mappingId": 107,
+          "material": "Lava004",
+          "maskSamples": 6839
+        },
+        {
+          "slot": 9,
+          "oldPath": "d:/ymir work/terrainmaps/dungeon/devilcave/dc_lava_red_01.dds",
+          "mappingId": 108,
+          "material": "Lava001",
+          "maskSamples": 9551
+        },
+        {
+          "slot": 12,
+          "oldPath": "d:/ymir work/terrainmaps/dungeon/field 01.dds",
+          "mappingId": 114,
+          "material": "forest_ground_06",
+          "maskSamples": 55741
+        }
+      ]
+    },
+    {
+      "map": "metin2_map_deviltower1",
+      "textureset": "textureset/metin2_map_deviltower1.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/dungeon/field 01.dds",
+          "mappingId": 114,
+          "material": "forest_ground_06",
+          "maskSamples": 599076
+        }
+      ]
+    },
+    {
+      "map": "metin2_map_duel",
+      "textureset": "textureset/metin2_duel.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/g/field/field 01.dds",
+          "mappingId": 162,
+          "material": "forest_ground_04",
+          "maskSamples": 25436
+        },
+        {
+          "slot": 3,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 03.dds",
+          "mappingId": 8,
+          "material": "Grass002",
+          "maskSamples": 26249
+        },
+        {
+          "slot": 4,
+          "oldPath": "d:/ymir work/terrainmaps/a/beach/beach sand 03.dds",
+          "mappingId": 41,
+          "material": "Ground079L",
+          "maskSamples": 336
+        }
+      ]
+    },
+    {
+      "map": "metin2_map_guild_01",
+      "textureset": "textureset/metin2_a2.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/a/field/field 01.dds",
+          "mappingId": 42,
+          "material": "Ground085",
+          "maskSamples": 92949
+        },
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/a/field/field 02.dds",
+          "mappingId": 43,
+          "material": "Ground103",
+          "maskSamples": 9732
+        },
+        {
+          "slot": 3,
+          "oldPath": "d:/ymir work/terrainmaps/a/grass/grass 01.dds",
+          "mappingId": 0,
+          "material": "Grass003",
+          "maskSamples": 27728
+        },
+        {
+          "slot": 4,
+          "oldPath": "d:/ymir work/terrainmaps/a/grass/grass 02.dds",
+          "mappingId": 1,
+          "material": "Grass001",
+          "maskSamples": 21367
+        },
+        {
+          "slot": 9,
+          "oldPath": "d:/ymir work/terrainmaps/a/beach/beach sand 01.dds",
+          "mappingId": 39,
+          "material": "Ground079L",
+          "maskSamples": 0
+        },
+        {
+          "slot": 10,
+          "oldPath": "d:/ymir work/terrainmaps/a/beach/beach sand 02.dds",
+          "mappingId": 40,
+          "material": "Ground079S",
+          "maskSamples": 0
+        }
+      ]
+    },
+    {
+      "map": "metin2_map_guild_02",
+      "textureset": "textureset/metin2_c1.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 01.dds",
+          "mappingId": 53,
+          "material": "Ground103",
+          "maskSamples": 93408
+        },
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 02.dds",
+          "mappingId": 55,
+          "material": "Ground106",
+          "maskSamples": 7931
+        },
+        {
+          "slot": 3,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 03.dds",
+          "mappingId": 57,
+          "material": "Ground085",
+          "maskSamples": 15022
+        },
+        {
+          "slot": 4,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 04.dds",
+          "mappingId": 59,
+          "material": "Ground103",
+          "maskSamples": 14677
+        },
+        {
+          "slot": 5,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 01.dds",
+          "mappingId": 3,
+          "material": "Grass004",
+          "maskSamples": 4149
+        },
+        {
+          "slot": 6,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 02.dds",
+          "mappingId": 6,
+          "material": "Grass001",
+          "maskSamples": 10416
+        },
+        {
+          "slot": 7,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 03.dds",
+          "mappingId": 8,
+          "material": "Grass002",
+          "maskSamples": 17074
+        },
+        {
+          "slot": 14,
+          "oldPath": "d:/ymir work/terrainmaps/b/beach/beach sand 01.dds",
+          "mappingId": 50,
+          "material": "Ground079L",
+          "maskSamples": 0
+        },
+        {
+          "slot": 15,
+          "oldPath": "d:/ymir work/terrainmaps/b/beach/beach sand 02.dds",
+          "mappingId": 51,
+          "material": "Ground079S",
+          "maskSamples": 0
+        },
+        {
+          "slot": 16,
+          "oldPath": "d:/ymir work/terrainmaps/b/beach/beach sand 03.dds",
+          "mappingId": 52,
+          "material": "Ground079L",
+          "maskSamples": 0
+        }
+      ]
+    },
+    {
+      "map": "metin2_map_guild_03",
+      "textureset": "textureset/metin2_b1.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 01.dds",
+          "mappingId": 53,
+          "material": "Ground103",
+          "maskSamples": 20428
+        },
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 02.dds",
+          "mappingId": 55,
+          "material": "Ground106",
+          "maskSamples": 4233
+        },
+        {
+          "slot": 3,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 03.dds",
+          "mappingId": 57,
+          "material": "Ground085",
+          "maskSamples": 102876
+        },
+        {
+          "slot": 4,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 04.dds",
+          "mappingId": 59,
+          "material": "Ground103",
+          "maskSamples": 1057
+        },
+        {
+          "slot": 5,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 01.dds",
+          "mappingId": 3,
+          "material": "Grass004",
+          "maskSamples": 24650
+        },
+        {
+          "slot": 6,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 02.dds",
+          "mappingId": 6,
+          "material": "Grass001",
+          "maskSamples": 26808
+        },
+        {
+          "slot": 7,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 03.dds",
+          "mappingId": 8,
+          "material": "Grass002",
+          "maskSamples": 454
+        },
+        {
+          "slot": 14,
+          "oldPath": "d:/ymir work/terrainmaps/b/beach/beach sand 01.dds",
+          "mappingId": 50,
+          "material": "Ground079L",
+          "maskSamples": 0
+        },
+        {
+          "slot": 15,
+          "oldPath": "d:/ymir work/terrainmaps/b/beach/beach sand 02.dds",
+          "mappingId": 51,
+          "material": "Ground079S",
+          "maskSamples": 0
+        },
+        {
+          "slot": 16,
+          "oldPath": "d:/ymir work/terrainmaps/b/beach/beach sand 03.dds",
+          "mappingId": 52,
+          "material": "Ground079L",
+          "maskSamples": 0
+        }
+      ]
+    },
+    {
+      "map": "metin2_map_milgyo",
+      "textureset": "textureset/metin2_milgyo.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 01.dds",
+          "mappingId": 3,
+          "material": "Grass004",
+          "maskSamples": 70576
+        },
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 01_02.dds",
+          "mappingId": 5,
+          "material": "Grass002",
+          "maskSamples": 45438
+        },
+        {
+          "slot": 3,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 03_05.dds",
+          "mappingId": 10,
+          "material": "mossy_rock",
+          "maskSamples": 42808
+        },
+        {
+          "slot": 7,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 04_02.dds",
+          "mappingId": 60,
+          "material": "Ground085",
+          "maskSamples": 2458
+        },
+        {
+          "slot": 8,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 04_05.dds",
+          "mappingId": 61,
+          "material": "Ground106",
+          "maskSamples": 19827
+        },
+        {
+          "slot": 10,
+          "oldPath": "d:/ymir work/terrainmaps/b/stone/dc_rock_00.dds",
+          "mappingId": 62,
+          "material": "Rock031",
+          "maskSamples": 12750
+        },
+        {
+          "slot": 11,
+          "oldPath": "d:/ymir work/terrainmaps/dungeon/devilcave/dc_grass_00.dds",
+          "mappingId": 20,
+          "material": "forest_ground_06",
+          "maskSamples": 1375
+        }
+      ]
+    },
+    {
+      "map": "metin2_map_monkeydungeon",
+      "textureset": "textureset/metin2_map_deviltower1.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/dungeon/field 01.dds",
+          "mappingId": 114,
+          "material": "forest_ground_06",
+          "maskSamples": 599076
+        }
+      ]
+    },
+    {
+      "map": "metin2_map_monkeydungeon_02",
+      "textureset": "textureset/metin2_map_deviltower1.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/dungeon/field 01.dds",
+          "mappingId": 114,
+          "material": "forest_ground_06",
+          "maskSamples": 599076
+        }
+      ]
+    },
+    {
+      "map": "metin2_map_monkeydungeon_03",
+      "textureset": "textureset/metin2_map_deviltower1.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/dungeon/field 01.dds",
+          "mappingId": 114,
+          "material": "forest_ground_06",
+          "maskSamples": 599076
+        }
+      ]
+    },
+    {
+      "map": "metin2_map_mt_thunder",
+      "textureset": "textureset/metin2_mtthunder.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/mtthunder/mtthunder_field01.dds",
+          "mappingId": 172,
+          "material": "Ground067",
+          "maskSamples": 74580
+        },
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/mtthunder/mtthunder_field02.dds",
+          "mappingId": 173,
+          "material": "Ground087",
+          "maskSamples": 116535
+        },
+        {
+          "slot": 3,
+          "oldPath": "d:/ymir work/terrainmaps/mtthunder/mtthunder_field03.dds",
+          "mappingId": 174,
+          "material": "forest_ground_06",
+          "maskSamples": 23774
+        },
+        {
+          "slot": 4,
+          "oldPath": "d:/ymir work/terrainmaps/mtthunder/mtthunder_field04.dds",
+          "mappingId": 175,
+          "material": "forrest_ground_01",
+          "maskSamples": 158119
+        },
+        {
+          "slot": 5,
+          "oldPath": "d:/ymir work/terrainmaps/mtthunder/mtthunder_grass02.dds",
+          "mappingId": 31,
+          "material": "sparse_grass",
+          "maskSamples": 61869
+        },
+        {
+          "slot": 6,
+          "oldPath": "d:/ymir work/terrainmaps/mtthunder/mtthunder_grass03.dds",
+          "mappingId": 32,
+          "material": "withered_grass",
+          "maskSamples": 105295
+        },
+        {
+          "slot": 7,
+          "oldPath": "d:/ymir work/terrainmaps/mtthunder/mtthunder_sand00.dds",
+          "mappingId": 176,
+          "material": "Ground079L",
+          "maskSamples": 172949
+        }
+      ]
+    },
+    {
+      "map": "metin2_map_n_desert_01",
+      "textureset": "textureset/metin2_n_desert_01.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/sand/sand01.dds",
+          "mappingId": 183,
+          "material": "Ground093A",
+          "maskSamples": 1580029
+        },
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/sand/sand02.dds",
+          "mappingId": 184,
+          "material": "mud_cracked_dry_riverbed_002",
+          "maskSamples": 20401
+        },
+        {
+          "slot": 3,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/sand/sand03.dds",
+          "mappingId": 185,
+          "material": "Ground079S",
+          "maskSamples": 4499
+        },
+        {
+          "slot": 4,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/field/field 01.dds",
+          "mappingId": 180,
+          "material": "Ground085",
+          "maskSamples": 110916
+        },
+        {
+          "slot": 5,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/field/field 02.dds",
+          "mappingId": 181,
+          "material": "Ground067",
+          "maskSamples": 5
+        },
+        {
+          "slot": 6,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/field/field 03.dds",
+          "mappingId": 182,
+          "material": "Ground085",
+          "maskSamples": 3608
+        },
+        {
+          "slot": 10,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/grass/grass 01.dds",
+          "mappingId": 33,
+          "material": "Grass003",
+          "maskSamples": 5115
+        },
+        {
+          "slot": 11,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/grass/grass 02.dds",
+          "mappingId": 34,
+          "material": "Grass004",
+          "maskSamples": 33003
+        },
+        {
+          "slot": 12,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/grass/grass 03.dds",
+          "mappingId": 35,
+          "material": "sparse_grass",
+          "maskSamples": 2050
+        }
+      ]
+    },
+    {
+      "map": "metin2_map_n_flame_01",
+      "textureset": "textureset/metin2_n_flame_01.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/n/flame area/valcano_01.dds",
+          "mappingId": 190,
+          "material": "Rock031",
+          "maskSamples": 323366
+        },
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/n/flame area/valcano_02.dds",
+          "mappingId": 191,
+          "material": "Rock031",
+          "maskSamples": 77438
+        },
+        {
+          "slot": 3,
+          "oldPath": "d:/ymir work/terrainmaps/n/flame area/valcano_03.dds",
+          "mappingId": 192,
+          "material": "Gravel040",
+          "maskSamples": 632320
+        },
+        {
+          "slot": 4,
+          "oldPath": "d:/ymir work/terrainmaps/n/flame area/valcano_04.dds",
+          "mappingId": 193,
+          "material": "Lava002",
+          "maskSamples": 305628
+        },
+        {
+          "slot": 5,
+          "oldPath": "d:/ymir work/terrainmaps/n/flame area/valcano_magma_01.dds",
+          "mappingId": 195,
+          "material": "Lava004",
+          "maskSamples": 124764
+        },
+        {
+          "slot": 7,
+          "oldPath": "d:/ymir work/terrainmaps/n/flame area/valcano_rock.dds",
+          "mappingId": 196,
+          "material": "Rock031",
+          "maskSamples": 804828
+        }
+      ]
+    },
+    {
+      "map": "metin2_map_n_flame_dungeon_01",
+      "textureset": "textureset/metin2_map_n_flame_dungeon_01.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/dungeon/field 01.dds",
+          "mappingId": 114,
+          "material": "forest_ground_06",
+          "maskSamples": 19
+        },
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/n/flame area/valcano_04.dds",
+          "mappingId": 193,
+          "material": "Lava002",
+          "maskSamples": 55526
+        },
+        {
+          "slot": 3,
+          "oldPath": "d:/ymir work/terrainmaps/n/flame area/valcano_magma_01.dds",
+          "mappingId": 195,
+          "material": "Lava004",
+          "maskSamples": 27582
+        },
+        {
+          "slot": 4,
+          "oldPath": "d:/ymir work/terrainmaps/n/flame area/valcano_rock.dds",
+          "mappingId": 196,
+          "material": "Rock031",
+          "maskSamples": 485633
+        },
+        {
+          "slot": 5,
+          "oldPath": "d:/ymir work/terrainmaps/n/flame area/valcano_05.dds",
+          "mappingId": 194,
+          "material": "Rock031",
+          "maskSamples": 18886
+        }
+      ]
+    },
+    {
+      "map": "metin2_map_n_snow_dungeon_01",
+      "textureset": "textureset/metin2_map_n_snow_dungeon_01.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/dungeon/field 01.dds",
+          "mappingId": 114,
+          "material": "forest_ground_06",
+          "maskSamples": 56374
+        }
+      ]
+    },
+    {
+      "map": "metin2_map_skipia_dungeon_02",
+      "textureset": "textureset/metin2_n_saguidungeon.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/dungeon/field 01.dds",
+          "mappingId": 114,
+          "material": "forest_ground_06",
+          "maskSamples": 2396301
+        }
+      ]
+    },
+    {
+      "map": "metin2_map_skipia_dungeon_boss",
+      "textureset": "textureset/metin2_n_saguidungeon.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/dungeon/field 01.dds",
+          "mappingId": 114,
+          "material": "forest_ground_06",
+          "maskSamples": 266256
+        }
+      ]
+    },
+    {
+      "map": "metin2_map_spiderdungeon",
+      "textureset": "textureset/metin2_map_spiderd.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/dungeon/field 01.dds",
+          "mappingId": 114,
+          "material": "forest_ground_06",
+          "maskSamples": 599076
+        }
+      ]
+    },
+    {
+      "map": "metin2_map_spiderdungeon_02",
+      "textureset": "textureset/metin2_n_saguidungeon.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/dungeon/field 01.dds",
+          "mappingId": 114,
+          "material": "forest_ground_06",
+          "maskSamples": 1065024
+        }
+      ]
+    },
+    {
+      "map": "metin2_map_spiderdungeon_03",
+      "textureset": "textureset/metin2_map_spiderd.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/dungeon/field 01.dds",
+          "mappingId": 114,
+          "material": "forest_ground_06",
+          "maskSamples": 599076
+        }
+      ]
+    },
+    {
+      "map": "metin2_map_t1",
+      "textureset": "textureset/metin2_map_t1.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 01.dds",
+          "mappingId": 53,
+          "material": "Ground103",
+          "maskSamples": 0
+        },
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 02.dds",
+          "mappingId": 55,
+          "material": "Ground106",
+          "maskSamples": 597
+        },
+        {
+          "slot": 3,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 03.dds",
+          "mappingId": 57,
+          "material": "Ground085",
+          "maskSamples": 112616
+        },
+        {
+          "slot": 4,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 04.dds",
+          "mappingId": 59,
+          "material": "Ground103",
+          "maskSamples": 0
+        },
+        {
+          "slot": 5,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 01.dds",
+          "mappingId": 3,
+          "material": "Grass004",
+          "maskSamples": 67440
+        },
+        {
+          "slot": 6,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 02.dds",
+          "mappingId": 6,
+          "material": "Grass001",
+          "maskSamples": 2197
+        },
+        {
+          "slot": 7,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 03.dds",
+          "mappingId": 8,
+          "material": "Grass002",
+          "maskSamples": 3490
+        },
+        {
+          "slot": 14,
+          "oldPath": "d:/ymir work/terrainmaps/b/beach/beach sand 01.dds",
+          "mappingId": 50,
+          "material": "Ground079L",
+          "maskSamples": 0
+        },
+        {
+          "slot": 15,
+          "oldPath": "d:/ymir work/terrainmaps/b/beach/beach sand 02.dds",
+          "mappingId": 51,
+          "material": "Ground079S",
+          "maskSamples": 0
+        },
+        {
+          "slot": 16,
+          "oldPath": "d:/ymir work/terrainmaps/b/beach/beach sand 03.dds",
+          "mappingId": 52,
+          "material": "Ground079L",
+          "maskSamples": 0
+        }
+      ]
+    },
+    {
+      "map": "metin2_map_t2",
+      "textureset": "textureset/metin2_map_t2.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/g/field/field 01.dds",
+          "mappingId": 162,
+          "material": "forest_ground_04",
+          "maskSamples": 0
+        },
+        {
+          "slot": 3,
+          "oldPath": "d:/ymir work/terrainmaps/g/field/field 03.dds",
+          "mappingId": 164,
+          "material": "forest_ground_06",
+          "maskSamples": 1701
+        },
+        {
+          "slot": 4,
+          "oldPath": "d:/ymir work/terrainmaps/g/field/field 04.dds",
+          "mappingId": 165,
+          "material": "Ground103",
+          "maskSamples": 9189
+        },
+        {
+          "slot": 5,
+          "oldPath": "d:/ymir work/terrainmaps/g/field/grass 01.dds",
+          "mappingId": 29,
+          "material": "Grass001",
+          "maskSamples": 0
+        },
+        {
+          "slot": 6,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 02.dds",
+          "mappingId": 6,
+          "material": "Grass001",
+          "maskSamples": 0
+        },
+        {
+          "slot": 7,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 03.dds",
+          "mappingId": 8,
+          "material": "Grass002",
+          "maskSamples": 9069
+        },
+        {
+          "slot": 14,
+          "oldPath": "d:/ymir work/terrainmaps/b/beach/beach sand 01.dds",
+          "mappingId": 50,
+          "material": "Ground079L",
+          "maskSamples": 0
+        },
+        {
+          "slot": 15,
+          "oldPath": "d:/ymir work/terrainmaps/b/beach/beach sand 02.dds",
+          "mappingId": 51,
+          "material": "Ground079S",
+          "maskSamples": 0
+        },
+        {
+          "slot": 16,
+          "oldPath": "d:/ymir work/terrainmaps/b/beach/beach sand 03.dds",
+          "mappingId": 52,
+          "material": "Ground079L",
+          "maskSamples": 0
+        }
+      ]
+    },
+    {
+      "map": "metin2_map_t3",
+      "textureset": "textureset/metin2_map_t3.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/g/field/field 05.dds",
+          "mappingId": 166,
+          "material": "forest_ground_04",
+          "maskSamples": 3203
+        },
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/g/field/field 01.dds",
+          "mappingId": 162,
+          "material": "forest_ground_04",
+          "maskSamples": 3850
+        },
+        {
+          "slot": 4,
+          "oldPath": "d:/ymir work/terrainmaps/g/field/field 06.dds",
+          "mappingId": 167,
+          "material": "mossy_rock",
+          "maskSamples": 23057
+        }
+      ]
+    },
+    {
+      "map": "metin2_map_t4",
+      "textureset": "textureset/metin2_map_t3.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/g/field/field 05.dds",
+          "mappingId": 166,
+          "material": "forest_ground_04",
+          "maskSamples": 4384
+        },
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/g/field/field 01.dds",
+          "mappingId": 162,
+          "material": "forest_ground_04",
+          "maskSamples": 4023
+        },
+        {
+          "slot": 4,
+          "oldPath": "d:/ymir work/terrainmaps/g/field/field 06.dds",
+          "mappingId": 167,
+          "material": "mossy_rock",
+          "maskSamples": 23973
+        }
+      ]
+    },
+    {
+      "map": "metin2_map_trent",
+      "textureset": "textureset/metin2_map_trent.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/trent/field/field 01.dds",
+          "mappingId": 208,
+          "material": "forrest_ground_03",
+          "maskSamples": 37907
+        },
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/trent/field/field 02.dds",
+          "mappingId": 209,
+          "material": "forrest_ground_01",
+          "maskSamples": 57486
+        },
+        {
+          "slot": 3,
+          "oldPath": "d:/ymir work/terrainmaps/trent/field/field 03.dds",
+          "mappingId": 210,
+          "material": "forest_ground_04",
+          "maskSamples": 15138
+        },
+        {
+          "slot": 4,
+          "oldPath": "d:/ymir work/terrainmaps/trent/grass/grass 01.dds",
+          "mappingId": 36,
+          "material": "Grass003",
+          "maskSamples": 41599
+        },
+        {
+          "slot": 5,
+          "oldPath": "d:/ymir work/terrainmaps/trent/grass/grass 02.dds",
+          "mappingId": 37,
+          "material": "Grass001",
+          "maskSamples": 103
+        },
+        {
+          "slot": 6,
+          "oldPath": "d:/ymir work/terrainmaps/trent/grass/grass 03.dds",
+          "mappingId": 38,
+          "material": "Grass002",
+          "maskSamples": 37
+        }
+      ]
+    },
+    {
+      "map": "metin2_map_trent02",
+      "textureset": "textureset/metin2_map_trent.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/trent/field/field 01.dds",
+          "mappingId": 208,
+          "material": "forrest_ground_03",
+          "maskSamples": 7443
+        },
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/trent/field/field 02.dds",
+          "mappingId": 209,
+          "material": "forrest_ground_01",
+          "maskSamples": 16801
+        },
+        {
+          "slot": 3,
+          "oldPath": "d:/ymir work/terrainmaps/trent/field/field 03.dds",
+          "mappingId": 210,
+          "material": "forest_ground_04",
+          "maskSamples": 196492
+        },
+        {
+          "slot": 4,
+          "oldPath": "d:/ymir work/terrainmaps/trent/grass/grass 01.dds",
+          "mappingId": 36,
+          "material": "Grass003",
+          "maskSamples": 50219
+        },
+        {
+          "slot": 5,
+          "oldPath": "d:/ymir work/terrainmaps/trent/grass/grass 02.dds",
+          "mappingId": 37,
+          "material": "Grass001",
+          "maskSamples": 10476
+        },
+        {
+          "slot": 6,
+          "oldPath": "d:/ymir work/terrainmaps/trent/grass/grass 03.dds",
+          "mappingId": 38,
+          "material": "Grass002",
+          "maskSamples": 268074
+        }
+      ]
+    },
+    {
+      "map": "metin2_map_wedding_01",
+      "textureset": "textureset/metin2_map_wedding_01.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 01_01.dds",
+          "mappingId": 54,
+          "material": "Ground085",
+          "maskSamples": 0
+        },
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 02_01.dds",
+          "mappingId": 56,
+          "material": "Ground103",
+          "maskSamples": 0
+        },
+        {
+          "slot": 3,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 03_01.dds",
+          "mappingId": 58,
+          "material": "Ground106",
+          "maskSamples": 2536
+        },
+        {
+          "slot": 4,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 04.dds",
+          "mappingId": 59,
+          "material": "Ground103",
+          "maskSamples": 71
+        },
+        {
+          "slot": 5,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 01_01.dds",
+          "mappingId": 4,
+          "material": "Grass003",
+          "maskSamples": 7133
+        },
+        {
+          "slot": 6,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 02_01.dds",
+          "mappingId": 7,
+          "material": "sparse_grass",
+          "maskSamples": 539
+        },
+        {
+          "slot": 7,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 03_01.dds",
+          "mappingId": 9,
+          "material": "sparse_grass",
+          "maskSamples": 14910
+        }
+      ]
+    },
+    {
+      "map": "season1/metin2_map_empirewar_a01",
+      "textureset": "textureset/metin2_map_empirewar_a01.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/empirewar/field01.dds",
+          "mappingId": 128,
+          "material": "Ground085",
+          "maskSamples": 30621
+        },
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/empirewar/field02.dds",
+          "mappingId": 129,
+          "material": "Ground103",
+          "maskSamples": 0
+        },
+        {
+          "slot": 3,
+          "oldPath": "d:/ymir work/terrainmaps/empirewar/field03.dds",
+          "mappingId": 130,
+          "material": "leafy_grass",
+          "maskSamples": 78412
+        },
+        {
+          "slot": 4,
+          "oldPath": "d:/ymir work/terrainmaps/empirewar/grass01.dds",
+          "mappingId": 23,
+          "material": "Grass001",
+          "maskSamples": 45682
+        },
+        {
+          "slot": 5,
+          "oldPath": "d:/ymir work/terrainmaps/empirewar/grass02.dds",
+          "mappingId": 24,
+          "material": "Grass002",
+          "maskSamples": 3681
+        }
+      ]
+    },
+    {
+      "map": "season1/metin2_map_ew02",
+      "textureset": "textureset/metin2_a1.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 01.dds",
+          "mappingId": 53,
+          "material": "Ground103",
+          "maskSamples": 342694
+        },
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 02.dds",
+          "mappingId": 55,
+          "material": "Ground106",
+          "maskSamples": 0
+        },
+        {
+          "slot": 3,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 03.dds",
+          "mappingId": 57,
+          "material": "Ground085",
+          "maskSamples": 0
+        },
+        {
+          "slot": 4,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 04.dds",
+          "mappingId": 59,
+          "material": "Ground103",
+          "maskSamples": 466591
+        },
+        {
+          "slot": 5,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 01.dds",
+          "mappingId": 3,
+          "material": "Grass004",
+          "maskSamples": 5
+        },
+        {
+          "slot": 6,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 02.dds",
+          "mappingId": 6,
+          "material": "Grass001",
+          "maskSamples": 0
+        },
+        {
+          "slot": 7,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 03.dds",
+          "mappingId": 8,
+          "material": "Grass002",
+          "maskSamples": 131223
+        },
+        {
+          "slot": 14,
+          "oldPath": "d:/ymir work/terrainmaps/b/beach/beach sand 01.dds",
+          "mappingId": 50,
+          "material": "Ground079L",
+          "maskSamples": 0
+        },
+        {
+          "slot": 15,
+          "oldPath": "d:/ymir work/terrainmaps/b/beach/beach sand 02.dds",
+          "mappingId": 51,
+          "material": "Ground079S",
+          "maskSamples": 0
+        },
+        {
+          "slot": 16,
+          "oldPath": "d:/ymir work/terrainmaps/b/beach/beach sand 03.dds",
+          "mappingId": 52,
+          "material": "Ground079L",
+          "maskSamples": 0
+        }
+      ]
+    },
+    {
+      "map": "season1/metin2_map_nusluck01",
+      "textureset": "textureset/metin2_wl_01.txt",
+      "slots": [
+        {
+          "slot": 6,
+          "oldPath": "d:/ymir work/terrainmaps/a/grass/grass 02.dds",
+          "mappingId": 1,
+          "material": "Grass001",
+          "maskSamples": 10038
+        },
+        {
+          "slot": 7,
+          "oldPath": "d:/ymir work/terrainmaps/a/grass/grass 03.dds",
+          "mappingId": 2,
+          "material": "sparse_grass",
+          "maskSamples": 38916
+        },
+        {
+          "slot": 8,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/sand/sand01.dds",
+          "mappingId": 183,
+          "material": "Ground093A",
+          "maskSamples": 0
+        },
+        {
+          "slot": 9,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 02_01.dds",
+          "mappingId": 7,
+          "material": "sparse_grass",
+          "maskSamples": 6042
+        },
+        {
+          "slot": 10,
+          "oldPath": "d:/ymir work/terrainmaps/a/beach/beach sand 02.dds",
+          "mappingId": 40,
+          "material": "Ground079S",
+          "maskSamples": 0
+        },
+        {
+          "slot": 11,
+          "oldPath": "d:/ymir work/terrainmaps/a/field/field 05.dds",
+          "mappingId": 44,
+          "material": "forrest_ground_03",
+          "maskSamples": 50697
+        },
+        {
+          "slot": 13,
+          "oldPath": "d:/ymir work/terrainmaps/g/field/field 06.dds",
+          "mappingId": 167,
+          "material": "mossy_rock",
+          "maskSamples": 113
+        },
+        {
+          "slot": 14,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/sand/sand02.dds",
+          "mappingId": 184,
+          "material": "mud_cracked_dry_riverbed_002",
+          "maskSamples": 130756
+        },
+        {
+          "slot": 15,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/sand/sand03.dds",
+          "mappingId": 185,
+          "material": "Ground079S",
+          "maskSamples": 5
+        },
+        {
+          "slot": 16,
+          "oldPath": "d:/ymir work/terrainmaps/ema1/beach/beach sand 03.dds",
+          "mappingId": 115,
+          "material": "Ground079L",
+          "maskSamples": 0
+        }
+      ]
+    },
+    {
+      "map": "season1/metin2_map_oxevent",
+      "textureset": "textureset/metin2_map_oxevent.txt",
+      "slots": [
+        {
+          "slot": 6,
+          "oldPath": "d:/ymir work/terrainmaps/a/grass/grass 02.dds",
+          "mappingId": 1,
+          "material": "Grass001",
+          "maskSamples": 3377
+        },
+        {
+          "slot": 7,
+          "oldPath": "d:/ymir work/terrainmaps/a/grass/grass 03.dds",
+          "mappingId": 2,
+          "material": "sparse_grass",
+          "maskSamples": 94785
+        },
+        {
+          "slot": 9,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 02_01.dds",
+          "mappingId": 7,
+          "material": "sparse_grass",
+          "maskSamples": 0
+        },
+        {
+          "slot": 11,
+          "oldPath": "d:/ymir work/terrainmaps/a/field/field 05.dds",
+          "mappingId": 44,
+          "material": "forrest_ground_03",
+          "maskSamples": 95283
+        },
+        {
+          "slot": 14,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/sand/sand03.dds",
+          "mappingId": 185,
+          "material": "Ground079S",
+          "maskSamples": 1892
+        },
+        {
+          "slot": 16,
+          "oldPath": "d:/ymir work/terrainmaps/ema1/beach/beach sand 03.dds",
+          "mappingId": 115,
+          "material": "Ground079L",
+          "maskSamples": 169
+        }
+      ]
+    },
+    {
+      "map": "season1/metin2_map_shinsutest_01",
+      "textureset": "textureset/metin2_a1_aa.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 01.dds",
+          "mappingId": 53,
+          "material": "Ground103",
+          "maskSamples": 65015
+        },
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 02.dds",
+          "mappingId": 55,
+          "material": "Ground106",
+          "maskSamples": 43470
+        },
+        {
+          "slot": 3,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 03.dds",
+          "mappingId": 57,
+          "material": "Ground085",
+          "maskSamples": 2446
+        },
+        {
+          "slot": 4,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 04.dds",
+          "mappingId": 59,
+          "material": "Ground103",
+          "maskSamples": 277345
+        },
+        {
+          "slot": 5,
+          "oldPath": "d:/ymir work/terrainmaps/ema1/field/field 05.dds",
+          "mappingId": 116,
+          "material": "forrest_ground_03",
+          "maskSamples": 22
+        },
+        {
+          "slot": 6,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 02.dds",
+          "mappingId": 6,
+          "material": "Grass001",
+          "maskSamples": 17794
+        },
+        {
+          "slot": 7,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 03.dds",
+          "mappingId": 8,
+          "material": "Grass002",
+          "maskSamples": 139829
+        },
+        {
+          "slot": 16,
+          "oldPath": "d:/ymir work/terrainmaps/b/beach/beach sand 03.dds",
+          "mappingId": 52,
+          "material": "Ground079L",
+          "maskSamples": 0
+        }
+      ]
+    },
+    {
+      "map": "season1/metin2_map_siege_01",
+      "textureset": "textureset/metin2_a1_aa.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 01.dds",
+          "mappingId": 53,
+          "material": "Ground103",
+          "maskSamples": 62323
+        },
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 02.dds",
+          "mappingId": 55,
+          "material": "Ground106",
+          "maskSamples": 43845
+        },
+        {
+          "slot": 3,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 03.dds",
+          "mappingId": 57,
+          "material": "Ground085",
+          "maskSamples": 4951
+        },
+        {
+          "slot": 4,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 04.dds",
+          "mappingId": 59,
+          "material": "Ground103",
+          "maskSamples": 272499
+        },
+        {
+          "slot": 5,
+          "oldPath": "d:/ymir work/terrainmaps/ema1/field/field 05.dds",
+          "mappingId": 116,
+          "material": "forrest_ground_03",
+          "maskSamples": 930
+        },
+        {
+          "slot": 6,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 02.dds",
+          "mappingId": 6,
+          "material": "Grass001",
+          "maskSamples": 21867
+        },
+        {
+          "slot": 7,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 03.dds",
+          "mappingId": 8,
+          "material": "Grass002",
+          "maskSamples": 136753
+        },
+        {
+          "slot": 16,
+          "oldPath": "d:/ymir work/terrainmaps/b/beach/beach sand 03.dds",
+          "mappingId": 52,
+          "material": "Ground079L",
+          "maskSamples": 0
+        }
+      ]
+    },
+    {
+      "map": "season1/metin2_map_siege_02",
+      "textureset": "textureset/metin2_a1_aa.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 01.dds",
+          "mappingId": 53,
+          "material": "Ground103",
+          "maskSamples": 62323
+        },
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 02.dds",
+          "mappingId": 55,
+          "material": "Ground106",
+          "maskSamples": 43845
+        },
+        {
+          "slot": 3,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 03.dds",
+          "mappingId": 57,
+          "material": "Ground085",
+          "maskSamples": 4951
+        },
+        {
+          "slot": 4,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 04.dds",
+          "mappingId": 59,
+          "material": "Ground103",
+          "maskSamples": 272499
+        },
+        {
+          "slot": 5,
+          "oldPath": "d:/ymir work/terrainmaps/ema1/field/field 05.dds",
+          "mappingId": 116,
+          "material": "forrest_ground_03",
+          "maskSamples": 930
+        },
+        {
+          "slot": 6,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 02.dds",
+          "mappingId": 6,
+          "material": "Grass001",
+          "maskSamples": 21867
+        },
+        {
+          "slot": 7,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 03.dds",
+          "mappingId": 8,
+          "material": "Grass002",
+          "maskSamples": 136753
+        },
+        {
+          "slot": 16,
+          "oldPath": "d:/ymir work/terrainmaps/b/beach/beach sand 03.dds",
+          "mappingId": 52,
+          "material": "Ground079L",
+          "maskSamples": 0
+        }
+      ]
+    },
+    {
+      "map": "season1/metin2_map_siege_03",
+      "textureset": "textureset/metin2_a1_aa.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 01.dds",
+          "mappingId": 53,
+          "material": "Ground103",
+          "maskSamples": 62323
+        },
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 02.dds",
+          "mappingId": 55,
+          "material": "Ground106",
+          "maskSamples": 43845
+        },
+        {
+          "slot": 3,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 03.dds",
+          "mappingId": 57,
+          "material": "Ground085",
+          "maskSamples": 4951
+        },
+        {
+          "slot": 4,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 04.dds",
+          "mappingId": 59,
+          "material": "Ground103",
+          "maskSamples": 272499
+        },
+        {
+          "slot": 5,
+          "oldPath": "d:/ymir work/terrainmaps/ema1/field/field 05.dds",
+          "mappingId": 116,
+          "material": "forrest_ground_03",
+          "maskSamples": 930
+        },
+        {
+          "slot": 6,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 02.dds",
+          "mappingId": 6,
+          "material": "Grass001",
+          "maskSamples": 21867
+        },
+        {
+          "slot": 7,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 03.dds",
+          "mappingId": 8,
+          "material": "Grass002",
+          "maskSamples": 136753
+        },
+        {
+          "slot": 16,
+          "oldPath": "d:/ymir work/terrainmaps/b/beach/beach sand 03.dds",
+          "mappingId": 52,
+          "material": "Ground079L",
+          "maskSamples": 0
+        }
+      ]
+    },
+    {
+      "map": "season1/metin2_map_skipia_bossdungeon",
+      "textureset": "textureset/metin2_n_saguidungeon.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/dungeon/field 01.dds",
+          "mappingId": 114,
+          "material": "forest_ground_06",
+          "maskSamples": 66564
+        }
+      ]
+    },
+    {
+      "map": "season1/metin2_map_skipia_dungeon_01",
+      "textureset": "textureset/metin2_n_saguidungeon.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/dungeon/field 01.dds",
+          "mappingId": 114,
+          "material": "forest_ground_06",
+          "maskSamples": 2396304
+        }
+      ]
+    },
+    {
+      "map": "season1/metin2_map_skipia_dungeon_02",
+      "textureset": "textureset/metin2_n_saguidungeon.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/dungeon/field 01.dds",
+          "mappingId": 114,
+          "material": "forest_ground_06",
+          "maskSamples": 2396301
+        }
+      ]
+    },
+    {
+      "map": "season1/metin2_map_spider_bossdungeon",
+      "textureset": "textureset/metin2_n_saguidungeon.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/dungeon/field 01.dds",
+          "mappingId": 114,
+          "material": "forest_ground_06",
+          "maskSamples": 66564
+        }
+      ]
+    },
+    {
+      "map": "season1/metin2_map_spiderdungeon_02",
+      "textureset": "textureset/metin2_n_saguidungeon.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/dungeon/field 01.dds",
+          "mappingId": 114,
+          "material": "forest_ground_06",
+          "maskSamples": 1065024
+        }
+      ]
+    },
+    {
+      "map": "season1/metin2_map_sungzi",
+      "textureset": "textureset/metin2_a1.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 01.dds",
+          "mappingId": 53,
+          "material": "Ground103",
+          "maskSamples": 131654
+        },
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 02.dds",
+          "mappingId": 55,
+          "material": "Ground106",
+          "maskSamples": 165
+        },
+        {
+          "slot": 3,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 03.dds",
+          "mappingId": 57,
+          "material": "Ground085",
+          "maskSamples": 65
+        },
+        {
+          "slot": 4,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 04.dds",
+          "mappingId": 59,
+          "material": "Ground103",
+          "maskSamples": 11949
+        },
+        {
+          "slot": 5,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 01.dds",
+          "mappingId": 3,
+          "material": "Grass004",
+          "maskSamples": 56628
+        },
+        {
+          "slot": 6,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 02.dds",
+          "mappingId": 6,
+          "material": "Grass001",
+          "maskSamples": 113
+        },
+        {
+          "slot": 7,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 03.dds",
+          "mappingId": 8,
+          "material": "Grass002",
+          "maskSamples": 64716
+        },
+        {
+          "slot": 14,
+          "oldPath": "d:/ymir work/terrainmaps/b/beach/beach sand 01.dds",
+          "mappingId": 50,
+          "material": "Ground079L",
+          "maskSamples": 0
+        },
+        {
+          "slot": 15,
+          "oldPath": "d:/ymir work/terrainmaps/b/beach/beach sand 02.dds",
+          "mappingId": 51,
+          "material": "Ground079S",
+          "maskSamples": 0
+        },
+        {
+          "slot": 16,
+          "oldPath": "d:/ymir work/terrainmaps/b/beach/beach sand 03.dds",
+          "mappingId": 52,
+          "material": "Ground079L",
+          "maskSamples": 0
+        }
+      ]
+    },
+    {
+      "map": "season1/metin2_map_sungzi_desert_01",
+      "textureset": "textureset/metin2_n_desert1.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/sand/sand01.dds",
+          "mappingId": 183,
+          "material": "Ground093A",
+          "maskSamples": 0
+        },
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/sand/sand02.dds",
+          "mappingId": 184,
+          "material": "mud_cracked_dry_riverbed_002",
+          "maskSamples": 525610
+        },
+        {
+          "slot": 3,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/sand/sand03.dds",
+          "mappingId": 185,
+          "material": "Ground079S",
+          "maskSamples": 534863
+        },
+        {
+          "slot": 4,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/field/field 01.dds",
+          "mappingId": 180,
+          "material": "Ground085",
+          "maskSamples": 627
+        },
+        {
+          "slot": 5,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/field/field 02.dds",
+          "mappingId": 181,
+          "material": "Ground067",
+          "maskSamples": 0
+        },
+        {
+          "slot": 6,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/field/field 03.dds",
+          "mappingId": 182,
+          "material": "Ground085",
+          "maskSamples": 0
+        },
+        {
+          "slot": 10,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/grass/grass 01.dds",
+          "mappingId": 33,
+          "material": "Grass003",
+          "maskSamples": 0
+        },
+        {
+          "slot": 11,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/grass/grass 02.dds",
+          "mappingId": 34,
+          "material": "Grass004",
+          "maskSamples": 0
+        },
+        {
+          "slot": 12,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/grass/grass 03.dds",
+          "mappingId": 35,
+          "material": "sparse_grass",
+          "maskSamples": 3911
+        }
+      ]
+    },
+    {
+      "map": "season1/metin2_map_sungzi_desert_hill_01",
+      "textureset": "textureset/metin2_n_desert1.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/sand/sand01.dds",
+          "mappingId": 183,
+          "material": "Ground093A",
+          "maskSamples": 0
+        },
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/sand/sand02.dds",
+          "mappingId": 184,
+          "material": "mud_cracked_dry_riverbed_002",
+          "maskSamples": 259532
+        },
+        {
+          "slot": 3,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/sand/sand03.dds",
+          "mappingId": 185,
+          "material": "Ground079S",
+          "maskSamples": 266048
+        },
+        {
+          "slot": 4,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/field/field 01.dds",
+          "mappingId": 180,
+          "material": "Ground085",
+          "maskSamples": 0
+        },
+        {
+          "slot": 5,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/field/field 02.dds",
+          "mappingId": 181,
+          "material": "Ground067",
+          "maskSamples": 0
+        },
+        {
+          "slot": 6,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/field/field 03.dds",
+          "mappingId": 182,
+          "material": "Ground085",
+          "maskSamples": 0
+        },
+        {
+          "slot": 10,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/grass/grass 01.dds",
+          "mappingId": 33,
+          "material": "Grass003",
+          "maskSamples": 0
+        },
+        {
+          "slot": 11,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/grass/grass 02.dds",
+          "mappingId": 34,
+          "material": "Grass004",
+          "maskSamples": 0
+        },
+        {
+          "slot": 12,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/grass/grass 03.dds",
+          "mappingId": 35,
+          "material": "sparse_grass",
+          "maskSamples": 6932
+        }
+      ]
+    },
+    {
+      "map": "season1/metin2_map_sungzi_desert_hill_02",
+      "textureset": "textureset/metin2_n_desert1.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/sand/sand01.dds",
+          "mappingId": 183,
+          "material": "Ground093A",
+          "maskSamples": 0
+        },
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/sand/sand02.dds",
+          "mappingId": 184,
+          "material": "mud_cracked_dry_riverbed_002",
+          "maskSamples": 259532
+        },
+        {
+          "slot": 3,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/sand/sand03.dds",
+          "mappingId": 185,
+          "material": "Ground079S",
+          "maskSamples": 266048
+        },
+        {
+          "slot": 4,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/field/field 01.dds",
+          "mappingId": 180,
+          "material": "Ground085",
+          "maskSamples": 0
+        },
+        {
+          "slot": 5,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/field/field 02.dds",
+          "mappingId": 181,
+          "material": "Ground067",
+          "maskSamples": 0
+        },
+        {
+          "slot": 6,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/field/field 03.dds",
+          "mappingId": 182,
+          "material": "Ground085",
+          "maskSamples": 0
+        },
+        {
+          "slot": 10,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/grass/grass 01.dds",
+          "mappingId": 33,
+          "material": "Grass003",
+          "maskSamples": 0
+        },
+        {
+          "slot": 11,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/grass/grass 02.dds",
+          "mappingId": 34,
+          "material": "Grass004",
+          "maskSamples": 0
+        },
+        {
+          "slot": 12,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/grass/grass 03.dds",
+          "mappingId": 35,
+          "material": "sparse_grass",
+          "maskSamples": 6932
+        }
+      ]
+    },
+    {
+      "map": "season1/metin2_map_sungzi_desert_hill_03",
+      "textureset": "textureset/metin2_n_desert1.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/sand/sand01.dds",
+          "mappingId": 183,
+          "material": "Ground093A",
+          "maskSamples": 0
+        },
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/sand/sand02.dds",
+          "mappingId": 184,
+          "material": "mud_cracked_dry_riverbed_002",
+          "maskSamples": 259532
+        },
+        {
+          "slot": 3,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/sand/sand03.dds",
+          "mappingId": 185,
+          "material": "Ground079S",
+          "maskSamples": 266048
+        },
+        {
+          "slot": 4,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/field/field 01.dds",
+          "mappingId": 180,
+          "material": "Ground085",
+          "maskSamples": 0
+        },
+        {
+          "slot": 5,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/field/field 02.dds",
+          "mappingId": 181,
+          "material": "Ground067",
+          "maskSamples": 0
+        },
+        {
+          "slot": 6,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/field/field 03.dds",
+          "mappingId": 182,
+          "material": "Ground085",
+          "maskSamples": 0
+        },
+        {
+          "slot": 10,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/grass/grass 01.dds",
+          "mappingId": 33,
+          "material": "Grass003",
+          "maskSamples": 0
+        },
+        {
+          "slot": 11,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/grass/grass 02.dds",
+          "mappingId": 34,
+          "material": "Grass004",
+          "maskSamples": 0
+        },
+        {
+          "slot": 12,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/grass/grass 03.dds",
+          "mappingId": 35,
+          "material": "sparse_grass",
+          "maskSamples": 6932
+        }
+      ]
+    },
+    {
+      "map": "season1/metin2_map_sungzi_flame_hill_01",
+      "textureset": "textureset/metin2_n_flame_01.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/n/flame area/valcano_01.dds",
+          "mappingId": 190,
+          "material": "Rock031",
+          "maskSamples": 281340
+        },
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/n/flame area/valcano_02.dds",
+          "mappingId": 191,
+          "material": "Rock031",
+          "maskSamples": 0
+        },
+        {
+          "slot": 3,
+          "oldPath": "d:/ymir work/terrainmaps/n/flame area/valcano_03.dds",
+          "mappingId": 192,
+          "material": "Gravel040",
+          "maskSamples": 98936
+        },
+        {
+          "slot": 4,
+          "oldPath": "d:/ymir work/terrainmaps/n/flame area/valcano_04.dds",
+          "mappingId": 193,
+          "material": "Lava002",
+          "maskSamples": 93969
+        },
+        {
+          "slot": 5,
+          "oldPath": "d:/ymir work/terrainmaps/n/flame area/valcano_magma_01.dds",
+          "mappingId": 195,
+          "material": "Lava004",
+          "maskSamples": 48666
+        },
+        {
+          "slot": 7,
+          "oldPath": "d:/ymir work/terrainmaps/n/flame area/valcano_rock.dds",
+          "mappingId": 196,
+          "material": "Rock031",
+          "maskSamples": 0
+        }
+      ]
+    },
+    {
+      "map": "season1/metin2_map_sungzi_flame_hill_02",
+      "textureset": "textureset/metin2_n_flame_01.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/n/flame area/valcano_01.dds",
+          "mappingId": 190,
+          "material": "Rock031",
+          "maskSamples": 281340
+        },
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/n/flame area/valcano_02.dds",
+          "mappingId": 191,
+          "material": "Rock031",
+          "maskSamples": 0
+        },
+        {
+          "slot": 3,
+          "oldPath": "d:/ymir work/terrainmaps/n/flame area/valcano_03.dds",
+          "mappingId": 192,
+          "material": "Gravel040",
+          "maskSamples": 98936
+        },
+        {
+          "slot": 4,
+          "oldPath": "d:/ymir work/terrainmaps/n/flame area/valcano_04.dds",
+          "mappingId": 193,
+          "material": "Lava002",
+          "maskSamples": 93969
+        },
+        {
+          "slot": 5,
+          "oldPath": "d:/ymir work/terrainmaps/n/flame area/valcano_magma_01.dds",
+          "mappingId": 195,
+          "material": "Lava004",
+          "maskSamples": 48666
+        },
+        {
+          "slot": 7,
+          "oldPath": "d:/ymir work/terrainmaps/n/flame area/valcano_rock.dds",
+          "mappingId": 196,
+          "material": "Rock031",
+          "maskSamples": 0
+        }
+      ]
+    },
+    {
+      "map": "season1/metin2_map_sungzi_flame_hill_03",
+      "textureset": "textureset/metin2_n_flame_01.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/n/flame area/valcano_01.dds",
+          "mappingId": 190,
+          "material": "Rock031",
+          "maskSamples": 281340
+        },
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/n/flame area/valcano_02.dds",
+          "mappingId": 191,
+          "material": "Rock031",
+          "maskSamples": 0
+        },
+        {
+          "slot": 3,
+          "oldPath": "d:/ymir work/terrainmaps/n/flame area/valcano_03.dds",
+          "mappingId": 192,
+          "material": "Gravel040",
+          "maskSamples": 98936
+        },
+        {
+          "slot": 4,
+          "oldPath": "d:/ymir work/terrainmaps/n/flame area/valcano_04.dds",
+          "mappingId": 193,
+          "material": "Lava002",
+          "maskSamples": 93969
+        },
+        {
+          "slot": 5,
+          "oldPath": "d:/ymir work/terrainmaps/n/flame area/valcano_magma_01.dds",
+          "mappingId": 195,
+          "material": "Lava004",
+          "maskSamples": 48666
+        },
+        {
+          "slot": 7,
+          "oldPath": "d:/ymir work/terrainmaps/n/flame area/valcano_rock.dds",
+          "mappingId": 196,
+          "material": "Rock031",
+          "maskSamples": 0
+        }
+      ]
+    },
+    {
+      "map": "season1/metin2_map_sungzi_milgyo",
+      "textureset": "textureset/metin2_milgyo.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 01.dds",
+          "mappingId": 3,
+          "material": "Grass004",
+          "maskSamples": 0
+        },
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 01_02.dds",
+          "mappingId": 5,
+          "material": "Grass002",
+          "maskSamples": 18239
+        },
+        {
+          "slot": 3,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 03_05.dds",
+          "mappingId": 10,
+          "material": "mossy_rock",
+          "maskSamples": 19435
+        },
+        {
+          "slot": 7,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 04_02.dds",
+          "mappingId": 60,
+          "material": "Ground085",
+          "maskSamples": 7070
+        },
+        {
+          "slot": 8,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 04_05.dds",
+          "mappingId": 61,
+          "material": "Ground106",
+          "maskSamples": 4973
+        },
+        {
+          "slot": 10,
+          "oldPath": "d:/ymir work/terrainmaps/b/stone/dc_rock_00.dds",
+          "mappingId": 62,
+          "material": "Rock031",
+          "maskSamples": 0
+        },
+        {
+          "slot": 11,
+          "oldPath": "d:/ymir work/terrainmaps/dungeon/devilcave/dc_grass_00.dds",
+          "mappingId": 20,
+          "material": "forest_ground_06",
+          "maskSamples": 0
+        }
+      ]
+    },
+    {
+      "map": "season1/metin2_map_sungzi_milgyo_pass_01",
+      "textureset": "textureset/metin2_milgyo.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 01.dds",
+          "mappingId": 3,
+          "material": "Grass004",
+          "maskSamples": 0
+        },
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 01_02.dds",
+          "mappingId": 5,
+          "material": "Grass002",
+          "maskSamples": 19316
+        },
+        {
+          "slot": 3,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 03_05.dds",
+          "mappingId": 10,
+          "material": "mossy_rock",
+          "maskSamples": 18211
+        },
+        {
+          "slot": 7,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 04_02.dds",
+          "mappingId": 60,
+          "material": "Ground085",
+          "maskSamples": 0
+        },
+        {
+          "slot": 8,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 04_05.dds",
+          "mappingId": 61,
+          "material": "Ground106",
+          "maskSamples": 9168
+        },
+        {
+          "slot": 10,
+          "oldPath": "d:/ymir work/terrainmaps/b/stone/dc_rock_00.dds",
+          "mappingId": 62,
+          "material": "Rock031",
+          "maskSamples": 0
+        },
+        {
+          "slot": 11,
+          "oldPath": "d:/ymir work/terrainmaps/dungeon/devilcave/dc_grass_00.dds",
+          "mappingId": 20,
+          "material": "forest_ground_06",
+          "maskSamples": 0
+        }
+      ]
+    },
+    {
+      "map": "season1/metin2_map_sungzi_milgyo_pass_02",
+      "textureset": "textureset/metin2_milgyo.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 01.dds",
+          "mappingId": 3,
+          "material": "Grass004",
+          "maskSamples": 0
+        },
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 01_02.dds",
+          "mappingId": 5,
+          "material": "Grass002",
+          "maskSamples": 19316
+        },
+        {
+          "slot": 3,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 03_05.dds",
+          "mappingId": 10,
+          "material": "mossy_rock",
+          "maskSamples": 18211
+        },
+        {
+          "slot": 7,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 04_02.dds",
+          "mappingId": 60,
+          "material": "Ground085",
+          "maskSamples": 0
+        },
+        {
+          "slot": 8,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 04_05.dds",
+          "mappingId": 61,
+          "material": "Ground106",
+          "maskSamples": 9168
+        },
+        {
+          "slot": 10,
+          "oldPath": "d:/ymir work/terrainmaps/b/stone/dc_rock_00.dds",
+          "mappingId": 62,
+          "material": "Rock031",
+          "maskSamples": 0
+        },
+        {
+          "slot": 11,
+          "oldPath": "d:/ymir work/terrainmaps/dungeon/devilcave/dc_grass_00.dds",
+          "mappingId": 20,
+          "material": "forest_ground_06",
+          "maskSamples": 0
+        }
+      ]
+    },
+    {
+      "map": "season1/metin2_map_sungzi_milgyo_pass_03",
+      "textureset": "textureset/metin2_milgyo.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 01.dds",
+          "mappingId": 3,
+          "material": "Grass004",
+          "maskSamples": 0
+        },
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 01_02.dds",
+          "mappingId": 5,
+          "material": "Grass002",
+          "maskSamples": 19316
+        },
+        {
+          "slot": 3,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 03_05.dds",
+          "mappingId": 10,
+          "material": "mossy_rock",
+          "maskSamples": 18211
+        },
+        {
+          "slot": 7,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 04_02.dds",
+          "mappingId": 60,
+          "material": "Ground085",
+          "maskSamples": 0
+        },
+        {
+          "slot": 8,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 04_05.dds",
+          "mappingId": 61,
+          "material": "Ground106",
+          "maskSamples": 9168
+        },
+        {
+          "slot": 10,
+          "oldPath": "d:/ymir work/terrainmaps/b/stone/dc_rock_00.dds",
+          "mappingId": 62,
+          "material": "Rock031",
+          "maskSamples": 0
+        },
+        {
+          "slot": 11,
+          "oldPath": "d:/ymir work/terrainmaps/dungeon/devilcave/dc_grass_00.dds",
+          "mappingId": 20,
+          "material": "forest_ground_06",
+          "maskSamples": 0
+        }
+      ]
+    },
+    {
+      "map": "season1/metin2_map_sungzi_snow",
+      "textureset": "textureset/metin2_n_snowm.txt",
+      "slots": [
+        {
+          "slot": 5,
+          "oldPath": "d:/ymir work/terrainmaps/n/snow.m/field 02.dds",
+          "mappingId": 198,
+          "material": "Ground085",
+          "maskSamples": 0
+        },
+        {
+          "slot": 6,
+          "oldPath": "d:/ymir work/terrainmaps/n/snow.m/field 03.dds",
+          "mappingId": 199,
+          "material": "Ground103",
+          "maskSamples": 0
+        }
+      ]
+    },
+    {
+      "map": "season1/metin2_map_sungzi_snow_pass01",
+      "textureset": "textureset/metin2_n_snowm.txt",
+      "slots": [
+        {
+          "slot": 5,
+          "oldPath": "d:/ymir work/terrainmaps/n/snow.m/field 02.dds",
+          "mappingId": 198,
+          "material": "Ground085",
+          "maskSamples": 0
+        },
+        {
+          "slot": 6,
+          "oldPath": "d:/ymir work/terrainmaps/n/snow.m/field 03.dds",
+          "mappingId": 199,
+          "material": "Ground103",
+          "maskSamples": 0
+        }
+      ]
+    },
+    {
+      "map": "season1/metin2_map_sungzi_snow_pass02",
+      "textureset": "textureset/metin2_n_snowm.txt",
+      "slots": [
+        {
+          "slot": 5,
+          "oldPath": "d:/ymir work/terrainmaps/n/snow.m/field 02.dds",
+          "mappingId": 198,
+          "material": "Ground085",
+          "maskSamples": 0
+        },
+        {
+          "slot": 6,
+          "oldPath": "d:/ymir work/terrainmaps/n/snow.m/field 03.dds",
+          "mappingId": 199,
+          "material": "Ground103",
+          "maskSamples": 0
+        }
+      ]
+    },
+    {
+      "map": "season1/metin2_map_sungzi_snow_pass03",
+      "textureset": "textureset/metin2_n_snowm.txt",
+      "slots": [
+        {
+          "slot": 5,
+          "oldPath": "d:/ymir work/terrainmaps/n/snow.m/field 02.dds",
+          "mappingId": 198,
+          "material": "Ground085",
+          "maskSamples": 0
+        },
+        {
+          "slot": 6,
+          "oldPath": "d:/ymir work/terrainmaps/n/snow.m/field 03.dds",
+          "mappingId": 199,
+          "material": "Ground103",
+          "maskSamples": 0
+        }
+      ]
+    },
+    {
+      "map": "season1/metin2_map_wl_01",
+      "textureset": "textureset/metin2_wl_01.txt",
+      "slots": [
+        {
+          "slot": 6,
+          "oldPath": "d:/ymir work/terrainmaps/a/grass/grass 02.dds",
+          "mappingId": 1,
+          "material": "Grass001",
+          "maskSamples": 187841
+        },
+        {
+          "slot": 7,
+          "oldPath": "d:/ymir work/terrainmaps/a/grass/grass 03.dds",
+          "mappingId": 2,
+          "material": "sparse_grass",
+          "maskSamples": 15964
+        },
+        {
+          "slot": 8,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/sand/sand01.dds",
+          "mappingId": 183,
+          "material": "Ground093A",
+          "maskSamples": 5
+        },
+        {
+          "slot": 9,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 02_01.dds",
+          "mappingId": 7,
+          "material": "sparse_grass",
+          "maskSamples": 97
+        },
+        {
+          "slot": 10,
+          "oldPath": "d:/ymir work/terrainmaps/a/beach/beach sand 02.dds",
+          "mappingId": 40,
+          "material": "Ground079S",
+          "maskSamples": 41200
+        },
+        {
+          "slot": 11,
+          "oldPath": "d:/ymir work/terrainmaps/a/field/field 05.dds",
+          "mappingId": 44,
+          "material": "forrest_ground_03",
+          "maskSamples": 808
+        },
+        {
+          "slot": 13,
+          "oldPath": "d:/ymir work/terrainmaps/g/field/field 06.dds",
+          "mappingId": 167,
+          "material": "mossy_rock",
+          "maskSamples": 3
+        },
+        {
+          "slot": 14,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/sand/sand02.dds",
+          "mappingId": 184,
+          "material": "mud_cracked_dry_riverbed_002",
+          "maskSamples": 506575
+        },
+        {
+          "slot": 15,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/sand/sand03.dds",
+          "mappingId": 185,
+          "material": "Ground079S",
+          "maskSamples": 89572
+        },
+        {
+          "slot": 16,
+          "oldPath": "d:/ymir work/terrainmaps/ema1/beach/beach sand 03.dds",
+          "mappingId": 115,
+          "material": "Ground079L",
+          "maskSamples": 139
+        }
+      ]
+    },
+    {
+      "map": "season2/map_n_snowm_02",
+      "textureset": "textureset/metin2_n_snowm.txt",
+      "slots": [
+        {
+          "slot": 5,
+          "oldPath": "d:/ymir work/terrainmaps/n/snow.m/field 02.dds",
+          "mappingId": 198,
+          "material": "Ground085",
+          "maskSamples": 0
+        },
+        {
+          "slot": 6,
+          "oldPath": "d:/ymir work/terrainmaps/n/snow.m/field 03.dds",
+          "mappingId": 199,
+          "material": "Ground103",
+          "maskSamples": 0
+        }
+      ]
+    },
+    {
+      "map": "season2/metin2_map_a2_1",
+      "textureset": "textureset/metin2_a2.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/a/field/field 01.dds",
+          "mappingId": 42,
+          "material": "Ground085",
+          "maskSamples": 206863
+        },
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/a/field/field 02.dds",
+          "mappingId": 43,
+          "material": "Ground103",
+          "maskSamples": 5157
+        },
+        {
+          "slot": 3,
+          "oldPath": "d:/ymir work/terrainmaps/a/grass/grass 01.dds",
+          "mappingId": 0,
+          "material": "Grass003",
+          "maskSamples": 375920
+        },
+        {
+          "slot": 4,
+          "oldPath": "d:/ymir work/terrainmaps/a/grass/grass 02.dds",
+          "mappingId": 1,
+          "material": "Grass001",
+          "maskSamples": 200653
+        },
+        {
+          "slot": 9,
+          "oldPath": "d:/ymir work/terrainmaps/a/beach/beach sand 01.dds",
+          "mappingId": 39,
+          "material": "Ground079L",
+          "maskSamples": 0
+        },
+        {
+          "slot": 10,
+          "oldPath": "d:/ymir work/terrainmaps/a/beach/beach sand 02.dds",
+          "mappingId": 40,
+          "material": "Ground079S",
+          "maskSamples": 0
+        }
+      ]
+    },
+    {
+      "map": "season2/metin2_map_empirewar01",
+      "textureset": "textureset/metin2_map_empirewar01.txt",
+      "slots": []
+    },
+    {
+      "map": "season2/metin2_map_empirewar02",
+      "textureset": "textureset/metin2_map_empirewar02.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/empirewar/summer/field01.dds",
+          "mappingId": 146,
+          "material": "Ground103",
+          "maskSamples": 63709
+        },
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/empirewar/summer/field02.dds",
+          "mappingId": 147,
+          "material": "Ground085",
+          "maskSamples": 16070
+        },
+        {
+          "slot": 3,
+          "oldPath": "d:/ymir work/terrainmaps/empirewar/summer/field03.dds",
+          "mappingId": 148,
+          "material": "leafy_grass",
+          "maskSamples": 52909
+        },
+        {
+          "slot": 4,
+          "oldPath": "d:/ymir work/terrainmaps/empirewar/summer/grass01.dds",
+          "mappingId": 27,
+          "material": "sparse_grass",
+          "maskSamples": 24452
+        },
+        {
+          "slot": 5,
+          "oldPath": "d:/ymir work/terrainmaps/empirewar/summer/grass02.dds",
+          "mappingId": 28,
+          "material": "Grass003",
+          "maskSamples": 0
+        }
+      ]
+    },
+    {
+      "map": "season2/metin2_map_empirewar03",
+      "textureset": "textureset/metin2_map_empirewar03.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/empirewar/desert/sand01.dds",
+          "mappingId": 121,
+          "material": "Ground079L",
+          "maskSamples": 79813
+        },
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/empirewar/desert/sand02.dds",
+          "mappingId": 122,
+          "material": "Ground093A",
+          "maskSamples": 29117
+        },
+        {
+          "slot": 3,
+          "oldPath": "d:/ymir work/terrainmaps/empirewar/desert/field01.dds",
+          "mappingId": 119,
+          "material": "Ground079S",
+          "maskSamples": 43909
+        },
+        {
+          "slot": 4,
+          "oldPath": "d:/ymir work/terrainmaps/empirewar/desert/field02.dds",
+          "mappingId": 120,
+          "material": "Ground103",
+          "maskSamples": 15529
+        },
+        {
+          "slot": 5,
+          "oldPath": "d:/ymir work/terrainmaps/empirewar/desert/grass01.dds",
+          "mappingId": 21,
+          "material": "withered_grass",
+          "maskSamples": 0
+        },
+        {
+          "slot": 6,
+          "oldPath": "d:/ymir work/terrainmaps/empirewar/desert/grass02.dds",
+          "mappingId": 22,
+          "material": "sparse_grass",
+          "maskSamples": 2565
+        }
+      ]
+    },
+    {
+      "map": "season2/metin2_map_guild_inside01",
+      "textureset": "textureset/metin2_n_saguidungeon.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/dungeon/field 01.dds",
+          "mappingId": 114,
+          "material": "forest_ground_06",
+          "maskSamples": 66564
+        }
+      ]
+    },
+    {
+      "map": "season2/metin2_map_milgyo_a",
+      "textureset": "textureset/metin2_milgyo.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 01.dds",
+          "mappingId": 3,
+          "material": "Grass004",
+          "maskSamples": 70576
+        },
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 01_02.dds",
+          "mappingId": 5,
+          "material": "Grass002",
+          "maskSamples": 45438
+        },
+        {
+          "slot": 3,
+          "oldPath": "d:/ymir work/terrainmaps/b/grass/grass 03_05.dds",
+          "mappingId": 10,
+          "material": "mossy_rock",
+          "maskSamples": 42808
+        },
+        {
+          "slot": 7,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 04_02.dds",
+          "mappingId": 60,
+          "material": "Ground085",
+          "maskSamples": 2458
+        },
+        {
+          "slot": 8,
+          "oldPath": "d:/ymir work/terrainmaps/b/field/field 04_05.dds",
+          "mappingId": 61,
+          "material": "Ground106",
+          "maskSamples": 19827
+        },
+        {
+          "slot": 10,
+          "oldPath": "d:/ymir work/terrainmaps/b/stone/dc_rock_00.dds",
+          "mappingId": 62,
+          "material": "Rock031",
+          "maskSamples": 12750
+        },
+        {
+          "slot": 11,
+          "oldPath": "d:/ymir work/terrainmaps/dungeon/devilcave/dc_grass_00.dds",
+          "mappingId": 20,
+          "material": "forest_ground_06",
+          "maskSamples": 1375
+        }
+      ]
+    },
+    {
+      "map": "season2/metin2_map_n_desert_02",
+      "textureset": "textureset/metin2_n_desert_01.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/sand/sand01.dds",
+          "mappingId": 183,
+          "material": "Ground093A",
+          "maskSamples": 1580029
+        },
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/sand/sand02.dds",
+          "mappingId": 184,
+          "material": "mud_cracked_dry_riverbed_002",
+          "maskSamples": 20401
+        },
+        {
+          "slot": 3,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/sand/sand03.dds",
+          "mappingId": 185,
+          "material": "Ground079S",
+          "maskSamples": 4499
+        },
+        {
+          "slot": 4,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/field/field 01.dds",
+          "mappingId": 180,
+          "material": "Ground085",
+          "maskSamples": 110916
+        },
+        {
+          "slot": 5,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/field/field 02.dds",
+          "mappingId": 181,
+          "material": "Ground067",
+          "maskSamples": 5
+        },
+        {
+          "slot": 6,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/field/field 03.dds",
+          "mappingId": 182,
+          "material": "Ground085",
+          "maskSamples": 3608
+        },
+        {
+          "slot": 10,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/grass/grass 01.dds",
+          "mappingId": 33,
+          "material": "Grass003",
+          "maskSamples": 5115
+        },
+        {
+          "slot": 11,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/grass/grass 02.dds",
+          "mappingId": 34,
+          "material": "Grass004",
+          "maskSamples": 33003
+        },
+        {
+          "slot": 12,
+          "oldPath": "d:/ymir work/terrainmaps/n/desert/grass/grass 03.dds",
+          "mappingId": 35,
+          "material": "sparse_grass",
+          "maskSamples": 2050
+        }
+      ]
+    },
+    {
+      "map": "season2/metin2_map_n_flame_02",
+      "textureset": "textureset/metin2_n_flame_01.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/n/flame area/valcano_01.dds",
+          "mappingId": 190,
+          "material": "Rock031",
+          "maskSamples": 486671
+        },
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/n/flame area/valcano_02.dds",
+          "mappingId": 191,
+          "material": "Rock031",
+          "maskSamples": 704
+        },
+        {
+          "slot": 3,
+          "oldPath": "d:/ymir work/terrainmaps/n/flame area/valcano_03.dds",
+          "mappingId": 192,
+          "material": "Gravel040",
+          "maskSamples": 1317195
+        },
+        {
+          "slot": 4,
+          "oldPath": "d:/ymir work/terrainmaps/n/flame area/valcano_04.dds",
+          "mappingId": 193,
+          "material": "Lava002",
+          "maskSamples": 346574
+        },
+        {
+          "slot": 5,
+          "oldPath": "d:/ymir work/terrainmaps/n/flame area/valcano_magma_01.dds",
+          "mappingId": 195,
+          "material": "Lava004",
+          "maskSamples": 123330
+        },
+        {
+          "slot": 7,
+          "oldPath": "d:/ymir work/terrainmaps/n/flame area/valcano_rock.dds",
+          "mappingId": 196,
+          "material": "Rock031",
+          "maskSamples": 0
+        }
+      ]
+    },
+    {
+      "map": "season2/metin2_map_skipia_bossdungeon",
+      "textureset": "textureset/metin2_n_saguidungeon.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/dungeon/field 01.dds",
+          "mappingId": 114,
+          "material": "forest_ground_06",
+          "maskSamples": 66564
+        }
+      ]
+    },
+    {
+      "map": "season2/metin2_map_skipia_dungeon_01",
+      "textureset": "textureset/metin2_n_saguidungeon.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/dungeon/field 01.dds",
+          "mappingId": 114,
+          "material": "forest_ground_06",
+          "maskSamples": 2396304
+        }
+      ]
+    },
+    {
+      "map": "season2/metin2_map_skipia_dungeon_02",
+      "textureset": "textureset/metin2_n_saguidungeon.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/dungeon/field 01.dds",
+          "mappingId": 114,
+          "material": "forest_ground_06",
+          "maskSamples": 2396294
+        }
+      ]
+    },
+    {
+      "map": "season2/metin2_map_trent02_a",
+      "textureset": "textureset/metin2_map_trent.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/trent/field/field 01.dds",
+          "mappingId": 208,
+          "material": "forrest_ground_03",
+          "maskSamples": 7440
+        },
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/trent/field/field 02.dds",
+          "mappingId": 209,
+          "material": "forrest_ground_01",
+          "maskSamples": 16801
+        },
+        {
+          "slot": 3,
+          "oldPath": "d:/ymir work/terrainmaps/trent/field/field 03.dds",
+          "mappingId": 210,
+          "material": "forest_ground_04",
+          "maskSamples": 200898
+        },
+        {
+          "slot": 4,
+          "oldPath": "d:/ymir work/terrainmaps/trent/grass/grass 01.dds",
+          "mappingId": 36,
+          "material": "Grass003",
+          "maskSamples": 50198
+        },
+        {
+          "slot": 5,
+          "oldPath": "d:/ymir work/terrainmaps/trent/grass/grass 02.dds",
+          "mappingId": 37,
+          "material": "Grass001",
+          "maskSamples": 10439
+        },
+        {
+          "slot": 6,
+          "oldPath": "d:/ymir work/terrainmaps/trent/grass/grass 03.dds",
+          "mappingId": 38,
+          "material": "Grass002",
+          "maskSamples": 249459
+        }
+      ]
+    },
+    {
+      "map": "season2/metin2_map_trent_a",
+      "textureset": "textureset/metin2_map_trent.txt",
+      "slots": [
+        {
+          "slot": 1,
+          "oldPath": "d:/ymir work/terrainmaps/trent/field/field 01.dds",
+          "mappingId": 208,
+          "material": "forrest_ground_03",
+          "maskSamples": 37907
+        },
+        {
+          "slot": 2,
+          "oldPath": "d:/ymir work/terrainmaps/trent/field/field 02.dds",
+          "mappingId": 209,
+          "material": "forrest_ground_01",
+          "maskSamples": 57486
+        },
+        {
+          "slot": 3,
+          "oldPath": "d:/ymir work/terrainmaps/trent/field/field 03.dds",
+          "mappingId": 210,
+          "material": "forest_ground_04",
+          "maskSamples": 15138
+        },
+        {
+          "slot": 4,
+          "oldPath": "d:/ymir work/terrainmaps/trent/grass/grass 01.dds",
+          "mappingId": 36,
+          "material": "Grass003",
+          "maskSamples": 41599
+        },
+        {
+          "slot": 5,
+          "oldPath": "d:/ymir work/terrainmaps/trent/grass/grass 02.dds",
+          "mappingId": 37,
+          "material": "Grass001",
+          "maskSamples": 103
+        },
+        {
+          "slot": 6,
+          "oldPath": "d:/ymir work/terrainmaps/trent/grass/grass 03.dds",
+          "mappingId": 38,
+          "material": "Grass002",
+          "maskSamples": 37
+        }
+      ]
+    }
+  ],
+  "excluded": [
+    {
+      "id": 111,
+      "reason": "Spinnweben-Detail ben\u00f6tigt eigene Variante; Original bleibt erhalten."
+    }
+  ],
+  "productionDeployment": false,
+  "classic": "Original textures",
+  "uvAndMasks": "unchanged",
+  "sourceMaps": [
+    "Color only"
+  ]
+}

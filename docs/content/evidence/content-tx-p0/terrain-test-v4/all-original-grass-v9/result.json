@@ -1,0 +1,53 @@
+{
+  "version": "all-original-grass-v9",
+  "restoredMaps": 51,
+  "restoredLayerAssignments": 147,
+  "removedThisRevision": 132,
+  "remainingGrassOverrides": 0,
+  "unchangedOtherLayers": 319,
+  "nativeViews": 6,
+  "exitCode": 0,
+  "protectedFilesUnchanged": 12201,
+  "packedOriginalsAvailable": 36,
+  "missingOriginals": [
+    "d:/ymir work/terrainmaps/empirewar/field03.dds",
+    "d:/ymir work/terrainmaps/empirewar/grass01.dds",
+    "d:/ymir work/terrainmaps/empirewar/grass02.dds",
+    "d:/ymir work/terrainmaps/g/field/grass 01.dds"
+  ],
+  "missingOriginalUsages": [
+    {
+      "map": "metin2_map_t2",
+      "slot": 5,
+      "oldPath": "d:/ymir work/terrainmaps/g/field/grass 01.dds",
+      "source": null,
+      "maskSamples": 0,
+      "path": "terrain/modern/metin2_map_t2/slot-005.dds"
+    },
+    {
+      "map": "season1/metin2_map_empirewar_a01",
+      "slot": 3,
+      "oldPath": "d:/ymir work/terrainmaps/empirewar/field03.dds",
+      "source": null,
+      "maskSamples": 78412,
+      "path": "terrain/modern/season1/metin2_map_empirewar_a01/slot-003.dds"
+    },
+    {
+      "map": "season1/metin2_map_empirewar_a01",
+      "slot": 4,
+      "oldPath": "d:/ymir work/terrainmaps/empirewar/grass01.dds",
+      "source": null,
+      "maskSamples": 45682,
+      "path": "terrain/modern/season1/metin2_map_empirewar_a01/slot-004.dds"
+    },
+    {
+      "map": "season1/metin2_map_empirewar_a01",
+      "slot": 5,
+      "oldPath": "d:/ymir work/terrainmaps/empirewar/grass02.dds",
+      "source": null,
+      "maskSamples": 3681,
+      "path": "terrain/modern/season1/metin2_map_empirewar_a01/slot-005.dds"
+    }
+  ],
+  "userVisualAcceptance": "Pending"
+}

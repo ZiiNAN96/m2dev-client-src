@@ -1,0 +1,1078 @@
+[
+  {
+    "file": "Gras\\material\\IM_GrassMat_Inst1.bin",
+    "format": ".bin",
+    "bytes": 154456,
+    "sha256": "fd2550430fee464c3c84d545e5eea9bfec0d4262c20a8b817b30e8b586fbbc25",
+    "role": "Exported preview sphere geometry (unused)"
+  },
+  {
+    "file": "Gras\\material\\IM_GrassMat_Inst1.gltf",
+    "format": ".gltf",
+    "bytes": 2557,
+    "sha256": "e800d666748269a110612d21908b5f6207d766d4ef5da13050268dc678d8c36a",
+    "role": "Material/mesh export metadata"
+  },
+  {
+    "file": "Gras\\material\\IM_GrassMat_Inst1_BaseColor.png",
+    "format": ".png",
+    "bytes": 26883780,
+    "sha256": "ac3313730166ebc2e44acc901792bd1572a20af1cd42df45da6ed2ea729e3616",
+    "width": 4096,
+    "height": 4096,
+    "mode": "RGBA",
+    "role": "BaseColor (sRGB)",
+    "channelMin": [
+      0,
+      0,
+      0,
+      255
+    ],
+    "channelMax": [
+      152,
+      183,
+      150,
+      255
+    ]
+  },
+  {
+    "file": "Gras\\material\\IM_GrassMat_Inst1_Normal.png",
+    "format": ".png",
+    "bytes": 35463647,
+    "sha256": "ec1f98bd104fcc5fa7d3988bc31f0658181fb4567f70db4c0d3cb2c4b9d0db95",
+    "width": 4096,
+    "height": 4096,
+    "mode": "RGBA",
+    "role": "Normal (linear)",
+    "channelMin": [
+      0,
+      0,
+      127,
+      255
+    ],
+    "channelMax": [
+      255,
+      255,
+      255,
+      255
+    ]
+  },
+  {
+    "file": "Gras\\material\\IM_GrassMat_Inst1_Occlusion.png",
+    "format": ".png",
+    "bytes": 14152558,
+    "sha256": "aea62edc419ab5d0e5f6862b1edb84915f375d4dfe0f5b1ee8e040559fd80a5f",
+    "width": 4096,
+    "height": 4096,
+    "mode": "RGBA",
+    "role": "AO (linear)",
+    "channelMin": [
+      0,
+      0,
+      0,
+      255
+    ],
+    "channelMax": [
+      255,
+      255,
+      255,
+      255
+    ]
+  },
+  {
+    "file": "Gras\\material\\IM_GrassMat_Inst2.bin",
+    "format": ".bin",
+    "bytes": 154456,
+    "sha256": "fd2550430fee464c3c84d545e5eea9bfec0d4262c20a8b817b30e8b586fbbc25",
+    "role": "Exported preview sphere geometry (unused)"
+  },
+  {
+    "file": "Gras\\material\\IM_GrassMat_Inst2.gltf",
+    "format": ".gltf",
+    "bytes": 2698,
+    "sha256": "939c44ccd3d50bbfeeaadeab381cf43ecab3074c89c78a6f869029fc0929c91d",
+    "role": "Material/mesh export metadata"
+  },
+  {
+    "file": "Gras\\material\\IM_GrassMat_Inst2_BaseColor.png",
+    "format": ".png",
+    "bytes": 20331002,
+    "sha256": "6baebb9b1b3dc4ae83cfd1599238b729953fed5c4c399d948c4a9055ad641991",
+    "width": 4096,
+    "height": 4096,
+    "mode": "RGBA",
+    "role": "BaseColor (sRGB)",
+    "channelMin": [
+      0,
+      0,
+      0,
+      255
+    ],
+    "channelMax": [
+      135,
+      151,
+      122,
+      255
+    ]
+  },
+  {
+    "file": "Gras\\material\\IM_GrassMat_Inst2_MetallicRoughness.png",
+    "format": ".png",
+    "bytes": 8047336,
+    "sha256": "6ca08923f826433c7a693fbc7a92a9b96ef5e3e378904788a04440448081c313",
+    "width": 4096,
+    "height": 4096,
+    "mode": "RGBA",
+    "role": "G Roughness / B Metallic (linear)",
+    "channelMin": [
+      0,
+      0,
+      4,
+      255
+    ],
+    "channelMax": [
+      0,
+      191,
+      4,
+      255
+    ]
+  },
+  {
+    "file": "Gras\\material\\IM_GrassMat_Inst2_Normal.png",
+    "format": ".png",
+    "bytes": 31254796,
+    "sha256": "5ebb9a5571127046ce6723fd53da68695bfa4a8be09a070067adb31c8b741245",
+    "width": 4096,
+    "height": 4096,
+    "mode": "RGBA",
+    "role": "Normal (linear)",
+    "channelMin": [
+      0,
+      0,
+      127,
+      255
+    ],
+    "channelMax": [
+      255,
+      255,
+      255,
+      255
+    ]
+  },
+  {
+    "file": "Gras\\material\\IM_GrassMat_Inst2_Occlusion.png",
+    "format": ".png",
+    "bytes": 11046641,
+    "sha256": "c89e0e73e169e824ed3d0a2eb4642211254b076c77c77021b645896b4b74582e",
+    "width": 4096,
+    "height": 4096,
+    "mode": "RGBA",
+    "role": "AO (linear)",
+    "channelMin": [
+      0,
+      0,
+      0,
+      255
+    ],
+    "channelMax": [
+      255,
+      255,
+      255,
+      255
+    ]
+  },
+  {
+    "file": "Gras\\material\\IM_GrassMat_Inst3.bin",
+    "format": ".bin",
+    "bytes": 154456,
+    "sha256": "fd2550430fee464c3c84d545e5eea9bfec0d4262c20a8b817b30e8b586fbbc25",
+    "role": "Exported preview sphere geometry (unused)"
+  },
+  {
+    "file": "Gras\\material\\IM_GrassMat_Inst3.gltf",
+    "format": ".gltf",
+    "bytes": 2556,
+    "sha256": "b13eec7d670595cfe69e3385f11d7e8e3effe3456eb9dddfc92b055342e0f13f",
+    "role": "Material/mesh export metadata"
+  },
+  {
+    "file": "Gras\\material\\IM_GrassMat_Inst3_BaseColor.png",
+    "format": ".png",
+    "bytes": 23828203,
+    "sha256": "5e2745869aff6600485738c730cd6c9ec5b7666b0f2a56cec6b7f0b085a44efe",
+    "width": 4096,
+    "height": 4096,
+    "mode": "RGBA",
+    "role": "BaseColor (sRGB)",
+    "channelMin": [
+      0,
+      0,
+      0,
+      255
+    ],
+    "channelMax": [
+      167,
+      179,
+      128,
+      255
+    ]
+  },
+  {
+    "file": "Gras\\material\\IM_GrassMat_Inst3_Normal.png",
+    "format": ".png",
+    "bytes": 31111969,
+    "sha256": "062962d6016116255283eccaa398efd2cb3e297b17be113123383547473fe8ae",
+    "width": 4096,
+    "height": 4096,
+    "mode": "RGBA",
+    "role": "Normal (linear)",
+    "channelMin": [
+      0,
+      0,
+      127,
+      255
+    ],
+    "channelMax": [
+      255,
+      255,
+      255,
+      255
+    ]
+  },
+  {
+    "file": "Gras\\material\\IM_GrassMat_Inst3_Occlusion.png",
+    "format": ".png",
+    "bytes": 12384562,
+    "sha256": "2e29ffff89041b69e76321c73da5c82a27ff92f616d3bf4f5d4aff4c5e315044",
+    "width": 4096,
+    "height": 4096,
+    "mode": "RGBA",
+    "role": "AO (linear)",
+    "channelMin": [
+      0,
+      0,
+      0,
+      255
+    ],
+    "channelMax": [
+      255,
+      255,
+      255,
+      255
+    ]
+  },
+  {
+    "file": "Gras\\material\\IM_GrassMat_Inst4.bin",
+    "format": ".bin",
+    "bytes": 154456,
+    "sha256": "fd2550430fee464c3c84d545e5eea9bfec0d4262c20a8b817b30e8b586fbbc25",
+    "role": "Exported preview sphere geometry (unused)"
+  },
+  {
+    "file": "Gras\\material\\IM_GrassMat_Inst4.gltf",
+    "format": ".gltf",
+    "bytes": 2556,
+    "sha256": "f160fc450a9b718ee68e9352ac2a43430e2e2406aa7e2bb6f9ee71cdfb2382ce",
+    "role": "Material/mesh export metadata"
+  },
+  {
+    "file": "Gras\\material\\IM_GrassMat_Inst4_BaseColor.png",
+    "format": ".png",
+    "bytes": 17877010,
+    "sha256": "2ad2d52592b48fcd9e6863a62ffa73cbe95e92af0682554eb3afa60675f94290",
+    "width": 4096,
+    "height": 4096,
+    "mode": "RGBA",
+    "role": "BaseColor (sRGB)",
+    "channelMin": [
+      0,
+      0,
+      0,
+      255
+    ],
+    "channelMax": [
+      172,
+      177,
+      135,
+      255
+    ]
+  },
+  {
+    "file": "Gras\\material\\IM_GrassMat_Inst4_Normal.png",
+    "format": ".png",
+    "bytes": 27691357,
+    "sha256": "b274b489d1fc49320f0445f1dc2050f4e9c7f43cdd2f273daeffa026e27edcf4",
+    "width": 4096,
+    "height": 4096,
+    "mode": "RGBA",
+    "role": "Normal (linear)",
+    "channelMin": [
+      0,
+      0,
+      127,
+      255
+    ],
+    "channelMax": [
+      255,
+      255,
+      255,
+      255
+    ]
+  },
+  {
+    "file": "Gras\\material\\IM_GrassMat_Inst4_Occlusion.png",
+    "format": ".png",
+    "bytes": 10086057,
+    "sha256": "9fed62d44481321cc614ed972ae5dc9d7695d6f4be1bee85f864844015426bbd",
+    "width": 4096,
+    "height": 4096,
+    "mode": "RGBA",
+    "role": "AO (linear)",
+    "channelMin": [
+      0,
+      0,
+      0,
+      255
+    ],
+    "channelMax": [
+      255,
+      255,
+      255,
+      255
+    ]
+  },
+  {
+    "file": "Gras\\material\\IM_GrassMat_Inst5.bin",
+    "format": ".bin",
+    "bytes": 154456,
+    "sha256": "fd2550430fee464c3c84d545e5eea9bfec0d4262c20a8b817b30e8b586fbbc25",
+    "role": "Exported preview sphere geometry (unused)"
+  },
+  {
+    "file": "Gras\\material\\IM_GrassMat_Inst5.gltf",
+    "format": ".gltf",
+    "bytes": 2698,
+    "sha256": "e3dc0b0e1328d7901b1d7d86c6db9d975a5696341dd501daa9a898bb9b0a0ea7",
+    "role": "Material/mesh export metadata"
+  },
+  {
+    "file": "Gras\\material\\IM_GrassMat_Inst5_BaseColor.png",
+    "format": ".png",
+    "bytes": 19151401,
+    "sha256": "81b94c37a92093e5d2258203fa83500199931062cc398563096480a7ca0351f9",
+    "width": 4096,
+    "height": 4096,
+    "mode": "RGBA",
+    "role": "BaseColor (sRGB)",
+    "channelMin": [
+      0,
+      0,
+      0,
+      255
+    ],
+    "channelMax": [
+      167,
+      161,
+      61,
+      255
+    ]
+  },
+  {
+    "file": "Gras\\material\\IM_GrassMat_Inst5_MetallicRoughness.png",
+    "format": ".png",
+    "bytes": 7648573,
+    "sha256": "d6bb33adf6bae13bbddabd38d39908317070e579765705ebd59f3b00baee642e",
+    "width": 4096,
+    "height": 4096,
+    "mode": "RGBA",
+    "role": "G Roughness / B Metallic (linear)",
+    "channelMin": [
+      0,
+      0,
+      4,
+      255
+    ],
+    "channelMax": [
+      0,
+      191,
+      4,
+      255
+    ]
+  },
+  {
+    "file": "Gras\\material\\IM_GrassMat_Inst5_Normal.png",
+    "format": ".png",
+    "bytes": 22681419,
+    "sha256": "84bd789d78da9e9f0c4ca70d2f38303b3cac5468ba2f9a91c48989cf81427711",
+    "width": 4096,
+    "height": 4096,
+    "mode": "RGBA",
+    "role": "Normal (linear)",
+    "channelMin": [
+      0,
+      0,
+      127,
+      255
+    ],
+    "channelMax": [
+      255,
+      255,
+      255,
+      255
+    ]
+  },
+  {
+    "file": "Gras\\material\\IM_GrassMat_Inst5_Occlusion.png",
+    "format": ".png",
+    "bytes": 11136786,
+    "sha256": "be7661be49d0b3414472937142de4b9dcde25b008d7a1b89df7d4a3a84947289",
+    "width": 4096,
+    "height": 4096,
+    "mode": "RGBA",
+    "role": "AO (linear)",
+    "channelMin": [
+      0,
+      0,
+      0,
+      255
+    ],
+    "channelMax": [
+      255,
+      255,
+      255,
+      255
+    ]
+  },
+  {
+    "file": "Gras\\material\\IM_GrassMat_Inst6.bin",
+    "format": ".bin",
+    "bytes": 154456,
+    "sha256": "fd2550430fee464c3c84d545e5eea9bfec0d4262c20a8b817b30e8b586fbbc25",
+    "role": "Exported preview sphere geometry (unused)"
+  },
+  {
+    "file": "Gras\\material\\IM_GrassMat_Inst6.gltf",
+    "format": ".gltf",
+    "bytes": 2556,
+    "sha256": "f06d0d54ae0013e3ae903067341263734dc0abf304f3f38a842861ca2f555b39",
+    "role": "Material/mesh export metadata"
+  },
+  {
+    "file": "Gras\\material\\IM_GrassMat_Inst6_BaseColor.png",
+    "format": ".png",
+    "bytes": 23274176,
+    "sha256": "37151278c509362d26a221a29d1910a3088aa3313775f80afc90b8b722866dc4",
+    "width": 4096,
+    "height": 4096,
+    "mode": "RGBA",
+    "role": "BaseColor (sRGB)",
+    "channelMin": [
+      0,
+      0,
+      0,
+      255
+    ],
+    "channelMax": [
+      222,
+      223,
+      222,
+      255
+    ]
+  },
+  {
+    "file": "Gras\\material\\IM_GrassMat_Inst6_Normal.png",
+    "format": ".png",
+    "bytes": 50465812,
+    "sha256": "5aeddceccead3bc1a4b4fd64b4d3ede442d2291c8ef1ac62a01cee9d5ca732a8",
+    "width": 4096,
+    "height": 4096,
+    "mode": "RGBA",
+    "role": "Normal (linear)",
+    "channelMin": [
+      0,
+      0,
+      127,
+      255
+    ],
+    "channelMax": [
+      255,
+      255,
+      255,
+      255
+    ]
+  },
+  {
+    "file": "Gras\\material\\IM_GrassMat_Inst6_Occlusion.png",
+    "format": ".png",
+    "bytes": 10684767,
+    "sha256": "5eac50162efcace10f6d5390a7868cf08c550087119701ee773e9a863d12efe7",
+    "width": 4096,
+    "height": 4096,
+    "mode": "RGBA",
+    "role": "AO (linear)",
+    "channelMin": [
+      0,
+      0,
+      0,
+      255
+    ],
+    "channelMax": [
+      255,
+      255,
+      255,
+      255
+    ]
+  },
+  {
+    "file": "Gras\\texture\\Game\\GrassMat\\Texture\\T_GrassMat1_ambientocclusion.PNG",
+    "format": ".png",
+    "bytes": 30155062,
+    "sha256": "d713cdf64c8655f5988a4c31c6029cd2e63c59c3c3bbb85f98118d0f6da82cc1",
+    "width": 4096,
+    "height": 4096,
+    "mode": "I;16",
+    "role": "AO (linear)",
+    "channelMin": 2,
+    "channelMax": 65535
+  },
+  {
+    "file": "Gras\\texture\\Game\\GrassMat\\Texture\\T_GrassMat1_basecolor.PNG",
+    "format": ".png",
+    "bytes": 67584683,
+    "sha256": "b05db484fa1de8148575cf70a4af06cfab7cffab3fa6cd794b65bb1e856a3059",
+    "width": 4096,
+    "height": 4096,
+    "mode": "RGBA",
+    "role": "BaseColor (sRGB)",
+    "channelMin": [
+      28,
+      37,
+      4,
+      255
+    ],
+    "channelMax": [
+      104,
+      157,
+      104,
+      255
+    ]
+  },
+  {
+    "file": "Gras\\texture\\Game\\GrassMat\\Texture\\T_GrassMat1_height.PNG",
+    "format": ".png",
+    "bytes": 27668191,
+    "sha256": "df8d547c6c761d21bf2c1446d9d3c1a865f5d34fe91c07d8c02a0778d2da7466",
+    "width": 4096,
+    "height": 4096,
+    "mode": "I;16",
+    "role": "Height (linear)",
+    "channelMin": 0,
+    "channelMax": 65535
+  },
+  {
+    "file": "Gras\\texture\\Game\\GrassMat\\Texture\\T_GrassMat1_metallic.PNG",
+    "format": ".png",
+    "bytes": 81729,
+    "sha256": "4492af3c68142d942921ddbf5ff9e464c6797e221cf26a64c2d379650ff1e835",
+    "width": 4096,
+    "height": 4096,
+    "mode": "L",
+    "role": "Metallic (linear)",
+    "channelMin": 32,
+    "channelMax": 32
+  },
+  {
+    "file": "Gras\\texture\\Game\\GrassMat\\Texture\\T_GrassMat1_normal.PNG",
+    "format": ".png",
+    "bytes": 99294824,
+    "sha256": "5887abe308a283d8a9d99c032136a39af4eafaddd154ddea5da8327275fb0d89",
+    "width": 4096,
+    "height": 4096,
+    "mode": "RGBA",
+    "role": "Normal (linear)",
+    "channelMin": [
+      1,
+      1,
+      139,
+      255
+    ],
+    "channelMax": [
+      254,
+      254,
+      255,
+      255
+    ]
+  },
+  {
+    "file": "Gras\\texture\\Game\\GrassMat\\Texture\\T_GrassMat1_roughness.PNG",
+    "format": ".png",
+    "bytes": 81729,
+    "sha256": "afbc5051d3d9265d757afc6ae2c53119860050a8bf0b9b1cfe68d56eeec1cbfe",
+    "width": 4096,
+    "height": 4096,
+    "mode": "L",
+    "role": "Roughness (linear)",
+    "channelMin": 227,
+    "channelMax": 227
+  },
+  {
+    "file": "Gras\\texture\\Game\\GrassMat\\Texture\\T_GrassMat2_ambientocclusion.PNG",
+    "format": ".png",
+    "bytes": 27842658,
+    "sha256": "f3e5a8118caf9296f97d0588c891fc7d9420750b1fcb797ffb7f7bb851191e14",
+    "width": 4096,
+    "height": 4096,
+    "mode": "I;16",
+    "role": "AO (linear)",
+    "channelMin": 2,
+    "channelMax": 65535
+  },
+  {
+    "file": "Gras\\texture\\Game\\GrassMat\\Texture\\T_GrassMat2_basecolor.PNG",
+    "format": ".png",
+    "bytes": 63083335,
+    "sha256": "335a1efe7bf1ddcb0c21e8ffdb736713a84f770cf0bd74512fb9fa26939788ea",
+    "width": 4096,
+    "height": 4096,
+    "mode": "RGBA",
+    "role": "BaseColor (sRGB)",
+    "channelMin": [
+      26,
+      38,
+      3,
+      255
+    ],
+    "channelMax": [
+      84,
+      99,
+      62,
+      255
+    ]
+  },
+  {
+    "file": "Gras\\texture\\Game\\GrassMat\\Texture\\T_GrassMat2_height.PNG",
+    "format": ".png",
+    "bytes": 23787707,
+    "sha256": "5aefa0d994eb669eff934f5a3c0454aa0b6521a86dbfa004bd0586a23695ba93",
+    "width": 4096,
+    "height": 4096,
+    "mode": "I;16",
+    "role": "Height (linear)",
+    "channelMin": 6557,
+    "channelMax": 65535
+  },
+  {
+    "file": "Gras\\texture\\Game\\GrassMat\\Texture\\T_GrassMat2_metallic.PNG",
+    "format": ".png",
+    "bytes": 81729,
+    "sha256": "4492af3c68142d942921ddbf5ff9e464c6797e221cf26a64c2d379650ff1e835",
+    "width": 4096,
+    "height": 4096,
+    "mode": "L",
+    "role": "Metallic (linear)",
+    "channelMin": 32,
+    "channelMax": 32
+  },
+  {
+    "file": "Gras\\texture\\Game\\GrassMat\\Texture\\T_GrassMat2_normal.PNG",
+    "format": ".png",
+    "bytes": 95068589,
+    "sha256": "cd6668b7dc273a284363ae877cf8118fb22f8bbd827b019ada322e09f3642fc8",
+    "width": 4096,
+    "height": 4096,
+    "mode": "RGBA",
+    "role": "Normal (linear)",
+    "channelMin": [
+      0,
+      0,
+      133,
+      255
+    ],
+    "channelMax": [
+      255,
+      255,
+      255,
+      255
+    ]
+  },
+  {
+    "file": "Gras\\texture\\Game\\GrassMat\\Texture\\T_GrassMat2_roughness.PNG",
+    "format": ".png",
+    "bytes": 25648581,
+    "sha256": "571ddd94f74284d78390d93b53cb6ea075b053108fc9826fb75198c97f4b790d",
+    "width": 4096,
+    "height": 4096,
+    "mode": "I;16",
+    "role": "Roughness (linear)",
+    "channelMin": 0,
+    "channelMax": 65535
+  },
+  {
+    "file": "Gras\\texture\\Game\\GrassMat\\Texture\\T_GrassMat3_ambientocclusion.PNG",
+    "format": ".png",
+    "bytes": 29128464,
+    "sha256": "a590674cd845ec5c5857b942a0f9db2b44b9a565b33ecfc38f62e68a7095cd9f",
+    "width": 4096,
+    "height": 4096,
+    "mode": "I;16",
+    "role": "AO (linear)",
+    "channelMin": 2,
+    "channelMax": 65535
+  },
+  {
+    "file": "Gras\\texture\\Game\\GrassMat\\Texture\\T_GrassMat3_basecolor.PNG",
+    "format": ".png",
+    "bytes": 85063820,
+    "sha256": "c6524813f214574eaaa3927f3243aa07cb794ba4503856a8b7509d773240fed9",
+    "width": 4096,
+    "height": 4096,
+    "mode": "RGBA",
+    "role": "BaseColor (sRGB)",
+    "channelMin": [
+      41,
+      50,
+      6,
+      255
+    ],
+    "channelMax": [
+      127,
+      151,
+      104,
+      255
+    ]
+  },
+  {
+    "file": "Gras\\texture\\Game\\GrassMat\\Texture\\T_GrassMat3_height.PNG",
+    "format": ".png",
+    "bytes": 27500797,
+    "sha256": "b837bede89c842215916cac3639319bb01d54a1653e3786d1425379810b10129",
+    "width": 4096,
+    "height": 4096,
+    "mode": "I;16",
+    "role": "Height (linear)",
+    "channelMin": 0,
+    "channelMax": 65535
+  },
+  {
+    "file": "Gras\\texture\\Game\\GrassMat\\Texture\\T_GrassMat3_metallic.PNG",
+    "format": ".png",
+    "bytes": 81729,
+    "sha256": "4492af3c68142d942921ddbf5ff9e464c6797e221cf26a64c2d379650ff1e835",
+    "width": 4096,
+    "height": 4096,
+    "mode": "L",
+    "role": "Metallic (linear)",
+    "channelMin": 32,
+    "channelMax": 32
+  },
+  {
+    "file": "Gras\\texture\\Game\\GrassMat\\Texture\\T_GrassMat3_normal.PNG",
+    "format": ".png",
+    "bytes": 95609385,
+    "sha256": "f885802156144a8639615504c4babefa4b359b366aef3dc2a1eff262bde1456c",
+    "width": 4096,
+    "height": 4096,
+    "mode": "RGBA",
+    "role": "Normal (linear)",
+    "channelMin": [
+      1,
+      1,
+      143,
+      255
+    ],
+    "channelMax": [
+      254,
+      254,
+      255,
+      255
+    ]
+  },
+  {
+    "file": "Gras\\texture\\Game\\GrassMat\\Texture\\T_GrassMat3_roughness.PNG",
+    "format": ".png",
+    "bytes": 81729,
+    "sha256": "afbc5051d3d9265d757afc6ae2c53119860050a8bf0b9b1cfe68d56eeec1cbfe",
+    "width": 4096,
+    "height": 4096,
+    "mode": "L",
+    "role": "Roughness (linear)",
+    "channelMin": 227,
+    "channelMax": 227
+  },
+  {
+    "file": "Gras\\texture\\Game\\GrassMat\\Texture\\T_GrassMat4_ambientocclusion.PNG",
+    "format": ".png",
+    "bytes": 26282150,
+    "sha256": "b1a2ff67acfd72b56052dbefd8f9fbf0ec9b8c3c1be696a9ff43154ea130b362",
+    "width": 4096,
+    "height": 4096,
+    "mode": "I;16",
+    "role": "AO (linear)",
+    "channelMin": 2,
+    "channelMax": 65535
+  },
+  {
+    "file": "Gras\\texture\\Game\\GrassMat\\Texture\\T_GrassMat4_basecolor.PNG",
+    "format": ".png",
+    "bytes": 53061791,
+    "sha256": "c0313ca1914c0a53ffce1ef7abe2b3c3bbba2e597813e1c133bf576032b4e699",
+    "width": 4096,
+    "height": 4096,
+    "mode": "RGBA",
+    "role": "BaseColor (sRGB)",
+    "channelMin": [
+      63,
+      40,
+      5,
+      255
+    ],
+    "channelMax": [
+      125,
+      132,
+      71,
+      255
+    ]
+  },
+  {
+    "file": "Gras\\texture\\Game\\GrassMat\\Texture\\T_GrassMat4_height.PNG",
+    "format": ".png",
+    "bytes": 23194286,
+    "sha256": "2b966ccf564bdfa064cd514e8d284cc00952a182fc785154a8c8db49f12a6f56",
+    "width": 4096,
+    "height": 4096,
+    "mode": "I;16",
+    "role": "Height (linear)",
+    "channelMin": 2029,
+    "channelMax": 65535
+  },
+  {
+    "file": "Gras\\texture\\Game\\GrassMat\\Texture\\T_GrassMat4_metallic.PNG",
+    "format": ".png",
+    "bytes": 81729,
+    "sha256": "4492af3c68142d942921ddbf5ff9e464c6797e221cf26a64c2d379650ff1e835",
+    "width": 4096,
+    "height": 4096,
+    "mode": "L",
+    "role": "Metallic (linear)",
+    "channelMin": 32,
+    "channelMax": 32
+  },
+  {
+    "file": "Gras\\texture\\Game\\GrassMat\\Texture\\T_GrassMat4_normal.PNG",
+    "format": ".png",
+    "bytes": 92766561,
+    "sha256": "e38193c8e68c789cea8a62c52f063508e623ac075f1052805e04ef70d6b4cb03",
+    "width": 4096,
+    "height": 4096,
+    "mode": "RGBA",
+    "role": "Normal (linear)",
+    "channelMin": [
+      0,
+      0,
+      133,
+      255
+    ],
+    "channelMax": [
+      255,
+      255,
+      255,
+      255
+    ]
+  },
+  {
+    "file": "Gras\\texture\\Game\\GrassMat\\Texture\\T_GrassMat4_roughness.PNG",
+    "format": ".png",
+    "bytes": 81729,
+    "sha256": "afbc5051d3d9265d757afc6ae2c53119860050a8bf0b9b1cfe68d56eeec1cbfe",
+    "width": 4096,
+    "height": 4096,
+    "mode": "L",
+    "role": "Roughness (linear)",
+    "channelMin": 227,
+    "channelMax": 227
+  },
+  {
+    "file": "Gras\\texture\\Game\\GrassMat\\Texture\\T_GrassMat5_ambientocclusion.PNG",
+    "format": ".png",
+    "bytes": 26890347,
+    "sha256": "2fa85db825c9cee7ea80d9cadbb7185803f7e6e88cb08250fdcc02c02786e04e",
+    "width": 4096,
+    "height": 4096,
+    "mode": "I;16",
+    "role": "AO (linear)",
+    "channelMin": 0,
+    "channelMax": 65535
+  },
+  {
+    "file": "Gras\\texture\\Game\\GrassMat\\Texture\\T_GrassMat5_basecolor.PNG",
+    "format": ".png",
+    "bytes": 48027972,
+    "sha256": "7f0bea84646a535308aabcc1c2e2ef5d3e5c3bdc2290d6bd67d5750a36fee6e3",
+    "width": 4096,
+    "height": 4096,
+    "mode": "RGBA",
+    "role": "BaseColor (sRGB)",
+    "channelMin": [
+      47,
+      25,
+      2,
+      255
+    ],
+    "channelMax": [
+      129,
+      112,
+      19,
+      255
+    ]
+  },
+  {
+    "file": "Gras\\texture\\Game\\GrassMat\\Texture\\T_GrassMat5_height.PNG",
+    "format": ".png",
+    "bytes": 23239577,
+    "sha256": "bf2fe2ab637733b7da60892c09f019fac02a5f51ef77629a15b6552a5ea747d0",
+    "width": 4096,
+    "height": 4096,
+    "mode": "I;16",
+    "role": "Height (linear)",
+    "channelMin": 0,
+    "channelMax": 65535
+  },
+  {
+    "file": "Gras\\texture\\Game\\GrassMat\\Texture\\T_GrassMat5_metallic.PNG",
+    "format": ".png",
+    "bytes": 81729,
+    "sha256": "4492af3c68142d942921ddbf5ff9e464c6797e221cf26a64c2d379650ff1e835",
+    "width": 4096,
+    "height": 4096,
+    "mode": "L",
+    "role": "Metallic (linear)",
+    "channelMin": 32,
+    "channelMax": 32
+  },
+  {
+    "file": "Gras\\texture\\Game\\GrassMat\\Texture\\T_GrassMat5_normal.PNG",
+    "format": ".png",
+    "bytes": 72721550,
+    "sha256": "427ec500a7d8d260fcb537092e7f8d8938ab5c04dac2c5d6c11b5a3d51a0e605",
+    "width": 4096,
+    "height": 4096,
+    "mode": "RGBA",
+    "role": "Normal (linear)",
+    "channelMin": [
+      0,
+      0,
+      135,
+      255
+    ],
+    "channelMax": [
+      255,
+      255,
+      255,
+      255
+    ]
+  },
+  {
+    "file": "Gras\\texture\\Game\\GrassMat\\Texture\\T_GrassMat5_roughness.PNG",
+    "format": ".png",
+    "bytes": 21684345,
+    "sha256": "6216829a8676911d8b23dcaf053cf042430baeb3e05e9d42a3f5c2cc7d4aee33",
+    "width": 4096,
+    "height": 4096,
+    "mode": "I;16",
+    "role": "Roughness (linear)",
+    "channelMin": 0,
+    "channelMax": 65535
+  },
+  {
+    "file": "Gras\\texture\\Game\\GrassMat\\Texture\\T_GrassMat6_ambientocclusion.PNG",
+    "format": ".png",
+    "bytes": 27077954,
+    "sha256": "69ea78c7072f6ea23f455f72387e047f81e81286c257507715657ae6e6ec3148",
+    "width": 4096,
+    "height": 4096,
+    "mode": "I;16",
+    "role": "AO (linear)",
+    "channelMin": 0,
+    "channelMax": 65535
+  },
+  {
+    "file": "Gras\\texture\\Game\\GrassMat\\Texture\\T_GrassMat6_basecolor.PNG",
+    "format": ".png",
+    "bytes": 78584133,
+    "sha256": "b01c4e1eb6b6e59f0c4b2b0fefa6a4a83fb09a07d61e9c350c5ff07c4244bdff",
+    "width": 4096,
+    "height": 4096,
+    "mode": "RGBA",
+    "role": "BaseColor (sRGB)",
+    "channelMin": [
+      25,
+      94,
+      3,
+      255
+    ],
+    "channelMax": [
+      255,
+      255,
+      255,
+      255
+    ]
+  },
+  {
+    "file": "Gras\\texture\\Game\\GrassMat\\Texture\\T_GrassMat6_height.PNG",
+    "format": ".png",
+    "bytes": 27111427,
+    "sha256": "0bcb3cca1bf633ff752491b5f6804aeb2a8113c60db156d469ae0e7b5f64f80e",
+    "width": 4096,
+    "height": 4096,
+    "mode": "I;16",
+    "role": "Height (linear)",
+    "channelMin": 372,
+    "channelMax": 65535
+  },
+  {
+    "file": "Gras\\texture\\Game\\GrassMat\\Texture\\T_GrassMat6_metallic.PNG",
+    "format": ".png",
+    "bytes": 81729,
+    "sha256": "4492af3c68142d942921ddbf5ff9e464c6797e221cf26a64c2d379650ff1e835",
+    "width": 4096,
+    "height": 4096,
+    "mode": "L",
+    "role": "Metallic (linear)",
+    "channelMin": 32,
+    "channelMax": 32
+  },
+  {
+    "file": "Gras\\texture\\Game\\GrassMat\\Texture\\T_GrassMat6_normal.PNG",
+    "format": ".png",
+    "bytes": 112105981,
+    "sha256": "034fc5737636b27468c9024e59e7debb2a3318c2232b0adb54cb60c9766ab262",
+    "width": 4096,
+    "height": 4096,
+    "mode": "RGBA",
+    "role": "Normal (linear)",
+    "channelMin": [
+      0,
+      0,
+      128,
+      255
+    ],
+    "channelMax": [
+      255,
+      255,
+      255,
+      255
+    ]
+  },
+  {
+    "file": "Gras\\texture\\Game\\GrassMat\\Texture\\T_GrassMat6_roughness.PNG",
+    "format": ".png",
+    "bytes": 81729,
+    "sha256": "afbc5051d3d9265d757afc6ae2c53119860050a8bf0b9b1cfe68d56eeec1cbfe",
+    "width": 4096,
+    "height": 4096,
+    "mode": "L",
+    "role": "Roughness (linear)",
+    "channelMin": 227,
+    "channelMax": 227
+  }
+]

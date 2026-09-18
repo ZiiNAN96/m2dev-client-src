@@ -1,5 +1,11 @@
 # P3 — Repository Cleanup nach Production-GO
 
+> Historischer Abschlussbericht. Die hier noch behaltenen Root-Verzeichnisse
+> wurden am 18.09.2026 durch die [Strukturbereinigung](repository-root-structure-cleanup.md)
+> abgelöst. [Erhaltene P3-Belege](evidence/p3-final-cleanup.zip) und
+> [final-integrity.json](evidence/p3-final-cleanup/final-integrity.json)
+> liegen jetzt dauerhaft unter `docs/maintenance/`.
+
 18.09.2026. **P3 FINAL + CLEANUP: GO.** Cleanup erst nach frischer Main-Integration,
 Production-Prüfung und separatem Deployment-Dokumentationscommit
 `e8fe10711e9d8805a6b7b9cd696c5408fcec5214` ausgeführt. Keine Produktänderung,

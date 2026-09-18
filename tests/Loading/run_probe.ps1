@@ -2,7 +2,7 @@ param([Parameter(Mandatory=$true)][string]$Name, [string]$ShaderCacheDirectory)
 $ErrorActionPreference='Stop'
 if($Name -notmatch '^[a-zA-Z0-9_-]+$'){throw 'Invalid evidence name'}
 $source=(Resolve-Path -LiteralPath "$PSScriptRoot/../..").Path
-$target=(Resolve-Path -LiteralPath "$source/build-p0l/$Name").Path
+$target=(Resolve-Path -LiteralPath "$source/build/loading/$Name").Path
 if(Test-Path -LiteralPath "$target/exit.json"){throw 'Fresh run required'}
 $env:M2_MAP_LOAD_TRACE='1'
 $watch=[Diagnostics.Stopwatch]::StartNew()

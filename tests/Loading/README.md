@@ -15,14 +15,14 @@ B1 load in the same session, then a warm reload.
 From a Visual Studio x64 developer shell, build only the relevant Release:
 
 ```powershell
-cmake --build build-h2x/msvc --config Release --target UserInterface --parallel 6
+cmake --build build --config Release --target UserInterface PackMaker --parallel 6
 & tests/Loading/prepare_probe.ps1 -Name chosen-fresh-name
 & tests/Loading/run_probe.ps1 -Name chosen-fresh-name
-python.exe tests/Loading/summarize_trace.py build-p0l/chosen-fresh-name
-python.exe tests/Loading/verify_probe.py build-p0l/chosen-fresh-name
+python.exe tests/Loading/summarize_trace.py build/loading/chosen-fresh-name
+python.exe tests/Loading/verify_probe.py build/loading/chosen-fresh-name
 ```
 
-`prepare_probe.ps1` expects the existing `PackMaker.exe` in that build. The
+`prepare_probe.ps1` defaults to `build/`; use `-BuildDirectory` for another configured build. It expects `PackMaker.exe` and the Release client there. The
 native client retains its existing administrator requirement. Start it through
 the authorized desktop environment; do not change its manifest.
 
@@ -49,9 +49,9 @@ Use `-ShaderLifecycle` for the short Client -> A1 cold -> B1 -> A1 warm route:
 ```powershell
 & tests/Loading/prepare_probe.ps1 -Name shader-fresh-name -ShaderLifecycle
 & tests/Loading/run_probe.ps1 -Name shader-fresh-name
-python.exe tests/Loading/summarize_trace.py build-p0l/shader-fresh-name
-python.exe tests/Loading/summarize_shader_trace.py build-p0l/shader-fresh-name
-python.exe tests/Loading/verify_probe.py build-p0l/shader-fresh-name --shader-lifecycle
+python.exe tests/Loading/summarize_trace.py build/loading/shader-fresh-name
+python.exe tests/Loading/summarize_shader_trace.py build/loading/shader-fresh-name
+python.exe tests/Loading/verify_probe.py build/loading/shader-fresh-name --shader-lifecycle
 ```
 
 The same opt-in capture now includes central Diligent compiler/PSO calls,
@@ -66,8 +66,8 @@ The focused pass-equivalence check uses the Windows HLSL compiler, no GPU or
 game assets. From the same Visual Studio x64 developer shell:
 
 ```powershell
-cl /nologo /std:c++17 /O2 /EHsc /I src tests/Loading/mesh_vertex_equivalence.cpp /Fe:build-p0l2/mesh_vertex_equivalence.exe /Fo:build-p0l2/mesh_vertex_equivalence.obj /link d3dcompiler.lib
-& build-p0l2/mesh_vertex_equivalence.exe build-deps/DiligentCore build-h2x/msvc/src/Renderer/fx-subset
+cl /nologo /std:c++17 /O2 /EHsc /I src tests/Loading/mesh_vertex_equivalence.cpp /Fe:build/loading/mesh_vertex_equivalence.exe /Fo:build/loading/mesh_vertex_equivalence.obj /link d3dcompiler.lib
+& build/loading/mesh_vertex_equivalence.exe external/DiligentCore build/src/Renderer/fx-subset
 ```
 
 It checks all 36 existing geometry/tangent/instance/pass combinations and

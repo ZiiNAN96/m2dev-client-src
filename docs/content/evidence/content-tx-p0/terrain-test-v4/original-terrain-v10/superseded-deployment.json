@@ -1,0 +1,18 @@
+{
+  "version": "all-original-grass-v9",
+  "deployedAt": "2026-09-16T20:42:25.702751+02:00",
+  "client": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client",
+  "releaseSHA256": "6f35b7f16d7ccafea526495b920e7777fcce5d3e276e13ce74f15938a7217376",
+  "previousReleaseSHA256": "959d03d5ff6e560a2043e300688811852ff56784d14236aea541a0ab003964cd",
+  "bindings": 319,
+  "maps": 84,
+  "materials": 19,
+  "newGrassOverrides": 0,
+  "originalGrassBindings": 147,
+  "originalGrassMaps": 51,
+  "fullMap3DGrass": false,
+  "backup": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\terrain-test-v4\\production-deployment-v9\\backup",
+  "canonicalFilesIndependentOfTestClient": true,
+  "userApproval": "so behalten wir es uebertrage es in den original client und dokumentiere es",
+  "nativeDeploymentProof": "PENDING"
+}

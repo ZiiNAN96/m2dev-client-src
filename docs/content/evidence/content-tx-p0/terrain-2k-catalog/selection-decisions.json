@@ -1,0 +1,26 @@
+{
+  "date": "2026-09-16",
+  "instruction": "Sand und Erde aus dem Katalog nehmen; Lava und Vulkan nehmen; bessere Gras- und Waldböden suchen.",
+  "selectedMaterials": [
+    "Ground079L",
+    "Ground079S",
+    "Ground093A",
+    "Ground085",
+    "Ground103",
+    "Ground106",
+    "Ground067",
+    "Ground087",
+    "mud_cracked_dry_riverbed_002",
+    "Lava004",
+    "Lava002",
+    "Lava001",
+    "Rock031"
+  ],
+  "selectedScopedMappings": {
+    "192": "Vulkan-Geröll"
+  },
+  "researchScope": "Nur Gras & Waldboden neu zuordnen. Steine, Pflaster, Schnee und Eis nicht weiter bearbeiten. Keine Bildgenerierung.",
+  "implementation": "Materialauswahl bestätigt; neuer Einbau noch nicht durchgeführt.",
+  "sandScope": "Drei Sandmaterialien; Flusskiesel nicht pauschal mit ausgewählt.",
+  "volcanoScope": "Lava004, Lava002, Lava001, Rock031; Gravel040 für den Vulkan-Geröll-Layer 192."
+}

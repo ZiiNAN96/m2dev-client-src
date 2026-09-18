@@ -1,4 +1,6 @@
 include(FetchContent)
+include(ExternalDependency)
+m2_use_external_dependency(DiligentCore DiligentCore)
 
 # ZiiNAN: Cross-platform bootstrap
 foreach(api DIRECT3D11 DIRECT3D12 OPENGL VULKAN METAL WEBGPU ARCHIVER)
@@ -23,6 +25,7 @@ if(CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
 FetchContent_Declare(DiligentCore
+    BINARY_DIR "${CMAKE_BINARY_DIR}/deps/DiligentCore"
     GIT_REPOSITORY https://github.com/DiligentGraphics/DiligentCore.git
     GIT_TAG b036337d68be2353c9950a85929acf796b9a6d50 # v2.5.6, unchanged from C2-X
     GIT_SUBMODULES ${m2_diligent_submodules}

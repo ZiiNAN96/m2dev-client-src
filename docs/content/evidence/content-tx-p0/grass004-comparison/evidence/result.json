@@ -1,0 +1,72 @@
+{
+  "candidate": "D Grass004",
+  "sourcePage": "https://ambientcg.com/view?id=Grass004",
+  "license": "CC0",
+  "sourceCodeChanged": false,
+  "binarySha256": "6f35b7f16d7ccafea526495b920e7777fcce5d3e276e13ce74f15938a7217376",
+  "colorAdjustments": "none",
+  "nativeSmoke": "PASS 3 views; exit 0",
+  "classicVsReference": {
+    "exactPixels": false,
+    "maxChannelDelta": 3,
+    "meanChannelDelta": 9.974175951717735e-05,
+    "differentPixels": 81
+  },
+  "shutdown": {
+    "SourceTextures": 0,
+    "SourceBuffers": 0,
+    "VegetationAssets": 0,
+    "VegetationInstances": 0,
+    "VegetationRenderAssets": 0,
+    "VegetationGeometry": 0,
+    "VegetationInstanceBuffers": 0,
+    "VegetationInstanceBytes": 0,
+    "VegetationFailures": 0,
+    "DiligentErrors": 0,
+    "DiligentFatals": 0,
+    "RuntimeSkeletons": 0,
+    "RuntimeAnimationClips": 0,
+    "GR2ReaderResources": 0
+  },
+  "grassCounters": [
+    {
+      "grassPlacements": 0,
+      "grassCells": 0,
+      "grassTiles": 0,
+      "grassExpectedTiles": 0,
+      "grassBytes": 0,
+      "grassLoadMs": 0.0
+    },
+    {
+      "grassPlacements": 0,
+      "grassCells": 0,
+      "grassTiles": 0,
+      "grassExpectedTiles": 0,
+      "grassBytes": 0,
+      "grassLoadMs": 0.0
+    },
+    {
+      "grassPlacements": 0,
+      "grassCells": 0,
+      "grassTiles": 0,
+      "grassExpectedTiles": 0,
+      "grassBytes": 0,
+      "grassLoadMs": 0.0
+    }
+  ],
+  "protectedFilesUnchanged": 317,
+  "productionBinaryUnchanged": true,
+  "override": "modern color map=metin2_map_a1 slot=5 source=terrain/modern/metin2_map_a1/slot-005.dds",
+  "textureSha256": "04aaa6b4f25a71c8014fc3a89dc001121c0002bd63897f3d7fb73768b8140dab",
+  "preservedApprovedTexture": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\brightness-v2\\imported\\slot-005.dds",
+  "preservedApprovedTextureSha256": "a89f70ced42c7c9595a1962b6b1bed4e0d5fbf8b992c11b0ae4aa955e280a28b",
+  "manualRuntimeUpdated": true,
+  "liveReload": "Restart or map reload needed if A1 was already resident",
+  "comparison": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\grass004-comparison\\gallery\\C-vs-Grass004.jpg",
+  "userApproval": {
+    "previousDarkenedC": "approved",
+    "Grass004": "material preferred, initial brightness too bright",
+    "productionDeployment": false
+  },
+  "latestRevision": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\grass004-comparison\\darkgreen-2k-v3\\evidence\\result.json"
+}

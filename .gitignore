@@ -62,6 +62,7 @@
 
 # Generated CMake build directories
 /build/
+# Compatibility guard for obsolete milestone directories; use build/ for new output.
 /build-*/
 /android/.gradle/
 /android/.cxx/

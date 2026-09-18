@@ -1,0 +1,163 @@
+{
+  "status": "GO",
+  "finished": "2026-09-18T14:58:34",
+  "git": {
+    "source": {
+      "branch": "main",
+      "head": "e83dd0aa36303db8a87a0b2dae3570b520d14b7e",
+      "status": "clean",
+      "changedSinceProductionInputs": [
+        "docs/maintenance/repository-cleanup-p3.md"
+      ],
+      "mergedBranchesRetained": [
+        "codex/g56-hdr-atmosphere",
+        "codex/p3-display-closure",
+        "codex/p3-frame-pacing",
+        "feature/gdx-diligentfx",
+        "feature/p2-runtime-performance",
+        "main"
+      ],
+      "allBranches": [
+        "codex/g56-hdr-atmosphere",
+        "  codex/p3-display-closure",
+        "  codex/p3-frame-pacing",
+        "  feature/gdx-diligentfx",
+        "  feature/p2-runtime-performance",
+        "* main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/codex/g56-hdr-atmosphere",
+        "  remotes/origin/feature/gdx-diligentfx",
+        "  remotes/origin/main",
+        "  remotes/origin/particle-batching",
+        "  remotes/origin/revert-64-main",
+        "  remotes/origin/rtw1x1-patch-1",
+        "  remotes/upstream/HEAD -> upstream/main",
+        "  remotes/upstream/main",
+        "  remotes/upstream/particle-batching",
+        "  remotes/upstream/revert-64-main",
+        "  remotes/upstream/rtw1x1-patch-1"
+      ],
+      "originMain": "ea1142c5224311c9ed7cfe604bd3471d775dea54"
+    },
+    "runtime": {
+      "branch": "main",
+      "head": "f0c25d5016603cf750b7c5ac5852e9207db274a7",
+      "status": "clean",
+      "changedSinceProductionInputs": [
+        ".gitignore",
+        "docs/maintenance/repository-cleanup-p3.md",
+        "docs/production-milestone-deployment.md"
+      ],
+      "mergedBranchesRetained": [
+        "codex/g56-hdr-colors",
+        "codex/p3-display-closure",
+        "codex/p3-frame-pacing",
+        "main"
+      ],
+      "allBranches": [
+        "codex/g56-hdr-colors",
+        "  codex/p3-display-closure",
+        "  codex/p3-frame-pacing",
+        "* main",
+        "  remotes/origin/HEAD -> origin/main",
+        "  remotes/origin/codex/g56-hdr-colors",
+        "  remotes/origin/main",
+        "  remotes/upstream/HEAD -> upstream/main",
+        "  remotes/upstream/main"
+      ],
+      "originMain": "72d925937bc5d93982190ce00660ffefe839e824"
+    }
+  },
+  "production": {
+    "deployed": "2026-09-18T14:18:06.8165358+02:00",
+    "oldExeSHA256": "C1145D82B178BE2F627DB82621D93A99C54CAD5F33ED6511BFA4F837CBBAA5D1",
+    "sourceBranch": "main",
+    "runtimeBranch": "main",
+    "newExeSHA256": "0E45E5F5817062F9AFFC499360BE63F349824F04C331FCAACA6F898EE6176AD9",
+    "replaced": [
+      "Metin2_Release.exe",
+      "pack/root.pck"
+    ],
+    "runtime": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client",
+    "uiCommit": "e89424f461efe6596fbace9c649d9b1b229b48eb",
+    "sourceCommit": "542722f36d7cf1c40d39b8fa2a14eb647d4718e4",
+    "newRootSHA256": "C144F2FBADBBD5A82136208E92F26E10308A51B19982F61BFE60F9396861786A",
+    "oldRootSHA256": "AEA566D4B56A74B1A2D6A33E4C6B24B57546B1D7F5F97BF9A8939D46B96400E3",
+    "packChangedEntries": [
+      "game.py",
+      "interfacemodule.py",
+      "ui.py",
+      "uichat.py",
+      "uicommon.py",
+      "uigamebutton.py",
+      "uigraphicssettings.py",
+      "uiinventory.py",
+      "uisystem.py"
+    ]
+  },
+  "userconfigs": [
+    {
+      "path": "config/graphics.cfg",
+      "sha256": "D23624C0F7B09C3ACF216F8D5D32CF481827D304F754A6636BF14FB4EED9A96F",
+      "status": "byte-identical",
+      "indexFlag": "original skip-worktree"
+    },
+    {
+      "path": "config/metin2.cfg",
+      "sha256": "D90C3CA9EF372BE99E219147AA3D80621E9AE46C83CC316663D78EDB463C9209",
+      "status": "byte-identical",
+      "indexFlag": "original skip-worktree"
+    }
+  ],
+  "protected": {
+    "status": "PASS",
+    "protectedRuntime": 54706,
+    "protectedSource": 11916,
+    "userconfigs": "byte-identical",
+    "localRegressionInputs": 426,
+    "classicGoldens": 12,
+    "productionExe": "unchanged",
+    "productionRootPack": "unchanged"
+  },
+  "postCleanup": {
+    "status": "PASS",
+    "releaseBuild": "PASS",
+    "targetedTests": "10/10",
+    "normalClientA1": "PASS",
+    "settings": "PASS",
+    "exit": 0,
+    "fastGate": "PASS",
+    "userconfigs": "byte-identical",
+    "exeAndRoot": "unchanged"
+  },
+  "intentionalChangesAfterProtectedCheck": [
+    "runtime/.gitignore",
+    "source/docs/maintenance/repository-cleanup-p3.md",
+    "runtime/docs/maintenance/repository-cleanup-p3.md"
+  ],
+  "beforeAfter": {
+    "before": {
+      "source": {
+        "files": 119925,
+        "bytes": 201146865487
+      },
+      "runtime": {
+        "files": 54709,
+        "bytes": 3447638888
+      }
+    },
+    "after": {
+      "source": {
+        "files": 25578,
+        "bytes": 13018520001
+      },
+      "runtime": {
+        "files": 54706,
+        "bytes": 3447638373
+      }
+    }
+  },
+  "branchesDeleted": false,
+  "pushed": false,
+  "followupPhaseStarted": false
+}

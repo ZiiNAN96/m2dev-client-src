@@ -26,8 +26,8 @@ helper creates these files in a private runtime, preserving production packs.
 Reproduction (from an existing configured build with `M2_BUILD_ASSET_TOOL=ON`):
 
 ```powershell
-cmake --build build-h2x/msvc --config Release --target ZiiNANModernVegetationAssets
-build-h2x/msvc/tools/AssetTool/Release/ZiiNANModernVegetationAssets.exe build-h2x/generated
+cmake --build build --config Release --target ZiiNANModernVegetationAssets
+build/tools/AssetTool/Release/ZiiNANModernVegetationAssets.exe build/generated/vegetation
 ```
 
 The target's actual executable location is shown by CMake; test fixture setup

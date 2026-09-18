@@ -1,0 +1,31 @@
+{
+  "source": "C:\\Users\\ZiiNAN\\Documents\\MEtin2-Texturenpacks\\Gras\\texture\\Game\\GrassMat\\Texture\\T_GrassMat3_basecolor.PNG",
+  "sourceHash": "c6524813f214574eaaa3927f3243aa07cb794ba4503856a8b7509d773240fed9",
+  "output": "C:\\Users\\ZiiNAN\\Documents\\GitHub\\m2dev-client-src\\build-content-tx-p0\\imported\\slot-005.dds",
+  "outputHash": "1abddd68b18bc45e446e4464de9ec83cddcfebe47f7fa37fa9df379f10820fa4",
+  "resolution": [
+    1024,
+    1024
+  ],
+  "mips": 11,
+  "format": "RGBA8 DDS, authored sRGB values; shader decodes sRGB",
+  "filter": "linear-light BOX for every mip from original",
+  "colorAdjustments": "none",
+  "normal": {
+    "file": "T_GrassMat3_normal.PNG",
+    "channels": 4,
+    "mean": [
+      -0.004160369746387005,
+      -0.01455187238752842,
+      0.8955041766166687,
+      1.0
+    ],
+    "meanVectorLength": 0.8984362483024597,
+    "used": false,
+    "reason": "Existing terrain supports diffuse color and geometry normals only; no terrain PBR/tangent engine added."
+  },
+  "metallic": 0,
+  "specular": 0,
+  "roughness": "diffuse-only matte (no roughness sampling)",
+  "tiling": "unchanged original slot scale; wrap + mip filtering"
+}
