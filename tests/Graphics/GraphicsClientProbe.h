@@ -4,6 +4,39 @@
 #include "Vegetation/VegetationRenderer.h"
 #include "Renderer/WorldResidencyDiagnostics.h"
 #include "Renderer/EffectRenderData.h"
+#include "Renderer/Diagnostics.h"
+static PyObject* systemTestDisplayGeometry(PyObject*, PyObject*)
+{
+    struct ViewportProbe : CGraphicBase { static Math::Viewport Read() { return ms_Viewport; } };
+    const auto cpu = ViewportProbe::Read();
+    const auto& render = Renderer::displayLayoutAudit;
+    const auto client = CPythonApplication::Instance().GetPlatformWindow().GetClientRect();
+    const auto outer = CPythonApplication::Instance().GetPlatformWindow().GetWindowRect();
+    auto& ui = UI::CWindowManager::Instance();
+    return Py_BuildValue("{s:i,s:i,s:I,s:I,s:l,s:l,s:I,s:I,s:I,s:I,s:i,s:i,s:K}",
+        "ClientWidth", int(client.right-client.left), "ClientHeight", int(client.bottom-client.top),
+        "BackbufferWidth", render.backbufferWidth, "BackbufferHeight", render.backbufferHeight,
+        "UIScreenWidth", ui.GetScreenWidth(), "UIScreenHeight", ui.GetScreenHeight(),
+        "CPUViewportWidth", cpu.Width, "CPUViewportHeight", cpu.Height,
+        "RenderViewportWidth", render.uiViewportWidth, "RenderViewportHeight", render.uiViewportHeight,
+        "OuterWidth", int(outer.right-outer.left), "OuterHeight", int(outer.bottom-outer.top),
+        "UIDraws", render.uiDraws);
+}
+// Native input replay for the private HUD regression probe. This exercises
+// production picking/capture/wheel routing inside the owned client process.
+static PyObject* systemTestUIInput(PyObject*, PyObject* args)
+{
+    const char* action;
+    int x, y, delta = 0;
+    if (!PyArg_ParseTuple(args, "sii|i", &action, &x, &y, &delta)) return nullptr;
+    auto& ui = UI::CWindowManager::Instance();
+    ui.RunMouseMove(x, y);
+    if (!strcmp(action, "wheel")) return PyBool_FromLong(ui.RunMouseWheel(delta));
+    else if (!strcmp(action, "down")) ui.RunMouseLeftButtonDown(x, y);
+    else if (!strcmp(action, "up")) ui.RunMouseLeftButtonUp(x, y);
+    else if (strcmp(action, "move")) return PyErr_Format(PyExc_ValueError, "Unknown UI input action");
+    return Py_BuildNone();
+}
 static PyObject* systemTestActorTiming(PyObject*, PyObject* args)
 {
     int vid;

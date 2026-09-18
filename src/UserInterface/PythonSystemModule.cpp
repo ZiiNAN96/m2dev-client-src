@@ -520,6 +520,8 @@ void initsystem()
         { "GetGraphicsRuntimeConfig", systemGetGraphicsRuntimeConfig, METH_VARARGS },
 #ifdef M2_RENDERER_DIAGNOSTICS
         { "TestGraphicsWindow", systemTestGraphicsWindow, METH_VARARGS },
+        { "TestUIInput", systemTestUIInput, METH_VARARGS },
+        { "TestDisplayGeometry", systemTestDisplayGeometry, METH_VARARGS },
         { "TestGraphicsSun", systemTestGraphicsSun, METH_VARARGS },
         { "TestWaterTime", systemTestWaterTime, METH_VARARGS },
         { "TestSkyTime", systemTestSkyTime, METH_VARARGS },

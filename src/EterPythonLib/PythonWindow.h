@@ -144,6 +144,7 @@ namespace UI
 			virtual BOOL	OnIMEOpenReadingWndEvent();
 			virtual BOOL	OnIMECloseReadingWndEvent();
 
+			virtual BOOL	OnMouseWheel(int delta);
 			virtual BOOL	OnMouseLeftButtonDown();
 			virtual BOOL	OnMouseLeftButtonUp();
 			virtual BOOL	OnMouseLeftButtonDoubleClick();

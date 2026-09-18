@@ -54,6 +54,8 @@ bool DiligentD3D11Backend::Initialize(const InitializeInfo& info)
                                      Diligent::NativeWindow{info.window}, &state->swapChain);
         if (!state->swapChain)
             return false;
+        displayLayoutAudit.backbufferWidth = state->swapChain->GetDesc().Width;
+        displayLayoutAudit.backbufferHeight = state->swapChain->GetDesc().Height;
         const auto& adapter=state->device->GetAdapterInfo();
         graphicsCapabilities={adapter.Texture.MaxTexture2DDimension,adapter.Memory.LocalMemory};
         m_impl = std::move(state);
@@ -187,6 +189,8 @@ bool DiligentD3D11Backend::Resize(uint32_t width, uint32_t height)
         if(m_impl->modern)m_impl->modern->ReleaseWindowResources();
         m_impl->swapChain->Resize(width, height);
         const auto& desc = m_impl->swapChain->GetDesc();
+        displayLayoutAudit.backbufferWidth = desc.Width;
+        displayLayoutAudit.backbufferHeight = desc.Height;
         return desc.Width == width && desc.Height == height;
     }
     catch (...)

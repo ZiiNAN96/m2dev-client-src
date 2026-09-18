@@ -364,6 +364,11 @@ void DiligentEffectRenderer::Draw(const EffectVertex* vertices,uint32_t count,co
         b.context->SetPipelineState(p.state);
         // ZiiNAN: UI never inherits a world viewport or a previous widget's scissor state.
         if(d.ui) {
+            if (verboseDiagnostics) {
+                displayLayoutAudit.uiViewportWidth = d.viewport[2];
+                displayLayoutAudit.uiViewportHeight = d.viewport[3];
+                ++displayLayoutAudit.uiDraws;
+            }
             Viewport viewport(float(d.viewport[0]),float(d.viewport[1]),float(d.viewport[2]),float(d.viewport[3]),0,1);
             const auto& swap=b.swapChain->GetDesc();
             b.context->SetViewports(1,&viewport,swap.Width,swap.Height);

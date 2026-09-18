@@ -1,6 +1,7 @@
 #pragma once
 #include <fstream>
 #include <atomic>
+#include <cstdint>
 
 namespace Renderer
 {
@@ -13,6 +14,14 @@ inline constexpr bool defaultVerboseDiagnostics = false;
 inline bool verboseDiagnostics = defaultVerboseDiagnostics;
 inline bool auditDiligentDiagnostics=false;
 inline std::atomic<unsigned> diligentErrorCount{},diligentFatalCount{};
+// Read-only evidence of the actual swapchain and submitted UI viewport.
+struct DisplayLayoutAudit
+{
+    uint32_t backbufferWidth=0, backbufferHeight=0;
+    uint32_t uiViewportWidth=0, uiViewportHeight=0;
+    uint64_t uiDraws=0;
+};
+inline DisplayLayoutAudit displayLayoutAudit;
 
 // Called only at the first existing failure of a renderer instance. Diagnostics
 // must never turn a recoverable logging problem into another render failure.

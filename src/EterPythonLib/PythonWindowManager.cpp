@@ -707,6 +707,7 @@ namespace UI
 		for (TLayerContainer::iterator itor = m_LayerWindowMap.begin(); itor != m_LayerWindowMap.end(); ++itor)
 		{
 			itor->second->SetSize(lWidth, lHeight);
+			itor->second->UpdateRect();
 		}
 	}
 
@@ -752,7 +753,8 @@ namespace UI
 			CWindow * pWindow = *itor;
 			if (pWindow->IsRendering())
 			if (pWindow->IsIn(x, y))
-				return pWindow;
+				if (CWindow* picked = pWindow->PickWindow(x, y))
+					return picked;
 		}
 
 		for (TWindowContainer::reverse_iterator ritor = m_LayerWindowList.rbegin(); ritor != m_LayerWindowList.rend(); ++ritor)
@@ -765,6 +767,24 @@ namespace UI
 		}
 
 		return NULL;
+	}
+
+	bool CWindowManager::RunMouseWheel(int delta)
+	{
+		if (!m_pLockWindow)
+			for (CWindow* window : m_PickAlwaysWindowList)
+				if (window->IsRendering() && window->OnMouseWheel(delta))
+					return true;
+		// Bubble only through the picked hierarchy, never through covered peers.
+		// PickAlways dropdowns take precedence; locking still bounds dispatch.
+		for (CWindow* window = __PickWindow(m_lMouseX, m_lMouseY); window; window = window->GetParent())
+		{
+			if (window->OnMouseWheel(delta))
+				return true;
+			if (window == m_pLockWindow)
+				break;
+		}
+		return false;
 	}
 
 	void CWindowManager::SetMousePosition(long x, long y)

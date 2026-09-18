@@ -132,6 +132,7 @@ namespace UI
 			void		RunOpenReading();
 			void		RunCloseReading();
 
+			bool		RunMouseWheel(int delta);
 			void		RunKeyDown(int vkey);
 			void		RunKeyUp(int vkey);
 			void		RunPressEscapeKey();

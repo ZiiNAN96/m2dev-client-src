@@ -678,6 +678,12 @@ namespace UI
 		return FALSE;
 	}
 
+	BOOL CWindow::OnMouseWheel(int delta)
+	{
+		long handled = 0;
+		return PyCallClassMemberFunc(m_poHandler, "OnMouseWheel", Py_BuildValue("(i)", delta), &handled) && handled;
+	}
+
 	BOOL CWindow::OnMouseLeftButtonDown()
 	{
 		long lValue;
