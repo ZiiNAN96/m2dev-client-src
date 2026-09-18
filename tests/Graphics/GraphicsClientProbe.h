@@ -98,9 +98,24 @@ static PyObject* systemTestGraphicsSun(PyObject*,PyObject* args)
 }
 // Only present when M2_BUILD_RENDERER_TESTS is enabled. The owned client performs
 // its own native window transitions; no cross-process control/elevation needed.
-static PyObject* systemTestGraphicsWindow(PyObject*, PyObject*)
+static PyObject* systemTestGraphicsWindow(PyObject*, PyObject* args)
 {
     auto& window = CPythonApplication::Instance().GetPlatformWindow();
+    // Optional client dimensions exercise the normal WM_SIZE path, independently
+    // of the graphics-settings apply path. Retain the existing no-argument probe.
+    if (PyTuple_Size(args))
+    {
+        int width, height;
+        if (!PyArg_ParseTuple(args, "ii", &width, &height)) return nullptr;
+        if (width <= 0 || height <= 0) return PyErr_Format(PyExc_ValueError, "Positive client size required");
+        const auto hwnd = static_cast<HWND>(CPythonApplication::Instance().GetNativeHandle().value);
+        RECT rect{0, 0, width, height};
+        if (!AdjustWindowRectEx(&rect, DWORD(GetWindowLongPtrW(hwnd, GWL_STYLE)), FALSE,
+                DWORD(GetWindowLongPtrW(hwnd, GWL_EXSTYLE)))) return PyErr_Format(PyExc_RuntimeError, "AdjustWindowRectEx failed");
+        if (!SetWindowPos(hwnd, nullptr, 0, 0, rect.right - rect.left, rect.bottom - rect.top,
+                SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE)) return PyErr_Format(PyExc_RuntimeError, "SetWindowPos failed");
+        return Py_BuildNone();
+    }
     const auto old = window.GetWindowRect();
     window.SetSize(900,650);
     const auto resized = window.GetWindowRect();

@@ -1,0 +1,91 @@
+{
+  "baselineBlackRect": {
+    "position": [
+      0,
+      961
+    ],
+    "size": [
+      1280,
+      120
+    ],
+    "visible": true
+  },
+  "startClient": [
+    1280,
+    960
+  ],
+  "startOuter": [
+    1296,
+    999
+  ],
+  "automatedNativeChecks": 20,
+  "resizeCycles": 3,
+  "automatedNative": "PASS",
+  "manualFrameDrag": "PASS_USER_CONFIRMED: Ja, beide Richtungen ohne Balken",
+  "userSightAcceptance": "sah alles gut aus",
+  "protectedFiles": {
+    "config/graphics.cfg": "e774f4f555883bd2afbec5541d8124d70b3d4d37c811ed4559b4f2a77bbc2b20",
+    "config/metin2.cfg": "d90c3ca9ef372be99e219147aa3d80621e9ae46c83cc316663d78edb463c9209",
+    "Metin2_Release.exe": "009fd470be521680665f176eb0eb8bfe6c37d678112f774938b2e274c697a7fa",
+    "Metin2_Debug.exe": "e58526a70c5ac538aeef77c71fe5f402d53bf814a6598b0c21fee155c709dd4b",
+    "pack/root.pck": "c144f2fbadbbd5a82136208e92f26e10308a51b19982f61bfe60f9396861786a"
+  },
+  "configsUnchanged": true,
+  "testConfigsRestored": {
+    "baseline": {
+      "channel.inf": "1c8bbd91bc22cb3285c1b9eb96b80124bf80d3df2f219d8f446252ce9e7eaa91",
+      "graphics.cfg": "e774f4f555883bd2afbec5541d8124d70b3d4d37c811ed4559b4f2a77bbc2b20",
+      "locale.cfg": "959a45d44e6fcf58361ed004681556fe50129f2109e817dec098c00c9e5d2578",
+      "metin2.cfg": "d90c3ca9ef372be99e219147aa3d80621e9ae46c83cc316663d78edb463c9209",
+      "mouse.cfg": "3de31b075b046585f55e58446f38805d39cdb1dd31449801d7c9356e035eba9c"
+    },
+    "fixed": {
+      "channel.inf": "1c8bbd91bc22cb3285c1b9eb96b80124bf80d3df2f219d8f446252ce9e7eaa91",
+      "graphics.cfg": "e774f4f555883bd2afbec5541d8124d70b3d4d37c811ed4559b4f2a77bbc2b20",
+      "locale.cfg": "959a45d44e6fcf58361ed004681556fe50129f2109e817dec098c00c9e5d2578",
+      "metin2.cfg": "d90c3ca9ef372be99e219147aa3d80621e9ae46c83cc316663d78edb463c9209",
+      "mouse.cfg": "3de31b075b046585f55e58446f38805d39cdb1dd31449801d7c9356e035eba9c"
+    }
+  },
+  "testedBinary": "878ac2c50f4484059c0e216608ee07baa3a87ee3c4c14754e2e620240d5442d2",
+  "testedUIQuest": "f81f3509e45c6e0ff7af45a83ad05b6aa11ab151f57593e9ff047a19d3c97ff9",
+  "idleResidency": {
+    "before": {
+      "terrainLoaded": 20,
+      "terrainUnloaded": 0,
+      "areasLoaded": 20,
+      "areasUnloaded": 0,
+      "terrainResident": 20,
+      "areasResident": 20,
+      "terrainAssignments": 2,
+      "treeBlockerDraws": 0,
+      "instanceBufferCreates": 58,
+      "treeLodSwitches": 29,
+      "treeCreated": 368,
+      "terrainVisible": 41,
+      "terrainDrawn": 41
+    },
+    "after": {
+      "terrainLoaded": 20,
+      "terrainUnloaded": 0,
+      "areasLoaded": 20,
+      "areasUnloaded": 0,
+      "terrainResident": 20,
+      "areasResident": 20,
+      "terrainAssignments": 2,
+      "treeBlockerDraws": 0,
+      "instanceBufferCreates": 58,
+      "treeLodSwitches": 29,
+      "treeCreated": 368,
+      "terrainVisible": 41,
+      "terrainDrawn": 41
+    },
+    "event": "idle_stability_pass",
+    "seconds": 299208.0695223
+  },
+  "productionDeployment": false,
+  "push": false,
+  "final": "TECHNICAL GO - TESTCLIENT ONLY",
+  "releaseBuild": "PASS",
+  "focusedTests": "QuestCurtain 4/4; Graphics.Display + Graphics.DisplayConfiguration 2/2"
+}
