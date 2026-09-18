@@ -189,6 +189,9 @@ std::intptr_t CPythonApplication::WindowProcedure(const Platform::NativeMessage&
 			break;
 
 		case WM_SIZE:
+            // SetWindowPos sends synchronous WM_SIZE. Apply once, explicitly,
+            // after style and geometry are stable at the frame boundary.
+            if (m_applyingDisplay) return 0;
 			if (m_terrainPresentation && !m_terrainPresentation->Resize(
 				wParam == SIZE_MINIMIZED ? 0 : LOWORD(lParam), wParam == SIZE_MINIMIZED ? 0 : HIWORD(lParam)))
 			{
@@ -204,7 +207,7 @@ std::intptr_t CPythonApplication::WindowProcedure(const Platform::NativeMessage&
 						const auto rcWnd = GetClientRect();
 				
 						UINT uWidth=rcWnd.right-rcWnd.left; 
-						UINT uHeight=rcWnd.bottom-rcWnd.left; 
+						UINT uHeight=rcWnd.bottom-rcWnd.top;
 						m_grpDevice.ResizeBackBuffer(uWidth, uHeight);
 					}
 					break;
@@ -224,9 +227,9 @@ std::intptr_t CPythonApplication::WindowProcedure(const Platform::NativeMessage&
 				const auto rcWnd = GetClientRect();
 				
 				UINT uWidth=rcWnd.right-rcWnd.left; 
-				UINT uHeight=rcWnd.bottom-rcWnd.left; 
+				UINT uHeight=rcWnd.bottom-rcWnd.top;
 				m_grpDevice.ResizeBackBuffer(uWidth, uHeight);
-				OnSizeChange(short(LOWORD(lParam)), short(HIWORD(lParam)));
+				OnSizeChange(uWidth, uHeight);
 			}
 			break; 
 		case WM_NCLBUTTONDOWN:

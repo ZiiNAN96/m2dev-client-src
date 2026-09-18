@@ -4,9 +4,29 @@
 #include "PythonApplication.h"
 #include "Graphics/GraphicsSettingsFile.h"
 #include "Renderer/GraphicsConfig.h"
+#include "DisplayConfiguration.h"
+#include "Platform/PlatformTime.h"
 
 bool CPythonSystem::ApplyGraphicsSettings(Graphics::GraphicsSettings settings)
 {
+    if (!m_graphics.IsOwnerThread()) return false;
+    if (!DisplayConfiguration::Equal(settings, GetGraphicsSettings()) && m_displayReady)
+    {
+        if (m_displayQueued || m_displayPending) return false;
+        const auto window = static_cast<HWND>(CPythonApplication::Instance().GetNativeHandle().value);
+        const auto monitor = DisplayConfiguration::Query(window);
+        if (settings.displayMode == Graphics::DisplayMode::Borderless)
+        {
+            settings.resolutionWidth = monitor.desktop.first;
+            settings.resolutionHeight = monitor.desktop.second;
+        }
+        if (!DisplayConfiguration::Normalize(settings, monitor, false)) return false;
+        if (!DisplayConfiguration::Equal(settings, GetGraphicsSettings()))
+        {
+            m_displayPrevious = GetGraphicsSettings();
+            m_displayQueued = true;
+        }
+    }
     return m_graphics.ApplyGraphicsSettings(settings);
 }
 
@@ -19,9 +39,18 @@ bool CPythonSystem::LoadGraphicsSettings()
 {
     if (!m_graphics.IsOwnerThread()) return false;
     std::string error;
-    const auto loaded = Graphics::LoadGraphicsSettingsFile(
+    auto defaults = Graphics::MigrateLegacy(m_Config.iShadowLevel, m_Config.iFogLevel);
+    defaults.resolutionWidth = m_Config.width; defaults.resolutionHeight = m_Config.height;
+    defaults.displayMode = m_Config.bWindowed ? Graphics::DisplayMode::Windowed : Graphics::DisplayMode::Borderless;
+    const auto monitor = DisplayConfiguration::Query(m_displayReady ?
+        static_cast<HWND>(CPythonApplication::Instance().GetNativeHandle().value) : nullptr);
+    if (defaults.displayMode == Graphics::DisplayMode::Borderless)
+    { defaults.resolutionWidth = monitor.desktop.first; defaults.resolutionHeight = monitor.desktop.second; }
+    auto loaded = Graphics::LoadGraphicsSettingsFile(
         Platform::Filesystem::Join(Platform::Filesystem::ConfigDirectory(), "graphics.cfg"),
-        Graphics::MigrateLegacy(m_Config.iShadowLevel, m_Config.iFogLevel), error);
+        defaults, error);
+    if (!DisplayConfiguration::Normalize(loaded.settings, monitor, true)) return false;
+    if (m_displayReady) return error.empty() && ApplyGraphicsSettings(loaded.settings);
     m_graphics.LoadGraphicsSettings(loaded.settings);
     if (!error.empty()) TraceError("Graphics Settings: %s", error.c_str());
     return error.empty();
@@ -31,8 +60,11 @@ bool CPythonSystem::SaveGraphicsSettings()
 {
     if (!m_graphics.IsOwnerThread()) return false;
     std::string error;
+    auto settings = GetGraphicsSettings();
+    // Closing, autosaving or exiting must never persist an unconfirmed preview.
+    if (m_displayQueued || m_displayPending) DisplayConfiguration::Copy(settings, m_displayPrevious);
     const bool saved = Graphics::SaveGraphicsSettingsFile(
-        Platform::Filesystem::Join(Platform::Filesystem::ConfigDirectory(), "graphics.cfg"), GetGraphicsSettings(), error);
+        Platform::Filesystem::Join(Platform::Filesystem::ConfigDirectory(), "graphics.cfg"), settings, error);
     if (!saved) TraceError("Graphics Settings: %s", error.c_str());
     return saved;
 }
@@ -40,12 +72,88 @@ bool CPythonSystem::SaveGraphicsSettings()
 void CPythonSystem::FlushGraphicsSettings()
 {
     if (!m_graphics.IsOwnerThread()) return;
+    if (m_displayReady)
+    {
+        auto& app = CPythonApplication::Instance();
+        if (m_displayQueued)
+        {
+            app.RememberDisplayWindow();
+            m_displayQueued = false;
+            m_displayPending = true;
+            m_displayDeadline = Platform::Time::MonotonicNanoseconds() + 15000000000ULL;
+            if (!m_displayCancel && !app.ApplyDisplayConfiguration(GetGraphicsSettings())) m_displayCancel = true;
+        }
+        if (m_displayPending && (m_displayCancel || Platform::Time::MonotonicNanoseconds() >= m_displayDeadline))
+        {
+            auto previous = GetGraphicsSettings();
+            DisplayConfiguration::Copy(previous, m_displayPrevious);
+            const auto monitor = DisplayConfiguration::Query(static_cast<HWND>(app.GetNativeHandle().value));
+            DisplayConfiguration::Normalize(previous, monitor, true);
+            if (!app.ApplyDisplayConfiguration(previous, true))
+            {
+                previous.displayMode = Graphics::DisplayMode::Windowed;
+                previous.resolutionWidth = monitor.safeWindow.first;
+                previous.resolutionHeight = monitor.safeWindow.second;
+                if (!app.ApplyDisplayConfiguration(previous))
+                {
+                    TraceError("Display rollback and safe window resize failed");
+                    app.Exit();
+                }
+            }
+            m_graphics.LoadGraphicsSettings(previous);
+            m_displayPending = m_displayCancel = false;
+            m_displayDeadline = 0;
+        }
+    }
     const auto event = m_graphics.ConsumeChanges();
     if (!event.fields) return;
     Renderer::ApplyGraphicsRuntimeConfig(event.runtime);
     if (event.Has(Graphics::ShadowsChanged)) CPythonBackground::Instance().RefreshShadowLevel();
     if (event.Has(Graphics::ViewDistanceChanged))
         CPythonBackground::Instance().SetViewDistanceSet(0, event.runtime.viewDistance);
+}
+
+void CPythonSystem::InitializeDisplaySettings()
+{
+    m_displayReady = true;
+    auto settings = GetGraphicsSettings();
+    const auto monitor = DisplayConfiguration::Query(static_cast<HWND>(CPythonApplication::Instance().GetNativeHandle().value));
+    DisplayConfiguration::Normalize(settings, monitor, true);
+    AdoptDisplaySettings(settings);
+}
+
+void CPythonSystem::AdoptDisplaySettings(const Graphics::GraphicsSettings& settings)
+{
+    auto current = GetGraphicsSettings();
+    DisplayConfiguration::Copy(current, settings);
+    m_graphics.LoadGraphicsSettings(current);
+}
+
+int CPythonSystem::DisplayConfirmationSeconds() const
+{
+    if (!m_displayPending || m_displayCancel) return 0;
+    const auto now = Platform::Time::MonotonicNanoseconds();
+    return now >= m_displayDeadline ? 0 : int((m_displayDeadline - now + 999999999ULL) / 1000000000ULL);
+}
+
+bool CPythonSystem::ConfirmDisplaySettings()
+{
+    if (!m_displayPending || !DisplayConfirmationSeconds()) return false;
+    std::string error;
+    if (!Graphics::SaveGraphicsSettingsFile(
+        Platform::Filesystem::Join(Platform::Filesystem::ConfigDirectory(), "graphics.cfg"), GetGraphicsSettings(), error))
+    {
+        TraceError("Display confirmation save: %s", error.c_str());
+        return false;
+    }
+    m_displayPending = false;
+    m_displayDeadline = 0;
+    return true;
+}
+
+void CPythonSystem::CancelDisplaySettings()
+{
+    if (m_displayQueued || m_displayPending) m_displayCancel = true;
 }
 
 #define DEFAULT_VALUE_ALWAYS_SHOW_NAME		true
@@ -206,12 +314,12 @@ int	CPythonSystem::GetFrequencyIndex(int res_index, DWORD frequency)
 
 DWORD CPythonSystem::GetWidth()
 {
-	return m_Config.width;
+	return GetGraphicsSettings().resolutionWidth;
 }
 
 DWORD CPythonSystem::GetHeight()
 {
-	return m_Config.height;
+	return GetGraphicsSettings().resolutionHeight;
 }
 DWORD CPythonSystem::GetBPP()
 {
@@ -357,7 +465,7 @@ void CPythonSystem::SetDefaultConfig()
 
 bool CPythonSystem::IsWindowed()
 {
-	return m_Config.bWindowed;
+	return GetGraphicsSettings().displayMode == Graphics::DisplayMode::Windowed;
 }
 
 bool CPythonSystem::IsViewChat()

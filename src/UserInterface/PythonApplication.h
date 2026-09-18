@@ -173,6 +173,8 @@ class CPythonApplication : public CMSApplication, public CInputKeyboard, public 
 
 		bool Create(PyObject* poSelf, const char* c_szName, int width, int height, int Windowed);
 		bool CreateDevice(int width, int height, int Windowed, int bit = 32, int frequency = 0);
+        bool ApplyDisplayConfiguration(const Graphics::GraphicsSettings& settings, bool restorePosition = false);
+        void RememberDisplayWindow();
 
 		void UpdateGame();
 		void RenderGame();
@@ -384,6 +386,8 @@ class CPythonApplication : public CMSApplication, public CInputKeyboard, public 
 		DWORD						m_dwCurUpdateTime;
 		DWORD						m_dwLoad;
 		DWORD						m_dwWidth;
+        bool m_applyingDisplay{};
+        RECT m_displayWindowRect{};
 		DWORD						m_dwHeight;
 
 	protected:

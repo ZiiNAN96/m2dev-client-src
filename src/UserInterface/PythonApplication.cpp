@@ -13,6 +13,7 @@
 
 #include "resource.h"
 #include "PythonApplication.h"
+#include "DisplayConfiguration.h"
 #include "PythonCharacterManager.h"
 #include "Renderer/ActorRenderData.h"
 #include "Renderer/SkinningBenchmark.h"
@@ -833,14 +834,10 @@ bool CPythonApplication::Create(PyObject * poSelf, const char * c_szName, int wi
 	}
 
 	NANOBEGIN
-		Windowed = CPythonSystem::Instance().IsWindowed() ? 1 : 0;
-        if(m_startupBackend == Renderer::BackendKind::DiligentD3D11 && !Windowed)
-            return FailRendererStartup("Diligent D3D11 requires windowed mode (WINDOWED 1). Legacy fullscreen is no longer supported. No fallback.");
+        // Start windowed; borderless uses the same window and swap chain.
+        Windowed = 1;
+        width = m_pySystem.GetWidth(); height = m_pySystem.GetHeight();
 
-	bool bAnotherWindow = false;
-
-	if (GetPlatformWindow().HasWindowWithTitle(c_szName))
-		bAnotherWindow = true;
 
 	m_dwWidth = width;
 	m_dwHeight = height;
@@ -870,39 +867,18 @@ bool CPythonApplication::Create(PyObject * poSelf, const char * c_szName, int wi
 	m_pyNetworkStream.Discord_Start();
 #endif
 
-	if (!m_pySystem.IsWindowed())
-	{
-		m_isWindowed = false;
-		m_isWindowFullScreenEnable = TRUE;
-		__SetFullScreenWindow(width, height, m_pySystem.GetBPP());
-
-		Windowed = true;
-	}
-	else
-	{
-		AdjustSize(m_pySystem.GetWidth(), m_pySystem.GetHeight());
-
-		if (Windowed)
-		{
-			m_isWindowed = true;
-
-			if (bAnotherWindow)
-			{
-				const auto rc = GetClientRect();
-
-				int windowWidth = rc.right - rc.left;
-				int windowHeight = (rc.bottom - rc.top);
-
-				CMSApplication::SetPosition(GetScreenWidth() - windowWidth, GetScreenHeight() - 60 - windowHeight);
-			}
-			SetPosition(-8, 0); //Fix
-		}
-		else
-		{
-			m_isWindowed = false;
-			SetPosition(0, 0);
-		}
-	}
+    m_pySystem.InitializeDisplaySettings();
+    if (!ApplyDisplayConfiguration(m_pySystem.GetGraphicsSettings()))
+    {
+        auto safe = m_pySystem.GetGraphicsSettings();
+        const auto monitor = DisplayConfiguration::Query(static_cast<HWND>(GetNativeHandle().value));
+        safe.displayMode = Graphics::DisplayMode::Windowed;
+        safe.resolutionWidth = monitor.safeWindow.first; safe.resolutionHeight = monitor.safeWindow.second;
+        if (!ApplyDisplayConfiguration(safe))
+            return FailRendererStartup("Cannot apply safe startup display configuration");
+        m_pySystem.AdoptDisplaySettings(safe);
+    }
+    width = m_pySystem.GetWidth(); height = m_pySystem.GetHeight();
 
 	NANOEND
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -32,7 +32,7 @@ bool Known(std::string_view key)
 {
     for (auto name : {"VERSION", "PRESET", "STYLE", "SHADOWS", "AO", "WATER", "VEGETATION",
                       "TEXTURES", "HDR", "BLOOM", "MODERN_SKY", "HIGH_QUALITY_FOG", "VIEW_DISTANCE", "FOG_LEVEL",
-                      "FRAME_RATE_LIMIT", "VSYNC"})
+                      "FRAME_RATE_LIMIT", "VSYNC", "RESOLUTION_WIDTH", "RESOLUTION_HEIGHT", "DISPLAY_MODE"})
         if (key == name) return true;
     return false;
 }
@@ -41,6 +41,8 @@ bool MatchesPreset(const GraphicsSettings& settings)
     auto quality = settings;
     quality.frameRateLimit = FrameRateLimit::FPS60;
     quality.vsync = VSync::On;
+    quality.resolutionWidth = quality.resolutionHeight = 0;
+    quality.displayMode = DisplayMode::Windowed;
     return settings.preset == GraphicsPreset::Custom ||
            quality == PresetSettings(settings.preset, settings.style);
 }
@@ -95,6 +97,9 @@ GraphicsSettings Validate(GraphicsSettings s)
     s.textures = Enum(s.textures, d.textures, 2);
     s.frameRateLimit = Enum(s.frameRateLimit, d.frameRateLimit, 2);
     s.vsync = Enum(s.vsync, d.vsync, 1);
+    s.displayMode = Enum(s.displayMode, d.displayMode, 2);
+    if (s.resolutionWidth > 16384 || s.resolutionHeight > 16384)
+        s.resolutionWidth = s.resolutionHeight = 0;
     s.fogLevel = std::clamp(s.fogLevel, 0, 2);
     s.viewDistance = std::isfinite(s.viewDistance) ?
         std::clamp(s.viewDistance, MinViewDistance, MaxViewDistance) : d.viewDistance;
@@ -116,6 +121,7 @@ GraphicsRuntimeConfig Resolve(const GraphicsSettings& requested, std::uint64_t r
     GraphicsRuntimeConfig r;
     r.revision = revision; r.style = s.style; r.legacyShadowLevel = int(s.shadows);
     r.frameRateLimit = s.frameRateLimit; r.vsync = s.vsync;
+    r.resolutionWidth = s.resolutionWidth; r.resolutionHeight = s.resolutionHeight; r.displayMode = s.displayMode;
     r.vegetation = s.vegetation; r.viewDistance = s.viewDistance;
     constexpr float vegetationScale[]{.65f, .85f, 1.f, 1.25f};
     r.vegetationDistanceScale = vegetationScale[int(s.vegetation)] * s.viewDistance / DefaultViewDistance;
@@ -154,13 +160,15 @@ LoadResult LoadGraphicsSettings(std::string_view text, const GraphicsSettings& d
     (void)version;
     std::istringstream input{std::string(text)};
     auto& s = result.settings;
+    bool invalidDisplay = false;
     while (std::getline(input, line))
     {
         std::istringstream row(line);
         if (!(row >> key) || !Known(key) || key == "VERSION") continue;
-        if (!(row >> value)) { ++result.invalidValues; continue; }
+        const bool displayKey = key == "RESOLUTION_WIDTH" || key == "RESOLUTION_HEIGHT" || key == "DISPLAY_MODE";
+        if (!(row >> value)) { ++result.invalidValues; invalidDisplay |= displayKey; continue; }
         std::string tail;
-        if ((row >> tail) && tail[0] != '#') { ++result.invalidValues; continue; }
+        if ((row >> tail) && tail[0] != '#') { ++result.invalidValues; invalidDisplay |= displayKey; continue; }
         if (key == "VIEW_DISTANCE")
         {
             float parsed{};
@@ -169,10 +177,10 @@ LoadResult LoadGraphicsSettings(std::string_view text, const GraphicsSettings& d
             continue;
         }
         int parsed{};
-        if (!Integer(value, parsed)) { ++result.invalidValues; continue; }
-        const int max = key == "PRESET" ? 4 : key == "SHADOWS" ? 5 : key == "VEGETATION" || key == "WATER" ? 3 :
+        if (!Integer(value, parsed)) { ++result.invalidValues; invalidDisplay |= displayKey; continue; }
+        const int max = key == "RESOLUTION_WIDTH" || key == "RESOLUTION_HEIGHT" ? 16384 : key == "DISPLAY_MODE" ? 2 : key == "PRESET" ? 4 : key == "SHADOWS" ? 5 : key == "VEGETATION" || key == "WATER" ? 3 :
             key == "AO" || key == "TEXTURES" || key == "FOG_LEVEL" || key == "FRAME_RATE_LIMIT" ? 2 : 1;
-        if (parsed < 0 || parsed > max) { ++result.invalidValues; continue; }
+        if (parsed < 0 || parsed > max) { ++result.invalidValues; invalidDisplay |= displayKey; continue; }
         if (key == "PRESET") s.preset = static_cast<GraphicsPreset>(parsed);
         else if (key == "STYLE") s.style = static_cast<GraphicsStyle>(parsed);
         else if (key == "SHADOWS") s.shadows = static_cast<ShadowQuality>(parsed);
@@ -181,6 +189,9 @@ LoadResult LoadGraphicsSettings(std::string_view text, const GraphicsSettings& d
         else if (key == "VEGETATION") s.vegetation = static_cast<VegetationQuality>(parsed);
         else if (key == "TEXTURES") s.textures = static_cast<TextureQuality>(parsed);
         else if (key == "FRAME_RATE_LIMIT") s.frameRateLimit = static_cast<FrameRateLimit>(parsed);
+        else if (key == "RESOLUTION_WIDTH") s.resolutionWidth = unsigned(parsed);
+        else if (key == "RESOLUTION_HEIGHT") s.resolutionHeight = unsigned(parsed);
+        else if (key == "DISPLAY_MODE") s.displayMode = static_cast<DisplayMode>(parsed);
         else if (key == "VSYNC") s.vsync = static_cast<VSync>(parsed);
         else if (key == "HDR") s.hdr = parsed != 0;
         else if (key == "BLOOM") s.bloom = parsed != 0;
@@ -188,6 +199,8 @@ LoadResult LoadGraphicsSettings(std::string_view text, const GraphicsSettings& d
         // HIGH_QUALITY_FOG is a retired key: validate old files, then discard it.
         else if (key == "FOG_LEVEL") s.fogLevel = parsed;
     }
+    if (invalidDisplay)
+    { s.resolutionWidth = s.resolutionHeight = 0; s.displayMode = DisplayMode::Windowed; }
     result.settings = Validate(s);
     return result;
 }
@@ -206,6 +219,8 @@ std::string SaveGraphicsSettings(const GraphicsSettings& requested, std::string_
         << "\nHDR " << s.hdr << "\nBLOOM " << s.bloom << "\nMODERN_SKY " << s.modernSky
         << "\nVIEW_DISTANCE " << s.viewDistance
         << "\nFOG_LEVEL " << s.fogLevel
+        << "\nRESOLUTION_WIDTH " << s.resolutionWidth << "\nRESOLUTION_HEIGHT " << s.resolutionHeight
+        << "\nDISPLAY_MODE " << int(s.displayMode)
         << "\nFRAME_RATE_LIMIT " << int(s.frameRateLimit) << "\nVSYNC " << int(s.vsync) << '\n';
     std::istringstream previous{std::string(previousText)};
     std::string line, key;
@@ -229,6 +244,8 @@ bool Store::ApplyGraphicsSettings(GraphicsSettings s)
     auto quality = s;
     quality.frameRateLimit = settings_.frameRateLimit;
     quality.vsync = settings_.vsync;
+    quality.resolutionWidth = settings_.resolutionWidth; quality.resolutionHeight = settings_.resolutionHeight;
+    quality.displayMode = settings_.displayMode;
     if (quality != settings_) s.preset = GraphicsPreset::Custom;
     return Commit(s);
 }
@@ -239,6 +256,8 @@ bool Store::ApplyGraphicsPreset(GraphicsPreset preset)
     auto s = PresetSettings(preset, settings_.style);
     s.frameRateLimit = settings_.frameRateLimit;
     s.vsync = settings_.vsync;
+    s.resolutionWidth = settings_.resolutionWidth; s.resolutionHeight = settings_.resolutionHeight;
+    s.displayMode = settings_.displayMode;
     return Commit(s);
 }
 bool Store::LoadGraphicsSettings(const GraphicsSettings& settings)
@@ -250,6 +269,8 @@ bool Store::Commit(GraphicsSettings s)
 {
     if (s == settings_) return true;
     pending_ |= RendererChanged;
+    if (s.resolutionWidth != settings_.resolutionWidth || s.resolutionHeight != settings_.resolutionHeight ||
+        s.displayMode != settings_.displayMode) pending_ |= DisplayChanged;
     if (s.frameRateLimit != settings_.frameRateLimit || s.vsync != settings_.vsync) pending_ |= FramePacingChanged;
     if (s.shadows != settings_.shadows) pending_ |= ShadowsChanged;
     if (s.vegetation != settings_.vegetation) pending_ |= VegetationChanged;

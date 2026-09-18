@@ -122,6 +122,30 @@ void LiveApply()
         Check(event.category == ApplyCategory::Live && event.runtime.revision > revision, "presets apply without PSO/restart");
     }
 }
+void Display()
+{
+    Store store;
+    store.ApplyGraphicsPreset(GraphicsPreset::High);
+    store.ConsumeChanges();
+    auto s = store.GetGraphicsSettings();
+    s.resolutionWidth = 1920; s.resolutionHeight = 1080; s.displayMode = DisplayMode::Borderless;
+    s.frameRateLimit = FrameRateLimit::Unlimited; s.vsync = VSync::Off;
+    Check(store.ApplyGraphicsSettings(s), "display apply");
+    const auto e = store.ConsumeChanges();
+    Check(e.fields == (RendererChanged | DisplayChanged | FramePacingChanged), "display does not rebuild quality resources");
+    Check(e.runtime.resolutionWidth == 1920 && e.runtime.resolutionHeight == 1080 && e.runtime.displayMode == DisplayMode::Borderless,
+        "central runtime display snapshot");
+    Check(store.GetGraphicsSettings().preset == GraphicsPreset::High, "display preserves preset");
+    store.ApplyGraphicsPreset(GraphicsPreset::Low);
+    s = store.GetGraphicsSettings();
+    Check(s.resolutionWidth == 1920 && s.resolutionHeight == 1080 && s.displayMode == DisplayMode::Borderless &&
+        s.frameRateLimit == FrameRateLimit::Unlimited && s.vsync == VSync::Off, "preset preserves every display choice");
+    Check(LoadGraphicsSettings(SaveGraphicsSettings(s)).settings == s, "display and pacing persist together");
+    s.resolutionWidth = 999999;
+    Check(Validate(s).resolutionWidth == 0 && Validate(s).resolutionHeight == 0, "oversized API dimensions request safe fallback");
+    Check(LoadGraphicsSettings("RESOLUTION_WIDTH 99999\nRESOLUTION_HEIGHT -5\nDISPLAY_MODE 9").invalidValues == 3,
+        "invalid stored display values diagnosed");
+}
 void VegetationTest()
 {
     auto asset = std::make_shared<Vegetation::Asset>();
@@ -175,12 +199,15 @@ int main(int argc, char** argv)
         else if (mode == "Custom") Custom();
         else if (mode == "Invalid") Invalid();
         else if (mode == "LiveApply") LiveApply();
+        else if (mode == "Display") Display();
         else if (mode == "Vegetation") VegetationTest();
         else if (mode == "Persistence") Persistence();
         else if (mode == "WriteRestart" || mode == "ReadRestart")
         {
             auto s = PresetSettings(GraphicsPreset::Ultra, GraphicsStyle::Modern);
             s.preset = GraphicsPreset::Custom; s.shadows = ShadowQuality::LegacySolo; s.fogLevel = 1; s.viewDistance = 17555.125f;
+            s.resolutionWidth = 1920; s.resolutionHeight = 1080; s.displayMode = DisplayMode::Borderless;
+            s.frameRateLimit = FrameRateLimit::FPS120; s.vsync = VSync::Off;
             std::string error;
             if (mode == "WriteRestart") Check(SaveGraphicsSettingsFile("graphics-restart.cfg", s, error), error.c_str());
             else { Store store; const auto result = LoadGraphicsSettingsFile("graphics-restart.cfg", {}, error);

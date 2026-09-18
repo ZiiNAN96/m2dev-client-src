@@ -1,5 +1,7 @@
 # P3 – Frame Pacing / FPS Settings / VSync
 
+Die zusätzliche Anzeigeverwaltung für Auflösung, Fenstermodus und sicheren Live-Apply ist separat in [P3 – Anzeigeeinstellungen](p3-display-settings.md) dokumentiert. Die folgenden Pacing-Messwerte sind die ursprüngliche P3-Matrix und keine nachträgliche Display-Abnahme.
+
 17.09.2026. **P3: GO – Fast Gate PASS.** 60 / 120 / Unbegrenzt und VSync Aus / Ein sind unabhängig, im vorhandenen Grafikmenü auswählbar, live anwendbar und persistent. Kein Production Deployment, kein Push. Nach P3 STOP.
 
 ## Umfang und Ausgangsstand

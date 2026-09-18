@@ -24,6 +24,9 @@ enum class VegetationQuality { Low, Medium, High, Ultra };
 enum class TextureQuality { Medium, High, Ultra };
 enum class FrameRateLimit { FPS60, FPS120, Unlimited };
 enum class VSync { Off, On };
+// Exclusive is reserved for backends that explicitly support it; D3D11's
+// current child surface / waitable swap chain only exposes the first two.
+enum class DisplayMode { Windowed, Borderless, Exclusive };
 constexpr unsigned FrameRate(FrameRateLimit limit)
 {
     return limit == FrameRateLimit::FPS60 ? 60 : limit == FrameRateLimit::FPS120 ? 120 : 0;
@@ -44,6 +47,8 @@ struct GraphicsSettings
     int fogLevel{}; // Classic-only dense / middle / light choice.
     FrameRateLimit frameRateLimit{FrameRateLimit::FPS60};
     VSync vsync{VSync::On}; // Preserve the previous Present(1) default.
+    unsigned resolutionWidth{}, resolutionHeight{}; // Zero means migrate / choose a safe startup size.
+    DisplayMode displayMode{DisplayMode::Windowed};
     bool operator==(const GraphicsSettings&) const = default;
 };
 
@@ -64,6 +69,8 @@ struct GraphicsRuntimeConfig
     unsigned shadowTextureSize{512}, waterFrameMilliseconds{70};
     FrameRateLimit frameRateLimit{FrameRateLimit::FPS60};
     VSync vsync{VSync::On};
+    unsigned resolutionWidth{}, resolutionHeight{};
+    DisplayMode displayMode{DisplayMode::Windowed};
 };
 
 struct GraphicsFeatures
@@ -80,7 +87,8 @@ enum Change : std::uint32_t
 {
     NoChange = 0, RendererChanged = 1, ShadowsChanged = 2,
     VegetationChanged = 4, ViewDistanceChanged = 8, FogChanged = 16,
-    WaterChanged = 32, ReservedChanged = 64, FramePacingChanged = 128, AllChanged = 255
+    WaterChanged = 32, ReservedChanged = 64, FramePacingChanged = 128,
+    DisplayChanged = 256, AllChanged = 511
 };
 enum class ApplyCategory { Live, PipelineRebuild, RestartRequired };
 struct GraphicsSettingsChanged

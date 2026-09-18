@@ -93,6 +93,12 @@ class CPythonSystem : public CSingleton<CPythonSystem>
         bool LoadGraphicsSettings();
         bool SaveGraphicsSettings();
         void FlushGraphicsSettings(); // Called once at the main-thread frame boundary.
+        void InitializeDisplaySettings();
+        bool ConfirmDisplaySettings();
+        void CancelDisplaySettings();
+        int DisplayConfirmationSeconds() const;
+        bool IsDisplayReady() const { return m_displayReady; }
+        void AdoptDisplaySettings(const Graphics::GraphicsSettings& settings);
 		void SetInterfaceHandler(PyObject * poHandler);
 		void DestroyInterfaceHandler();
 
@@ -167,6 +173,9 @@ class CPythonSystem : public CSingleton<CPythonSystem>
 
 	protected:
         Graphics::Store m_graphics;
+        Graphics::GraphicsSettings m_displayPrevious;
+        std::uint64_t m_displayDeadline{};
+        bool m_displayReady{}, m_displayQueued{}, m_displayPending{}, m_displayCancel{};
 		TResolution						m_ResolutionList[RESOLUTION_MAX_NUM];
 		int								m_ResolutionCount;
 
